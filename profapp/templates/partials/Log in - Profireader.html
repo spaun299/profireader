@@ -7,7 +7,7 @@
     <meta property="og:image" itemprop="image primaryImageOfPage" content="https://cdn.sstatic.net/stackoverflow/img/apple-touch-icon@2.png?v=ea71a5211a91&amp;a">
     <meta name="twitter:title" property="og:title" itemprop="title name" content="Log in">
     <meta name="twitter:description" property="og:description" itemprop="description" content="Q&amp;A for professional and enthusiast programmers">
-    <meta property="og:url" content="https://stackoverflow.com/users/login">
+    <meta property="og:url" content="https://profireader.com/users/login">
 
     <script src="../../static/js/quant.js" async=""></script>
     <script src="../../static/js/beacon.js" async=""></script>
@@ -170,7 +170,8 @@ style.firebugResetStyles {
     position: fixed !important;
     pointer-events: auto !important;
 }
-</style><style id="igtranslator-color" type="text/css"></style></head>
+</style>
+    <style id="igtranslator-color" type="text/css"></style>
 
     <noscript><div id="noscript-padding"></div></noscript>
     <div id="notify-container"></div>
@@ -188,26 +189,13 @@ style.firebugResetStyles {
 <div id="mainbar-full" class="login-page" data-login="true">
     <div class="subheader">
         <div id="tabs" style="float: left;">
-            <a href="https://stackoverflow.com/users/login" title="Log in to Stack Overflow" class="youarehere">Log in</a>
-            <a href="https://stackoverflow.com/users/signup" title="Sign up to Stack Overflow">Sign up</a>
+            <a href="/users/login/" title="Log in to Stack Overflow" class="youarehere">Log in</a>
+            <a href="/users/signup/" title="Sign up to Stack Overflow">Sign up</a>
         </div>
     </div>
     <div>
             <h2 class="title">Log in using any of the following services:</h2>
-            <div id="openid-buttons">
-                    <div class="preferred-login google-login" data-provider="google" data-oauthserver="https://accounts.google.com/o/oauth2/auth" data-oauthversion="2.0">
-                        <p>
-                            <span class="icon" style="background-position: 0px 0px; "></span>
-                            <span>Log in using Google</span>
-                        </p>
-                    </div>
-                    <div class="preferred-login facebook-login" data-provider="facebook" data-oauthserver="https://www.facebook.com/v2.0/dialog/oauth" data-oauthversion="2.0">
-                        <p>
-                            <span class="icon" style="background-position: -18px 0px; "></span>
-                            <span>Log in using Facebook</span>
-                        </p>
-                    </div>
-            </div>
+            {% include 'partials/social_network_buttons.html' %}
             <div id="se-login" class="preferred-login">
                 <a style="display: none;" href="https://stackoverflow.com/users/account-recovery" id="forgot-password">forgot password</a>
                 <form id="se-login-form" action="/users/login" method="POST">

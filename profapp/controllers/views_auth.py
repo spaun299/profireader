@@ -3,6 +3,8 @@ from flask import jsonify, make_response, g, session, request, redirect, \
     url_for, render_template
 from authomatic.adapters import WerkzeugAdapter
 from ..models.users import User
+from db_init import db_session
+from ..constants.USER_REGISTERED import DB_ALIAS_UID, REGISTERED_WITH_FLIPPED
 #from urllib.parse import quote
 #import urllib.parse
 from urllib.parse import quote
@@ -10,17 +12,11 @@ from urllib.parse import quote
 #def _session_saver():
 #    session.modified = True
 
-
-from authomatic import Authomatic
-from config import Config
-authomatic = Authomatic(Config.OAUTH_CONFIG,
-                        Config.SECRET_KEY, report_errors=True)  # app.config['SECRET_KEY']
-
 import re
 from authomatic.adapters import WerkzeugAdapter
 
 from flask import redirect, make_response
-from flask.ext.login import LoginManager, login_user
+from flask.ext.login import login_user
 
 
 EMAIL_REGEX = re.compile(r'[^@]+@[^@]+\.[^@]+')
@@ -47,17 +43,45 @@ def login():
 def login_particular(provider_name):
     response = make_response()
     try:
-        result = authomatic.login(WerkzeugAdapter(request, response),
-                                  provider_name)
+        result = g.authomatic.login(WerkzeugAdapter(request, response),
+                                    provider_name)
         if result:
             if result.user:
                 result.user.update()
-                email = result.user.email
-                if email and EMAIL_REGEX.match(email):
-                    user = User.query.filter_by(email=email).first()
-                    if user:
-                        login_user(user)
-                        return redirect(url_for('index'))
+                result_user = result.user
+                pass
+                #user = db_session.query(User).\
+                #    filter(
+                #    getattr(User, DB_ALIAS_UID[provider_name])
+                #    == result_user.id
+                #).first()
+                #if not user:
+    # email='guest@profireader.com', first_name=None,
+    # second_name=None, password=None, pass_salt=None, fb_uid=None,
+    # google_uid=None, twitter_uid=None, linkedin_uid=None,
+    # email_conf_key=None, email_conf_tm=None, pass_reset_key=None,
+    # pass_reset_conf_tm=None, registered_via=None, ):
+                #    user = User(first_name=res_user_unified.first_name,
+                #                second_name=res_user_unified.second_name,
+                #                registered_via=
+                #                REGISTERED_WITH_FLIPPED[provider_name]
+                #                )
+                #    setattr(user, DB_ALIAS_UID[provider_name], result_user.id)
+                #    setattr(user, res_user_unified.email[attr],
+                #            res_user_unified.email[value])
+                #    db_session.add(user)
+                #    db_session.commit()
+                #session['user_id'] = user.id
+                ##  create a flag showing the profile is not complete!!!
+                return redirect('/')
+
+                #  email = result.user.email
+                #  if email and EMAIL_REGEX.match(email):
+                #      user = User.query.filter_by(email=email).first()
+                #      if user:
+                #          login_user(user)
+                #          return redirect(url_for('general.index'))
+                #      return redirect(url_for('general.index'))  #  delete this redirect
     except:
         raise
     return response
