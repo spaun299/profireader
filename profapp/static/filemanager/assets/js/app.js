@@ -11,7 +11,7 @@
     app.directive('angularFileManager', ['$parse', function($parse) {
         return {
             restrict: 'EA',
-            templateUrl: 'assets/templates/index.html'
+            templateUrl: 'assets/templates/image_editor.html'
         };
     }]);
 

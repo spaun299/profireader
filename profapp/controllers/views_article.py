@@ -5,7 +5,6 @@ from profapp.models.users import User
 from profapp.models.company import Company
 from db_init import db_session
 from .blueprints import article_bp
-#import os
 
 
 @article_bp.route('/article/', methods=['GET', 'POST'])
@@ -16,8 +15,7 @@ def article(page=1):
     posts = ArticleHistory.query.filter(ArticleHistory.id == page)
 
     if form.validate_on_submit():
-        article_history=ArticleHistory(form.name.data,form.article.data, 0,
-                                       User.query.first().id)
+        article_history = ArticleHistory(form.name.data, form.article.data, 0, User.query.first().id)
         db_session.add(article_history)
         db_session.commit()
 
@@ -29,10 +27,10 @@ def article(page=1):
             db_session.add(article)
             db_session.commit()
         return redirect(url_for('article', page=article_history.id))
-    elif request.method!='POST':
+    elif request.method != 'POST':
 
         for post in posts:
-            form.name.data=post.name
-            form.article.data=post.article_text
+            form.name.data = post.name
+            form.article.data = post.article_text
 
     return render_template('article.html', form=form, posts=posts)

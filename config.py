@@ -40,6 +40,9 @@ class Config(object):
 
     DATABASE_CONNECT_OPTIONS = {}
 
+    #Ratio for image_editor, can be : 1.7777777777777777, 1.3333333333333333, 0.6666666666666666, 1
+    IMAGE_EDITOR_RATIO = 1.3333333333333333
+
     # Enable protection against *Cross-site Request Forgery (CSRF)*
     CSRF_ENABLED = True
 
@@ -65,6 +68,7 @@ class ProductionDevelopmentConfig(Config):
     # Define production database
     SQLALCHEMY_DATABASE_URI = \
         database_uri(host, username, password, db_name)
+
 
     # Use a secure, unique and absolutely secret key for
     # signing the data.
