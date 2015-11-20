@@ -6,7 +6,7 @@ from ..constants.SOCIAL_NETWORKS import DB_FIELDS, SOC_NET_FIELDS, \
 from flask.ext.login import logout_user, current_user, login_required
 from urllib.parse import quote
 from ..models.users import User
-from ..forms.auth import LoginForm, RegistrationForm, ChangePasswordForm, \
+from ..forms.auth import LoginRegistrationForm, ChangePasswordForm, \
     PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm
 from .errors import BadDataProvided
 from ..utils.email import send_email
@@ -136,7 +136,7 @@ def signup():
         if portal_id:
             return redirect(url_for('general.reader_subscription', portal_id=portal_id))
 
-    form = RegistrationForm()
+    form = LoginRegistrationForm(login_signup='signup')
     if form.validate_on_submit():  # # pass1 == pass2
         profireader_all = SOC_NET_NONE['profireader'].copy()
         profireader_all['email'] = form.email.data
@@ -158,7 +158,8 @@ def signup():
                    'auth/email/confirm', user=user, token=token)
         flash('A confirmation email has been sent to you by email.')
         return redirect(url_for('auth.login'))
-    return render_template('auth/signup.html', form=form)
+    # return render_template('auth/signup.html', login_signup='signup', form=form)
+    return render_template('auth/login_signup.html', login_signup='signup', form=form)
 
 
 @auth_bp.route('/login/<soc_network_name>', methods=['GET', 'POST'])
@@ -169,8 +170,7 @@ def login_soc_network(soc_network_name):
 
 @auth_bp.route('/signup/<soc_network_name>', methods=['GET', 'POST'])
 def signup_soc_network(soc_network_name):
-    return redirect(url_for('auth.login_soc_network',
-                     soc_network_name=soc_network_name))
+    return redirect(url_for('auth.login_soc_network', soc_network_name=soc_network_name))
     #return login_signup_general('profireader', soc_network_name)
 
 
@@ -193,7 +193,7 @@ def login():
               'account logout first please')
         return redirect(url_for('general.index'))
 
-    form = LoginForm()
+    form = LoginRegistrationForm()
 
     if form.validate_on_submit():
         user = g.db.query(User).\
@@ -210,7 +210,8 @@ def login():
         redirect_url = url_for('auth.login')
         redirect_url += '?/' + portal_id if portal_id else ''
         return redirect(redirect_url)
-    return render_template('auth/login.html', form=form, portal_id=portal_id)
+    # return render_template('auth/login.html', form=form, login_signup='login', portal_id=portal_id)
+    return render_template('auth/login_signup.html', form=form, login_signup='login', portal_id=portal_id)
 
 
 @auth_bp.route('/logout/', methods=['GET'])

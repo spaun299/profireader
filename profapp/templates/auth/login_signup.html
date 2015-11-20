@@ -1,0 +1,43 @@
+{% extends "index_layout.html" %}
+{% block title %}Profireader - SignUp{% endblock title %}
+{% block head %}
+    {{ super() }}
+{% endblock head %}
+
+{% block portal_base %}
+    {{ super() }}
+{% endblock portal_base %}
+
+{% block portal_content %}
+    <div class="auth-form" ng-controller="UserLoginController">
+        <div class="tabs">
+            <div ng-hide="login_signup==='signup'">
+                <a class="tab actual" title="Log in to Profireader">{{ '{{' }}_('Log in'){{ '}}' }}</a>
+                <a class="tab" ng-click="login_signup='signup'" href="" title="Sign up to Profireader">{{ '{{' }}_('Sign up'){{ '}}' }}</a>
+            </div>
+            <div ng-show="login_signup==='signup'">
+                <a class="tab" ng-click="login_signup='login'" href="" title="Log in to Profireader">{{ '{{' }}_('Log in'){{ '}}' }}</a>
+                <a class="tab actual" title="Sign up to Profireader">{{ '{{' }}_('Sign up'){{ '}}' }}</a>
+            </div>
+        </div>
+
+        <div class="content-block">
+            <div ng-if="login_signup==='signup'">
+                {% include 'partials/Signup - Soc Networks.html' %}
+                {% include 'partials/Signup - Profireader.html' %}
+            </div>
+            <div ng-if="login_signup!=='signup'">
+                {% include 'partials/Log in - Soc Networks.html' %}
+                {% include 'partials/Log in - Profireader.html' %}
+            </div>
+        </div>
+    </div>
+
+    </div>
+    {#
+    <div>
+    <div class="by-socials-block"><h2>Sign up using any of the following
+        services:</h2>{% include 'partials/Signup - Soc Networks.html' %}</div>
+    <div class="by-profireader-block"><h2>Simple registration</h2>{% include 'partials/Signup - Profireader.html' %}</div>
+    #}
+{% endblock portal_content %}
