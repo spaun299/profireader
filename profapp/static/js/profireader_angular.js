@@ -875,3 +875,12 @@ function cloneObject(o) {
 function add_message(amessage, atype, atime) {
     return angularControllerFunction('message-controller', 'add_message')(amessage, atype, atime);
 }
+
+function randomHash()
+{
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for( var i=0; i < 32; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    return text;
+}

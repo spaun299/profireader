@@ -110,41 +110,11 @@
 
 {% block content %}
 
+    {% include 'templates-angular.html' %}
+
     <div class="container widewrapper">
-
-        <script>
-
-            module.controller('message-controller', ['$scope', '$modal', '$ok', function ($scope, $modal, $ok) {
-
-                $scope.alerts = [
-                    {type: 'danger', msg: 'Oh snap! Change a few things up and try submitting again.'},
-                    {type: 'success', msg: 'Well done! You successfully read this important alert message.'}
-                ];
-
-                $scope.add_message = function (amessage, atype) {
-                    $scope.alerts.push({type: atype ? atype : 'warning', msg: amessage});
-                };
-
-                {% for message in get_flashed_messages() %}
-                    setTimeout(function () {
-                        $scope.add_message('{{ message }}', 'warning')
-                    }, 1000);
-
-                {% endfor %}
-            }]);
-        </script>
-
-
-
         {% block portal_content %}
-
-            <div ng-controller="message-controller">
-                {% raw %}
-                <uib-alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}
-                </uib-alert>
-                {% endraw %}
-            </div>
-
+            {% include 'flashed-messages.html' %}
             {% include 'partials/Profireader_content' %}
         {% endblock portal_content %}
         <br/>

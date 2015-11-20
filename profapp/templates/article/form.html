@@ -16,7 +16,8 @@
         $scope.$$translate = {{ translates('article_edit')|safe }};
 
         $scope.afterSave = function (resp) {
-            window.location.href = $scope.details_article({article_id: resp['id']})
+            {#            window.location.href = $scope.details_article({article_id: resp['id']})#}
+            add_message('article was created', 'info', 5000);
         };
 
         $scope.getData = function (model, deff) {
@@ -96,7 +97,6 @@
         };
 
 
-
         {#  $scope.addAlert = function() {#}
         {#    $scope.alerts.push({msg: 'Another alert!'});#}
         {#  };#}
@@ -150,7 +150,8 @@
 
     <h2 ng-show="data.id && !company">{{ _('update your version of article') }}</h2>
 
-    <table af aaaf-after-load="aaarticleAfterLoad" af-before-save="getData" af-beforeValidate="getData" ng-model="data">
+    <table af aaaf-after-load="aaarticleAfterLoad" af-after-save="afterSave()" af-before-save="getData"
+           af-beforeValidate="getData" ng-model="data">
         <tr>
             <td style="width: 60%">
 
