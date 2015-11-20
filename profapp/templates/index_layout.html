@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="/static/css/profireader.css">
     <link rel="stylesheet" href="/static/css/oles.css">
     <link rel="stylesheet" href="/static/css/icons.css">
-    <link rel="stylesheet" href="/static/angular-xeditable/xeditable.css">
+
 {%- endblock styles %}
 
 {%- block head %}
@@ -46,6 +46,8 @@
     <script src="{{ url_for('static', filename = 'angular-ui-tinymce/tinymce.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ajax-validator/ngAjaxValidator.js') }}"></script>
 
+    {#TODO: SS by OZ: remove this two lines when ng-grid is up and running #}
+    <link rel="stylesheet" href="/static/angular-xeditable/xeditable.css">
     <script src="{{ url_for('static', filename = 'angular-xeditable/xeditable.js') }}"></script>
 
     <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>
@@ -84,6 +86,12 @@
         }
     </style>
 
+    <script>
+        {% for message in get_flashed_messages() %}
+            add_message('{{ message }}', 'warning');
+        {% endfor %}
+    </script>
+
 
 
 {%- endblock head %}
@@ -102,17 +110,41 @@
 
 {% block content %}
 
-
     <div class="container widewrapper">
-        {% for message in get_flashed_messages() %}
-            <div class="alert alert-warning">
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                {{ message }}
-            </div>
-        {% endfor %}
+
+        <script>
+
+            module.controller('message-controller', ['$scope', '$modal', '$ok', function ($scope, $modal, $ok) {
+
+                $scope.alerts = [
+                    {type: 'danger', msg: 'Oh snap! Change a few things up and try submitting again.'},
+                    {type: 'success', msg: 'Well done! You successfully read this important alert message.'}
+                ];
+
+                $scope.add_message = function (amessage, atype) {
+                    $scope.alerts.push({type: atype ? atype : 'warning', msg: amessage});
+                };
+
+                {% for message in get_flashed_messages() %}
+                    setTimeout(function () {
+                        $scope.add_message('{{ message }}', 'warning')
+                    }, 1000);
+
+                {% endfor %}
+            }]);
+        </script>
+
 
 
         {% block portal_content %}
+
+            <div ng-controller="message-controller">
+                {% raw %}
+                <uib-alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}
+                </uib-alert>
+                {% endraw %}
+            </div>
+
             {% include 'partials/Profireader_content' %}
         {% endblock portal_content %}
         <br/>
@@ -121,6 +153,6 @@
 {% endblock content %}
 
 {% block scripts %}
-   {% include 'partials/portal_footer_Profireader.html' %}
+    {% include 'partials/portal_footer_Profireader.html' %}
 {% endblock scripts %}
 

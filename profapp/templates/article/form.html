@@ -128,11 +128,6 @@
             });
         };
 
-        $scope.alerts = [
-            {type: 'danger', msg: 'Oh snap! Change a few things up and try submitting again.'},
-            {type: 'success', msg: 'Well done! You successfully read this important alert message.'}
-        ];
-
     }]);
 </script>
 
@@ -140,15 +135,7 @@
 
 {% raw %}
 
-<script type="text/ng-template" id="alert.html">
-    <div class="alert" style="background-color:#fa39c3;color:white" role="alert">
-      <div ng-transclude></div>
-    </div>
-  </script>
-
 <div ng-init="init()" ng-controller="article_edit">
-
-     <uib-alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}</uib-alert>
 
     <h1 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company)
         }}<span></span></h1>

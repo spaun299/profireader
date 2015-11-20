@@ -11,15 +11,41 @@
         </a>
     </script>
 
+    <script type="text/ng-template" id="alert.html">
+        <div class="alert" style="background-color:#fa39c3;color:white" role="alert">
+            <div ng-transclude></div>
+        </div>
+    </script>
+
+
+    <script>
+
+        module.controller('message-controller', ['$scope', '$modal', '$ok', function ($scope, $modal, $ok) {
+
+            $scope.alerts = [
+                {type: 'danger', msg: 'Oh snap! Change a few things up and try submitting again.'},
+                {type: 'success', msg: 'Well done! You successfully read this important alert message.'}
+            ];
+
+            $scope.add_message = function (amessage, atype) {
+                $scope.alerts.push({type: atype ? atype : 'warning', msg: amessage});
+            };
+
+            {% for message in get_flashed_messages() %}
+                $scope.add_message('{{ message }}', 'warning');
+            {% endfor %}
+        }]);
+    </script>
+
 
     <div class="container main-site-block">
         <div class="over-block">
-            {% for message in get_flashed_messages() %}
-                <div class="alert alert-warning">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    {{ message }}
-                </div>
-            {% endfor %}
+            <div ng-controller="message-controller">
+                {% raw %}
+                <uib-alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}
+                </uib-alert>
+                {% endraw %}
+            </div>
 
             {% block portal_content %}
                 Portal Content
