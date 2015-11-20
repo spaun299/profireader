@@ -205,9 +205,9 @@ def profile_edit_load(json, portal_id):
         # TODO (AA to AA): We have to consider the situation when divisions were changed while editting tags.
         def strip_new_tags(json):
             """ Strips tags have gotten from input prameter json
-            :param json: {'bound_tags' [{'portal_division_id': '....', 'tag_name': '  sun  '}, ...],
+            :param json: {'bound_tags': [{'portal_division_id': '....', 'tag_name': '  sun  '}, ...],
                 'notbound_tags': ['  moon  ', ...], 'confirm_profile_edit': True}
-            :return:     {'bound_tags' [{'portal_division_id': '....', 'tag_name': 'sun'}, ...],
+            :return:     {'bound_tags': [{'portal_division_id': '....', 'tag_name': 'sun'}, ...],
                 'notbound_tags': ['moon', ...], 'confirm_profile_edit': True}
             """
 

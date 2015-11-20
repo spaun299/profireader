@@ -40,8 +40,8 @@
                 <ul class="nav navbar-nav navbar-right">
                     <li ng-cloak ng-show="!user.id">
                         <ul class="user-auth">
-                            <li><a href="{{ url_for('auth.login') }}">{{_('Log In')}}</a></li>
-                            <li><a href="{{ url_for('auth.signup') }}">{{_('Sign Up')}}</a></li>
+                            <li><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=login' }}">{{_('Log In')}}</a></li>
+                            <li><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=signup' }}">{{_('Sign Up')}}</a></li>
                         </ul>
                     </li>
                     <li class="dropdown" ng-cloak ng-show="user.id">

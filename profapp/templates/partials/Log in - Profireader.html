@@ -2,11 +2,11 @@
 <h3>{{ '{{' }}_('Log in using Profireader'){{ '}}' }}</h3>
 
 <form action="{{ url_for('auth.login', next=request.args.get('next')) }}" method="POST">
-    {{ form.email(placeholder='yourname@email.com') }} <br/>
-    {{ form.password(placeholder="{{_('Password')}}") }} <br/>
-    {{ form.submit_login(type="submit", value="{{_('Login')}}") }}<br/>
+    {{ login_form.email(placeholder='yourname@email.com') }} <br/>
+    {{ login_form.password(placeholder="{{_('Password')}}") }} <br/>
+    {{ login_form.submit_login(type="submit", value="{{_('Login')}}") }}{# <br/> #}
     <!-- <input name="submit" type="submit" /> <br> -->
-    {{ form.csrf_token }}
+    {{ login_form.csrf_token }}
 </form>
 
 <div style="font-size: 14px; text-align: center; padding-top: 25px; line-height: 16px;">
