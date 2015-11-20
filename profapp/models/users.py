@@ -283,7 +283,6 @@ class User(Base, UserMixin, PRBase):
         g.db.commit()
 
     def avatar(self, size=100):
-        print('avatar')
         if 'facebook' in session['logged_via']:
             avatar = json.load(req.urlopen(
                 url='http://graph.facebook.com/{facebook_id}/picture?width='

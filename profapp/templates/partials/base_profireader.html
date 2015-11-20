@@ -47,7 +47,7 @@
                             <li class="dropdown">
                                 <a href="#" data-toggle="dropdown">
                                     {#                        <img src="{{ current_user.profireader_small_avatar_url }}" style="width:18px;border:0">#}
-                                    <img class="person-small-cover" src="{{ current_user.profireader_small_avatar_url }}">
+                                    <img class="person-small-cover" src="{{ current_user.avatar() }}">
                                     {{ '{{' }} user.name {{ '}}' }}
                                     <b class="caret"></b>
                                 </a>

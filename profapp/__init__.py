@@ -388,6 +388,10 @@ class AnonymousUser(AnonymousUserMixin):
     def user_name():
         return 'Guest'
 
+    @staticmethod
+    def avatar(size=0):
+        pass
+
     def __repr__(self):
         return "<User(id = %r)>" % self.id
 

@@ -29,7 +29,9 @@ def create(company_id):
 
     return render_template('portal/portal_create.html',
                            company_id=company_id,
-                           company_logo=company_logo)
+                           company_logo=company_logo,
+                           company_name=company.name,
+                           company=company.get_client_side_dict())
 
 
 # @portal_bp.route('/create/<string:company_id>/', methods=['POST'])
