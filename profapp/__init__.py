@@ -258,6 +258,7 @@ def translates(template):
     ret = {ph.name: ph.uk for ph in phrases}
     return json.dumps(ret)
 
+
 def config_variables():
     variables = g.db.query(Config).filter_by(client_side=1).all()
     ret = {}

@@ -281,12 +281,11 @@ class User(Base, UserMixin, PRBase):
         g.db.commit()
 
     def avatar(self, size=100):
-        print('avatar')
-        if 'facebook' in session['logged_via']:
+        logged_via = REGISTERED_WITH[self.logged_in_via()]
+        if logged_via == 'facebook':
             avatar = json.load(req.urlopen(
-                url='http://graph.facebook.com/{facebook_id}/picture?width='
-                    '{size}&height={size}&redirect=0'.format(
-                facebook_id=g.user.facebook_id, size=size)))
+                url='http://graph.facebook.com/{facebook_id}/picture?width={size}&height={size}&redirect=0'.
+                    format(facebook_id=g.user.facebook_id, size=size)))
             if avatar['data'].get('is_silhouette'):
                 avatar = self.gravatar(size=size)
             else:
@@ -444,6 +443,7 @@ class User(Base, UserMixin, PRBase):
         self.profireader_email = new_email
         return True
 
+    # TODO (AA to ???): file.upload(content=content).url() is wrong and should be corrected
     def avatar_update(self, passed_file):
         content = passed_file.stream.read(-1)
 

@@ -18,7 +18,7 @@ from ..models.tag import TagPortalDivisionArticle
 # from ..models.rights import list_of_RightAtomic_attributes
 from profapp.models.rights import RIGHTS
 from ..models.files import File
-from flask import session
+# from flask import session
 from .pagination import pagination
 from config import Config
 
