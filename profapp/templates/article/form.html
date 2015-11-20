@@ -66,10 +66,10 @@
         $scope.articleAfterLoad = function (resp, deff) {
             deff(resp);
 
-{#            setTimeout(function () {#}
-                $scope.setImageUrl($scope.data);
-                $scope.change_picture_in_croper($scope.data.coordinates);
-{#            }, 0);#}
+            {#            setTimeout(function () {#}
+            $scope.setImageUrl($scope.data);
+            $scope.change_picture_in_croper($scope.data.coordinates);
+            {#            }, 0);#}
             {#                    init_cropper();#}
             return true;
         };
@@ -84,14 +84,27 @@
             return model;
         };
 
-    $scope.init = function () {
-        $ok('?action=load', {}, function (resp) {
-            $scope.data = resp;
+        $scope.init = function () {
+            $ok('?action=load', {}, function (resp) {
+                $scope.data = resp;
 
-            $scope.setImageUrl($scope.data);
-            if (!$scope.default_image){$scope.change_picture_in_croper($scope.data.coordinates);}
-        })
-    };
+                $scope.setImageUrl($scope.data);
+                if (!$scope.default_image) {
+                    $scope.change_picture_in_croper($scope.data.coordinates);
+                }
+            })
+        };
+
+
+
+        {#  $scope.addAlert = function() {#}
+        {#    $scope.alerts.push({msg: 'Another alert!'});#}
+        {#  };#}
+        {##}
+        {#  $scope.closeAlert = function(index) {#}
+        {#    $scope.alerts.splice(index, 1);#}
+        {#  };#}
+        {# }); #}
 
 
         $scope.chooseImage = function () {
@@ -115,6 +128,11 @@
             });
         };
 
+        $scope.alerts = [
+            {type: 'danger', msg: 'Oh snap! Change a few things up and try submitting again.'},
+            {type: 'success', msg: 'Well done! You successfully read this important alert message.'}
+        ];
+
     }]);
 </script>
 
@@ -122,11 +140,21 @@
 
 {% raw %}
 
+<script type="text/ng-template" id="alert.html">
+    <div class="alert" style="background-color:#fa39c3;color:white" role="alert">
+      <div ng-transclude></div>
+    </div>
+  </script>
 
 <div ng-init="init()" ng-controller="article_edit">
 
-    <h1 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company) }}<span></span></h1>
+     <uib-alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}</uib-alert>
+
+    <h1 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company)
+        }}<span></span></h1>
+
     <h1 ng-show="data.id && !company">{{ _('update your version of article') }}<span></span></h1>
+
     <h2 ng-show="!data.id">{{ _('Create new article') }}</h2>
 
     <h2 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company)
