@@ -5,8 +5,9 @@
     {% include 'pager.html' %}
     <script type="text/ng-template" id="typeaheadTemplate.html">
         <a class="typeahead-item" href="#">
-            <span ng-show="match.model.id" bind-html-unsafe="match.label | typeaheadHighlight:query"></span>
-            <em ng-show="!match.model.id" bind-html-unsafe="match.label"></em>
+            <span ng-show="match.model.id" ng-bind-html="match.label | uibTypeaheadHighlight:query"></span>
+            <em ng-show="!match.model.id" ng-bind-html="match.label"></em>
+
         </a>
     </script>
 
