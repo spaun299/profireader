@@ -16,7 +16,8 @@
         $scope.$$translate = {{ translates('article_edit')|safe }};
 
         $scope.afterSave = function (resp) {
-            window.location.href = $scope.details_article({article_id: resp['id']})
+            {#            window.location.href = $scope.details_article({article_id: resp['id']})#}
+            add_message('article was created', 'info', 5000);
         };
 
         $scope.getData = function (model, deff) {
@@ -66,10 +67,10 @@
         $scope.articleAfterLoad = function (resp, deff) {
             deff(resp);
 
-{#            setTimeout(function () {#}
-                $scope.setImageUrl($scope.data);
-                $scope.change_picture_in_croper($scope.data.coordinates);
-{#            }, 0);#}
+            {#            setTimeout(function () {#}
+            $scope.setImageUrl($scope.data);
+            $scope.change_picture_in_croper($scope.data.coordinates);
+            {#            }, 0);#}
             {#                    init_cropper();#}
             return true;
         };
@@ -84,14 +85,26 @@
             return model;
         };
 
-    $scope.init = function () {
-        $ok('?action=load', {}, function (resp) {
-            $scope.data = resp;
+        $scope.init = function () {
+            $ok('?action=load', {}, function (resp) {
+                $scope.data = resp;
 
-            $scope.setImageUrl($scope.data);
-            if (!$scope.default_image){$scope.change_picture_in_croper($scope.data.coordinates);}
-        })
-    };
+                $scope.setImageUrl($scope.data);
+                if (!$scope.default_image) {
+                    $scope.change_picture_in_croper($scope.data.coordinates);
+                }
+            })
+        };
+
+
+        {#  $scope.addAlert = function() {#}
+        {#    $scope.alerts.push({msg: 'Another alert!'});#}
+        {#  };#}
+        {##}
+        {#  $scope.closeAlert = function(index) {#}
+        {#    $scope.alerts.splice(index, 1);#}
+        {#  };#}
+        {# }); #}
 
 
         $scope.chooseImage = function () {
@@ -122,11 +135,13 @@
 
 {% raw %}
 
-
 <div ng-init="init()" ng-controller="article_edit">
 
-    <h1 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company) }}<span></span></h1>
+    <h1 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company)
+        }}<span></span></h1>
+
     <h1 ng-show="data.id && !company">{{ _('update your version of article') }}<span></span></h1>
+
     <h2 ng-show="!data.id">{{ _('Create new article') }}</h2>
 
     <h2 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company)
@@ -135,7 +150,8 @@
 
     <h2 ng-show="data.id && !company">{{ _('update your version of article') }}</h2>
 
-    <table af aaaf-after-load="aaarticleAfterLoad" af-before-save="getData" af-beforeValidate="getData" ng-model="data">
+    <table af aaaf-after-load="aaarticleAfterLoad" af-after-save="afterSave()" af-before-save="getData"
+           af-beforeValidate="getData" ng-model="data">
         <tr>
             <td style="width: 60%">
 

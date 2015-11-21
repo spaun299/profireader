@@ -70,38 +70,37 @@
 
     <div ng-init="loadData()" ng-controller="companies_list">
         <h1 class="nice-title">{{_('Company list')}}<span></span></h1>
-        <a class="h1-btn icon icon-add" href="{{ url_create_own_company }}" title="{{ _('CREATE OWN COMPANY') }}"><img src="../../static/front/img/ico/companies.png" /></a>
-
+        <a class="h1-btn icon icon-add" href="{{ url_create_own_company }}" title="{{ _('CREATE OWN COMPANY') }}"><img
+                src="../../static/front/img/ico/companies.png"/></a>
         <div ng-if="loading">{{ _('Loading...') }}</div>
         <div ng-if="!loading">
             <div class="one-company" ng-repeat="my_employer in data.companies" id="joined_company_{{ my_employer.id }}">
                 <div class="company-item">
-                    <img class="company-logo" src="{{ company_logo }}">
+                    <img pr-image="my_employer.logo_file_id" class="company-logo"/>
                     <a href="{{ url_company_profile({company_id: my_employer.id}) }}">
-
-                        {{
-                        _('Company: `%(name)s`', my_employer ) }}
-                        {{
-                        _((my_employer.author_user_id==data.user_id?' Type: OWN
-                        COMPANY':''), my_employer) }}
+                        {{ _('Company: `%(name)s`', my_employer ) }} {{ _((my_employer.author_user_id==data.user_id?'
+                        Type: OWN COMPANY':''), my_employer) }}
                     </a>
                     <br/>
                     <span ng-if="!my_employer.own_portal.host"><b>{{_('Portals')}}: </b>{{_('No')}}</span>
-                    <div ng-if="my_employer.own_portal.host" >
+
+                    <div ng-if="my_employer.own_portal.host">
                         <a href="http://{{ my_employer.own_portal.host }}">
                             http://{{my_employer.own_portal.host }}
-                        </a>                       
-                        <a href="{{ url_portal_profile({portal_id: my_employer.own_portal.id}) }}">[{{_('edit portal profile')}}]</a>
+                        </a>
+                        <a href="{{ url_portal_profile({portal_id: my_employer.own_portal.id}) }}">[{{_('edit portal
+                            profile')}}]</a>
                     </div>
                     <br/>
                 </div>
 
             </div>
-            <br />
+            <br/>
+
             <div class="one-company" ng-repeat="non_active_employer in data.non_active_user_company_status"
                  id="joined_company_{{ non_active_employer.id }}">
                 <div class="company-item">
-                    <img class="company-logo" src="{{ fileUrl(my_employer.logo_file_id, false, '/static/images/company_no_logo.png') }}">
+                    <img pr-image="non_active_employer.logo_file_id" class="company-logo"/>
                     <a href="{{ url_company_profile({company_id: non_active_employer.id}) }}">{{ _('Company:
                         `%(name)s` - NON ACTIVE',
                         non_active_employer) }}</a>
@@ -111,14 +110,14 @@
 
         <hr/>
         <h1 class="nice-title">{{ _('Join also to company') }}<span></span></h1>
-        <br />
+        <br/>
 
         <input typeahead-on-select="onSelect($item, $model, $label)"
-                                               typeahead-template-url="typeaheadTemplate.html"
-                                               typeahead-loading="loadingCompanies"
-                                               ng-model="selectedCompany_name"
-                                               typeahead="company as company.name for company in searchForCompanyToJoin($viewValue)"
-                                               name="company_id"/>&nbsp;
+               typeahead-template-url="typeaheadTemplate.html"
+               typeahead-loading="loadingCompanies"
+               ng-model="selectedCompany_name"
+               typeahead="company as company.name for company in searchForCompanyToJoin($viewValue)"
+               name="company_id"/>&nbsp;
         <button class="btn" ng-click="joinToCompany()"
                 ng-class="{'disabled': !selectedCompany || selectedCompany_sending}"
                 ng-disabled="!selectedCompany || selectedCompany_sending">{{ _('join to this company') }}
