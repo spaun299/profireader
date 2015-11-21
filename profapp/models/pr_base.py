@@ -95,7 +95,17 @@ class PRBase:
     def get(cls, id):
         return g.db().query(cls).get(id)
 
-# TODO: OZ by OZ:**kwargs should accept lambdafunction for fields formattings
+    def to_dict_object_property(self, object_name):
+        object_property = getattr(self, object_name)
+        if isinstance(object_property, datetime.datetime):
+            return object_property.strftime('%c')
+        elif isinstance(object_property, dict):
+            return object_property
+        else:
+            return object_property
+
+            # TODO: OZ by OZ:**kwargs should accept lambdafunction for fields formattings
+
     def to_dict(self, *args, prefix=''):
         ret = {}
 
@@ -118,11 +128,9 @@ class PRBase:
         columns = class_mapper(self.__class__).columns
         relations = {a: b for (a, b) in class_mapper(self.__class__).relationships.items()}
 
-        get_key_value = lambda o: o.strftime('%c') if isinstance(
-            o, datetime.datetime) else o
         for col in columns:
             if col.key in req_columns or '*' in req_columns:
-                ret[col.key] = get_key_value(getattr(self, col.key))
+                ret[col.key] = self.to_dict_object_property(col.key)
                 if col.key in req_columns:
                     del req_columns[col.key]
         if '*' in req_columns:
@@ -137,9 +145,9 @@ class PRBase:
             else:
                 raise ValueError("you requested for attribute(s) but "
                                  "relationships found `%s%s`" % (
-                    prefix, '`, `'.join(set(relations.keys()).
-                                        intersection(
-                            req_columns.keys())),))
+                                     prefix, '`, `'.join(set(relations.keys()).
+                                         intersection(
+                                         req_columns.keys())),))
 
         for relationname, relation in relations.items():
             if relationname in req_relationships or '*' in \
@@ -150,14 +158,19 @@ class PRBase:
                 else:
                     nextlevelargs = req_relationships['*']
                 related_obj = getattr(self, relationname)
+                require_standard_fields_for_object = '~' in relationname
                 if relation.uselist:
-                    ret[relationname] = [
-                        child.to_dict(*nextlevelargs,
-                                      prefix=prefix + relationname + '.'
-                                      ) for child in
-                                         related_obj]
+                    if require_standard_fields_for_object:
+                        ret[relationname] = [child.get_client_side_dict() for child in related_obj]
+                    else:
+                        ret[relationname] = [child.to_dict(*nextlevelargs, prefix=prefix + relationname + '.') for child
+                                             in related_obj]
                 else:
-                    ret[relationname] = None if related_obj is None else related_obj.to_dict(*nextlevelargs, prefix=prefix + relationname + '.')
+                    if require_standard_fields_for_object:
+                        ret[relationname] = None if related_obj is None else related_obj.get_client_side_dict()
+                    else:
+                        ret[relationname] = None if related_obj is None else related_obj.to_dict(*nextlevelargs,
+                                                                                                 prefix=prefix + relationname + '.')
 
         if '*' in req_relationships:
             del req_relationships['*']
