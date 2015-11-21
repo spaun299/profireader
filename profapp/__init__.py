@@ -209,6 +209,7 @@ def load_user():
     g.user_init = user_init
     g.user = user
     g.user_dict = user_dict
+    g.user_id = user_dict['id']
 
     for variable in g.db.query(Config).filter_by(server_side=1).all():
 

@@ -11,7 +11,6 @@ from utils.validators import validators
 from ..controllers import errors
 from utils.db_utils import db
 
-
 Base = declarative_base()
 
 # this event is called whenever an attribute
@@ -52,11 +51,12 @@ class Search(Base):
         rel = {'keywords': 10, 'title': 9, 'name': 8, 'short': 7, 'long_stripped': 6}
         return rel[field_name]
 
+
 class PRBase:
     def __init__(self):
         self.query = g.db.query_property()
 
-    def validate(self, action):
+    def validate(self, is_new):
         return {'errors': {}, 'warnings': {}, 'notices': {}}
 
     def delfile(self):
@@ -68,6 +68,7 @@ class PRBase:
         g.db.flush()
         return self
 
+# TODO: OZ by OZ: why we need two identical functions??!?!
     def updates(self, dictionary):
         for f in dictionary:
             setattr(self, f, dictionary[f])
@@ -172,20 +173,20 @@ class PRBase:
             else:
                 raise ValueError("you requested for relation(s) but "
                                  "column(s) found `%s%s`" % (
-                    prefix, '`, `'.join(set(columns).intersection(
-                        req_relationships)),))
+                                     prefix, '`, `'.join(set(columns).intersection(
+                                         req_relationships)),))
 
         return ret
 
     @staticmethod
     def validate_before_update(mapper, connection, target):
-        ret = target.validate('update')
+        ret = target.validate(False)
         if len(ret['errors'].keys()):
             raise errors.ValidationException(ret)
 
     @staticmethod
     def validate_before_insert(mapper, connection, target):
-        ret = target.validate('insert')
+        ret = target.validate(True)
         if len(ret['errors'].keys()):
             raise errors.ValidationException(ret)
 

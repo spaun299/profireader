@@ -183,8 +183,8 @@ class Portal(Base, PRBase):
                     article_portal_division_id=None).save().id
         return self
 
-    def validate(self, action):
-        ret = super().validate(action)
+    def validate(self, is_new):
+        ret = super().validate(is_new)
         if db(Portal, company_owner_id=self.own_company.id).filter(Portal.id != self.id).count():
             ret['errors']['form'] = 'portal for company already exists'
         if not re.match('[^\s]{3,}', self.name):

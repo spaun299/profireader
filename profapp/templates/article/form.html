@@ -16,7 +16,7 @@
         $scope.$$translate = {{ translates('article_edit')|safe }};
 
         $scope.afterSave = function (resp) {
-            {#            window.location.href = $scope.details_article({article_id: resp['id']})#}
+            $scope.data = resp;
             add_message('article was created', 'info', 5000);
         };
 

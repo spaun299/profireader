@@ -635,7 +635,7 @@ module.run(function ($rootScope, $ok, $sce) {
             var CtrlName = this.controllerName ? this.controllerName : 'None';
             if (scope.$$translate[phrase] === undefined) {
                 scope.$$translate[phrase] = phrase;
-                $ok('/articles/save_translate/', {
+                $ok('/tools/save_translate/', {
                     template: CtrlName,
                     phrase: phrase,
                     url: window.location.href
@@ -651,7 +651,7 @@ module.run(function ($rootScope, $ok, $sce) {
                 //scope.$$translate[phrase] = phrase;
             } else if (scope.$$translate_accessed[phrase] === undefined) {
                 scope.$$translate_accessed[phrase] = true;
-                $ok('/articles/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
+                $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
 
                 });
             }
