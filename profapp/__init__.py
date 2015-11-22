@@ -86,23 +86,21 @@ def filter_json(json, *args, prefix='', NoneTo='', ExceptionOnNotPresent=False):
                                      req_columns.keys())),))
 
     for relationname, relation in json.items():
-        if relationname in req_relationships or '*' in \
-                req_relationships:
+        if relationname in req_relationships or '*' in req_relationships:
             if relationname in req_relationships:
                 nextlevelargs = req_relationships[relationname]
                 del req_relationships[relationname]
             else:
                 nextlevelargs = req_relationships['*']
-            related_obj = relation
-            if type(json) is dict:
+            if type(relation) is list:
                 ret[relationname] = [
-                    child.filter_json(*nextlevelargs,
-                                      prefix=prefix + relationname + '.'
-                                      ) for child in
-                    related_obj]
+                    filter_json(child, *nextlevelargs,
+                                prefix=prefix + relationname + '.'
+                                ) for child in
+                    relation]
             else:
-                ret[relationname] = None if related_obj is None else related_obj.filter_json(*nextlevelargs,
-                                                                                             prefix=prefix + relationname + '.')
+                ret[relationname] = None if relation is None else filter_json(relation, *nextlevelargs,
+                                                                              prefix=prefix + relationname + '.')
 
     if '*' in req_relationships:
         del req_relationships['*']

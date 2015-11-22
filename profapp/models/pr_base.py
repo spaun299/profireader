@@ -104,17 +104,18 @@ class PRBase:
         req_relationships = {}
 
         for arguments in args:
-            for argument in re.compile('\s*,\s*').split(arguments):
-                columnsdevided = argument.split('.')
-                column_names = columnsdevided.pop(0)
-                for column_name in column_names.split('|'):
-                    if len(columnsdevided) == 0:
-                        req_columns[column_name] = True
-                    else:
-                        if column_name not in req_relationships:
-                            req_relationships[column_name] = []
-                        req_relationships[column_name].append(
-                            '.'.join(columnsdevided))
+            if arguments:
+                for argument in re.compile('\s*,\s*').split(arguments):
+                    columnsdevided = argument.split('.')
+                    column_names = columnsdevided.pop(0)
+                    for column_name in column_names.split('|'):
+                        if len(columnsdevided) == 0:
+                            req_columns[column_name] = True
+                        else:
+                            if column_name not in req_relationships:
+                                req_relationships[column_name] = []
+                            req_relationships[column_name].append(
+                                '.'.join(columnsdevided))
 
         columns = class_mapper(self.__class__).columns
         relations = {a: b for (a, b) in class_mapper(self.__class__).relationships.items()}

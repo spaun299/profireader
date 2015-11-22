@@ -9,6 +9,7 @@ from .views_file import crop_image, update_croped_image
 from ..models.files import ImageCroped
 from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
+import time
 
 
 @article_bp.route('/list/', methods=['GET'])
@@ -58,10 +59,9 @@ def load_mine(json):
             'statuses': statuses}
 
 
-
 @article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
 @article_bp.route('/create/', methods=['GET'])
-def article_show_form(article_company_id = None):
+def article_show_form(article_company_id=None):
     return render_template('article/form.html', article_company_id=article_company_id)
 
 
@@ -81,69 +81,36 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
     if action == 'load':
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None, 'image_file_id': None}
-        article_dict = articleVersion.get_client_side_dict()
+        article_dict = articleVersion.get_client_side_dict(more_fields = 'long')
 
         if article_dict.get('image_file_id'):
             try:
+                # TODO: VK by OZ: pls check image_dict hs proper value
                 image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
                     get_coordinates_and_original_img(article_dict.get('image_file_id'))
+            # TODO: VK by OZ: If you catch exception you must do something
             except Exception:
                 pass
         return {'article': article_dict, 'image': image_dict}
     else:
-        parameters = g.filter_json(json, 'article.title|short|long|keywords')
+        # TODO: VK by OZ: pls filter image part * -> something more specific
+        parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
+        articleVersion.attr(parameters['article'])
         if action == 'validate':
-            return ArticleCompany.attr(parameters).validate()
+            return articleVersion.validate(article_company_id is None)
         else:
-
-            image_id = json.get('image_file_id')
+            image_id = parameters.get('image_file_id')
             if image_id:
-                json['image_file_id'] = crop_image(image_id, json.get('coordinates'))
-            del json['coordinates'], json['ratio']
-            articleVersion = Article.save_new_article(g.user_dict['id'], **json)
-            g.db.add(articleVersion)
-            return articleVersion.get_client_side_dict()
+                # TODO: VK by OZ: pls next line
+                crop_image(image_id, json['image'].get('coordinates'))
+            return {'article': articleVersion.save().get_client_side_dict(more_fields = 'long'), 'image': json['image']}
 
-#
-#
-# @article_bp.route('/update/<string:article_company_id>/', methods=['POST'])
-# @ok
-# def load_form_update(json, article_company_id):
-#     action = g.req('action', allowed=['load', 'save', 'validate'])
-#
-#     if action == 'load':
-#         pass
-#     else:
-#         article.attr({key: val for key, val in json.items() if key in
-#                       ['keywords', 'title', 'short', 'long']})
-#         if action == 'save':
-#             image_id = json.get('image_file_id')
-#             coordinates = json.get('coordinates')
-#             if image_id:
-#                 if db(ImageCroped, original_image_id=image_id).count():
-#                     update_croped_image(image_id, coordinates)
-#                 else:
-#                     article.image_file_id = crop_image(image_id, coordinates)
-#                     article.save()
-#
-#             article = article.get_client_side_dict()
-#             return article
-#         else:
-#             article.detach()
-#             return article.validate('update')
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
 def details(article_id):
     return render_template('article/details.html',
                            article_id=article_id)
-
-
-@article_bp.route('/update_last_accessed/', methods=['POST'])
-@ok
-def details_load_hahah(json, article_id):
-    return {'1111':'222'}
-
 
 @article_bp.route('/details/<string:article_id>/', methods=['POST'])
 @ok
