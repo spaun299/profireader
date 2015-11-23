@@ -307,7 +307,7 @@ def load(json, company_id=None):
         else:
             if company_id is not None:
                 company.detach()
-            return company.validate('insert' if company_id is None else 'update')
+            return company.validate(company_id is None)
 
 
 # @company_bp.route('/confirm_create/', methods=['POST'])
