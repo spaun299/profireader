@@ -44,36 +44,26 @@
         var ret = {};
 
         ret.$storeModelForValidation = function (model, scope) {
-            modelsForValidation.push({model: model, scope: scope});
+            modelsForValidation.push({model: model, scope: scope, http: null});
         };
 
-        ret.$replaceModelForValidation = function (oldval, newval) {
-            var found = false;
-            //$.each(modelsForValidation, function (ind, val) {
-            //    if (val === oldval) {
-            //        modelsForValidation[ind] = newval;
-            //        found = ind;
-            //    }
-            //});
-            //if (found === false) {
-            //    ret.$storeModelForValidation(newval);
-            //}
+        ret.$getValidationDict = function (model) {
+            var found = null;
+            $.each(modelsForValidation, function (ind, val) {
+                if (val && val['model'].$modelValue === model) {
+                    found = modelsForValidation[ind];
+                    return false;
+                }
+            });
+            return found;
         };
 
         ret.$callDirectiveMethod = function (model, method, action) {
-            var found = false;
-            var ret = null;
-            $.each(modelsForValidation, function (ind, val) {
-                if (val && val['model'].$modelValue === model) {
-                    found = true;
-                    ret = (action ? modelsForValidation[ind]['scope'][method](action) : modelsForValidation[ind]['scope'][method]());
-                }
-            });
-            //console.log(found?ret:null);
-            return found?ret:null;
+            var found = ret.$getValidationDict(model);
+            return found ? (action ? found['scope'][method](action) : found['scope'][method]()) : null;
         };
 
-        ret.save = function (model, action) {
+        ret.save = function (model) {
             return ret.$callDirectiveMethod(model, 'save');
         };
         ret.load = function (model) {
@@ -87,45 +77,22 @@
         };
         return ret;
 
-    }]).directive('afValidationAnswer', [function () {
-
-
-        var watch_functions = {};
-        return {
-            restrict: "A",
-            replace: false,
-            //$scope: {
-            //    afValidationAnswer: '&'
-            //},
-            template: function (tElement, tAttrs) {
-                console.log(tAttrs['afValidationAnswer']);
-                var model_fields = tAttrs['afValidationAnswer'].split(':');
-                var model_name = model_fields[0];
-                var field_name = model_fields[1];
-                var erm = '' + model_name + '.errors.' + field_name;
-                var ewm = '' + model_name + '.warnings.' + field_name;
-                var enm = '' + model_name + '.notices.' + field_name;
-                return '<span class="error"   ng-if="' + erm + '"><span class="icon icon-stop"></span> {{ ' + erm + ' }}</span>' +
-                       '<span class="warning" ng-if="!' + erm + ' && ' + ewm + '"><span class="icon icon-warning"></span> {{ ' + ewm + ' }}</span>' +
-                       '<span class="notice"  ng-if="!' + erm + ' && ! ' + ewm + ' && ' + enm + '"><span class="icon icon-check"></span> {{ ' + enm + ' }}</span>';
-            },
-            scope: false,
-            link: function ($scope, iElement, iAttrs, ngModelCtrl) {
-
-            }
-        }
-    }]).directive('af', ['$af', '$ok', function ($af, $ok) {
-
+    }]).directive('af', ['$af', '$ok', '$timeout', function ($af, $ok, $timeout) {
+//TODO: OZ by OZ: interact with model validation features (prestine, dirty, valid)
         return {
             restrict: 'A',
             scope: {
                 'model': '=ngModel',
                 'afBeforeLoad': '&',
+                'afAmidLoad': '&',
                 'afAfterLoad': '&',
                 'afBeforeValidate': '&',
+                'afAmidValidate': '&',
                 'afAfterValidate': '&',
                 'afBeforeSave': '&',
-                'afAfterSave': '&'
+                'afAmidSave': '&',
+                'afAfterSave': '&',
+                'afWatch': '&'
             },
             require: ['ngModel'],
             link: function ($scope, el, attrs, afModelCtrl) {
@@ -136,16 +103,15 @@
 
                 var params = {};
 
-                console.log(attrs, $parent.controllerName);
                 cloneIfExistsAttributes(params, {'af-url': window.location.href}, attrs);
                 var trans = '';
                 if (attrs['afLoadTranslate']) {
                     trans = '&__translate=' + attrs['afLoadTranslate'];
                 }
                 else {
-                    if (attrs['afLoadTranslate']==='') {
-                    trans = '&__translate=' + $parent.controllerName;
-                }
+                    if (attrs['afLoadTranslate'] === '') {
+                        trans = '&__translate=' + $parent.controllerName;
+                    }
                 }
                 cloneIfExistsAttributes(params, {
                     'afUrlLoad': AppendParameter(params['af-url'], 'action=load' + trans),
@@ -153,6 +119,7 @@
                     'afUrlSave': AppendParameter(params['af-url'], 'action=save')
                 }, attrs);
 
+//TODO oz by OZ: allow model name dictionary
 
                 cloneIfExistsAttributes(params, {
                     'afDebounce': '500',
@@ -173,11 +140,13 @@
 
                 var defaultCallbacks = {
                     afBeforeLoad: trivialbefore,
+                    afAmidLoad: trivialbefore,
                     afBeforeValidate: trivialbefore,
+                    afAmidValidate: trivialbefore,
+                    afAmidSave: trivialbefore,
                     afBeforeSave: trivialbefore,
                     afAfterLoad: function () {
                         return function (resp) {
-                            $scope.model = cloneObject(resp);
                             setInParent('afLoadResult', cloneObject(resp));
                             return true;
                         }
@@ -185,13 +154,7 @@
                     afAfterValidate: function () {
                         return function (resp) {
                             setInParent('afValidationResult', cloneObject(resp));
-                            if (resp['errors']) {
-                                setInParent('afState', !resp['errors'] || Object.keys(resp['errors']).length ? 'invalid' : 'valid');
-                                return true;
-                            }
-                            else {
-                                return false;
-                            }
+                            return true;
                         }
                     },
                     afAfterSave: function () {
@@ -221,106 +184,101 @@
                 };
 
 
-                var func1 = function (action, statebefore, ok, notok) {
+                var func1 = function (action, statebefore, stateonok, stateonfail, ok, notok) {
+                    ok = ok ? ok : function () {
+                    };
+                    notok = notok ? notok : function () {
+                    };
                     //debugger;
+                    var validationdict = $af.$getValidationDict($scope['model']);
                     try {
                         var dataToSend = callCallback('afBefore' + action, $scope['model']);
                         var url = params['afUrl' + action];
-
                         setInParent('afState', statebefore);
-                        $ok(url, dataToSend ? dataToSend : {},
+                        var promise = $ok(url, dataToSend ? dataToSend : {},
                             function (resp, errorcode, httpresp) {
                                 try {
-                                    var ret = callCallback('afAfter' + action, resp);
+                                    var ret = callCallback('afAmid' + action, resp);
                                     ok(ret);
+                                    if (stateonok) setInParent('afState', stateonok);
+                                    $timeout(function () {
+                                        callCallback('afAfter' + action, ret)
+                                    }, 0);
                                 }
                                 catch (e) {
-                                    notok(resp, e);
+                                    console.error(e);
+                                    if (stateonfail) setInParent('afState', stateonfail);
+                                    notok(resp);
                                 }
                             },
                             function (resp, errorcode, httpresp) {
+                                if (stateonok) setInParent('afState', stateonfail);
                                 notok(resp, errorcode);
+                            }).finally(function () {
+                                validationdict['http'] = null;
                             });
+                        if (validationdict) {
+                            validationdict['http'] = promise;
+                        }
                         return true;
                     }
                     catch (e) {
-                        notok(undefined, e);
+                        console.error(e);
+                        if (stateonok) setInParent('afState', stateonfail);
+                        notok(undefined);
+                        validationdict['http'] = null;
                     }
-
-
                 };
 
-                setInParent('afState', 'init');
 
                 $scope.load = function () {
                     if ($scope.isActionAllowed('load')) {
-                        func1('Load', 'loading',
+                        func1('Load', 'loading', 'clean', 'loading_failed',
                             function (resp) {
-                                //$parent[attrs.ngModel] =  cloneObject(resp);
-                                //$parent.$watch(attrs.ngModel, watchfunc, true);
-                                //ctrl.$setViewValue(cloneObject(resp));
-                                //ctrl.$render();
-                                $af.$storeModelForValidation(ctrl, $scope);
-                                setInParent('afState', 'clean');
-                                //!!!$scope.$watch('model', watchfunc, true);
-                            },
-                            function (resp) {
-                                setInParent('afState', 'loading_failed');
+                                $scope.model = cloneObject(resp);
                             });
-                    }
-                    else {
-                        console.error('called method `load` is forbidden for model because current model is in state: `' + $parent[params['afState']] + '`');
                     }
                 };
 
                 $scope.validate = function () {
                     if ($scope.isActionAllowed('validate')) {
-                        func1('Validate', 'validating',
+                        func1('Validate', 'validating', false, 'validating_failed',
                             function (resp) {
                                 if ($parent[params['afState']] === 'validating') {
-                                    setInParent('afState', 'valid');
+                                    setInParent('afState', !resp['errors'] || Object.keys(resp['errors']).length ? 'invalid' : 'valid');
                                 }
-                            },
-                            function (resp) {
-                                setInParent('afState', 'validating_failed');
                             });
                     }
                     else {
-                        console.error('called method `validate` is forbidden for model because current model is in state: `' + $parent[params['afState']] + '`. debouncing validation');
                         debouncedvalidate();
                     }
                 };
 
                 $scope.save = function () {
                     if ($scope.isActionAllowed('save')) {
-                        func1('Save', 'saving',
-                            function (resp) {
-                                setInParent('afState', 'clean');
-                            },
-                            function (resp) {
-                                setInParent('afState', 'saving_failed');
-                            })
-                    }
-                    else {
-                        console.error('called method `save` is forbidden for model because current model is in state: `' + $parent[params['afState']] + '`');
+                        func1('Save', 'saving', 'clean', 'saving_failed')
                     }
                 };
 
-                var save_states = ['init', 'clean', 'saving_failed', 'valid', 'loading_failed'];
-                var validate_or_load_states = save_states.slice(0);
-                validate_or_load_states.push('dirty', 'validating_failed', 'invalid');
                 $scope.isActionAllowed = function (action) {
-                    if (action === 'load') {
-                        return validate_or_load_states.indexOf($parent[params['afState']]) !== -1
+                    var http = $af.$getValidationDict($scope['model']);
+                    if (http && http['http']) {
+                        //console.error('called method `' + action + '` is forbidden for model because http sent');
+                        return false;
                     }
-                    if (action === 'validate') {
-                        return validate_or_load_states.indexOf($parent[params['afState']]) !== -1
+                    var allowed_states = {'save': ['init', 'clean', 'saving_failed', 'valid', 'loading_failed']};
+                    allowed_states['load'] = allowed_states['save'] + ['dirty', 'validating_failed', 'invalid'];
+                    allowed_states['validate'] = allowed_states['load'];
+
+                    if (allowed_states[action].indexOf($parent[params['afState']]) === -1) {
+                        //console.error('called method `'+action+'` is forbidden for model because current model is in state: `' + $parent[params['afState']] + '`');
+                        return false;
                     }
-                    if (action === 'save') {
-                        //console.log(action, $parent[params['afState']], save_states, save_states.indexOf($parent[params['afState']])!==-1);
-                        return save_states.indexOf($parent[params['afState']]) !== -1
-                    }
+                    return true;
                 };
+
+                $af.$storeModelForValidation(ctrl, $scope);
+                setInParent('afState', 'init');
 
                 $scope.load();
 
@@ -329,19 +287,42 @@
                 }, params['afDebounce']);
 
                 var watchfunc = function (oldval, newval) {
-                    //if (-1 !== ['clean', 'saving_failed', 'valid', 'loading_failed', 'dirty', 'validating_failed', 'invalid', 'saving', 'validating'].indexOf($parent[params['afState']])) {
                     setInParent('afState', 'dirty');
                     debouncedvalidate();
-                    //}
                 };
 
-                $scope.$watch('model', watchfunc, true);
-
-
+                $timeout(function () {
+                    $parent.$watch(attrs['afWatch'] ? attrs['afWatch'] : attrs['ngModel'], watchfunc, true)
+                }, 0, false);
             }
         };
 
 
+    }]).directive('afValidationAnswer', [function () {
+
+        var watch_functions = {};
+        return {
+            restrict: "A",
+            replace: false,
+            //$scope: {
+            //    afValidationAnswer: '&'
+            //},
+            template: function (tElement, tAttrs) {
+                var model_fields = tAttrs['afValidationAnswer'].split(':');
+                var model_name = model_fields[0];
+                var field_name = model_fields[1];
+                var erm = '' + model_name + '.errors.' + field_name;
+                var ewm = '' + model_name + '.warnings.' + field_name;
+                var enm = '' + model_name + '.notices.' + field_name;
+                return '<span class="error"   ng-if="' + erm + '"><span class="icon icon-stop"></span> {{ ' + erm + ' }}</span>' +
+                    '<span class="warning" ng-if="!' + erm + ' && ' + ewm + '"><span class="icon icon-warning"></span> {{ ' + ewm + ' }}</span>' +
+                    '<span class="notice"  ng-if="!' + erm + ' && ! ' + ewm + ' && ' + enm + '"><span class="icon icon-check"></span> {{ ' + enm + ' }}</span>';
+            },
+            scope: false,
+            link: function ($scope, iElement, iAttrs, ngModelCtrl) {
+
+            }
+        }
     }]);
 
 
