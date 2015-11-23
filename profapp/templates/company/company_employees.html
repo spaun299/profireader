@@ -35,14 +35,14 @@
                 <input type="hidden" name="company_id" id="company_id" value="{{ company.id }}">
                 <dt>
                     <img src="{{ company_user_rights[user_id]['user'].profireader_small_avatar_url }}" style="width:100px;height:100px;border:0">
-                    {{ company_user_rights[user_id]['name'] }} {% if g.user_dict['id']==user_id %} {{ '{{' }}_('you'){{ '}}' }} {% endif %}{% if company_user_rights[user_id]['status']=='suspended' %} {{ '{{' }}_('- Suspended'){{ '}}' }}<br>{% for c_user in curr_user %}{% if curr_user[c_user]['rights'][Right['suspend_employee']] %}<a href="{{ url_for('company.unsuspend', user_id=user_id, company_id=company_id) }}">{{ '{{' }}_('Unsuspend'){{ '}}' }}</a>{% endif %}{% endfor %}{% endif %}<br>
-                    {{ '{{' }}_('Phone number'){{ '}}' }} {{ company_user_rights[user_id]['user'].phone_number }}<br/>
-                    {{ '{{' }}_('Email'){{ '}}' }} {{ company_user_rights[user_id]['user'].show_email }}<br/>
-                    {{ '{{' }}_('Subscribed'){{ '}}' }} {{ company_user_rights[user_id]['date'] }}<br/>
-                    {{ '{{' }}_('Position'){{ '}}' }} <input type="text" name="position" value={{ company_user_rights[user_id]['position'] }}><br/>
+                    {{ company_user_rights[user_id]['name'] }} {% if g.user_dict['id']==user_id %} - {{ '{{' }}_('you'){{ '}}' }} {% endif %}{% if company_user_rights[user_id]['status']=='suspended' %} {{ '{{' }}_('- Suspended'){{ '}}' }}<br>{% for c_user in curr_user %}{% if curr_user[c_user]['rights'][Right['suspend_employee']] %}<a href="{{ url_for('company.unsuspend', user_id=user_id, company_id=company_id) }}">{{ '{{' }}_('Unsuspend'){{ '}}' }}</a>{% endif %}{% endfor %}{% endif %}<br>
+                    {{ '{{' }}_('Phone number'){{ '}}' }} : {{ company_user_rights[user_id]['user'].phone_number }}<br/>
+                    {{ '{{' }}_('Email'){{ '}}' }} : {{ company_user_rights[user_id]['user'].show_email }}<br/>
+                    {{ '{{' }}_('Subscribed'){{ '}}' }} : {{ company_user_rights[user_id]['date'] }}<br/>
+                    {{ '{{' }}_('Position'){{ '}}' }} : <input type="text" name="position" value={{ company_user_rights[user_id]['position'] }}><br/>
                 </dt>
                 {% for company in company_user_rights[user_id]['companies'] %}
-                    <dt> {{ '{{' }}_('ALL COMPANIES'){{ '}}' }}
+                    <dt> {{ '{{' }}_('ALL COMPANIES'){{ '}}' }} :
                         {% for c in company %}
                             <a href="{{ url_for('company.profile', company_id=c.id)}}">{{ c.name }}</a>
                         {% endfor %}
@@ -117,7 +117,8 @@
         {% for c_user in curr_user %}
             {% if curr_user[c_user]['rights'][Right['manage_rights_company']]==true or company.author_user_id==g.user_dict['id'] %}
                 {% if company_user_rights[user_id]['status'] == 'nonactive' %}
-                    {{ '{{' }}_('User'){{ '}}' }} {{ company_user_rights[user_id]['name'] }} {{ '{{' }}_('send query to your company'){{ '}}' }}<br>
+                    {{ '{{' }}_('User %(name)s send query to your company', {'name': '{{company_user_rights[user_id]['name'] }}'}){{ '}}' }}<br>
+                    <!--{{ '{{' }}_('User'){{ '}}' }} {{ company_user_rights[user_id]['name'] }} {{ '{{' }}_('send query to your company'){{ '}}' }}<br>-->
                     <form class="add_subscriber" action="{{ url_for('company.confirm_subscriber') }}" onsubmit="return AjaxPost2()" id="subscribe" method="post">
                         <input type="hidden" id="company_id" name="company_id" value="{{ company.id }}">
                         <input type="hidden" id="user_id" name="user_id" value="{{ user_id }}">

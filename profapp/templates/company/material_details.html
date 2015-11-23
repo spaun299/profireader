@@ -333,7 +333,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
 
             <div ng-if="myRights('publish', 'unpublish', 'edit')">
                 <hr/>
-                {{ _('Current article status:') }} `<span class="..." ng-if="!data_resp.article.status">{{ data.article.status }}</span>`<br/>
+                {{ _('Current article status') }}: `<span class="..." ng-if="!data_resp.article.status">{{ data.article.status }}</span>`<br/>
                 {{ _('Change material status to') }}
                 <select ng-model="change_status_to">
                     <option value="{{ changeto }}" ng-repeat="changeto in data.allowed_statuses">{{ changeto }}</option>
@@ -358,7 +358,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
         </button>
         <i ng-show="loadingUsers" class="glyphicon glyphicon-refresh"></i>
                 <div ng-if="data_resp_user_search.user">
-                    {{_('Article')}} {{data.article.title}} {{_('was successfully sent to user')}} {{
+                    {{_('Article %(title)s was successfully sent to user', {'title': data.article.title})}} {{
                     data_resp_user_search.user.profireader_name }}
                 </div>
                 <div ng-if="!data_resp_user.user">
@@ -374,16 +374,16 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                         <input disabled type="submit" value="{{_('Send article')}}">
                     </div>
                     <hr/>
-                    This material was published to following portals:
+                    {{_('This material was published to following portals')}}:
                     <div ng-repeat="portal in data.article.portal_article" style="width: 1000px">
                         {{ portal.division.portal.name }}    -    {{ portal.division.name }}<br>
-                        <button ng-click="delete_atricle_from_portal(portal.id, portal.division.portal.name)">Delete this material from this portal</button><hr/>
+                        <button ng-click="delete_atricle_from_portal(portal.id, portal.division.portal.name)">{{_('Delete this material from this portal')}}</button><hr/>
                     </div>
                     </br>
                     {{ article_message }}
                 </div>
                 <div ng-if="data_resp_user.user">
-                    {{_('Article')}} {{data.article.title}} {{_('was successfully sent to user')}}
+                    {{_('Article %(title)s was successfully sent to user', {'title': data.article.title})}}
                     {{ data_resp_user.user.profireader_name }}
                 </div>
 
@@ -410,7 +410,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                     </select>
                     <br/>
                     <div ng-controller="SelectTagsCtrl">
-                        <h3>Add tags:</h3>
+                        <h3>{{_('Add tags:')}}</h3>
                         <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;">
                             <ui-select-match placeholder="Select tags...">{{$item}}</ui-select-match>
                             <ui-select-choices repeat="tag in availableTags | filter:$select.search">
@@ -432,7 +432,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                     </form>
                 </div>
                 <span ng-if="data_resp_portal">
-                    Article "{{ data.article.title }}" successfully was published at portal "{{ data.portal }}"
+                    {{_('Article %(title)s successfully was published at portal', {'title': data.article.title})}} "{{ data.portal }}"
                 </span>
             </div>
         </div>

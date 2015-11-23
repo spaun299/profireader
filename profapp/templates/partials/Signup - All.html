@@ -1,7 +1,7 @@
 <div class="auth-form" ng-controller="UserLoginController">
     <div class="tabs">
-        <a class="tab" href="{{ url_for('auth.login') }}" title="Log in to Profireader">{{ '{{' }}_('Log in'){{ '}}' }}</a>
-        <a class="tab actual" href="{{ url_for('auth.signup') }}" title="Sign up to Profireader">{{ '{{' }}_('Sign up'){{ '}}' }}</a>
+        <a class="tab" href="{{ url_for('auth.login') }}" title="{{_('Log in to Profireader')}}">{{ '{{' }}_('Log in'){{ '}}' }}</a>
+        <a class="tab actual" href="{{ url_for('auth.signup') }}" title="{{_('Sign up to Profireader')}}">{{ '{{' }}_('Sign up'){{ '}}' }}</a>
     </div>
     <div class="content-block">
         {% include 'partials/Signup - Soc Networks.html' %}
@@ -10,7 +10,7 @@
 </div>
 {#
 <div>
-<div class="by-socials-block"><h2>Sign up using any of the following
-    services:</h2>{% include 'partials/Signup - Soc Networks.html' %}</div>
-<div class="by-profireader-block"><h2>Simple registration</h2>{% include 'partials/Signup - Profireader.html' %}</div>
+<div class="by-socials-block"><h2>{{ '{{' }}_('Sign up using any of the following
+    services'){{ '}}' }}:</h2>{% include 'partials/Signup - Soc Networks.html' %}</div>
+<div class="by-profireader-block"><h2>{{ '{{' }}_('Simple registration'){{ '}}' }}</h2>{% include 'partials/Signup - Profireader.html' %}</div>
 #}
