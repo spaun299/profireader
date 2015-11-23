@@ -5,6 +5,8 @@ from ..models.portal import MemberCompanyPortal, PortalDivision, Portal, Company
     PortalDivisionSettings_company_subportal
 from utils.db_utils import db
 from ..models.users import User
+from ..models.company import UserCompany
+
 from config import Config
 # from profapp import
 from .pagination import pagination
@@ -64,8 +66,7 @@ def favicon():
 @front_bp.route('<int:page>/', methods=['GET'])
 def index(page=1):
     search_text, portal, sub_query = get_params()
-    division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
-                                                      portal_division_type_id='index').one()
+    division = g.db().query(PortalDivision).filter_by(portal_id=portal.id, portal_division_type_id='index').one()
     articles, pages, page = pagination(query=sub_query, page=page)
 
     ordered_articles = collections.OrderedDict()
@@ -251,9 +252,17 @@ def subportal_contacts(member_company_id, member_company_name):
 
     company_users = member_company.employees
 
+    # TODO: AA by OZ: remove this. llok also for ERROR employees.position.2
+    # ERROR employees.position.2#
+    def getposition(u_id, c_id):
+        r = db(UserCompany, user_id=u_id, company_id=c_id).first()
+        return r.position if r else ''
+
     return render_template('front/bird/subportal_contacts.html',
                            subportal=True,
-                           company_users={u.id: u.get_client_side_dict() for u in company_users},
+                           company_users={
+                           u.id: dict(u.get_client_side_dict(), position=getposition(u.id, member_company_id)) for u in
+                           company_users},
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
                            current_subportal_division=False,

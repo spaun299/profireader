@@ -60,6 +60,8 @@ class Company(Base, PRBase):
 
     user_owner = relationship('User', back_populates='companies')
 
+# TODO: AA by OZ: we need employees.position (from user_company table) (also search and fix #ERROR employees.position.2#)
+#ERROR employees.position.1#
     employees = relationship('User',
                              secondary='user_company',
                              back_populates='employers',
@@ -202,7 +204,7 @@ class UserCompany(Base, PRBase):
                                 get_my_attributes(STATUS_NAME))),
                          name='status_name_type'), nullable=False)
 
-    position = Column(TABLE_TYPES['short_name'])
+    position = Column(TABLE_TYPES['short_name'], default='')
 
     md_tm = Column(TABLE_TYPES['timestamp'])
 
@@ -304,11 +306,13 @@ class UserCompany(Base, PRBase):
     @staticmethod
     # @check_rights(simple_permissions([Right['manage_rights_company']]))
     @check_rights(forbidden_for_current_user)
-    def update_rights(user_id, company_id, new_rights):
+    def update_rights(user_id, company_id, new_rights, position = None):
         """This method defines for update user-rights in company. Apply list of rights"""
         new_rights_binary = Right.transform_rights_into_integer(new_rights)
         user_company = db(UserCompany, user_id=user_id, company_id=company_id)
         rights_dict = {'_rights': new_rights_binary}
+        if position is not None:
+            rights_dict['position'] = position
         # rights_dict = {'rights_int': new_rights_binary}  # TODO (AA to AA): does it work?
         user_company.update(rights_dict)
 

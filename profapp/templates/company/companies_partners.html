@@ -15,39 +15,41 @@
 
     <script>
         module.controller('portal_list', ['$scope', '$ok', function ($scope, $ok) {
+
+            $scope.url_company_profile = {{ raw_url_for('company.profile')|safe }};
+
             $scope.url_join = {{ raw_url_for('portal.apply_company')|safe }};
-            $scope.myRights = function(){
+            $scope.myRights = function () {
                 if (!$scope.data || !$scope.data.user_rights) return false;
                 for (var i = 0; i < arguments.length; i++) {
-                     if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {
-                         return false;
-                     }
+                    if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {
+                        return false;
+                    }
                 }
                 return true;
             };
             $scope.$$translate = {{ translates('portal_list')|safe }};
             $scope.afterSave = function (resp) {
-            window.location.href = $scope.partners({company_id: resp['company_id']})
+                window.location.href = $scope.partners({company_id: resp['company_id']})
             };
         }]);
     </script>
+
     {% raw %}
     <div ng-init="loadData()" ng-controller="portal_list">
-    <div ng-if="data.portal==''">
-        <h3>{{_('This company does not have portal')}}</h3>
-    </div>
-    <div ng-if="data.portal!=''">
-        <span>
-            <h3>{{_('Companies partners :')}}
+        <div ng-if="data.portal==''">
+            <h3>{{_('This company does not have portal')}}</h3>
+        </div>
+
+        <div ng-if=" data.portal != '' ">
+
                 <span ng-repeat="company in data.companies_partners">
-                    <span ng-if="company.id!=data.company_id">
-                    <a href="{{ url_company_profile({company_id: company.id}) }}"> "{{ company.name }}"</a>
+                    <span ang-if="company.company.id != data.company_id">
+                        <a href="{{ url_company_profile({company_id: company.company.id}) }}">{{ company.company.name }}</a>
                     </span>
                </span>
-            </h3>
-        </span>
-    </div>
+        </div>
 
     </div>
-{% endraw %}
+    {% endraw %}
 {% endblock portal_content %}

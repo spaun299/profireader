@@ -10,7 +10,8 @@
 
             $scope.url_search_translations = {{ raw_url_for('admin.translations_load')|safe }};
             $scope.url_save_translations = {{ raw_url_for('admin.translations_save')|safe }};
-
+            $scope.url_delete_translations = {{ raw_url_for('admin.delete')|safe }}
+            $scope.error = '';
             $scope.page_changed = function () {
                 $scope.sendData(false);
             };
@@ -33,8 +34,23 @@
                 });
             };
 
+            $scope.delete = function(id, model){
+                $ok($scope.url_delete_translations(), {id: id}, function (resp) {
+                    if(resp == 'True'){
+                        $scope.sendData('');
+                    }else{
+                        $scope.error = 'error delete'
+                    }
+                    model.del = true;
+                }, function () {
+                }).finally(function () {
+                    model.del = false;
+                })
+            };
+
             $scope.sendData = function (new_search_text) {
-                var data = {}
+                $scope.error = '';
+                var data = {};
                 data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 data.template = $scope.template ? $scope.template : null;
                 data.url = $scope.url ? $scope.url : null;
@@ -69,19 +85,20 @@
 
         <table style="width:100%">
             <tr>
-                <th width="150px">Creation time</th>
-                <th width="150px">Last accessed</th>
-                <th width="150px">Template</th>
-                <th width="150px">First url used</th>
-                <th width="250px">Phrase</th>
-                <th ng-repeat="lang in languages" width="250px">{{ lang }}</th>
+                <th width="8em">Creation time</th>
+                <th width="8em">Last accessed</th>
+                <th width="8em">Template</th>
+                <th width="15em">First url used</th>
+                <th width="50%">Phrase</th>
+                <th ng-repeat="lang in languages" width="50%">{{ lang }}</th>
+                <th></th>
             </tr>
             <tr valign="top">
                 <td></td>
                 <td></td>
-                <td><select ng-disabled="loading" style="width: 100%; padding: 5px;" ng-model="template"
+                <td><select ng-disabled="loading" style="width: 8em; padding: 5px;" ng-model="template"
                             ng-options="template.value as template.label for template in templates"></select></td>
-                <td><select ng-disabled="loading" style="width: 100%; padding: 5px;" ng-model="url"
+                <td><select ng-disabled="loading" style="width: 15em; padding: 5px;" ng-model="url"
                             ng-options="url.value as url.label for url in urls"></select></td>
                 <td colspan="{{ languages.length + 1 }}"><input ng-disabled="loading" style="width: 98%" type="text"
                                                                 placeholder="Search"
@@ -92,16 +109,17 @@
                            style="width: 50px"></td>
             </tr>
             <tr ng-repeat="translation in translations" valign="top">
-                <td>{{ translation.cr_tm }}</td>
-                <td>{{ translation.ac_tm }}</td>
-                <td>{{ translation.template }}</td>
-                <td>{{ translation.url }}</td>
+                <td><div style="width: 8em; overflow: hidden">{{ translation.cr_tm }}</div></td>
+                <td><div style="width: 8em; overflow: hidden">{{ translation.ac_tm }}</div></td>
+                <td><div style="width: 8em; overflow: hidden">{{ translation.template }}</div></td>
+                <td><div style="width: 15em; overflow: hidden">{{ translation.url }}</div></td>
                 <td>{{ translation.name }}</td>
                 <td ng-repeat="lang in languages">
                      <span style="margin: 3px;"
                            onbeforesave="saveTranslation(translation['id'], lang, $data, translation)"
                            editable-text="translation[lang]">{{ translation[lang] }}</span>
                 </td>
+                <td><button class="btn btn-danger" ng-click="delete(translation.id, translation)">Delete</button><span ng-show="error" style="color: red">{{error}}</span></td>
             </tr>
             <tr ng-show="!loading && !areAllEmpty(translations)">
                 <td colspan="5">

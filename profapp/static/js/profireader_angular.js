@@ -63,7 +63,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 }
             }
 
-            return $http.post(url, $.extend({},data, translate?{__translate:translate}:{})).then(
+            return $http.post(url, $.extend({}, data, translate ? {__translate: translate} : {})).then(
                 function (resp) {
                     if (!resp || !resp['data'] || typeof resp['data'] !== 'object' || resp === null) {
                         return error('wrong response', -1);
@@ -115,6 +115,36 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     if (nv !== ov) {
                         highlight($(element));
                     }
+                });
+            }
+        };
+    }])
+    .directive('prImage', ['$timeout', function ($timeout) {
+        return {
+            restrict: 'A',
+            scope: {
+                prImage: '&',
+                prNoImage: '@'
+            },
+            link: function (scope, element, attrs) {
+
+                var image_reference = attrs['prImage'].split('.').pop();
+                var no_image = attrs['prNoImage'] ? attrs['prNoImage'] : false;
+
+                if (!no_image) {
+                    if (image_reference === 'logo_file_id')
+                        no_image = '/static/images/company_no_logo.png';
+                    else {
+                        no_image = '/static/images/no_image.png';
+                    }
+                }
+
+                element.attr('src', '/static/images/0.gif');
+                element.css({
+                    backgroundPosition: 'center',
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundImage: "url('" + fileUrl(scope['prImage'](), false, no_image) + "')"
                 });
             }
         };
@@ -350,157 +380,158 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             }
         }
     }])
-    .directive('ngAjaxFormOld', ['$http', '$compile', '$ok', function ($http, $compile, $ok) {
-        return {
-            restrict: 'A',
-            scope: {
-                ngAfter: '&',
-                ngBefore: '&',
-                ngData: '@',
-                ngState: '@'
-            },
-            link: function (scope, iElement, iAttrs, ngModelCtrl) {
-
-                var parentscope = scope.$parent.$parent;
-
-                var defaultparameters = {
-
-                    ngData: 'data',
-
-                    ngState: 'state',
-
-
-                    ngBefore: function (data, validation, httpconfig, defaultfunc) {
-                        //httpconfig['url'] = http://someurl
-                        if (data) {
-                            if (typeof parentscope[parameters['ngState']] === 'string') {
-                                return false;
-                            }
-                            parentscope[parameters['ngState']] = validation ? 'validating' : 'sending';
-                        }
-                        else {
-                            return false;
-                        }
-                    },
-
-                    ngAfter: function (response, validation, httpresp, defaultfunc) {
-                        if (!response) {
-                            return false;
-                        }
-                        if (!validation && response && httpresp && httpresp['headers']('Location')) {
-                            window.location.href = httpresp['headers']('Location');
-                        }
-                        return response;
-                    }
-
-                };
-
-
-                var enableSubmit = function (enablesubmit, enableinput) {
-                    if (enablesubmit) {
-                        $('*[ng-model]', $(iElement)).prop('disabled', false);
-                    }
-                    else {
-                        $('*[ng-model]', $(iElement)).prop('disabled', true);
-                    }
-                }
-
-                scope.$parent.$parent.__validation = false;
-                scope.$parent.$parent.__validated = false;
-
-                var sendValidation = _.debounce(function () {
-                    if (scope.$parent.$parent.__validation) {
-                        return false;
-                    }
-                    var dataToSend = scope['ngOnsubmit']()();
-                    if (dataToSend) {
-                        scope.$parent.$parent.__validation = dataToSend;
-                        $ok(scope['ngAction'], $.extend({__validation: true}, dataToSend), function (resp) {
-                            scope.$parent.$parent.__validated = resp;
-                        }, function (resp) {
-                            scope.$parent.$parent.__validated = false;
-                        }).finally(function () {
-                            scope.$parent.$parent.__validation = false;
-                        });
-                    }
-                }, 500);
-
-                if (scope['ngWatch']) {
-                    scope, scope.$parent.$parent.$watch(scope['ngWatch'], sendValidation, true);
-                }
-
-
-                var parameters = $.extend(defaultparameters, {
-                    ngData: scope['ngData'],
-                    ngBefore: scope['ngBefore'],
-                    ngAfter: scope['ngAfter'],
-                    ngState: scope['ngState']
-                });
-
-                var sendfunction = function (validate) {
-                    var old_state = parentscope[parameters['ngState']];
-                    var default_data = parentscope[parameters['ngData']];
-                    var default_config = {url: iAttrs['action'] ? iAttrs['action'] : window.location.href};
-                    if (validate) {
-                        default_config['headers'] = {validation: 'true'};
-                    }
-                    var dataToSend = parameters['ngBefore'](default_data, validate, default_config, defaultparameters['ngBefore']);
-                    console.log(dataToSend);
-
-                    if (!dataToSend) {
-                        return false;
-                    }
-                    var url = default_config['url'](dataToSend, true, defaultparameters['ngUrl']);
-                    $ok(url, dataToSend,
-                        function (resp, errorcode, httpresp) {
-                            var ret = parameters['ngAfter']()(resp, true, defaultparameters['ngAfter'], errorcode, httpresp);
-                            parentscope[parameters['ngState']] = ret ? ret : old_state;
-                        },
-                        function (resp, errorcode, httpresp) {
-                            var ret = parameters['ngAfter']()(null, true, defaultparameters['ngAfter'], errorcode, httpresp);
-                            parentscope[parameters['ngState']] = ret ? ret : old_state;
-                        });
-                }
-
-
-                if (parameters['ngData']) {
-                    parentscope.$watch(parameters['ngData'], _.debounce(function () {
-                        sendfunction(true);
-                    }, 500), true);
-                }
-
-                if (scope['ngOnsubmit']) {
-                    $(iElement).on('submit',
-                        function () {
-                            if (scope.$parent.$parent.__validation) {
-                                return false;
-                            }
-                            enableSubmit(false);
-                            scope.$apply(function () {
-                                var dataToSend = scope['ngOnsubmit']()();
-                                console.log(dataToSend);
-                                if (dataToSend) {
-                                    $ok(scope['ngAction'], dataToSend, function (resp) {
-                                        if (scope.ngOnsuccess) {
-                                            scope.ngOnsuccess()(resp)
-                                        }
-                                    }).finally(function () {
-                                        enableSubmit(true);
-                                    });
-                                }
-                            });
-                            return false;
-                        });
-                }
-
-                $(iElement).on('submit',
-                    function () {
-                        sendfunction(false);
-                        return false;
-                    });
-            }
-        }
-    }]);
+//.directive('ngAjaxFormOld', ['$http', '$compile', '$ok', function ($http, $compile, $ok) {
+//    return {
+//        restrict: 'A',
+//        scope: {
+//            ngAfter: '&',
+//            ngBefore: '&',
+//            ngData: '@',
+//            ngState: '@'
+//        },
+//        link: function (scope, iElement, iAttrs, ngModelCtrl) {
+//
+//            var parentscope = scope.$parent.$parent;
+//
+//            var defaultparameters = {
+//
+//                ngData: 'data',
+//
+//                ngState: 'state',
+//
+//
+//                ngBefore: function (data, validation, httpconfig, defaultfunc) {
+//                    //httpconfig['url'] = http://someurl
+//                    if (data) {
+//                        if (typeof parentscope[parameters['ngState']] === 'string') {
+//                            return false;
+//                        }
+//                        parentscope[parameters['ngState']] = validation ? 'validating' : 'sending';
+//                    }
+//                    else {
+//                        return false;
+//                    }
+//                },
+//
+//                ngAfter: function (response, validation, httpresp, defaultfunc) {
+//                    if (!response) {
+//                        return false;
+//                    }
+//                    if (!validation && response && httpresp && httpresp['headers']('Location')) {
+//                        window.location.href = httpresp['headers']('Location');
+//                    }
+//                    return response;
+//                }
+//
+//            };
+//
+//
+//            var enableSubmit = function (enablesubmit, enableinput) {
+//                if (enablesubmit) {
+//                    $('*[ng-model]', $(iElement)).prop('disabled', false);
+//                }
+//                else {
+//                    $('*[ng-model]', $(iElement)).prop('disabled', true);
+//                }
+//            }
+//
+//            scope.$parent.$parent.__validation = false;
+//            scope.$parent.$parent.__validated = false;
+//
+//            var sendValidation = _.debounce(function () {
+//                if (scope.$parent.$parent.__validation) {
+//                    return false;
+//                }
+//                var dataToSend = scope['ngOnsubmit']()();
+//                if (dataToSend) {
+//                    scope.$parent.$parent.__validation = dataToSend;
+//                    $ok(scope['ngAction'], $.extend({__validation: true}, dataToSend), function (resp) {
+//                        scope.$parent.$parent.__validated = resp;
+//                    }, function (resp) {
+//                        scope.$parent.$parent.__validated = false;
+//                    }).finally(function () {
+//                        scope.$parent.$parent.__validation = false;
+//                    });
+//                }
+//            }, 500);
+//
+//            if (scope['ngWatch']) {
+//                scope, scope.$parent.$parent.$watch(scope['ngWatch'], sendValidation, true);
+//            }
+//
+//
+//            var parameters = $.extend(defaultparameters, {
+//                ngData: scope['ngData'],
+//                ngBefore: scope['ngBefore'],
+//                ngAfter: scope['ngAfter'],
+//                ngState: scope['ngState']
+//            });
+//
+//            var sendfunction = function (validate) {
+//                var old_state = parentscope[parameters['ngState']];
+//                var default_data = parentscope[parameters['ngData']];
+//                var default_config = {url: iAttrs['action'] ? iAttrs['action'] : window.location.href};
+//                if (validate) {
+//                    default_config['headers'] = {validation: 'true'};
+//                }
+//                var dataToSend = parameters['ngBefore'](default_data, validate, default_config, defaultparameters['ngBefore']);
+//                console.log(dataToSend);
+//
+//                if (!dataToSend) {
+//                    return false;
+//                }
+//                var url = default_config['url'](dataToSend, true, defaultparameters['ngUrl']);
+//                $ok(url, dataToSend,
+//                    function (resp, errorcode, httpresp) {
+//                        var ret = parameters['ngAfter']()(resp, true, defaultparameters['ngAfter'], errorcode, httpresp);
+//                        parentscope[parameters['ngState']] = ret ? ret : old_state;
+//                    },
+//                    function (resp, errorcode, httpresp) {
+//                        var ret = parameters['ngAfter']()(null, true, defaultparameters['ngAfter'], errorcode, httpresp);
+//                        parentscope[parameters['ngState']] = ret ? ret : old_state;
+//                    });
+//            }
+//
+//
+//            if (parameters['ngData']) {
+//                parentscope.$watch(parameters['ngData'], _.debounce(function () {
+//                    sendfunction(true);
+//                }, 500), true);
+//            }
+//
+//            if (scope['ngOnsubmit']) {
+//                $(iElement).on('submit',
+//                    function () {
+//                        if (scope.$parent.$parent.__validation) {
+//                            return false;
+//                        }
+//                        enableSubmit(false);
+//                        scope.$apply(function () {
+//                            var dataToSend = scope['ngOnsubmit']()();
+//                            console.log(dataToSend);
+//                            if (dataToSend) {
+//                                $ok(scope['ngAction'], dataToSend, function (resp) {
+//                                    if (scope.ngOnsuccess) {
+//                                        scope.ngOnsuccess()(resp)
+//                                    }
+//                                }).finally(function () {
+//                                    enableSubmit(true);
+//                                });
+//                            }
+//                        });
+//                        return false;
+//                    });
+//            }
+//
+//            $(iElement).on('submit',
+//                function () {
+//                    sendfunction(false);
+//                    return false;
+//                });
+//        }
+//    }
+//}
+//])
 
 
 areAllEmpty = function () {
@@ -596,11 +627,19 @@ module.run(function ($rootScope, $ok, $sce) {
             if (!scope.$$translate) {
                 scope.$$translate = {};
             }
+
+            if (!scope.$$translate_accessed) {
+                scope.$$translate_accessed = {};
+            }
             //TODO OZ by OZ hasOwnProperty
-            var CtrlName = this.controllerName ? this.controllerName: 'None';
+            var CtrlName = this.controllerName ? this.controllerName : 'None';
             if (scope.$$translate[phrase] === undefined) {
                 scope.$$translate[phrase] = phrase;
-                $ok('/articles/save_translate/', {template: CtrlName, phrase: phrase, url: window.location.href}, function (resp) {
+                $ok('/articles/save_translate/', {
+                    template: CtrlName,
+                    phrase: phrase,
+                    url: window.location.href
+                }, function (resp) {
                     //console.log(resp['phrase']);
                     //if(resp['phrase'] === ''){
                     //    scope.$$translate[phrase] = phrase
@@ -610,13 +649,18 @@ module.run(function ($rootScope, $ok, $sce) {
 
                 });
                 //scope.$$translate[phrase] = phrase;
+            } else if (scope.$$translate_accessed[phrase] === undefined) {
+                scope.$$translate_accessed[phrase] = true;
+                $ok('/articles/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
+
+                });
             }
             phrase = scope.$$translate[phrase];
             //alert(scope.$$translate);
 
 
             try {
-                return phrase.replace(/%\(([^)]*)\)s/g, function (g0, g1) {
+                return phrase.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
                     var indexes = g1.split('.');
                     var d = dict ? dict : scope;
                     for (var i in indexes) {
@@ -826,4 +870,17 @@ function fileUrl(id, down, if_no_file) {
 
 function cloneObject(o) {
     return (o === null || typeof o !== 'object') ? o : $.extend(true, {}, o);
+}
+
+function add_message(amessage, atype, atime) {
+    return angularControllerFunction('message-controller', 'add_message')(amessage, atype, atime);
+}
+
+function randomHash()
+{
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for( var i=0; i < 32; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    return text;
 }

@@ -27,6 +27,7 @@ from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
 import json
 
+
 def req(name, allowed=None, default=None, exception=True):
     ret = request.args.get(name)
     if allowed and (ret in allowed):
@@ -39,7 +40,7 @@ def req(name, allowed=None, default=None, exception=True):
         return None
 
 
-def filter_json(json, *args, prefix='', NoneTo='', ExceptionOnNotPresent = False):
+def filter_json(json, *args, prefix='', NoneTo='', ExceptionOnNotPresent=False):
     ret = {}
     req_columns = {}
     req_relationships = {}
@@ -50,7 +51,8 @@ def filter_json(json, *args, prefix='', NoneTo='', ExceptionOnNotPresent = False
             column_names = columnsdevided.pop(0)
             for column_name in column_names.split('|'):
                 if len(columnsdevided) == 0:
-                    req_columns[column_name] = NoneTo if (column_name not in json or json[column_name] is None) else json[column_name]
+                    req_columns[column_name] = NoneTo if (column_name not in json or json[column_name] is None) else \
+                        json[column_name]
                 else:
                     if column_name not in req_relationships:
                         req_relationships[column_name] = []
@@ -175,6 +177,7 @@ def load_user():
     user_dict = INFO_ITEMS_NONE.copy()
     user_dict['logged_via'] = None
     user_dict['registered_tm'] = None
+    user_dict['lang'] = 'uk'
     #  ['id', 'email', 'first_name', 'last_name', 'name', 'gender', 'link', 'phone']
 
     if user_init.is_authenticated():
@@ -185,6 +188,7 @@ def load_user():
         user = current_user
         logged_via = REGISTERED_WITH[user.logged_in_via()]
         user_dict['logged_via'] = logged_via
+
         user_dict['profile_completed'] = user.profile_completed()
 
         for attr in SOC_NET_FIELDS:
@@ -196,6 +200,7 @@ def load_user():
                     user.attribute_getter(logged_via, attr)
         user_dict['id'] = id
         user_dict['registered_tm'] = user.registered_tm
+        user_dict['lang'] = user.lang
         # name = user.user_name
 
 
@@ -230,6 +235,7 @@ def load_portal_id(app):
         g.portal_id = g.db.query(Portal.id).filter_by(host=app.config['SERVER_NAME']).one()[0]
         # g.portal_id = db_session_func(app.config['SQLALCHEMY_DATABASE_URI']).\
         #             query(Portal.id).filter_by(host=app.config['SERVER_NAME']).one()[0]
+
     return func
 
 
@@ -244,6 +250,7 @@ def flask_endpoint_to_angular(endpoint, **kwargs):
     url = url.replace('{{', '{{ ').replace('}}', ' }}')
     return url
 
+
 # TODO OZ by OZ rename this func and add two parameters
 def file_url(id):
     if not id:
@@ -253,10 +260,40 @@ def file_url(id):
 
 
 def translates(template):
-#     pass
+    if g.user:
+        user_language = g.user.lang
+    else:
+        user_language = 'uk'
     phrases = g.db.query(TranslateTemplate).filter_by(template=template).all()
-    ret = {ph.name: ph.uk for ph in phrases}
+    if user_language == 'uk':
+        ret = {ph.name: ph.uk for ph in phrases}
+    else:
+        ret = {ph.name: ph.en for ph in phrases}
     return json.dumps(ret)
+
+
+@jinja2.contextfunction
+def translate_phrase(context, phrase, dictionary=None):
+    template = context.name
+
+    translated = TranslateTemplate.getTranslate(template, phrase)
+
+    r = re.compile("%\\(([^)]*)\\)s")
+
+    def getFromContext(context, indexes, default):
+        d = context
+        for i in indexes:
+            if i in d:
+                d = d[i]
+            else:
+                return default
+        return d
+
+    def replaceinphrase(match):
+        indexes = match.group(1).split('.')
+        return str(getFromContext(context if dictionary is None else dictionary, indexes, match.group(1)))
+
+    return r.sub(replaceinphrase, translated)
 
 
 def config_variables():
@@ -283,9 +320,9 @@ def get_url_adapter():
         url_adapter = appctx.url_adapter
     return url_adapter
 
+
 # TODO: OZ by OZ: add kwargs just like in url_for
 def raw_url_for(endpoint):
-
     url_adapter = get_url_adapter()
 
     rules = url_adapter.map._rules_by_endpoint.get(endpoint, ())
@@ -351,6 +388,10 @@ class AnonymousUser(AnonymousUserMixin):
     def user_name():
         return 'Guest'
 
+    @staticmethod
+    def avatar(size=0):
+        pass
+
     def __repr__(self):
         return "<User(id = %r)>" % self.id
 
@@ -410,6 +451,7 @@ def create_app(config='config.ProductionDevelopmentConfig',
     app.jinja_env.globals.update(translates=translates)
     app.jinja_env.globals.update(file_url=file_url)
     app.jinja_env.globals.update(config_variables=config_variables)
+    app.jinja_env.globals.update(_=translate_phrase)
 
 
     # see: http://flask.pocoo.org/docs/0.10/patterns/sqlalchemy/

@@ -19,18 +19,18 @@
         <div class="profile-thumbnail" style="background-image: url('{{ user.avatar() }}');">
             <div class="control">
                 <a ng-click="mySwitch = !mySwitch">
-                    <span ng-hide="mySwitch">[upload picture]</span><span ng-show="mySwitch">[hide]</span>
+                    <span ng-hide="mySwitch">[{{ '{{' }}_('upload picture'){{ '}}' }}]</span><span ng-show="mySwitch">[{{ '{{' }}_('hide'){{ '}}' }}]</span>
                 </a>
 
                 <form ng-hide="mySwitch" id="myform" method="post" style="display: inline;">
-                    <input type="hidden" name="avatar" value="Use Gravatar"/><a onclick="document.getElementById('myform').submit();" style="border: none;">[use gravatar]</a>
+                    <input type="hidden" name="avatar" value="Use Gravatar"/><a onclick="document.getElementById('myform').submit();" style="border: none;">[{{ '{{' }}_('use gravatar'){{ '}}' }}]</a>
                 </form>
             </div>
         </div>
 
 
         {#<a>#}
-        {#    <span ng-hide="mySwitch">[use gravatar]</span>#}
+        {#    <span ng-hide="mySwitch">[{{ '{{' }}_('use gravatar'){{ '}}' }}]</span>#}
         {#</a>#}
         <div class="img-upload-form">
             <form id="avatar" ng-show="mySwitch" ng-init="mySwitch=false" action="{{ request.path }}" method="post"
@@ -45,7 +45,7 @@
             <div class="item"><span>{{ '{{' }}_('Your display name'){{ '}}' }}:</span><input type="text" placeholder="name" name="name"
                                                                     value="{{ user.profireader_name }}"></div>
             <div class="item"><span>{{ '{{' }}_('Your email'){{ '}}' }}:</span>{{ user.profireader_email }} <a
-                    href="{{ url_for('auth.change_email_request') }}"> [change]</a></div>
+                    href="{{ url_for('auth.change_email_request') }}"> [{{ '{{' }}_('change'){{ '}}' }}]</a></div>
             <div class="item"><span>{{ '{{' }}_('Your first name'){{ '}}' }}:</span><input type="text" placeholder="first name" name="first_name"
                                                                   value="{{ user.profireader_first_name or '' }}"></div>
             <div class="item"><span>{{ '{{' }}_('Your last name'){{ '}}' }}:</span><input type="text" placeholder="last name" name="last_name"
@@ -60,6 +60,17 @@
                     <label for="male">{{ '{{' }}_('Male'){{ '}}' }}</label>
                     <input type="radio" name="gender" id="female" value="female"><label for="female">{{ '{{' }}_('Female'){{ '}}' }}</label>
                 {% endif %}
+            </div>
+            <div class="item"><span>{{ '{{' }}_('Language'){{ '}}' }}:</span>
+                <select id="language" name="language" style="width: 100px">
+                        {% if user.lang=='en' %}
+                            <option selected="selected">en</option>
+                            <option>uk</option>
+                        {% else %}
+                            <option>en</option>
+                            <option selected="selected">uk</option>
+                        {% endif %}
+                </select>
             </div>
 
             <div class="item"><span>{{ '{{' }}_('Your web-page'){{ '}}' }}:</span><input type="text" placeholder="www.your.webpage.com"

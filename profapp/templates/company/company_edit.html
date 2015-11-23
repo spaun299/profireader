@@ -87,7 +87,8 @@
              af-after-load="afterLoad"
              ng-model="data">
 
-            <h1 class="nice-title">{{ data.id ? _('Edit company profile') : _('New company Account') }}<span></span></h1>
+            <h1 class="nice-title">{{ data.id ? _('Edit company profile') : _('New company Account') }}<span></span>
+            </h1>
 
             <div style="width: 400px;">
                 <div ng-click="chooseImage()"
@@ -101,17 +102,18 @@
                 <div class="item"><span class="input_label">{{_('Company name')}}</span><input ng-model="data.name">
                 </div>
                 <div class="item"><span class="input_label">{{_('Country')}}</span><input type="text"
-                                                                                 ng-model="data.country"></div>
+                                                                                          ng-model="data.country"></div>
                 <div class="item"><span class="input_label">{{_('Region')}}</span><input type="text"
-                                                                                ng-model="data.region"></div>
+                                                                                         ng-model="data.region"></div>
                 <div class="item"><span class="input_label">{{_('Adress')}}</span><input type="text"
-                                                                                ng-model="data.address"></div>
+                                                                                         ng-model="data.address"></div>
                 <div class="item"><span class="input_label">{{_('Phone')}}</span><input type="text"
-                                                                               ng-model="data.phone"></div>
-                <div class="item"><span class="input_label">{{_('Fax')}}</span><input type="text" ng-model="data.phone2">
+                                                                                        ng-model="data.phone"></div>
+                <div class="item"><span class="input_label">{{_('Fax')}}</span><input type="text"
+                                                                                      ng-model="data.phone2">
                 </div>
                 <div class="item"><span class="input_label">{{_('Email')}}</span><input type="text"
-                                                                               ng-model="data.email"></div>
+                                                                                        ng-model="data.email"></div>
             </div>
 
             <div style="width: 1000px; margin-left: 0px;">

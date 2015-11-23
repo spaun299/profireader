@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="/static/css/profireader.css">
     <link rel="stylesheet" href="/static/css/oles.css">
     <link rel="stylesheet" href="/static/css/icons.css">
-    <link rel="stylesheet" href="/static/angular-xeditable/xeditable.css">
+
 {%- endblock styles %}
 
 {%- block head %}
@@ -46,9 +46,11 @@
     <script src="{{ url_for('static', filename = 'angular-ui-tinymce/tinymce.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ajax-validator/ngAjaxValidator.js') }}"></script>
 
+    {#TODO: SS by OZ: remove this two lines when ng-grid is up and running #}
+    <link rel="stylesheet" href="/static/angular-xeditable/xeditable.css">
     <script src="{{ url_for('static', filename = 'angular-xeditable/xeditable.js') }}"></script>
 
-    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.13.2.js"></script>
+    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>
     {#    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>#}
 
     {#    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.js"></script>#}
@@ -74,12 +76,21 @@
     <script src="/static/js/jquery.smooth-scroll.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 
+    <!---GRID---->
+    <!--<link rel="styleSheet" href="release/ui-grid.min.css"/>-->
+    <!--<script src="/release/ui-grid.min.js"></script>-->
 
     <style>
         ul.dropdown-menu li a strong {
             color: #f00;
         }
     </style>
+
+    <script>
+        {% for message in get_flashed_messages() %}
+            add_message('{{ message }}', 'warning');
+        {% endfor %}
+    </script>
 
 
 
@@ -99,17 +110,11 @@
 
 {% block content %}
 
+    {% include 'templates-angular.html' %}
 
     <div class="container widewrapper">
-        {% for message in get_flashed_messages() %}
-            <div class="alert alert-warning">
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                {{ message }}
-            </div>
-        {% endfor %}
-
-
         {% block portal_content %}
+            {% include 'flashed-messages.html' %}
             {% include 'partials/Profireader_content' %}
         {% endblock portal_content %}
         <br/>
@@ -118,6 +123,6 @@
 {% endblock content %}
 
 {% block scripts %}
-   {% include 'partials/portal_footer_Profireader.html' %}
+    {% include 'partials/portal_footer_Profireader.html' %}
 {% endblock scripts %}
 
