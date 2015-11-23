@@ -15,6 +15,8 @@
             $scope.page_changed = function () {
                 $scope.sendData(false);
             };
+            $scope.dictionary = {};
+            $scope.translations = {};
 
             $scope.data = {
                 search_text: '',
@@ -22,15 +24,81 @@
                 template: null,
                 url: null
             };
+            var paginationOptions = {
+                pageNumber: 1,
+                pageSize: 50,
+                sort: null
+            };
+
+            $scope.storeFile = function( gridRow, gridCol, files ) {
+                // ignore all but the first file, it can only select one anyway
+                // set the filename into this column
+                gridRow.entity.filename = files[0].name;
+                console.log(files[0].name);
+
+
+                // read the file and set it into a hidden column, which we may do stuff with later
+                var setFile = function(fileContent){
+                  gridRow.entity.file = fileContent.currentTarget.result;
+                  // put it on scope so we can display it - you'd probably do something else with it
+                  $scope.lastFile = fileContent.currentTarget.result;
+                  $scope.$apply();
+                  $scope.saveTranslation(files[0].id, files[0].lang, $scope.lastFile, files[0])
+
+                };
+                var reader = new FileReader();
+                reader.onload = setFile;
+                reader.readAsText( files[0] );
+              };
+
+            $scope.gridOptions1 = {
+                totalItems : 100,
+                paginationPageSizes: [25, 50, 75],
+                paginationPageSize: 25,
+                useExternalPagination: true,
+                useExternalSorting: true,
+                columnDefs: [
+                  { field: 'Creation time' },
+                  { field: 'Last accessed', enableSorting: false,enableCellEdit: false },
+                  { field: 'Template', enableSorting: false,enableCellEdit: false },
+                  { field: 'First url used', enableSorting: false,enableCellEdit: false },
+                  { field: 'Phrase', enableSorting: false,enableCellEdit: false},
+                  { field: 'uk', enableSorting: false, enableCellEdit: true},
+                  { field: 'en', enableSorting: false,enableCellEdit: false}
+                ],
+                onRegisterApi: function(gridApi) {
+                  $scope.gridApi = gridApi;
+                  $scope.gridApi.core.on.sortChanged($scope, function(grid, sortColumns) {
+                    if (sortColumns.length == 0) {
+                      paginationOptions.sort = null;
+                    } else {
+                      paginationOptions.sort = sortColumns[0].sort.direction;
+                    }
+                    getPage();
+                  });
+                  gridApi.pagination.on.paginationChanged($scope, function (newPage, pageSize) {
+                    paginationOptions.pageNumber = newPage;
+                    paginationOptions.pageSize = pageSize;
+                    $scope.sendData('');
+                  });
+                  gridApi.edit.on.afterCellEdit($scope, function(rowEntity, colDef, newValue, oldValue) {
+                    //Do your REST call here via $http.get or $http.post
+                    $scope.saveTranslation(rowEntity['Template'], rowEntity['Phrase'], colDef['name'], newValue);
+                    console.log(rowEntity['Template']);
+                    //Alert to show what info about the edit is available
+                    alert('Column: ' + colDef.name + ' ID: ' + rowEntity.id + ' Name: ' + rowEntity.name + ' Age: ' + rowEntity.age);
+                  });
+                }
+              };
 
             $scope.new_search_text = '';
 
-            $scope.saveTranslation = function (id, lang, newval, model) {
-                $ok($scope.url_save_translations(), {id: id, lang: lang, val: newval}, function (resp) {
-                    model.saving = true;
+            $scope.saveTranslation = function (row, col, lang, newval) {
+                $ok($scope.url_save_translations(), {row: row, col: col, lang: lang, val: newval}, function (resp) {
+                    $scope.saving = true;
                 }, function () {
                 }).finally(function () {
-                    model.saving = false;
+                    $scope.saving = false;
                 });
             };
 
@@ -47,6 +115,22 @@
                     model.del = false;
                 })
             };
+            $scope.pageNextPageClick = function(){
+                $scope.sendData(false);
+            };
+//             var getPage = function(curPage, pageSize, sort) {
+//                  var url;
+//                  switch(sort) {
+//                    case uiGridConstants.ASC:
+//                      url = '/data/100_ASC.json';
+//                      break;
+//                    case uiGridConstants.DESC:
+//                      url = '/data/100_DESC.json';
+//                      break;
+//                    default:
+//                      url = '/data/100.json';
+//                      break;
+//                  }
 
             $scope.sendData = function (new_search_text) {
                 $scope.error = '';
@@ -54,14 +138,27 @@
                 data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 data.template = $scope.template ? $scope.template : null;
                 data.url = $scope.url ? $scope.url : null;
-                data.page = $scope.data.pages.current_page;
+                data.page = paginationOptions.pageNumber;//$scope.data.pages.current_page;
+                data.pageSize = $scope.gridOptions1.paginationPageSize;
                 $ok($scope.url_search_translations({}), data, function (resp) {
-
                     $scope.data['pages'] = resp.pages;
                     $scope.translations = resp.translations;
+                    $scope.gridOptions1.totalItems = resp.total;
 
                     $scope.languages = resp.languages;
-
+                    $scope.list = [];
+                    for(var i=0;i< $scope.translations.length;i++){
+                        $scope.list.push({
+                            'Creation time' : $scope.translations[i].cr_tm,
+                            'Last accessed' : $scope.translations[i].ac_tm,
+                            'Template' : $scope.translations[i].template,
+                            'First url used' : $scope.translations[i].url,
+                            'Phrase': $scope.translations[i].name,
+                            'uk' : $scope.translations[i].uk,
+                            'en' : $scope.translations[i].en
+                        })
+                    }
+                    $scope.gridOptions1.data = $scope.list;
                     $scope.templates = resp.templates;
                     $scope.templates.unshift({label: '-- all --', value: undefined});
 
@@ -71,6 +168,22 @@
                     $scope.data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 })
             };
+
+//            $scope.getData = function(translations){
+//                var list = [];
+//                var tr = translations;
+//                for(var i=0;i<tr.length;i++){
+//                    list.push({
+//                        'Creation time' : tr[i].cr_tm,
+//                        'Last accessed' : tr[i].ac_tm,
+//                        'Template' : tr[i].template,
+//                        'First url used' : tr[i].url,
+//                        'Phrase': tr[i].name
+//                    })
+//                }
+//                console.log(list);
+//                return list
+//            };
 
         }]);
 
@@ -83,55 +196,68 @@
     </style>
     <div ng-init="sendData('')" ng-controller="translation_list">
 
-        <table style="width:100%">
-            <tr>
-                <th width="8em">Creation time</th>
-                <th width="8em">Last accessed</th>
-                <th width="8em">Template</th>
-                <th width="15em">First url used</th>
-                <th width="50%">Phrase</th>
-                <th ng-repeat="lang in languages" width="50%">{{ lang }}</th>
-                <th></th>
-            </tr>
-            <tr valign="top">
-                <td></td>
-                <td></td>
-                <td><select ng-disabled="loading" style="width: 8em; padding: 5px;" ng-model="template"
-                            ng-options="template.value as template.label for template in templates"></select></td>
-                <td><select ng-disabled="loading" style="width: 15em; padding: 5px;" ng-model="url"
-                            ng-options="url.value as url.label for url in urls"></select></td>
-                <td colspan="{{ languages.length + 1 }}"><input ng-disabled="loading" style="width: 98%" type="text"
-                                                                placeholder="Search"
-                                                                ng-model="new_search_text"></td>
-                <td><input ng-disabled="loading" ng-click="sendData(new_search_text)" type="submit"
-                           ng-model="new_search_text"
-                           value="{{ loading?'loading...':'search' }}"
-                           style="width: 50px"></td>
-            </tr>
-            <tr ng-repeat="translation in translations" valign="top">
-                <td><div style="width: 8em; overflow: hidden">{{ translation.cr_tm }}</div></td>
-                <td><div style="width: 8em; overflow: hidden">{{ translation.ac_tm }}</div></td>
-                <td><div style="width: 8em; overflow: hidden">{{ translation.template }}</div></td>
-                <td><div style="width: 15em; overflow: hidden">{{ translation.url }}</div></td>
-                <td>{{ translation.name }}</td>
-                <td ng-repeat="lang in languages">
-                     <span style="margin: 3px;"
-                           onbeforesave="saveTranslation(translation['id'], lang, $data, translation)"
-                           editable-text="translation[lang]">{{ translation[lang] }}</span>
-                </td>
-                <td><button class="btn btn-danger" ng-click="delete(translation.id, translation)">Delete</button><span ng-show="error" style="color: red">{{error}}</span></td>
-            </tr>
-            <tr ng-show="!loading && !areAllEmpty(translations)">
-                <td colspan="5">
-                    <div ng-include="'pagination.html'"></div>
-                </td>
-            </tr>
-            <tr ng-show="!loading && areAllEmpty(translations)">
-                <td colspan="5">
-                    No translations
-                </td>
-            </tr>
-        </table>
+        <form class="navbar-form navbar-right" role="search" ng-if="!areAllEmpty(translations)">
+            <div class="form-group">
+            <input class="form-control" ng-disabled="loading"  type="text"
+                                                                    placeholder="Search"
+                                                                    ng-model="new_search_text" >
+            </div>
+                <button id='toggleGender' ng-click="sendData(new_search_text)" value="{{ loading?'loading...':'search' }}" class="btn btn-success" ng-disabled="loading" ng-model="new_search_text">Search</button>
+
+        </form>
+        <div style="clear: right"></div>
+        <div ng-if="!areAllEmpty(translations)">
+            <div class="grid" id="grid1" ui-grid-pagination  ui-grid-edit  ui-grid="gridOptions1" ></div>
+            </div>
+        <!--<table style="width:100%">-->
+            <!--<tr>-->
+                <!--<th width="8em">Creation time</th>-->
+                <!--<th width="8em">Last accessed</th>-->
+                <!--<th width="8em">Template</th>-->
+                <!--<th width="15em">First url used</th>-->
+                <!--<th width="50%">Phrase</th>-->
+                <!--<th ng-repeat="lang in languages" width="50%">{{ lang }}</th>-->
+                <!--<th></th>-->
+            <!--</tr>-->
+            <!--<tr valign="top">-->
+                <!--<td></td>-->
+                <!--<td></td>-->
+                <!--<td><select ng-disabled="loading" style="width: 8em; padding: 5px;" ng-model="template"-->
+                            <!--ng-options="template.value as template.label for template in templates"></select></td>-->
+                <!--<td><select ng-disabled="loading" style="width: 15em; padding: 5px;" ng-model="url"-->
+                            <!--ng-options="url.value as url.label for url in urls"></select></td>-->
+                <!--<td colspan="{{ languages.length + 1 }}"><input ng-disabled="loading" style="width: 98%" type="text"-->
+                                                                <!--placeholder="Search"-->
+                                                                <!--ng-model="new_search_text"></td>-->
+                <!--<td><input ng-disabled="loading" ng-click="sendData(new_search_text)" type="submit"-->
+                           <!--ng-model="new_search_text"-->
+                           <!--value="{{ loading?'loading...':'search' }}"-->
+                           <!--style="width: 50px"></td>-->
+            <!--</tr>-->
+            <!--<tr ng-repeat="translation in translations" valign="top">-->
+                <!--<td><div style="width: 8em; overflow: hidden">{{ translation.cr_tm }}</div></td>-->
+                <!--<td><div style="width: 8em; overflow: hidden">{{ translation.ac_tm }}</div></td>-->
+                <!--<td><div style="width: 8em; overflow: hidden">{{ translation.template }}</div></td>-->
+                <!--<td><div style="width: 15em; overflow: hidden">{{ translation.url }}</div></td>-->
+                <!--<td>{{ translation.name }}</td>-->
+                <!--<td ng-repeat="lang in languages">-->
+                     <!--<span style="margin: 3px;"-->
+                           <!--onbeforesave="saveTranslation(translation['id'], lang, $data, translation)"-->
+                           <!--editable-text="translation[lang]">{{ translation[lang] }}</span>-->
+                <!--</td>-->
+                <!--<td><button class="btn btn-danger" ng-click="delete(translation.id, translation)">Delete</button><span ng-show="error" style="color: red">{{error}}</span></td>-->
+            <!--</tr>-->
+
+        <!--</table>-->
+        <!--<div ng-show="!loading && !areAllEmpty(translations)">-->
+                <!--<div colspan="5">-->
+                    <!--<div ng-include="'pagination.html'"></div>-->
+                <!--</div>-->
+            <!--</div>-->
+        <div ng-show="!loading && areAllEmpty(translations)" style="float: left; margin-right: 20px; padding-top: 4px">
+                    <h4>No translations</h4>
+                </div>
+            <button ng-click="sendData('')" class="btn btn-warning" ng-show="!loading && areAllEmpty(translations)">Back</button>
 
     </div>
     {% endraw %}
