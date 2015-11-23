@@ -66,15 +66,12 @@
 
             $scope.articleAfterLoad = function (resp, deff) {
                 deff(resp);
-                $scope.setImageUrl($scope.data);
+                $scope.setImageUrl($scope.data.image);
                 $scope.change_picture_in_croper($scope.data.coordinates);
                 return true;
             };
 
             $scope.setImageUrl = function (image) {
-                console.log('///////////////*****');
-                console.log(image);
-                console.log('*****/////////////////');
 
                 $scope.image_file_url = fileUrl(image.image_file_id, false, '{{ url_for('static', filename='images/choose_image.jpg') }}');
                 var image = $scope.image_file_url;
@@ -86,7 +83,7 @@
 
             $scope.change_picture_in_croper = function (coordinates) {
                 setTimeout(function () {
-                    init_cropper($scope.cropAreaChanged, $scope.data.ratio, coordinates);
+                    init_cropper($scope.cropAreaChanged, $scope.data.image.ratio, coordinates);
                 }, 0);
 
             };
