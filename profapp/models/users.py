@@ -283,23 +283,23 @@ class User(Base, UserMixin, PRBase):
         g.db.commit()
 
     def avatar(self, size=100):
-        if 'facebook' in session['logged_via']:
-            avatar = json.load(req.urlopen(
-                url='http://graph.facebook.com/{facebook_id}/picture?width='
-                    '{size}&height={size}&redirect=0'.format(
-                    facebook_id=g.user.facebook_id, size=size)))
-            if avatar['data'].get('is_silhouette'):
-                avatar = self.gravatar(size=size)
-            else:
-                avatar = avatar['data'].get('url')
+    #     if 'facebook' in session['logged_via']:
+    #         avatar = json.load(req.urlopen(
+    #             url='http://graph.facebook.com/{facebook_id}/picture?width='
+    #                 '{size}&height={size}&redirect=0'.format(
+    #                 facebook_id=g.user.facebook_id, size=size)))
+    #         if avatar['data'].get('is_silhouette'):
+    #             avatar = self.gravatar(size=size)
+    #         else:
+    #             avatar = avatar['data'].get('url')
         # if 'google' in session['logged_via']:
         #     url = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
         #     a= url
 
-        else:
-            avatar = self.gravatar(size=size)
+        # else:
+        #     avatar = self.gravatar(size=size)
 
-        return avatar
+        return self.gravatar(size=size)
 
     def gravatar(self, size=100, default='identicon', rating='g'):
         if request.is_secure:

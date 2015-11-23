@@ -22,25 +22,18 @@
             $scope.$$translate = {{ translates('article_edit')|safe }};
 
             $scope.amidSave = function (resp) {
-                if (!$scope.data.article.id) {
                     window.location.href = $scope.details_article({article_id: resp['article']['article_id']});
                     add_message('article was created', 'info', 5000);
-                }
+
             };
 
             $scope.getData = function (model, deff) {
-                var x = document.getElementById("dataX");
-                var y = document.getElementById("dataY");
-                var width = document.getElementById("dataWidth");
-                var height = document.getElementById("dataHeight");
-                var rotate = document.getElementById("dataRotate");
-                model.image.coordinates = {
-                    'x': angular.element(x).val(), 'y': angular.element(y).val(),
-                    'width': angular.element(width).val(), 'height': angular.element(height).val(),
-                    'rotate': angular.element(rotate).val()
-                };
+                var $image = $('.img-container > img');
+                console.log($image.cropper('getData'));
+                $scope.data.image.coordinates = $image.cropper('getData');
                 return deff(model);
             };
+
 
 
             $scope.tinymceImageOptions['height'] = '450px';
@@ -49,8 +42,9 @@
                 $scope.setImageUrl($scope.data.image);
                 closeFileManager();
                 var $image = $('.img-container > img');
-                $image.cropper('replace', $scope.image_file_url);
-                $scope.change_picture_in_croper();
+                $image.cropper('setAspectRatio', $scope.data.image.ratio);
+{#                $image.cropper('replace', $scope.image_file_url);#}
+{#                $scope.change_picture_in_croper();#}
 
             };
             $scope.default_image = true;
@@ -60,16 +54,16 @@
                 return data;
             };
 
-            $scope.cropAreaChanged = function (new_coordinates) {
-                $scope.coordinates = new_coordinates;
-            };
+{#            $scope.cropAreaChanged = function (new_coordinates) {#}
+{#                $scope.coordinates = new_coordinates;#}
+{#            };#}
 
-            $scope.articleAfterLoad = function (resp, deff) {
-                deff(resp);
-                $scope.setImageUrl($scope.data.image);
-                $scope.change_picture_in_croper($scope.data.coordinates);
-                return true;
-            };
+{#            $scope.articleAfterLoad = function (resp, deff) {#}
+{#                deff(resp);#}
+{#                $scope.setImageUrl($scope.data.image);#}
+{#                $scope.change_picture_in_croper($scope.data.coordinates);#}
+{#                return true;#}
+{#            };#}
 
             $scope.setImageUrl = function (image) {
 
@@ -78,12 +72,12 @@
                 if (image != "{{ url_for('static', filename='images/choose_image.jpg') }}") {
                     $scope.default_image = false;
                 }
-                $scope.change_picture_in_croper(image.coordinates);
+{#                $scope.change_picture_in_croper(image.coordinates);#}
             };
 
             $scope.change_picture_in_croper = function (coordinates) {
                 setTimeout(function () {
-                    init_cropper($scope.cropAreaChanged, $scope.data.image.ratio, coordinates);
+                    init_cropper($scope.data.image.ratio, coordinates);
                 }, 0);
 
             };

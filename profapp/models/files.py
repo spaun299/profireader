@@ -578,10 +578,10 @@ class ImageCroped(Base, PRBase):
     id = Column(TABLE_TYPES['id_profireader'], nullable=False, unique=True, primary_key=True)
     original_image_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'), nullable=False)
     croped_image_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'), nullable=False)
-    x = Column(TABLE_TYPES['int'], nullable=False)
-    y = Column(TABLE_TYPES['int'], nullable=False)
-    width = Column(TABLE_TYPES['int'], nullable=False)
-    height = Column(TABLE_TYPES['int'], nullable=False)
+    x = Column(TABLE_TYPES['float'], nullable=False)
+    y = Column(TABLE_TYPES['float'], nullable=False)
+    width = Column(TABLE_TYPES['float'], nullable=False)
+    height = Column(TABLE_TYPES['float'], nullable=False)
     rotate = Column(TABLE_TYPES['int'], nullable=False)
 
     def __init__(self, original_image_id=None, x=None, y=None, width=None, height=None, rotate=None,

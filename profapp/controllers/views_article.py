@@ -83,17 +83,11 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None, 'image_file_id': None}
         article_dict = articleVersion.get_client_side_dict(more_fields='long')
         if article_dict.get('image_file_id'):
-            try:
-                # TODO: VK by OZ: pls check image_dict hs proper value
-                image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
-                    get_coordinates_and_original_img(article_dict.get('image_file_id'))
-            # TODO: VK by OZ: If you catch exception you must do something
-            except Exception:
-                pass
+            image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
+                get_coordinates_and_original_img(article_dict.get('image_file_id'))
         return {'article': article_dict, 'image': image_dict}
     else:
-        # TODO: VK by OZ: pls filter image part * -> something more specific
-
+        print(json.get('image'))
         parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
 
         articleVersion.attr(parameters['article'])
@@ -102,7 +96,6 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         else:
             image_id = parameters['image'].get('image_file_id')
             if image_id:
-                # TODO: VK by OZ: pls next line
                 articleVersion.image_file_id = crop_image(image_id,
                                                           json['image'].get('coordinates'))
             return {'article': articleVersion.save().get_client_side_dict(more_fields='long'),

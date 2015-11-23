@@ -213,7 +213,8 @@ def file_query(table, file_id):
 def crop_image(image_id, coordinates):
 
     image_query = db(File, id=image_id).one()
-
+    if db(ImageCroped, original_image_id=image_id).count():
+        return update_croped_image(image_id, coordinates)
     company_owner = db(Company, journalist_folder_file_id=image_query.root_folder_id).one()
     bytes_file = crop_with_coordinates(image_query, coordinates)
     if bytes_file:
@@ -235,9 +236,9 @@ def crop_image(image_id, coordinates):
         g.db.flush()
         ImageCroped(original_image_id=copy_original_image_to_system_folder.id,
                     croped_image_id=croped.id,
-                    x=int(coordinates['x']), y=int(coordinates['y']),
-                    width=int(coordinates['width']),
-                    height=int(coordinates['height']), rotate=int(coordinates['rotate'])).save()
+                    x=float(coordinates['x']), y=float(coordinates['y']),
+                    width=float(coordinates['width']),
+                    height=float(coordinates['height']), rotate=int(coordinates['rotate'])).save()
         return croped.id
     else:
         return image_query.id
@@ -252,10 +253,10 @@ def update_croped_image(original_image_id, coordinates):
     if bytes_file:
         croped.size = sys.getsizeof(bytes_file.getvalue())
         croped.file_content.content = bytes_file.getvalue()
-        image_croped_assoc.x = int(coordinates['x'])
-        image_croped_assoc.y = int(coordinates['y'])
-        image_croped_assoc.width = int(coordinates['width'])
-        image_croped_assoc.height = int(coordinates['height'])
+        image_croped_assoc.x = float(coordinates['x'])
+        image_croped_assoc.y = float(coordinates['y'])
+        image_croped_assoc.width = float(coordinates['width'])
+        image_croped_assoc.height = float(coordinates['height'])
         image_croped_assoc.rotate = int(coordinates['rotate'])
     return croped.id
 
@@ -266,7 +267,7 @@ def crop_with_coordinates(image, coordinates,  ratio=Config.IMAGE_EDITOR_RATIO,
     image_pil = Image.open(BytesIO(image.file_content.content))
     try:
         area = [int(a) for a in (coordinates['x'], coordinates['y'], coordinates['width'],
-                             coordinates['height'])
+                                 coordinates['height'])
                 if int(a) in range(0, max(image_pil.size))]
         angle = int(coordinates["rotate"])*-1
         area[2] = (area[0]+area[2])
