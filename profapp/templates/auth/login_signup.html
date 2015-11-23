@@ -23,12 +23,12 @@
 
         <div class="content-block">
             <stan ng-if="login_signup==='signup'">
-                <h3 {{ '{{' }}_('Sign up via social'){{ '}}' }}:</h3>
+                <h3>{{ '{{' }}_('Sign up via social'){{ '}}' }}:</h3>
                 {% include 'partials/LoginSignup - Soc Networks.html' %}
                 {% include 'partials/Signup - Profireader.html' %}
             </stan>
             <div ng-if="login_signup!=='signup'">
-                <h3 {{ '{{' }}_('Login via social'){{ '}}' }}:</h3>
+                <h3>{{ '{{' }}_('Login via social'){{ '}}' }}:</h3>
                 {% include 'partials/LoginSignup - Soc Networks.html' %}
                 {% include 'partials/Log in - Profireader.html' %}
             </div>

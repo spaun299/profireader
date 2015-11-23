@@ -166,7 +166,7 @@ sed -i '/profireader.com/d' /etc/hosts
 echo '' >> /etc/hosts
 echo '127.0.0.1 db.profi web.profi mail.profi' >> /etc/hosts
 echo '127.0.0.1 db.profi_test' >> /etc/hosts
-echo '127.0.0.1 profireader.com oles.profireader.com rodynnifirmy.profireader.com derevoobrobka.profireader.com viktor.profireader.com aa.profireader.com md.profireader.com oleh.profireader.com file001.profireader.com fsm.profireader.com' >> /etc/hosts
+echo '127.0.0.1 profireader.com oles.profireader.com rodynnifirmy.profireader.com derevoobrobka.profireader.com viktor.profireader.com aa.profireader.com md.profireader.com oleh.profireader.com file001.profireader.com fsm.profireader.com mytestprof.profireader.com' >> /etc/hosts
 echo '127.0.0.1 test.profireader.com test1.profireader.com test2.profireader.com test3.profireader.com test4.profireader.com test5.profireader.com test6.profireader.com test7.profireader.com test8.profireader.com test9.profireader.com' >> /etc/hosts
 cat /etc/hosts" sudo haproxy
     }

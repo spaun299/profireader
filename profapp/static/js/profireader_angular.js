@@ -565,7 +565,7 @@ function file_choose(selectedfile) {
 
 // 'ui.select' uses "/static/js/select.js" included in index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
-module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable']);
+module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid','ui.grid.pagination','ui.grid.edit','ngAnimate', 'ngTouch', 'ui.grid.selection']);
 
 module.config(function ($provide) {
     $provide.decorator('$controller', function ($delegate) {
@@ -649,7 +649,8 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
 
                 });
                 //scope.$$translate[phrase] = phrase;
-            } else if (scope.$$translate_accessed[phrase] === undefined) {
+            }
+            else if(scope.$$translate_accessed[phrase] === undefined){
                 scope.$$translate_accessed[phrase] = true;
                 $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
 
