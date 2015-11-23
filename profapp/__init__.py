@@ -40,7 +40,7 @@ def req(name, allowed=None, default=None, exception=True):
         return None
 
 
-def filter_json(json, *args, prefix='', NoneTo='', ExceptionOnNotPresent=False):
+def filter_json(json, *args, NoneTo='', ExceptionOnNotPresent=False, prefix=''):
     ret = {}
     req_columns = {}
     req_relationships = {}
@@ -126,7 +126,7 @@ def db_session_func(db_config):
     from sqlalchemy.orm import scoped_session, sessionmaker
 
     engine = create_engine(db_config)
-    g.sql_connection = engine.connect()
+    # g.sql_connection = engine.connect()
     db_session = scoped_session(sessionmaker(autocommit=False,
                                              autoflush=False,
                                              bind=engine))

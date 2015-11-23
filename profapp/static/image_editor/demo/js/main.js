@@ -1,10 +1,6 @@
 var init_cropper = null;
-
 function a() {
-
-
     'use strict';
-
     var console = window.console || {
                 log: function () {
                 }
@@ -13,141 +9,27 @@ function a() {
         $message = $alert.find('.message'),
         showMessage = function (message, type) {
             $message.text(message);
-
             if (type) {
                 $message.addClass(type);
             }
-
             $alert.fadeIn();
-
             setTimeout(function () {
                 $alert.fadeOut();
             }, 3000);
         };
-
-    // Demo
-    // -------------------------------------------------------------------------
-
-    init_cropper = function (ff, ratio, coordinates) {
-
-        //debugger;
-        //console.log(data);
-
+    init_cropper = function (ratio, coordinates) {
+        console.log(coordinates);
         var $image = $('.img-container > img'),
-            $dataX = $('#dataX'),
-            $dataY = $('#dataY'),
-            $dataHeight = $('#dataHeight'),
-            $dataWidth = $('#dataWidth'),
-            $dataRotate = $('#dataRotate'),
-        //    $dataX = $('#dataX'),
-        //    $dataY = $('#dataY'),
-        //    $dataHeight = $('#dataHeight'),
-        //    $dataWidth = $('#dataWidth'),
-        //    $dataRotate = $('#dataRotate'),
-
             options = {
-            //    data: {
-            //    x: parseInt($('#coordinate_x').val()),
-            //    y: parseInt($('#coordinate_y').val()),
-            //    width: parseInt($('#coordinate_width').val()),
-            //    height: parseInt($('#coordinate_height').val()),
-            //    rotate: parseInt($('#coordinate_rotate').val())
-            //    },
-                // strict: false,
-                // responsive: false,
-                // checkImageOrigin: false
-
-                // modal: false,
-                // guides: false,
-                // center: false,
-                // highlight: false,
-                // background: false,
-
-                // autoCrop: false,
-                // autoCropArea: 0.5,
-                // dragCrop: false,
-                // movable: false,
-                // rotatable: false,
-                // zoomable: false,
-                // touchDragZoom: false,
-                // mouseWheelZoom: false,
-                // cropBoxMovable: false,
-                // cropBoxResizable: false,
-                // doubleClickToggle: false,
-
-                // minCanvasWidth: 320,
-                // minCanvasHeight: 180,
-                // minCropBoxWidth: 160,
-                // minCropBoxHeight: 90,
-                // minContainerWidth: 320,
-                // minContainerHeight: 180,
-
-                // build: null,
-                // built: null,
-                // dragstart: null,
-                // dragmove: null,
-                // dragend: null,
-                // zoomin: null,
-                // zoomout: null,
-
                 aspectRatio: ratio,
-                //preview: '.img-preview',
                 crop: function (data) {
-
-                    $dataX.val(Math.round(data.x));
-                    $dataY.val(Math.round(data.y));
-                    $dataHeight.val(Math.round(data.height));
-                    $dataWidth.val(Math.round(data.width));
-                    $dataRotate.val(Math.round(data.rotate));
+                    console.log(data.x);
                 }
             };
-
-        //setTimeout(function () {
-        // if ($('#default_image').val() == 'false') {
-        ////    console.log($('#default_image').val());
-        //    options.data = {
-        //        x: parseInt($('#coordinate_x').val()),
-        //        y: parseInt($('#coordinate_y').val()),
-        //        width: parseInt($('#coordinate_width').val()),
-        //        height: parseInt($('#coordinate_height').val()),
-        //        rotate: parseInt($('#coordinate_rotate').val())
-        //
-        //    };
-        //    console.log(options.data);
-        //}},10);
         if (coordinates) options.data = coordinates;
-        $image.on({
-            'build.cropper': function (e) {
-                console.log(e.type);
-            },
-            'built.cropper': function (e) {
-                console.log(e.type);
-            },
-            'dragstart.cropper': function (e) {
-                console.log(e.type, e.dragType);
-            },
-            'dragmove.cropper': function (e) {
-                console.log(e.type, e.dragType);
-            },
-            'dragend.cropper': function (e) {
-                console.log(e.type, e.dragType);
-            },
-            'zoomin.cropper': function (e) {
-                console.log(e.type);
-            },
-            'zoomout.cropper': function (e) {
-                console.log(e.type);
-            },
-            'change.cropper': function (e) {
-                console.log(e.type);
-            }
-        }).cropper(options);
-
-
-        // Methods
+        $image.on({}).cropper(options);
         $(document.body).on('click', '[data-method]', function () {
             var data = $(this).data(),
-
                 $target,
                 result;
             if (!$image.data('cropper')) {
@@ -170,7 +52,6 @@ function a() {
                 }
 
                 result = $image.cropper(data.method, data.option);
-
                 if (data.method === 'getCroppedCanvas') {
                     $('#getCroppedCanvasModal').modal().find('.modal-body').html(result);
                 }
