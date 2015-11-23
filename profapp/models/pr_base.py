@@ -11,7 +11,6 @@ from utils.validators import validators
 from ..controllers import errors
 from utils.db_utils import db
 
-
 Base = declarative_base()
 
 # this event is called whenever an attribute
@@ -57,7 +56,7 @@ class PRBase:
     def __init__(self):
         self.query = g.db.query_property()
 
-    def validate(self, action):
+    def validate(self, is_new):
         return {'errors': {}, 'warnings': {}, 'notices': {}}
 
     def delfile(self):
@@ -69,6 +68,7 @@ class PRBase:
         g.db.flush()
         return self
 
+# TODO: OZ by OZ: why we need two identical functions??!?!
     def updates(self, dictionary):
         for f in dictionary:
             setattr(self, f, dictionary[f])
@@ -104,17 +104,18 @@ class PRBase:
         req_relationships = {}
 
         for arguments in args:
-            for argument in re.compile('\s*,\s*').split(arguments):
-                columnsdevided = argument.split('.')
-                column_names = columnsdevided.pop(0)
-                for column_name in column_names.split('|'):
-                    if len(columnsdevided) == 0:
-                        req_columns[column_name] = True
-                    else:
-                        if column_name not in req_relationships:
-                            req_relationships[column_name] = []
-                        req_relationships[column_name].append(
-                            '.'.join(columnsdevided))
+            if arguments:
+                for argument in re.compile('\s*,\s*').split(arguments):
+                    columnsdevided = argument.split('.')
+                    column_names = columnsdevided.pop(0)
+                    for column_name in column_names.split('|'):
+                        if len(columnsdevided) == 0:
+                            req_columns[column_name] = True
+                        else:
+                            if column_name not in req_relationships:
+                                req_relationships[column_name] = []
+                            req_relationships[column_name].append(
+                                '.'.join(columnsdevided))
 
         columns = class_mapper(self.__class__).columns
         relations = {a: b for (a, b) in class_mapper(self.__class__).relationships.items()}
@@ -173,20 +174,20 @@ class PRBase:
             else:
                 raise ValueError("you requested for relation(s) but "
                                  "column(s) found `%s%s`" % (
-                    prefix, '`, `'.join(set(columns).intersection(
-                        req_relationships)),))
+                                     prefix, '`, `'.join(set(columns).intersection(
+                                         req_relationships)),))
 
         return ret
 
     @staticmethod
     def validate_before_update(mapper, connection, target):
-        ret = target.validate('update')
+        ret = target.validate(False)
         if len(ret['errors'].keys()):
             raise errors.ValidationException(ret)
 
     @staticmethod
     def validate_before_insert(mapper, connection, target):
-        ret = target.validate('insert')
+        ret = target.validate(True)
         if len(ret['errors'].keys()):
             raise errors.ValidationException(ret)
 

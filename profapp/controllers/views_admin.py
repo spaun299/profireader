@@ -1,6 +1,6 @@
 from .blueprints_declaration import admin_bp
 from flask import g, request, url_for, render_template, flash, current_app
-from .request_wrapers import ok, object_to_dict
+from .request_wrapers import ok
 from .pagination import pagination
 from ..models.translate import TranslateTemplate
 from config import Config

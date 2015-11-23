@@ -8,6 +8,7 @@ from ..models.portal import PortalDivision, Portal
 from ..models.users import User
 from ..models.files import File, FileContent
 from ..models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
+from config import Config
 # from ..models.tag import Tag
 
 from utils.db_utils import db
@@ -62,7 +63,8 @@ class ArticlePortalDivision(Base, PRBase):
     publishing_tm = Column(TABLE_TYPES['timestamp'])
     status = Column(TABLE_TYPES['id_profireader'], default=ARTICLE_STATUS_IN_PORTAL.published)
 
-    division = relationship('PortalDivision', backref=backref('article_portal_division', cascade="save-update, merge, delete"),
+    division = relationship('PortalDivision',
+                            backref=backref('article_portal_division', cascade="save-update, merge, delete"),
                             cascade="save-update, merge, delete")
     company = relationship(Company, secondary='article_company',
                            primaryjoin="ArticlePortalDivision.article_company_id == ArticleCompany.id",
@@ -139,8 +141,8 @@ class ArticlePortalDivision(Base, PRBase):
         # all = {'name': 'All', 'id': 0}
         companies = {}
         # companies.append(all)
-        articles = g.db.query(ArticlePortalDivision).\
-            join(ArticlePortalDivision.portal).\
+        articles = g.db.query(ArticlePortalDivision). \
+            join(ArticlePortalDivision.portal). \
             filter(Portal.id == portal_id).all()
         # for article in db(ArticlePortalDivision, portal_id=portal_id).all():
         for article in articles:
@@ -154,9 +156,9 @@ class ArticlePortalDivision(Base, PRBase):
 
     @staticmethod
     def subquery_portal_articles(search_text=None, portal_id=None, **kwargs):
-        sub_query = g.db.query(ArticlePortalDivision).filter_by(**kwargs).\
-            join(ArticlePortalDivision.division).\
-            join(PortalDivision.portal).\
+        sub_query = g.db.query(ArticlePortalDivision).filter_by(**kwargs). \
+            join(ArticlePortalDivision.division). \
+            join(PortalDivision.portal). \
             filter(Portal.id == portal_id).order_by(expression.desc(ArticlePortalDivision.publishing_tm))
 
         if search_text:
@@ -182,6 +184,7 @@ class ArticleCompany(Base, PRBase):
     md_tm = Column(TABLE_TYPES['timestamp'])
     image_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'), nullable=False)
     keywords = Column(TABLE_TYPES['keywords'], nullable=False)
+
     company = relationship(Company)
     editor = relationship(User)
     article = relationship('Article', primaryjoin="and_(Article.id==ArticleCompany.article_id)",
@@ -192,15 +195,14 @@ class ArticleCompany(Base, PRBase):
                                               "article_company_id",
                                   backref='company_article')
 
-    def get_client_side_dict(self, fields='id|title|short|'
-                                          'long|keywords|cr_tm|md_tm|company_id|'
-                                          'article_id|image_file_id|'
-                                          'status, company.name, portal_article.status,'
-                                          'portal_article.portal.name,portal_article.portal.id'):
-        return self.to_dict(fields)
+    def get_client_side_dict(self,
+                             standard_fields='id|title|short|keywords|cr_tm|md_tm|company_id|article_id|image_file_id|status',
+                             more_fields=None):
+        # 'company.~, portal_article.portal.~,' \
+        return self.to_dict(standard_fields, more_fields)
 
-    def validate(self, action):
-        ret = super().validate(action)
+    def validate(self, is_new):
+        ret = super().validate(is_new)
         # TODO: (AA to OZ): regexp doesn't work
 
         if not re.match('.*\S{3,}.*', self.title):
@@ -367,12 +369,6 @@ class Article(Base, PRBase):
                                     'submitted_versions.company.name'):
         return self.to_dict(fields)
 
-    @staticmethod
-    def save_new_article(user_id, **kwargs):
-        return Article(mine_version=ArticleCompany(editor_user_id=user_id,
-                                                   company_id=None,
-                                                   **kwargs),
-                       author_user_id=user_id)
 
     def get_article_with_html_tag(self, text_into_html):
         article = self.get_client_side_dict()

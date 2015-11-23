@@ -1,46 +1,20 @@
 from flask import render_template, redirect, url_for, request, g, make_response
-from profapp.forms.article import ArticleForm
 from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision
-from profapp.models.users import User
-# from profapp.models.company import Company
-# from db_init import db_session
 from .blueprints_declaration import article_bp
-from .request_wrapers import ok, object_to_dict
+from .request_wrapers import ok
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
-# import os
 from .pagination import pagination
 from config import Config
 from .views_file import crop_image, update_croped_image
-from ..models.files import ImageCroped, File
-from ..models.pr_base import PRBase
+from ..models.files import ImageCroped
 from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
-from ..models.translate import TranslateTemplate
+import time
 
-
-
-@article_bp.route('/translate/', methods=['POST'])
-@ok
-def translate(json):
-    translation = TranslateTemplate.getTranslate(request.json['template'], request.json['phrase'])
-    return {'phrase': translation}
-
-
-@article_bp.route('/save_translate/', methods=['POST'])
-@ok
-def save_translate(json):
-    return TranslateTemplate.getTranslate(request.json['template'], request.json['phrase'], request.json['url'])
-
-@article_bp.route('/update_last_accessed/', methods=['POST'])
-@ok
-def update_last_accessed(json):
-    return TranslateTemplate.update_last_accessed(request.json['template'], request.json['phrase'])
 
 @article_bp.route('/list/', methods=['GET'])
 def show_mine():
-    return render_template(
-        'article/list.html',
-        angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js')
+    return render_template('article/list.html')
 
 
 @article_bp.route('/list/', methods=['POST'])
@@ -85,91 +59,58 @@ def load_mine(json):
             'statuses': statuses}
 
 
+@article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
 @article_bp.route('/create/', methods=['GET'])
-def show_form_create():
-    return render_template('article/create.html')
+def article_show_form(article_company_id=None):
+    return render_template('article/form.html', article_company_id=article_company_id)
 
 
 @article_bp.route('/create/', methods=['POST'])
-@ok
-def load_form_create(json):
-    action = g.req('action', allowed=['load', 'validate', 'save'])
-    if action == 'load':
-        return {'id': '', 'title': '', 'short': '', 'long': '', 'coordinates': '',
-                'ratio': Config.IMAGE_EDITOR_RATIO}
-    if action == 'validate':
-        del json['coordinates'], json['ratio']
-
-        return Article.save_new_article(g.user_dict['id'],
-                                        **g.filter_json(json, 'title,short,long,keywords')).mine_version.validate(
-            'insert')
-    else:
-        image_id = json.get('image_file_id')
-        if image_id:
-            json['image_file_id'] = crop_image(image_id, json.get('coordinates'))
-        del json['coordinates'], json['ratio']
-        article = Article.save_new_article(g.user_dict['id'], **json)
-        g.db.add(article)
-        return article.get_client_side_dict()
-
-
-@article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
-def show_form_update(article_company_id):
-    return render_template('article/update.html',
-                           article_company_id=article_company_id)
-
-
+@article_bp.route('/update_mine/<string:mine_version_article_company_id>/', methods=['POST'])
 @article_bp.route('/update/<string:article_company_id>/', methods=['POST'])
 @ok
-def load_form_update(json, article_company_id):
-    action = g.req('action', allowed=['load', 'save', 'validate'])
-    article = ArticleCompany.get(article_company_id)
+def load_form_create(json, article_company_id=None, mine_version_article_company_id=None):
+    action = g.req('action', allowed=['load', 'validate', 'save'])
+
+    if article_company_id:  # companys version. always updating existing
+        articleVersion = ArticleCompany.get(article_company_id)
+    elif mine_version_article_company_id:  # updating personal version
+        articleVersion = ArticleCompany.get(mine_version_article_company_id)
+    else:  # creating personal version
+        articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
+
     if action == 'load':
-        article = article.get_client_side_dict()
-        article.update(ratio=Config.IMAGE_EDITOR_RATIO)
-        image_id = article.get('image_file_id')
-        if image_id:
+        image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None, 'image_file_id': None}
+        article_dict = articleVersion.get_client_side_dict(more_fields = 'long')
+
+        if article_dict.get('image_file_id'):
             try:
-                article['image_file_id'], coordinates = ImageCroped. \
-                    get_coordinates_and_original_img(image_id)
-                article.update(coordinates)
-            except NoResultFound:
+                # TODO: VK by OZ: pls check image_dict hs proper value
+                image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
+                    get_coordinates_and_original_img(article_dict.get('image_file_id'))
+            # TODO: VK by OZ: If you catch exception you must do something
+            except Exception:
                 pass
-        return article
+        return {'article': article_dict, 'image': image_dict}
     else:
-        article.attr({key: val for key, val in json.items() if key in
-                      ['keywords', 'title', 'short', 'long']})
-        if action == 'save':
-            image_id = json.get('image_file_id')
-            coordinates = json.get('coordinates')
-            if image_id:
-                if db(ImageCroped, original_image_id=image_id).count():
-                    update_croped_image(image_id, coordinates)
-                else:
-                    article.image_file_id = crop_image(image_id, coordinates)
-                    article.save()
-
-            article = article.get_client_side_dict()
-            # print(article['image_file_id'])
-            return article
+        # TODO: VK by OZ: pls filter image part * -> something more specific
+        parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
+        articleVersion.attr(parameters['article'])
+        if action == 'validate':
+            return articleVersion.validate(article_company_id is None)
         else:
-            # return {'errors': {}, 'warnings': {}, 'notices': {}}
-            article.detach()
-            return article.validate('update')
+            image_id = parameters.get('image_file_id')
+            if image_id:
+                # TODO: VK by OZ: pls next line
+                crop_image(image_id, json['image'].get('coordinates'))
+            return {'article': articleVersion.save().get_client_side_dict(more_fields = 'long'), 'image': json['image']}
 
-
-@article_bp.route('/save/<string:article_company_id>/', methods=['POST'])
-@ok
-def save(json, article_company_id):
-    pass
-    # return ret.get_client_side_dict()
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
 def details(article_id):
     return render_template('article/details.html',
                            article_id=article_id)
-
 
 @article_bp.route('/details/<string:article_id>/', methods=['POST'])
 @ok
