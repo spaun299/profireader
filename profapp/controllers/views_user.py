@@ -55,6 +55,7 @@ def edit_profile(user_id):
         user_fields['profireader_gender'] = request.form['gender']
         user_fields['profireader_link'] = request.form['link']
         user_fields['profireader_phone'] = request.form['phone']
+        user_fields['lang'] = request.form['language']
         user_fields['location'] = request.form['location']
         user_fields['about_me'] = request.form['about_me']
 

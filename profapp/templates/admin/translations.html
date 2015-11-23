@@ -10,7 +10,8 @@
 
             $scope.url_search_translations = {{ raw_url_for('admin.translations_load')|safe }};
             $scope.url_save_translations = {{ raw_url_for('admin.translations_save')|safe }};
-
+            $scope.url_delete_translations = {{ raw_url_for('admin.delete')|safe }}
+            $scope.error = '';
             $scope.page_changed = function () {
                 $scope.sendData(false);
             };
@@ -33,8 +34,23 @@
                 });
             };
 
+            $scope.delete = function(id, model){
+                $ok($scope.url_delete_translations(), {id: id}, function (resp) {
+                    if(resp == 'True'){
+                        $scope.sendData('');
+                    }else{
+                        $scope.error = 'error delete'
+                    }
+                    model.del = true;
+                }, function () {
+                }).finally(function () {
+                    model.del = false;
+                })
+            };
+
             $scope.sendData = function (new_search_text) {
-                var data = {}
+                $scope.error = '';
+                var data = {};
                 data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 data.template = $scope.template ? $scope.template : null;
                 data.url = $scope.url ? $scope.url : null;
@@ -103,6 +119,7 @@
                            onbeforesave="saveTranslation(translation['id'], lang, $data, translation)"
                            editable-text="translation[lang]">{{ translation[lang] }}</span>
                 </td>
+                <td><button class="btn btn-danger" ng-click="delete(translation.id, translation)">Delete</button><span ng-show="error" style="color: red">{{error}}</span></td>
             </tr>
             <tr ng-show="!loading && !areAllEmpty(translations)">
                 <td colspan="5">

@@ -82,7 +82,7 @@
                     <form class="suspend_employee" action="{{ url_for('company.suspend_employee') }}" onsubmit="return AjaxPost()" method="post">
                         <input type="hidden" id='company_id' name="company_id" value="{{ company.id }}">
                         <input type="hidden" id="user_id" name="user_id" value="{{ user_id }}">
-                        <input type="submit" value="{{ '{{' }}_('Suspend') {{ '}}' }} {{ company_user_rights[user_id]['name'] }} {{ '{{' }} _('from your company') {{ '}}' }}">
+                        <input type="submit" value="{{ '{{' }}_('Suspend `%(name)s` from your company', {'name': '{{ company_user_rights[user_id]['name'] }}' }){{ '}}' }}">
                     </form>
                 {% endif %}
             {% endfor %}
@@ -92,7 +92,7 @@
                 <form class="suspend_employee" action="{{ url_for('company.fire_employee') }}" onsubmit="return AjaxPost()" method="post">
                     <input type="hidden" id='company_id' name="company_id" value="{{ company.id }}">
                     <input type="hidden" id="user_id" name="user_id" value="{{ user_id }}">
-                    <input type="submit" value="{{ '{{' }}_('Fire'){{ '}}' }} {{ company_user_rights[user_id]['name']}} {{ '{{' }} _('from your company'){{ '}}' }}" >
+                    <input type="submit" value="{{ '{{' }}_('Fire %(name)s from your company',{'name': '{{ company_user_rights[user_id]['name']}}' } ){{ '}}' }}" >
                 </form>
                 {% endif %}
             {% endfor %}
@@ -122,13 +122,13 @@
                         <input type="hidden" id="company_id" name="company_id" value="{{ company.id }}">
                         <input type="hidden" id="user_id" name="user_id" value="{{ user_id }}">
                         <input type="hidden" id="req1" name="req" value="True">
-                        <input type="submit" id="apply" value="{{ '{{' }}_('Add'){{ '}}' }} {{ company_user_rights[user_id]['name'] }} {{ '{{' }}_('to your company'){{ '}}' }}">
+                        <input type="submit" id="apply" value="{{ '{{' }}_('Add %(name)s to your company', {'name' : '{{ company_user_rights[user_id]['name'] }}'}){{ '}}' }}">
                     </form>
                     <form class="add_subscriber" action="{{ url_for('company.confirm_subscriber') }}" onsubmit="return AjaxPost2()" id="subscribe" method="post">
                         <input type="hidden" id="company_id" name="company_id" value="{{ company.id }}">
                         <input type="hidden" id="user_id" name="user_id" value="{{ user_id }}">
                         <input type="hidden" id="req1" name="req" value='False'>
-                        <input type="submit" id="reject" value="{{ '{{' }}_('Don\'t add'){{ '}}' }} {{ company_user_rights[user_id]['name'] }} {{ '{{' }}_('to your company'){{ '}}' }}">
+                        <input type="submit" id="reject" value="{{ '{{' }}_('Don\'t add %(name)s to your company', {'name':'{{ company_user_rights[user_id]['name'] }}'}){{ '}}' }}">
                     </form>
                 {% endif %}
             {% endif %}

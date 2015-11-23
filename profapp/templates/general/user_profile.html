@@ -3,7 +3,6 @@
 {% block head %}
     {{ super() }}
 {% endblock head %}
-
 {% block portal_base %}
     {% include 'partials/portal_base_Profireader_auth_user.html' %}
 {% endblock portal_base %}
@@ -38,7 +37,7 @@
         <div class="info">
     {#        <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=256) }}"><br>#}
     {#        <img class="img-rounded profile-thumbnail" src="{{ user.profireader_avatar_url }}" style="width:{{ avatar_size }}px;height:{{ avatar_size }}px;border:0"><br>#}
-            <div class="profile-thumbnail" style="background-image: url('{{ user.avatar(size=avatar_size) }}')"></div>
+            <div class="profile-thumbnail" style="background-image: url('{{ user.profireader_avatar_url }}')"></div>
             <div class="item"><span>Your email:</span> {{ user.profireader_email }}</div>
             <div class="item"><span>Your display name:</span> {{ user.profireader_name }}</div>
             <div class="item"><span>Your first name:</span> {{ user.profireader_first_name or ''}}</div>

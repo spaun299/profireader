@@ -267,7 +267,7 @@ def crop_with_coordinates(image, coordinates,  ratio=Config.IMAGE_EDITOR_RATIO,
     try:
         area = [int(a) for a in (coordinates['x'], coordinates['y'], coordinates['width'],
                              coordinates['height'])
-            if int(a) in range(0, max(image_pil.size))]
+                if int(a) in range(0, max(image_pil.size))]
         angle = int(coordinates["rotate"])*-1
         area[2] = (area[0]+area[2])
         area[3] = (area[1]+area[3])

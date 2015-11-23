@@ -2,9 +2,9 @@ from .pr_base import PRBase, Base
 from ..constants.TABLE_TYPES import TABLE_TYPES
 from sqlalchemy import Column, ForeignKey, text
 from utils.db_utils import db
+import datetime
 import re
 from flask import g, request, current_app
-
 
 class TranslateTemplate(Base, PRBase):
     __tablename__ = 'translate'
@@ -17,8 +17,8 @@ class TranslateTemplate(Base, PRBase):
     md_tm = Column(TABLE_TYPES['timestamp'])
     template = Column(TABLE_TYPES['short_name'], default='')
     name = Column(TABLE_TYPES['name'], default='')
-    uk = Column(TABLE_TYPES['name'], default='')
     url = Column(TABLE_TYPES['keywords'], default='')
+    uk = Column(TABLE_TYPES['name'], default='')
     en = Column(TABLE_TYPES['name'], default='')
 
     def __init__(self, id=None, template=None, url='', name=None, uk=None, en=None):
@@ -67,6 +67,19 @@ class TranslateTemplate(Base, PRBase):
                                       url=url, **{l: phrase for l in TranslateTemplate.languages}).save()
 
         return getattr(exist, lang)
+
+    @staticmethod
+    def update_last_accessed(template, phrase):
+        i = datetime.datetime.now()
+        obj = [b for b in db(TranslateTemplate, template=template, name=phrase)]
+        obj[0].updates({'ac_tm': i})
+        return 'True'
+
+    @staticmethod
+    def delete(id):
+        obj = TranslateTemplate.get(id)
+        TranslateTemplate.delfile(obj)
+        return 'True'
 
     @staticmethod
     def isExist(template, phrase):

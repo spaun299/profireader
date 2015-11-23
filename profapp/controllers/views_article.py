@@ -29,8 +29,12 @@ def translate(json):
 @article_bp.route('/save_translate/', methods=['POST'])
 @ok
 def save_translate(json):
-    return TranslateTemplate.getTranslate(json['template'], json['phrase'], json['url'])
+    return TranslateTemplate.getTranslate(request.json['template'], request.json['phrase'], request.json['url'])
 
+@article_bp.route('/update_last_accessed/', methods=['POST'])
+@ok
+def update_last_accessed(json):
+    return TranslateTemplate.update_last_accessed(request.json['template'], request.json['phrase'])
 
 @article_bp.route('/list/', methods=['GET'])
 def show_mine():
