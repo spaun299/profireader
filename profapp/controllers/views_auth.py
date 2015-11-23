@@ -87,7 +87,6 @@ def login_signup_general(*soc_network_names):
                     return redirect(url_for('general.index'))
 
                 login_user(user)
-                session['logged_via'] = soc_network_names
                 flash('You have successfully logged in.')
 
                 # session['user_id'] = user.id assignment
