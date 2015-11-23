@@ -12,7 +12,6 @@
             $scope.url_save_translations = {{ raw_url_for('admin.translations_save')|safe }};
             $scope.url_delete_translations = {{ raw_url_for('admin.delete')|safe }}
             $scope.error = '';
-
             $scope.list_templates = [];
             $scope.page_changed = function () {
                 $scope.sendData(false);
@@ -36,8 +35,6 @@
                 // ignore all but the first file, it can only select one anyway
                 // set the filename into this column
                 gridRow.entity.filename = files[0].name;
-
-
                 // read the file and set it into a hidden column, which we may do stuff with later
                 var setFile = function(fileContent){
                   gridRow.entity.file = fileContent.currentTarget.result;
@@ -45,7 +42,6 @@
                   $scope.lastFile = fileContent.currentTarget.result;
                   $scope.$apply();
                   $scope.saveTranslation(files[0].id, files[0].lang, $scope.lastFile, files[0])
-
                 };
                 var reader = new FileReader();
                 reader.onload = setFile;
@@ -53,64 +49,11 @@
               };
             $scope.highlightFilteredHeader = function( row, rowRenderIndex, col, colRenderIndex ) {
                 if( col.filters[0].term ){
-                  return 'header-filtered';
+                    $scope.template = $scope.list_templates[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_templates[col.filters[0].term - 1]['label'];
+                    $scope.sendData('');
+                  //return 'header-filtered';
                 } else {
                   return '';
-                }
-              };
-
-            $scope.gridOptions1 = {
-                paginationPageSizes: [25, 50, 75],
-                paginationPageSize: 25,
-                useExternalPagination: true,
-                useExternalSorting: true,
-                enableFiltering: true,
-
-                columnDefs: [
-                  { field: 'Creation time',enableCellEdit: false },
-                  { field: 'Last accessed', enableSorting: false,enableCellEdit: false },
-                  { field: 'Template', enableSorting: false,enableCellEdit: false,
-//                        filterHeaderTemplate: '<div class="ui-grid-filter-container" ng-repeat="colFilter in col.Filters"><div my-custom-dropdown></div></div>',
-////                       filter: {
-////                      term: '1',
-////                      type: uiGridConstants.filter.SELECT,
-////                      selectOptions: $scope.list_templates
-////                    },
-//                        filter: {
-//                          term: 1,
-//                          options: [ {id: 1, value: 'male'}, {id: 2, value: 'female'}] //$scope.list_templates     // custom attribute that goes with custom directive above
-//                        },
-                    cellFilter: 'mapGender'},
-                  { field: 'First url used', enableSorting: false,enableCellEdit: false },
-                  { field: 'Phrase', enableSorting: false,enableCellEdit: false},
-                  { field: 'uk', enableSorting: false, enableCellEdit: true},
-                  { field: 'en', enableSorting: false,enableCellEdit: false}
-                ],
-                onRegisterApi: function(gridApi) {
-                  $scope.gridApi = gridApi;
-                  $scope.gridApi.core.on.sortChanged($scope, function(grid, sortColumns) {
-                    if (sortColumns.length == 0) {
-                      paginationOptions.sort = null;
-                    } else {
-                      paginationOptions.sort = sortColumns[0].sort.direction;
-                    }
-                    getPage();
-                  });
-                  gridApi.pagination.on.paginationChanged($scope, function (newPage, pageSize) {
-                    paginationOptions.pageNumber = newPage;
-                    paginationOptions.pageSize = pageSize;
-                    $scope.sendData('');
-                  });
-                  gridApi.edit.on.afterCellEdit($scope, function(rowEntity, colDef, newValue, oldValue) {
-                    //Do your REST call here via $http.get or $http.post
-                    if(newValue === oldValue){
-                        console.log(rowEntity['Template']);
-                    }else{
-                        $scope.saveTranslation(rowEntity['Template'], rowEntity['Phrase'], colDef['name'], newValue);
-                    }
-                    //Alert to show what info about the edit is available
-                    alert('Column: ' + colDef.name + ' ID: ' + rowEntity.id + ' Name: ' + rowEntity.name + ' Age: ' + rowEntity.age);
-                  });
                 }
               };
 
@@ -143,6 +86,7 @@
             };
 
             $scope.sendData = function (new_search_text) {
+
                 $scope.error = '';
                 var data = {};
                 data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
@@ -176,51 +120,85 @@
 
                     $scope.urls.unshift({label: '-- all --', value: undefined});
                     console.log($scope.templates[0]['label']);
-                    for(var n=0;n< $scope.templates.length;n++){
-                        $scope.list_templates.push({
-                            'label': $scope.templates[n]['label']
-                        })
+                    if($scope.list_templates.length === 0){
+                        for(var n=0;n< $scope.templates.length;n++){
+                            var val = n+1;
+                            val.toString();
+                            $scope.list_templates.push({
+                                'value': val.toString(),
+                                'label': $scope.templates[n]['label']
+                            })
+                        }
+                    }
+
+                    $scope.genderHash = [];
+                    for(var m=0;m< $scope.templates.length;m++){
+                            $scope.genderHash.push({
+                                'id': 'm+1',
+                                'value': $scope.templates[m]['label']
+                            })
                     }
                     console.log($scope.list_templates);
 
                     $scope.data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 })
             };
+             $scope.gridOptions1 = {
+                    paginationPageSizes: [25, 50, 75],
+                    paginationPageSize: 25,
+                    enableFiltering: true,
+                    useExternalPagination: true,
+                    useExternalSorting: true,
+                    useExternalFiltering: true,
 
-//            $scope.getData = function(translations){
-//                var list = [];
-//                var tr = translations;
-//                for(var i=0;i<tr.length;i++){
-//                    list.push({
-//                        'Creation time' : tr[i].cr_tm,
-//                        'Last accessed' : tr[i].ac_tm,
-//                        'Template' : tr[i].template,
-//                        'First url used' : tr[i].url,
-//                        'Phrase': tr[i].name
-//                    })
-//                }
-//                console.log(list);
-//                return list
-//            };
+                    columnDefs: [
+                      { field: 'Creation time',enableCellEdit: false },
+                      { field: 'Last accessed', enableSorting: false,enableCellEdit: false },
+                      { field: 'Template', enableSorting: false,enableCellEdit: false,
+                          filter: {
+                            term: '1',
+                            type: uiGridConstants.filter.SELECT,
+                            selectOptions: $scope.list_templates },
+                          headerCellClass: $scope.highlightFilteredHeader
+                      },
+                      { field: 'First url used', enableSorting: false,enableCellEdit: false },
+                      { field: 'Phrase', enableSorting: false,enableCellEdit: false},
+                      { field: 'uk', enableSorting: false, enableCellEdit: true},
+                      { field: 'en', enableSorting: false,enableCellEdit: false}
+                    ],
+                    onRegisterApi: function(gridApi) {
+                      $scope.gridApi = gridApi;
 
-        }])
-        .filter('mapGender', function() {
-              var genderHash = {
-                1: 'male',
-                2: 'female'
-              };
+                      $scope.gridApi.core.on.sortChanged($scope, function(grid, sortColumns) {
+                        if (sortColumns.length == 0) {
+                          paginationOptions.sort = null;
+                        } else {
+                          paginationOptions.sort = sortColumns[0].sort.direction;
+                        }
+                        getPage();
+                      });
+                      gridApi.pagination.on.paginationChanged($scope, function (newPage, pageSize) {
+                        paginationOptions.pageNumber = newPage;
+                        paginationOptions.pageSize = pageSize;
+                        $scope.sendData('');
+                      });
+                      gridApi.edit.on.afterCellEdit($scope, function(rowEntity, colDef, newValue, oldValue) {
+                        //Do your REST call here via $http.get or $http.post
+                        if(newValue === oldValue){
+                            console.log(rowEntity['Template']);
+                        }else{
+                            $scope.saveTranslation(rowEntity['Template'], rowEntity['Phrase'], colDef['name'], newValue);
+                        }
+                        //Alert to show what info about the edit is available
+                        alert('Column: ' + colDef.name + ' ID: ' + rowEntity.id + ' Name: ' + rowEntity.name + ' Age: ' + rowEntity.age);
+                      });
+                    }
+                  };
 
-              return function(input) {
-                if (!input){
-                  return '';
-                } else {
-                  return genderHash[input];
-                }
-              };
-            })
-        .directive('myCustomDropdown', function() {
+        }]);
+        module.directive('myCustomDropdown', function() {
           return {
-            template:'<select class="form-control" ng-model="template" ng-options="option.id as option.value for option in colFilter.options"></select>' // '<select ng-disabled="loading" style="width: 15em; padding: 5px;" ng-model="url" ng-options="url.value as url.label for url in urls"></select>'
+            template: '<select ng-disabled="loading" style="width: 15em; padding: 5px;" ng-model="url" ng-options="url.value as url.label for url in urls"></select>'
           };
         })
 
