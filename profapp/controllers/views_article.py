@@ -87,7 +87,6 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                 get_coordinates_and_original_img(article_dict.get('image_file_id'))
         return {'article': article_dict, 'image': image_dict}
     else:
-        print(json.get('image'))
         parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
 
         articleVersion.attr(parameters['article'])
