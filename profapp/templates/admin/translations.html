@@ -6,12 +6,14 @@
 
 
     <script>
-        module.controller('translation_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
+        module.controller('translation_list', ['$scope', '$ok', '$sce', 'uiGridConstants', function ($scope, $ok, $sce, uiGridConstants) {
 
             $scope.url_search_translations = {{ raw_url_for('admin.translations_load')|safe }};
             $scope.url_save_translations = {{ raw_url_for('admin.translations_save')|safe }};
             $scope.url_delete_translations = {{ raw_url_for('admin.delete')|safe }}
             $scope.error = '';
+
+            $scope.list_templates = [];
             $scope.page_changed = function () {
                 $scope.sendData(false);
             };
@@ -34,7 +36,6 @@
                 // ignore all but the first file, it can only select one anyway
                 // set the filename into this column
                 gridRow.entity.filename = files[0].name;
-                console.log(files[0].name);
 
 
                 // read the file and set it into a hidden column, which we may do stuff with later
@@ -50,6 +51,13 @@
                 reader.onload = setFile;
                 reader.readAsText( files[0] );
               };
+            $scope.highlightFilteredHeader = function( row, rowRenderIndex, col, colRenderIndex ) {
+                if( col.filters[0].term ){
+                  return 'header-filtered';
+                } else {
+                  return '';
+                }
+              };
 
             $scope.gridOptions1 = {
                 totalItems : 100,
@@ -57,10 +65,19 @@
                 paginationPageSize: 25,
                 useExternalPagination: true,
                 useExternalSorting: true,
+                enableFiltering: true,
+
                 columnDefs: [
-                  { field: 'Creation time' },
+                  { field: 'Creation time',enableCellEdit: false },
                   { field: 'Last accessed', enableSorting: false,enableCellEdit: false },
-                  { field: 'Template', enableSorting: false,enableCellEdit: false },
+                  { field: 'Template', enableSorting: false,enableCellEdit: false,
+
+                       filter: {
+                      term: '1',
+                      type: uiGridConstants.filter.SELECT,
+                      selectOptions: $scope.list_templates
+                    },
+                    cellFilter: 'mapGender', headerCellClass: $scope.highlightFilteredHeader },
                   { field: 'First url used', enableSorting: false,enableCellEdit: false },
                   { field: 'Phrase', enableSorting: false,enableCellEdit: false},
                   { field: 'uk', enableSorting: false, enableCellEdit: true},
@@ -83,8 +100,11 @@
                   });
                   gridApi.edit.on.afterCellEdit($scope, function(rowEntity, colDef, newValue, oldValue) {
                     //Do your REST call here via $http.get or $http.post
-                    $scope.saveTranslation(rowEntity['Template'], rowEntity['Phrase'], colDef['name'], newValue);
-                    console.log(rowEntity['Template']);
+                    if(newValue === oldValue){
+                        console.log(rowEntity['Template']);
+                    }else{
+                        $scope.saveTranslation(rowEntity['Template'], rowEntity['Phrase'], colDef['name'], newValue);
+                    }
                     //Alert to show what info about the edit is available
                     alert('Column: ' + colDef.name + ' ID: ' + rowEntity.id + ' Name: ' + rowEntity.name + ' Age: ' + rowEntity.age);
                   });
@@ -118,19 +138,6 @@
             $scope.pageNextPageClick = function(){
                 $scope.sendData(false);
             };
-//             var getPage = function(curPage, pageSize, sort) {
-//                  var url;
-//                  switch(sort) {
-//                    case uiGridConstants.ASC:
-//                      url = '/data/100_ASC.json';
-//                      break;
-//                    case uiGridConstants.DESC:
-//                      url = '/data/100_DESC.json';
-//                      break;
-//                    default:
-//                      url = '/data/100.json';
-//                      break;
-//                  }
 
             $scope.sendData = function (new_search_text) {
                 $scope.error = '';
@@ -163,7 +170,15 @@
                     $scope.templates.unshift({label: '-- all --', value: undefined});
 
                     $scope.urls = resp.urls;
+
                     $scope.urls.unshift({label: '-- all --', value: undefined});
+                    console.log($scope.templates[0]['label']);
+                    for(var n=0;n< $scope.templates.length;n++){
+                        $scope.list_templates.push({
+                            'label': $scope.templates[n]['label']
+                        })
+                    }
+                    console.log($scope.list_templates);
 
                     $scope.data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 })
@@ -185,7 +200,22 @@
 //                return list
 //            };
 
-        }]);
+        }])
+        .filter('mapGender', function() {
+
+              return function(input) {
+                if (!input){
+                  return '';
+                } else {
+                    return ''
+                }
+              };
+            })
+        .directive('myCustomDropdown', function() {
+          return {
+            template: ''//'<select ng-disabled="loading" style="width: 15em; padding: 5px;" ng-model="url" ng-options="url.value as url.label for url in urls"></select>' //'<select class="form-control" ng-model="template" ng-options="option.id as option.value for option in colFilter.options"></select>'
+          };
+        })
 
     </script>
     {% raw %}
