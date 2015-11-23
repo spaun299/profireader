@@ -261,8 +261,7 @@ class User(Base, UserMixin, PRBase):
         banned = self.banned
         if self.banned:
             flash('Sorry, you cannot login into the Profireader. Contact the profireader'
-                  'administrator, please: ' +
-                  current_app.config['PROFIREADER_MAIL_SENDER'])
+                  'administrator, please: ' + current_app.config['PROFIREADER_MAIL_SENDER'])
         return banned
 
     def ban(self):
@@ -303,12 +302,8 @@ class User(Base, UserMixin, PRBase):
         else:
             url = 'http://www.gravatar.com/avatar'
 
-        email = 'guest@profireader.com'
-        if self.profireader_email:
-            email = self.profireader_email
-
-        hash = hashlib.md5(
-            email.encode('utf-8')).hexdigest()
+        email = getattr(self, 'profireader_email', 'guest@profireader.com')
+        hash = hashlib.md5(email.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
             url=url, hash=hash, size=size, default=default, rating=rating)
 

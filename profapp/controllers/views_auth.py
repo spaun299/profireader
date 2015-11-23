@@ -107,7 +107,7 @@ def unconfirmed():
     return render_template('auth/unconfirmed.html')
 
 
-@auth_bp.route('/login_signup/', methods=['GET'])
+@auth_bp.route('/login_signup', methods=['GET'])
 def login_signup_endpoint():
     # if g.user_init and g.user_init.is_authenticated():
     if g.user_init.is_authenticated():
@@ -116,7 +116,7 @@ def login_signup_endpoint():
             return redirect(url_for('general.reader_subscription', portal_id=portal_id))
         flash('You are already logged in')
 
-    login_signup = request.args.get('login_signup', None)
+    login_signup = request.args.get('login_signup', 'login')
 
     login_form = LoginForm()
     signup_form = RegistrationForm()
