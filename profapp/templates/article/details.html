@@ -88,7 +88,7 @@
             {{ data.mine_version.short }}
             <h4>{{ _('Created at %(data.mine_version.cr_tm)s') }}</h4>
             <h4>{{ _('Last modified at %(data.mine_version.md_tm)s') }} [<a
-                    href="{{ url_update({article_company_id: data.mine_version.id}) }}">edit</a>]</h4>
+                    href="{{ url_update({article_company_id: data.mine_version.id}) }}">{{_('edit')}}</a>]</h4>
 
             {{ _('submit my article to company') }} <input typeahead-on-select="onSelect($item, $model, $label)"
                                                            typeahead-template-url="typeaheadTemplate.html"

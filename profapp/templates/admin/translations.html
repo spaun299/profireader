@@ -60,7 +60,6 @@
               };
 
             $scope.gridOptions1 = {
-                totalItems : 100,
                 paginationPageSizes: [25, 50, 75],
                 paginationPageSize: 25,
                 useExternalPagination: true,
@@ -71,13 +70,17 @@
                   { field: 'Creation time',enableCellEdit: false },
                   { field: 'Last accessed', enableSorting: false,enableCellEdit: false },
                   { field: 'Template', enableSorting: false,enableCellEdit: false,
-
-                       filter: {
-                      term: '1',
-                      type: uiGridConstants.filter.SELECT,
-                      selectOptions: $scope.list_templates
-                    },
-                    cellFilter: 'mapGender', headerCellClass: $scope.highlightFilteredHeader },
+//                        filterHeaderTemplate: '<div class="ui-grid-filter-container" ng-repeat="colFilter in col.Filters"><div my-custom-dropdown></div></div>',
+////                       filter: {
+////                      term: '1',
+////                      type: uiGridConstants.filter.SELECT,
+////                      selectOptions: $scope.list_templates
+////                    },
+//                        filter: {
+//                          term: 1,
+//                          options: [ {id: 1, value: 'male'}, {id: 2, value: 'female'}] //$scope.list_templates     // custom attribute that goes with custom directive above
+//                        },
+                    cellFilter: 'mapGender'},
                   { field: 'First url used', enableSorting: false,enableCellEdit: false },
                   { field: 'Phrase', enableSorting: false,enableCellEdit: false},
                   { field: 'uk', enableSorting: false, enableCellEdit: true},
@@ -202,18 +205,22 @@
 
         }])
         .filter('mapGender', function() {
+              var genderHash = {
+                1: 'male',
+                2: 'female'
+              };
 
               return function(input) {
                 if (!input){
                   return '';
                 } else {
-                    return ''
+                  return genderHash[input];
                 }
               };
             })
         .directive('myCustomDropdown', function() {
           return {
-            template: ''//'<select ng-disabled="loading" style="width: 15em; padding: 5px;" ng-model="url" ng-options="url.value as url.label for url in urls"></select>' //'<select class="form-control" ng-model="template" ng-options="option.id as option.value for option in colFilter.options"></select>'
+            template:'<select class="form-control" ng-model="template" ng-options="option.id as option.value for option in colFilter.options"></select>' // '<select ng-disabled="loading" style="width: 15em; padding: 5px;" ng-model="url" ng-options="url.value as url.label for url in urls"></select>'
           };
         })
 
