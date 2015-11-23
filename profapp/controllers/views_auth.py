@@ -107,7 +107,7 @@ def unconfirmed():
     return render_template('auth/unconfirmed.html')
 
 
-@auth_bp.route('/login_signup', methods=['GET'])
+@auth_bp.route('/login_signup/', methods=['GET'])
 def login_signup_endpoint():
     # if g.user_init and g.user_init.is_authenticated():
     if g.user_init.is_authenticated():
