@@ -38,17 +38,17 @@
     {#        <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=256) }}"><br>#}
     {#        <img class="img-rounded profile-thumbnail" src="{{ user.profireader_avatar_url }}" style="width:{{ avatar_size }}px;height:{{ avatar_size }}px;border:0"><br>#}
             <div class="profile-thumbnail" style="background-image: url('{{ user.profireader_avatar_url }}')"></div>
-            <div class="item"><span>Your email:</span> {{ user.profireader_email }}</div>
-            <div class="item"><span>Your display name:</span> {{ user.profireader_name }}</div>
-            <div class="item"><span>Your first name:</span> {{ user.profireader_first_name or ''}}</div>
-            <div class="item"><span>Your last name:</span> {{ user.profireader_last_name or ''}}</div>
-            <div class="item"><span>Gender:</span> {{ user.profireader_gender or ''}}</div>
-            <div class="item"><span>Your web-page:</span> {{ user.profireader_link or ''}}</div>
-            <div class="item"><span>Phone:</span>  {{ user.profireader_phone.national or ''}}</div>
-            <div class="item"><span>Your location:</span> {{ user.location or ''}}</div>
-            <div class="item"><span>About:</span> {{ user.about_me or ''}}</div>
-    {#        <p>Member since {{ '{{' }} user.registered_tm {{ '}}' }}.</p>#}
-            <div class="item"><span>Member since</span>{{ moment(user.registered_tm).format('L') }}.</div>
+            <div class="item"><span>{{ '{{' }}_('Your email'){{ '}}' }}:</span> {{ user.profireader_email }}</div>
+            <div class="item"><span>{{ '{{' }}_('Your display name'){{ '}}' }}:</span> {{ user.profireader_name }}</div>
+            <div class="item"><span>{{ '{{' }}_('Your first name'){{ '}}' }}:</span> {{ user.profireader_first_name or ''}}</div>
+            <div class="item"><span>{{ '{{' }}_('Your last name'){{ '}}' }}:</span> {{ user.profireader_last_name or ''}}</div>
+            <div class="item"><span>{{ '{{' }}_('Gender'){{ '}}' }}:</span> {{ user.profireader_gender or ''}}</div>
+            <div class="item"><span>{{ '{{' }}_('Your web-page'){{ '}}' }}:</span> {{ user.profireader_link or ''}}</div>
+            <div class="item"><span>{{ '{{' }}_('Phone'){{ '}}' }}:</span>  {{ user.profireader_phone.national or ''}}</div>
+            <div class="item"><span>{{ '{{' }}_('Your location'){{ '}}' }}:</span> {{ user.location or ''}}</div>
+            <div class="item"><span>{{ '{{' }}_('About'){{ '}}' }}:</span> {{ user.about_me or ''}}</div>
+    {#        <p>{{ '{{' }}_('Member since'){{ '}}' }} {{ '{{' }} user.registered_tm {{ '}}' }}.</p>#}
+            <div class="item"><span{{ '{{' }}_('Member since'){{ '}}' }}</span>{{ moment(user.registered_tm).format('L') }}.</div>
         </div>
     </div>
 </div>

@@ -110,7 +110,7 @@
         <h3>{{ _('Article title is `%(title)s` submitted to company `%(company.name)s` and has status `%(status)s`',
             a_submitted) }} [<a
                     href="{{ url_update({article_company_id: a_submitted.id}) }}">edit</a>]
-            <span ng-if="a_submitted.status === 'declined'">[<a ng-click="resubmit(a_submitted.id)" href="#">resubmit</a>]</span>
+            <span ng-if="a_submitted.status === 'declined'">[<a ng-click="resubmit(a_submitted.id)" href="#">{{_('resubmit')}}</a>]</span>
         </h3>
         {{ a_submitted.short }}
 <!-- TODO RP by OZ:  PART 1. if we change element of array data.submitted (see PART 2) below h5 elements don't rerendered  -->
