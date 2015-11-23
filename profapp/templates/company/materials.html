@@ -35,7 +35,7 @@
 
 
             $scope.sendData = function (new_search_text) {
-                var data = {}
+                var data = {};
                 data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 data.status = $scope.status ? $scope.status : null;
                 data.portal_id = ($scope.portal_id !== ' ') ? $scope.portal_id : null;
@@ -64,7 +64,7 @@
 
         <table style="width:100%">
             <tr>
-                <th>Material status</th>
+                <th>{{_('Material status')}}</th>
                 <th width="250px">{{_('Date')}}</th>
                 <th width="250px">{{_('Title')}}</th>
                 <th width="250px">{{_('Portals - Bublication status')}}</th>

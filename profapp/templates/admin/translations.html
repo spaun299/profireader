@@ -6,12 +6,13 @@
 
 
     <script>
-        module.controller('translation_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
+        module.controller('translation_list', ['$scope', '$ok', '$sce', 'uiGridConstants', function ($scope, $ok, $sce, uiGridConstants) {
 
             $scope.url_search_translations = {{ raw_url_for('admin.translations_load')|safe }};
             $scope.url_save_translations = {{ raw_url_for('admin.translations_save')|safe }};
             $scope.url_delete_translations = {{ raw_url_for('admin.delete')|safe }}
             $scope.error = '';
+            $scope.list_templates = [];
             $scope.page_changed = function () {
                 $scope.sendData(false);
             };
@@ -34,9 +35,6 @@
                 // ignore all but the first file, it can only select one anyway
                 // set the filename into this column
                 gridRow.entity.filename = files[0].name;
-                console.log(files[0].name);
-
-
                 // read the file and set it into a hidden column, which we may do stuff with later
                 var setFile = function(fileContent){
                   gridRow.entity.file = fileContent.currentTarget.result;
@@ -44,50 +42,18 @@
                   $scope.lastFile = fileContent.currentTarget.result;
                   $scope.$apply();
                   $scope.saveTranslation(files[0].id, files[0].lang, $scope.lastFile, files[0])
-
                 };
                 var reader = new FileReader();
                 reader.onload = setFile;
                 reader.readAsText( files[0] );
               };
-
-            $scope.gridOptions1 = {
-                totalItems : 100,
-                paginationPageSizes: [25, 50, 75],
-                paginationPageSize: 25,
-                useExternalPagination: true,
-                useExternalSorting: true,
-                columnDefs: [
-                  { field: 'Creation time' },
-                  { field: 'Last accessed', enableSorting: false,enableCellEdit: false },
-                  { field: 'Template', enableSorting: false,enableCellEdit: false },
-                  { field: 'First url used', enableSorting: false,enableCellEdit: false },
-                  { field: 'Phrase', enableSorting: false,enableCellEdit: false},
-                  { field: 'uk', enableSorting: false, enableCellEdit: true},
-                  { field: 'en', enableSorting: false,enableCellEdit: false}
-                ],
-                onRegisterApi: function(gridApi) {
-                  $scope.gridApi = gridApi;
-                  $scope.gridApi.core.on.sortChanged($scope, function(grid, sortColumns) {
-                    if (sortColumns.length == 0) {
-                      paginationOptions.sort = null;
-                    } else {
-                      paginationOptions.sort = sortColumns[0].sort.direction;
-                    }
-                    getPage();
-                  });
-                  gridApi.pagination.on.paginationChanged($scope, function (newPage, pageSize) {
-                    paginationOptions.pageNumber = newPage;
-                    paginationOptions.pageSize = pageSize;
+            $scope.highlightFilteredHeader = function( row, rowRenderIndex, col, colRenderIndex ) {
+                if( col.filters[0].term ){
+                    $scope.template = $scope.list_templates[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_templates[col.filters[0].term - 1]['label'];
                     $scope.sendData('');
-                  });
-                  gridApi.edit.on.afterCellEdit($scope, function(rowEntity, colDef, newValue, oldValue) {
-                    //Do your REST call here via $http.get or $http.post
-                    $scope.saveTranslation(rowEntity['Template'], rowEntity['Phrase'], colDef['name'], newValue);
-                    console.log(rowEntity['Template']);
-                    //Alert to show what info about the edit is available
-                    alert('Column: ' + colDef.name + ' ID: ' + rowEntity.id + ' Name: ' + rowEntity.name + ' Age: ' + rowEntity.age);
-                  });
+                  //return 'header-filtered';
+                } else {
+                  return '';
                 }
               };
 
@@ -118,21 +84,9 @@
             $scope.pageNextPageClick = function(){
                 $scope.sendData(false);
             };
-//             var getPage = function(curPage, pageSize, sort) {
-//                  var url;
-//                  switch(sort) {
-//                    case uiGridConstants.ASC:
-//                      url = '/data/100_ASC.json';
-//                      break;
-//                    case uiGridConstants.DESC:
-//                      url = '/data/100_DESC.json';
-//                      break;
-//                    default:
-//                      url = '/data/100.json';
-//                      break;
-//                  }
 
             $scope.sendData = function (new_search_text) {
+
                 $scope.error = '';
                 var data = {};
                 data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
@@ -163,29 +117,90 @@
                     $scope.templates.unshift({label: '-- all --', value: undefined});
 
                     $scope.urls = resp.urls;
+
                     $scope.urls.unshift({label: '-- all --', value: undefined});
+                    console.log($scope.templates[0]['label']);
+                    if($scope.list_templates.length === 0){
+                        for(var n=0;n< $scope.templates.length;n++){
+                            var val = n+1;
+                            val.toString();
+                            $scope.list_templates.push({
+                                'value': val.toString(),
+                                'label': $scope.templates[n]['label']
+                            })
+                        }
+                    }
+
+                    $scope.genderHash = [];
+                    for(var m=0;m< $scope.templates.length;m++){
+                            $scope.genderHash.push({
+                                'id': 'm+1',
+                                'value': $scope.templates[m]['label']
+                            })
+                    }
+                    console.log($scope.list_templates);
 
                     $scope.data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 })
             };
+             $scope.gridOptions1 = {
+                    paginationPageSizes: [25, 50, 75],
+                    paginationPageSize: 25,
+                    enableFiltering: true,
+                    useExternalPagination: true,
+                    useExternalSorting: true,
+                    useExternalFiltering: true,
 
-//            $scope.getData = function(translations){
-//                var list = [];
-//                var tr = translations;
-//                for(var i=0;i<tr.length;i++){
-//                    list.push({
-//                        'Creation time' : tr[i].cr_tm,
-//                        'Last accessed' : tr[i].ac_tm,
-//                        'Template' : tr[i].template,
-//                        'First url used' : tr[i].url,
-//                        'Phrase': tr[i].name
-//                    })
-//                }
-//                console.log(list);
-//                return list
-//            };
+                    columnDefs: [
+                      { field: 'Creation time',enableCellEdit: false },
+                      { field: 'Last accessed', enableSorting: false,enableCellEdit: false },
+                      { field: 'Template', enableSorting: false,enableCellEdit: false,
+                          filter: {
+                            term: '1',
+                            type: uiGridConstants.filter.SELECT,
+                            selectOptions: $scope.list_templates },
+                          headerCellClass: $scope.highlightFilteredHeader
+                      },
+                      { field: 'First url used', enableSorting: false,enableCellEdit: false },
+                      { field: 'Phrase', enableSorting: false,enableCellEdit: false},
+                      { field: 'uk', enableSorting: false, enableCellEdit: true},
+                      { field: 'en', enableSorting: false,enableCellEdit: false}
+                    ],
+                    onRegisterApi: function(gridApi) {
+                      $scope.gridApi = gridApi;
+
+                      $scope.gridApi.core.on.sortChanged($scope, function(grid, sortColumns) {
+                        if (sortColumns.length == 0) {
+                          paginationOptions.sort = null;
+                        } else {
+                          paginationOptions.sort = sortColumns[0].sort.direction;
+                        }
+                        getPage();
+                      });
+                      gridApi.pagination.on.paginationChanged($scope, function (newPage, pageSize) {
+                        paginationOptions.pageNumber = newPage;
+                        paginationOptions.pageSize = pageSize;
+                        $scope.sendData('');
+                      });
+                      gridApi.edit.on.afterCellEdit($scope, function(rowEntity, colDef, newValue, oldValue) {
+                        //Do your REST call here via $http.get or $http.post
+                        if(newValue === oldValue){
+                            console.log(rowEntity['Template']);
+                        }else{
+                            $scope.saveTranslation(rowEntity['Template'], rowEntity['Phrase'], colDef['name'], newValue);
+                        }
+                        //Alert to show what info about the edit is available
+                        alert('Column: ' + colDef.name + ' ID: ' + rowEntity.id + ' Name: ' + rowEntity.name + ' Age: ' + rowEntity.age);
+                      });
+                    }
+                  };
 
         }]);
+        module.directive('myCustomDropdown', function() {
+          return {
+            template: '<select ng-disabled="loading" style="width: 15em; padding: 5px;" ng-model="url" ng-options="url.value as url.label for url in urls"></select>'
+          };
+        })
 
     </script>
     {% raw %}

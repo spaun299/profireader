@@ -14,7 +14,7 @@
 </div>
 <form action="{{ url_for('auth.change_email_request') }}" method="POST">
     {{ form.email(placeholder='yourname@email.com', maxlength="100", type="email") }} <br/>
-    {{ form.password(placeholder='Password') }} <br/>
+    {{ form.password(placeholder="{{_('Password')}}") }} <br/>
     {{ form.submit(type="submit") }}
     {{ form.csrf_token }}
 </form>

@@ -87,7 +87,7 @@
         <div ng-if="loading">{{_('Loading...')}}</div>
         <div ng-if="!loading">
             <div ng-if="myRights('publish')">
-                <h2>Article <span style="color: #1295bf">{{ data.article.title }}</span> {{_('was sent from company')}} <span
+                <h2>{{_('Article %(data.article.title)s was sent from company')}} <span
                         style="color: #1295bf">'{{ data.article.company.name }}'</span></h2><br>
                 {{_('Short description')}}
                 <input type="text" value="{{ data.article.short }}" disabled><br>
