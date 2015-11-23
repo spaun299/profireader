@@ -81,8 +81,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
     if action == 'load':
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None, 'image_file_id': None}
-        article_dict = articleVersion.get_client_side_dict(more_fields = 'long')
-
+        article_dict = articleVersion.get_client_side_dict(more_fields='long')
         if article_dict.get('image_file_id'):
             try:
                 # TODO: VK by OZ: pls check image_dict hs proper value
@@ -94,17 +93,20 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         return {'article': article_dict, 'image': image_dict}
     else:
         # TODO: VK by OZ: pls filter image part * -> something more specific
+
         parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
 
         articleVersion.attr(parameters['article'])
         if action == 'validate':
             return articleVersion.validate(article_company_id is None)
         else:
-            image_id = parameters.get('image_file_id')
+            image_id = parameters['image'].get('image_file_id')
             if image_id:
                 # TODO: VK by OZ: pls next line
-                crop_image(image_id, json['image'].get('coordinates'))
-            return {'article': articleVersion.save().get_client_side_dict(more_fields = 'long'), 'image': json['image']}
+                articleVersion.image_file_id = crop_image(image_id,
+                                                          json['image'].get('coordinates'))
+            return {'article': articleVersion.save().get_client_side_dict(more_fields='long'),
+                    'image': json['image']}
 
 
 

@@ -220,7 +220,7 @@ def crop_image(image_id, coordinates):
         croped = File()
         croped.md_tm = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         croped.size = sys.getsizeof(bytes_file.getvalue())
-        croped.name = image_query.name + '_croped'
+        croped.name = image_query.name + '_cropped'
         croped.parent_id = company_owner.system_folder_file_id
         croped.root_folder_id = company_owner.system_folder_file_id
         croped.mime = image_query.mime

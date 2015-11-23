@@ -602,7 +602,7 @@ class ImageCroped(Base, PRBase):
     @staticmethod
     def get_coordinates_and_original_img(croped_image_id):
         coor_img = db(ImageCroped, croped_image_id=croped_image_id).one()
-        return coor_img.original_image_id, {'coordinates': coor_img.get_client_side_dict()}
+        return coor_img.original_image_id, coor_img.get_client_side_dict()
 
 
 class YoutubeApi(GoogleAuthorize):
