@@ -90,7 +90,7 @@ def create_save(json, create_or_update, company_id):
         if action == 'save':
             return portal.setup_created_portal(g.filter_json(json_portal, 'logo_file_id')).save().get_client_side_dict()
         else:
-            return portal.validate(create_or_update)
+            return portal.validate(create_or_update == 'insert')
 
 
 # member_company = Portal.companies

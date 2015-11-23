@@ -609,7 +609,7 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
         $scope.src = $scope.src + '?' + $.param(params);
     }]);
 
-module.run(function ($rootScope, $ok, $sce) {
+module.run(function ($rootScope, $ok, $sce, $modal) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
     angular.extend($rootScope, {
         fileUrl: function (file_id, down, if_no_file) {
@@ -635,7 +635,7 @@ module.run(function ($rootScope, $ok, $sce) {
             var CtrlName = this.controllerName ? this.controllerName : 'None';
             if (scope.$$translate[phrase] === undefined) {
                 scope.$$translate[phrase] = phrase;
-                $ok('/articles/save_translate/', {
+                $ok('/tools/save_translate/', {
                     template: CtrlName,
                     phrase: phrase,
                     url: window.location.href
@@ -651,7 +651,7 @@ module.run(function ($rootScope, $ok, $sce) {
                 //scope.$$translate[phrase] = phrase;
             } else if (scope.$$translate_accessed[phrase] === undefined) {
                 scope.$$translate_accessed[phrase] = true;
-                $ok('/articles/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
+                $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
 
                 });
             }
@@ -693,6 +693,29 @@ module.run(function ($rootScope, $ok, $sce) {
             });
         },
         areAllEmpty: areAllEmpty,
+        chooseImageinFileManager: function (do_on_action, default_action, callfor) {
+            var scope = this;
+            var callfor_ = callfor?callfor:'file_browse_image';
+            var default_action_ = default_action?default_action:'file_browse_image';
+            scope.filemanagerModal = $modal.open({
+                templateUrl: 'filemanager.html',
+                controller: 'filemanagerCtrl',
+                size: 'filemanager-halfscreen',
+                resolve: {
+                    file_manager_called_for: function () {
+                        return callfor_
+                    },
+                    file_manager_on_action: function () {
+                        return {
+                            choose: do_on_action
+                        }
+                    },
+                    file_manager_default_action: function () {
+                        return default_action_
+                    }
+                }
+            });
+        },
         tinymceImageOptions: {
             inline: false,
             plugins: 'advlist autolink link image lists charmap print preview paste',
@@ -876,11 +899,10 @@ function add_message(amessage, atype, atime) {
     return angularControllerFunction('message-controller', 'add_message')(amessage, atype, atime);
 }
 
-function randomHash()
-{
+function randomHash() {
     var text = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for( var i=0; i < 32; i++ )
+    for (var i = 0; i < 32; i++)
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     return text;
 }
