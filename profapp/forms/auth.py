@@ -26,9 +26,11 @@ class ValidateDisplayname(object):
         self.message = message
 
     def __call__(self, form, field):
+        print('!!!')
         if g.db.query(User).filter_by(profireader_name=field.data).first():
             raise ValidationError(self.message)
             # pass
+        pass
 
 validate_displayname = ValidateDisplayname
 
@@ -46,9 +48,9 @@ class RegistrationForm(Form):
     displayname = StringField('displayname', validators=[
         DataRequired(), Length(1, 64), validate_displayname('Username already in use. Please choose another name.'),
         Regexp('^[A-Za-z][A-Za-z0-9_.]*$', 0, 'User names must have only letters, numbers, dots or underscores')])
-    password = PasswordField('Password', validators=[
-        DataRequired(), EqualTo('password2', message='Passwords must match.')])
-    password2 = PasswordField('Confirm password', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    password2 = PasswordField('Confirm password', validators=[DataRequired(),
+                                                              EqualTo('password', message='Passwords must match.')])
     submit_register = SubmitField('Register')
 
 
