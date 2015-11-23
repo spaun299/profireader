@@ -41,7 +41,7 @@ def login_signup_general(*soc_network_names):
                           "soc-network account yet. "
                           "Please confirm email first or choose "
                           "another way of authentication.")
-                    redirect(url_for('auth.login_signup') + '?login_signup=login')
+                    redirect(url_for('auth.login_signup_endpoint') + '?login_signup=login')
 
                 db_fields = DB_FIELDS[soc_network_names[-1]]
                 # user = g.db.query(User).filter(getattr(User, db_fields['id']) == result_user.id).first()
@@ -134,7 +134,7 @@ def signup():
     if g.user_init.is_authenticated():
         # raise BadDataProvided
         flash('You are already logged in. To sign up Profireader with new account you should logout first')
-        return redirect(url_for('auth.login_signup') + '?login_signup=signup')
+        return redirect(url_for('auth.login_signup_endpoint') + '?login_signup=signup')
 
     signup_form = RegistrationForm()
     login_form = LoginForm()
@@ -154,17 +154,17 @@ def signup():
         g.db.add(user)
         g.db.commit()
         token = user.generate_confirmation_token()
-        send_email(user.profireader_email, 'Confirm Your Account',
-                   'auth/email/confirm', user=user, token=token)
+        send_email(user.profireader_email, 'Confirm Your Account', 'auth/email/confirm', user=user, token=token)
         flash('A confirmation email has been sent to you by email.')
-        return redirect(url_for('auth.login_signup') + '?login_signup=login')
+        # return redirect(url_for('auth.login_signup_endpoint') + '?login_signup=login')
+        return redirect(url_for('auth.login_signup_endpoint'))
     return render_template('auth/login_signup.html',
                            login_signup='signup',
                            login_form=login_form,
                            signup_form=signup_form)
 
 
-@auth_bp.route('/login_signup/<soc_network_name>', methods=['GET', 'POST'])
+@auth_bp.route('/login_signup_socnet/<soc_network_name>', methods=['GET', 'POST'])
 def login_signup_soc_network(soc_network_name):
     return login_signup_general('profireader', soc_network_name)
 
@@ -214,7 +214,7 @@ def login():
                 return redirect(url_for('general.reader_subscription', portal_id=portal_id))
             return redirect(request.args.get('next') or url_for('general.index'))
         flash('Invalid username or password.')
-        redirect_url = url_for('auth.login_signup') + '?login_signup=login'
+        redirect_url = url_for('auth.login_signup_endpoint') + '?login_signup=login'
         redirect_url += ('&' + 'portal_id=' + portal_id) if portal_id else ''
         return redirect(redirect_url)
     return render_template('auth/login_signup.html',
@@ -290,7 +290,7 @@ def password_reset_request():
             flash('An email with instructions to reset your password has been sent to you.')
         else:
             flash('You are not Profireader user yet. Sign up Profireader first please.')
-        return redirect(url_for('auth.login_signup') + '?login_signup=login')
+        return redirect(url_for('auth.login_signup_endpoint') + '?login_signup=login')
     return render_template('auth/reset_password.html', form=form)
 
 
@@ -306,7 +306,7 @@ def password_reset(token):
             return redirect(url_for('general.index'))
         if user.reset_password(token, form.password.data):
             flash('Your password has been updated.')
-            return redirect(url_for('auth.login_signup') + '?login_signup=login')
+            return redirect(url_for('auth.login_signup_endpoint') + '?login_signup=login')
         else:
             return redirect(url_for('general.index'))
     return render_template('auth/reset_password_token.html', form=form, token=token)

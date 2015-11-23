@@ -351,7 +351,7 @@ login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 #  The login_view attribute sets the endpoint for the login page.
 #  I am not sure that it is necessary
-login_manager.login_view = 'auth.login'
+login_manager.login_view = 'auth.login_signup'
 
 
 class AnonymousUser(AnonymousUserMixin):
