@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, request, g
+from flask import render_template, redirect, url_for
 from .blueprints_declaration import general_bp
 from flask.ext.login import current_user, login_required
 
@@ -18,7 +18,7 @@ def index():
                            )
 
 
-@general_bp.route('/subscribe/<string:portal_id>')
+@general_bp.route('subscribe/<string:portal_id>')
 @login_required
 def reader_subscribe(portal_id):
     # TODO (AA to AA): code here.

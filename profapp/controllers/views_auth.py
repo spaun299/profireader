@@ -113,7 +113,7 @@ def login_signup_endpoint():
     if g.user_init.is_authenticated():
         portal_id = request.args.get('subscribe', None)
         if portal_id:
-            return redirect(url_for('general.reader_subscription', portal_id=portal_id))
+            return redirect(url_for('general.reader_subscribe', portal_id=portal_id))
         flash('You are already logged in')
 
     login_signup = request.args.get('login_signup', 'login')
@@ -195,7 +195,7 @@ def login():
     portal_id = request.args.get('subscribe', None)
     if g.user_init.is_authenticated():
         if portal_id:
-            return redirect(url_for('general.reader_subscription', portal_id=portal_id))
+            return redirect(url_for('general.reader_subscribe', portal_id=portal_id))
         flash('You are already logged in. If you want to login with another account logout first please')
         return redirect(url_for('general.index'))
 
@@ -211,7 +211,7 @@ def login():
         if user and user.verify_password(login_form.password.data):
             login_user(user)
             if portal_id:
-                return redirect(url_for('general.reader_subscription', portal_id=portal_id))
+                return redirect(url_for('general.reader_subscribe', portal_id=portal_id))
             return redirect(request.args.get('next') or url_for('general.index'))
         flash('Invalid username or password.')
         redirect_url = url_for('auth.login_signup_endpoint') + '?login_signup=login'
