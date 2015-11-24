@@ -47,4 +47,4 @@ def translations_save(json):
 @admin_bp.route('/delete', methods=['POST'])
 @ok
 def delete(json):
-    return TranslateTemplate.delete(json['id'])
+    return TranslateTemplate.delete(json['objects'])

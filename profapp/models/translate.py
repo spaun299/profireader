@@ -71,14 +71,15 @@ class TranslateTemplate(Base, PRBase):
     @staticmethod
     def update_last_accessed(template, phrase):
         i = datetime.datetime.now()
-        obj = [b for b in db(TranslateTemplate, template=template, name=phrase)]
-        obj[0].updates({'ac_tm': i})
+        obj = db(TranslateTemplate, template=template, name=phrase).first()
+        obj.updates({'ac_tm': i})
         return 'True'
 
     @staticmethod
-    def delete(id):
-        obj = TranslateTemplate.get(id)
-        TranslateTemplate.delfile(obj)
+    def delete(objects):
+        for obj in objects:
+            f = db(TranslateTemplate, template=obj['Template'], name=obj['Phrase']).first()
+            TranslateTemplate.delfile(f)
         return 'True'
 
     @staticmethod

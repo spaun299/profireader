@@ -69,12 +69,12 @@
 
                 </ul>
                 <ul class="top-menu">
-                    <li><a class="messages_btn" href="#" title="All Messages"><span class="tooltip">{{ '{{' }}_('All Messages'){{ '}}' }}</span></a></li>
-                    <li><a class="company_btn" href="{{ url_for('company.show') }}" title="Company"><span class="tooltip">{{ '{{' }}_('Company'){{ '}}' }}</span></a>
+                    <li><a class="messages_btn" href="#" title="{{_('All Messages')}}"><span class="tooltip">{{ '{{' }}_('All Messages'){{ '}}' }}</span></a></li>
+                    <li><a class="company_btn" href="{{ url_for('company.show') }}" title="{{_('Company')}}"><span class="tooltip">{{ '{{' }}_('Company'){{ '}}' }}</span></a>
                     </li>
-                    <li><a class="article_btn" href="{{ url_for('article.show_mine') }}" title="My articles"><span class="tooltip">{{ '{{' }}_('My articles'){{ '}}' }}</span></a>
+                    <li><a class="article_btn" href="{{ url_for('article.show_mine') }}" title="{{_('My articles')}}"><span class="tooltip">{{ '{{' }}_('My articles'){{ '}}' }}</span></a>
                     </li>
-                    <li><a class="filemanager_btn" href="#" ng-click="open_filemanager()" title="File manager"><span class="tooltip">{{ '{{' }}_('File manager'){{ '}}' }}</span></a>
+                    <li><a class="filemanager_btn" href="#" ng-click="open_filemanager()" title="{{_('File manager')}}"><span class="tooltip">{{ '{{' }}_('File manager'){{ '}}' }}</span></a>
                     </li>
 
                 </ul>
