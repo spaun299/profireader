@@ -112,11 +112,11 @@ class ArticlePortalDivision(Base, PRBase):
         # self.portal_id = portal_id
 
     def get_client_side_dict(self, fields='id|image_file_id|title|short|image_file_id|'
-                                          'long|keywords|cr_tm|md_tm|'
+                                          'keywords|cr_tm|md_tm|'
                                           'status|publishing_tm, '
-                                          'company.id|name, division.id|name,'
-                                          'company_article.*'):
-        return self.to_dict(fields)
+                                          'company.id|name, division.id|name, portal.id|name',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
     @staticmethod
     def update_article_portal(article_portal_division_id, **kwargs):
@@ -133,7 +133,7 @@ class ArticlePortalDivision(Base, PRBase):
         # portals.append(all)
         for article in db(ArticleCompany, company_id=company_id).all():
             for port in article.portal_article:
-                portals[port.portal.id] = port.portal.to_dict('name')
+                portals[port.portal.id] = port.portal.get_client_side_dict(fields='name')
         return portals
 
     @staticmethod
@@ -146,7 +146,7 @@ class ArticlePortalDivision(Base, PRBase):
             filter(Portal.id == portal_id).all()
         # for article in db(ArticlePortalDivision, portal_id=portal_id).all():
         for article in articles:
-            companies[article.company.id] = article.company.to_dict('name')
+            companies[article.company.id] = article.company.get_client_side_dict(fields='name')
         return companies
 
     def clone_for_company(self, company_id):
@@ -196,10 +196,9 @@ class ArticleCompany(Base, PRBase):
                                   backref='company_article')
 
     def get_client_side_dict(self,
-                             standard_fields='id|title|short|keywords|cr_tm|md_tm|company_id|article_id|image_file_id|status',
+                             fields='id|title|short|keywords|cr_tm|md_tm|company_id|article_id|image_file_id|status',
                              more_fields=None):
-        # 'company.~, portal_article.portal.~,' \
-        return self.to_dict(standard_fields, more_fields)
+        return self.to_dict(fields, more_fields)
 
     def validate(self, is_new):
         ret = super().validate(is_new)
@@ -219,7 +218,7 @@ class ArticleCompany(Base, PRBase):
 
         for article in db(Article, author_user_id=user_id).all():
             for comp in article.submitted_versions:
-                companies.append(comp.company.to_dict('id, name'))
+                companies.append(comp.company.get_client_side_dict(fields='id, name'))
         return all, [dict(comp) for comp in set([tuple(c.items()) for c in companies])]
 
     def clone_for_company(self, company_id):
@@ -366,8 +365,9 @@ class Article(Base, PRBase):
                                     'cr_tm|md_tm|company_id|status|image_file_id, '
                                     'submitted_versions.editor.id|'
                                     'profireader_name, '
-                                    'submitted_versions.company.name'):
-        return self.to_dict(fields)
+                                    'submitted_versions.company.name',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
 
     def get_article_with_html_tag(self, text_into_html):
@@ -380,7 +380,7 @@ class Article(Base, PRBase):
     def search_for_company_to_submit(user_id, article_id, searchtext):
         # TODO: AA by OZ:    .filter(user_id has to be employee in company and
         # TODO: must have rights to submit article to this company)
-        return [x.to_dict('id,name') for x in db(Company).filter(~db(ArticleCompany).
+        return [x.get_client_side_dict(fields='id,name') for x in db(Company).filter(~db(ArticleCompany).
                                                                  filter_by(company_id=Company.id,
                                                                            article_id=article_id).
                                                                  exists()).filter(
