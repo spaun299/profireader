@@ -1,6 +1,5 @@
 from .blueprints_declaration import auth_bp
 from flask import g, request, url_for, render_template, flash, current_app, session
-#from db_init import db_session
 from ..constants.SOCIAL_NETWORKS import DB_FIELDS, SOC_NET_FIELDS, \
     SOC_NET_FIELDS_SHORT
 from flask.ext.login import logout_user, current_user, login_required
@@ -18,6 +17,7 @@ from flask import redirect, make_response
 from flask.ext.login import login_user
 from ..constants.SOCIAL_NETWORKS import SOC_NET_NONE
 from ..constants.UNCATEGORIZED import AVATAR_SIZE, AVATAR_SMALL_SIZE
+from ..utils.redirect_url import redirect_url
 
 # def _session_saver():
 #    session.modified = True
@@ -27,7 +27,8 @@ EMAIL_REGEX = re.compile(r'[^@]+@[^@]+\.[^@]+')
 
 def login_signup_general(*soc_network_names):
     if g.user_init and g.user_init.is_authenticated():
-        raise BadDataProvided
+        flash('You are already logged in. Logout first to login as another user.')
+        return redirect(redirect_url())
 
     response = make_response()
     try:
@@ -37,10 +38,8 @@ def login_signup_general(*soc_network_names):
                 result.user.update()
                 result_user = result.user
                 if result_user.email is None:
-                    flash("you haven't confirm email bound to your "
-                          "soc-network account yet. "
-                          "Please confirm email first or choose "
-                          "another way of authentication.")
+                    flash("you haven't confirm email bound to your soc-network account yet. "
+                          "Please confirm email first or choose another way of authentication.")
                     redirect(url_for('auth.login_signup_endpoint') + '?login_signup=login')
 
                 db_fields = DB_FIELDS[soc_network_names[-1]]
@@ -81,7 +80,11 @@ def login_signup_general(*soc_network_names):
                 # session['user_id'] = user.id assignment
                 # is automatically executed by login_user(user)
 
-                return redirect('/')  # #  http://profireader.com/
+                if 'portal_id' in session.keys():
+                    portal_id = session['portal_id']
+                    session.pop('portal_id')
+                    return redirect(url_for('general.reader_subscribe', portal_id=portal_id))
+                return redirect(url_for('general.index'))  # #  http://profireader.com/
             elif result.error:
                 redirect_path = '#/?msg={}'.format(quote(soc_network_names[-1] + ' login failed.'))
                 return redirect(redirect_path)
@@ -111,9 +114,8 @@ def unconfirmed():
 def login_signup_endpoint():
     # if g.user_init and g.user_init.is_authenticated():
     if g.user_init.is_authenticated():
-        portal_id = request.args.get('subscribe', None)
-        if portal_id:
-            return redirect(url_for('general.reader_subscribe', portal_id=portal_id))
+        if 'portal_id' in session.keys():
+            return redirect(url_for('general.reader_subscribe', portal_id=session['portal_id']))
         flash('You are already logged in')
 
     login_signup = request.args.get('login_signup', 'login')
@@ -164,10 +166,20 @@ def signup():
                            signup_form=signup_form)
 
 
-@auth_bp.route('/login_signup_socnet/<soc_network_name>', methods=['GET', 'POST'])
-def login_signup_soc_network(soc_network_name):
-    return login_signup_general('profireader', soc_network_name)
+@auth_bp.route('/subscribe/')
+def subscribe():
+    portal_id = request.args.get('portal_id', None)
+    session['portal_id'] = portal_id
+    return redirect(url_for('auth.login_signup_endpoint', login_signup='login'))
 
+
+@auth_bp.route('/login_signup/<soc_network_name>', methods=['GET', 'POST'])
+# @auth_bp.route('/login_signup_socnet/<soc_network_name>', methods=['GET', 'POST'])
+# @auth_bp.route('/login_signup/<string:soc_network_name>/<string:portal_id>', methods=['GET', 'POST'])
+# def login_signup_soc_network(soc_network_name, portal_id=None):
+def login_signup_soc_network(soc_network_name):
+    ret = login_signup_general('profireader', soc_network_name)
+    return ret
 
 # @auth_bp.route('/login/<soc_network_name>', methods=['GET', 'POST'])
 # def login_soc_network(soc_network_name):

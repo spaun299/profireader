@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for
+from flask import render_template, jsonify
 from .blueprints_declaration import general_bp
 from flask.ext.login import current_user, login_required
 
@@ -24,4 +24,4 @@ def reader_subscribe(portal_id):
     # TODO (AA to AA): code here.
     # portal_id = request.args.get('subscribe', None)
     print('here a subscription must be done')
-    return redirect(url_for('general.index'))
+    return jsonify({'portal_id': portal_id})
