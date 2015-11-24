@@ -77,6 +77,7 @@ class ArticlePortalDivision(Base, PRBase):
 
     # tag_assoc_ = relationship('TagPortalDivisionArticle',
     #                                 back_populates='article_portal_division_select')
+    search_fields = ('title', 'short', 'long_stripped', 'keywords')
     tag_assoc_select = relationship('TagPortalDivisionArticle',
                                     back_populates='article_portal_division_select',
                                     cascade="save-update, merge, delete")
@@ -96,7 +97,7 @@ class ArticlePortalDivision(Base, PRBase):
                           secondaryjoin="PortalDivision.portal_id == Portal.id",
                           back_populates='articles',
                           uselist=False)
-    search_fields = ('title', 'short', 'long_stripped', 'keywords')
+
 
     def __init__(self, article_company_id=None, title=None, short=None, keywords=None,
                  long=None, status=None, portal_division_id=None, image_file_id=None

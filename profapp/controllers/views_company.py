@@ -95,7 +95,9 @@ def materials_load(json, company_id):
     statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
 
     return {'materials': [{'article': a.get_client_side_dict(),
-                           'portals_count': len(a.get_client_side_dict()['portal_article']) + 1}
+                           'portals_count': len(a.get_client_side_dict().get('portal_article')
+                                                if a.get_client_side_dict().get('portal_article')
+                                                else [0]) + 1}
                           for a in articles],
             'portals': portals,
             'pages': {'total': pages, 'current_page': current_page,
