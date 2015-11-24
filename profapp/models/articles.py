@@ -23,6 +23,7 @@ import re
 from sqlalchemy import event
 from html.parser import HTMLParser
 from ..controllers import errors
+from ..constants.SEARCH import RELEVANCE
 
 
 class MLStripper(HTMLParser):
@@ -77,7 +78,8 @@ class ArticlePortalDivision(Base, PRBase):
 
     # tag_assoc_ = relationship('TagPortalDivisionArticle',
     #                                 back_populates='article_portal_division_select')
-    search_fields = ('title', 'short', 'long_stripped', 'keywords')
+    search_fields = {'title': RELEVANCE.title, 'short': RELEVANCE.short,
+                     'long_stripped': RELEVANCE.long_stripped, 'keywords': RELEVANCE.keyword}
     tag_assoc_select = relationship('TagPortalDivisionArticle',
                                     back_populates='article_portal_division_select',
                                     cascade="save-update, merge, delete")

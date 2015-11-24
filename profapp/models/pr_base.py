@@ -46,10 +46,10 @@ class Search(Base):
         self.relevance = relevance
         self.kind = kind
 
-    @staticmethod
-    def get_relevance(field_name):
-        rel = {'keywords': 10, 'title': 9, 'name': 8, 'short': 7, 'long_stripped': 6}
-        return rel[field_name]
+    # @staticmethod
+    # def get_relevance(field_name):
+    #     rel = {'keywords': 10, 'title': 9, 'name': 8, 'short': 7, 'long_stripped': 6}
+    #     return rel[field_name]
 
 
 class PRBase:
@@ -204,9 +204,9 @@ class PRBase:
             if not target.id:
                 target.save()
             add_to_db = []
-            for field in target.search_fields:
+            for field, relevance in target.search_fields.items():
                 search_setter = Search(index=target.id, table_name=target.__tablename__,
-                                       relevance=Search.get_relevance(field), kind=field)
+                                       relevance=relevance, kind=field)
                 setattr(search_setter, 'text', getattr(target, field))
                 add_to_db.append(search_setter)
             g.db.add_all(add_to_db)
