@@ -103,5 +103,6 @@ class TranslateTemplate(Base, PRBase):
 
         return sub_query
 
-    def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url'):
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)

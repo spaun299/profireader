@@ -7,6 +7,7 @@
     {#TODO: OZ by OZ move this code to one file#}
     <link href="/static/image_editor/dist/cropper.css" rel="stylesheet">
     <link href="/static/image_editor/demo/css/main.css" rel="stylesheet">
+
     <script>
 
         module.controller('article_edit', ['$scope', '$modal', '$af', '$ok', function ($scope, $modal, $af, $ok) {
@@ -31,6 +32,32 @@
                 return deff(model);
             };
             $scope.tinymceImageOptions['height'] = '450px';
+            $scope.tinymceImageOptions['toolbar'] = "undo redo | styleselect | bold italic | link image";
+{#            $scope.tinymceImageOptions['indentation'] = "1pt";#}
+            $scope.tinymceImageOptions['valid_styles'] = {
+                "*": "",
+                "div": "width,height",
+                "table": "width,height"
+            }
+
+
+            var allowed_tags = buildAllowedTagsAndAttributes();
+            var formats = {};
+
+
+{#            $scope.tinymceImageOptions['formats'] = {#}
+{#                #}
+{#            };#}
+
+            //});
+
+            // Register default block formats
+            //each('p h1 h2 h3 h4 h5 h6 div address pre div dt dd samp'.split(/\s/), function(name) {
+//register(name, {block: name, remove: 'all'});
+            //});
+            {#            };#}
+
+
             $scope.articleImageSelected = function (item) {
                 $scope.data.image.image_file_id = item.id;
                 $scope.setImageUrl($scope.data.image);

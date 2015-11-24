@@ -147,8 +147,8 @@ def create_save(json, create_or_update, company_id):
 def apply_company(json):
     MemberCompanyPortal.apply_company_to_portal(company_id=json['company_id'],
                                                 portal_id=json['portal_id'])
-    return {'portals_partners': [portal.portal.to_dict(
-        'name, company_owner_id,id') for portal in MemberCompanyPortal.get_portals(json['company_id'])],
+    return {'portals_partners': [portal.portal.get_client_side_dict(fields='name, company_owner_id,id')
+                                 for portal in MemberCompanyPortal.get_portals(json['company_id'])],
             'company_id': json['company_id']}
 
 
@@ -179,8 +179,8 @@ def profile_load(json, portal_id):
     portal_bound_tags = portal.portal_bound_tags_select
     tags = set(tag_portal_division.tag for tag_portal_division in portal_bound_tags)
     tags_dict = {tag.id: tag.name for tag in tags}
-    return {'portal': portal.to_dict('*, divisions.*, own_company.*, portal_bound_tags_select.*',
-                                     'portal_notbound_tags_select.*'),
+    return {'portal': portal.get_client_side_dict(
+        more_fields='divisions, own_company, portal_bound_tags_select, portal_notbound_tags_select'),
             'portal_id': portal_id,
             'tag': tags_dict}
 
@@ -418,12 +418,7 @@ def profile_edit_load(json, portal_id):
     company = portal.own_company
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
-    return {'portal': portal.to_dict('*, '
-                                     'divisions.*, '
-                                     'own_company.*, '
-                                     'portal_bound_tags_select.*',
-                                     # 'portal_notbound_tags_select.*'
-                                     ),
+    return {'portal': portal.get_client_side_dict('divisions,own_company,portal_bound_tags_select'),
             'company_logo': company_logo,
             'portal_id': portal_id,
             'tag': tags_dict}
@@ -445,11 +440,11 @@ def portals_partners(company_id):
 @ok
 def portals_partners_load(json, company_id):
     portal = db(Company, id=company_id).one().own_portal
-    portals_partners = [port.portal.to_dict('name, company_owner_id, id')
+    portals_partners = [port.portal.get_client_side_dict(fields='name, company_owner_id, id')
                         for port in MemberCompanyPortal.get_portals(
             company_id) if port]
     user_rights = list(g.user.user_rights_in_company(company_id))
-    return {'portal': portal.to_dict('name') if portal else [],
+    return {'portal': portal.get_client_side_dict(fields='name') if portal else [],
             'portals_partners': portals_partners,
             'company_id': company_id,
             'user_rights': user_rights}
@@ -472,10 +467,10 @@ def companies_partners(company_id):
 @ok
 def companies_partners_load(json, company_id):
     portal = db(Company, id=company_id).one().own_portal
-    companies_partners = [comp.to_dict('company.id, company.name') for comp in
+    companies_partners = [comp.get_client_side_dict(fields='company.id, company.name') for comp in
                           portal.company_members] if portal else []
     user_rights = list(g.user.user_rights_in_company(company_id))
-    return {'portal': portal.to_dict('name') if portal else [],
+    return {'portal': portal.get_client_side_dict(fields='name') if portal else [],
             'companies_partners': companies_partners,
             'company_id': company_id,
             'user_rights': user_rights}
@@ -609,7 +604,7 @@ def submit_to_portal(json):
     article_portal = article.clone_for_portal(portal_division_id, json['tags'])
     article.save()
     portal = article_portal.get_article_owner_portal(portal_division_id=portal_division_id)
-    json['article'] = article_portal.to_dict(
+    json['article'] = article_portal.get_client_side_dict(fields=
         'id, title,short, cr_tm, md_tm, company_id, status, long,'
         'editor_user_id, company.name|id,portal_article.id,'
         'portal_article.division.name, portal_article.division.portal.name,portal_article.status')
