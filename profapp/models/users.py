@@ -293,6 +293,18 @@ class User(Base, UserMixin, PRBase):
                 avatar = avatar['data'].get('url')
         else:
             avatar = self.gravatar(size=size)
+    #     if 'facebook' in session['logged_via']:
+    #         avatar = json.load(req.urlopen(
+    #             url='http://graph.facebook.com/{facebook_id}/picture?width='
+    #                 '{size}&height={size}&redirect=0'.format(
+    #                 facebook_id=g.user.facebook_id, size=size)))
+    #         if avatar['data'].get('is_silhouette'):
+    #             avatar = self.gravatar(size=size)
+    #         else:
+    #             avatar = avatar['data'].get('url')
+        # if 'google' in session['logged_via']:
+        #     url = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
+        #     a= url
 
         return avatar
 

@@ -40,7 +40,6 @@ def create(company_id):
 # def load_create(json, company_id):
 #     return {}
 
-
 @portal_bp.route('/<any(create,update):create_or_update>/<string:company_id>/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([Right[RIGHTS.MANAGE_PORTAL()]]))

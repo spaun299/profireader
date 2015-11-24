@@ -17,77 +17,44 @@
             {% else %}
                 $scope.save_article = '{{ url_for('article.load_form_create')|safe }}';
             {% endif %}
-
             $scope.data = {};
             $scope.$$translate = {{ translates('article_edit')|safe }};
-
             $scope.amidSave = function (resp) {
-                if (!$scope.data.article.id) {
                     window.location.href = $scope.details_article({article_id: resp['article']['article_id']});
                     add_message('article was created', 'info', 5000);
-                }
+
             };
 
             $scope.getData = function (model, deff) {
-                var x = document.getElementById("dataX");
-                var y = document.getElementById("dataY");
-                var width = document.getElementById("dataWidth");
-                var height = document.getElementById("dataHeight");
-                var rotate = document.getElementById("dataRotate");
-                model.image.coordinates = {
-                    'x': angular.element(x).val(), 'y': angular.element(y).val(),
-                    'width': angular.element(width).val(), 'height': angular.element(height).val(),
-                    'rotate': angular.element(rotate).val()
-                };
+                var $image = $('.img-container > img');
+                $scope.data.image.coordinates = $image.cropper('getData');
                 return deff(model);
             };
-
-
             $scope.tinymceImageOptions['height'] = '450px';
             $scope.articleImageSelected = function (item) {
                 $scope.data.image.image_file_id = item.id;
-                $scope.setImageUrl($scope.data);
+                $scope.setImageUrl($scope.data.image);
                 closeFileManager();
                 var $image = $('.img-container > img');
-                $image.cropper('replace', $scope.image_file_url);
-                $scope.change_picture_in_croper();
-
+                $image.cropper('setAspectRatio', $scope.data.image.ratio);
             };
             $scope.default_image = true;
-
             $scope.cleanUpHtml = function (data) {
                 data.long = cleanup_html(data.long);
                 return data;
             };
-
-            $scope.cropAreaChanged = function (new_coordinates) {
-                $scope.coordinates = new_coordinates;
-            };
-
-            $scope.articleAfterLoad = function (resp, deff) {
-                deff(resp);
-                $scope.setImageUrl($scope.data);
-                $scope.change_picture_in_croper($scope.data.coordinates);
-                return true;
-            };
-
             $scope.setImageUrl = function (image) {
-
                 $scope.image_file_url = fileUrl(image.image_file_id, false, '{{ url_for('static', filename='images/choose_image.jpg') }}');
                 var image = $scope.image_file_url;
                 if (image != "{{ url_for('static', filename='images/choose_image.jpg') }}") {
                     $scope.default_image = false;
                 }
-                $scope.change_picture_in_croper(image.coordinates);
             };
-
             $scope.change_picture_in_croper = function (coordinates) {
                 setTimeout(function () {
-                    init_cropper($scope.cropAreaChanged, $scope.data.ratio, coordinates);
+                    init_cropper($scope.data.image.ratio, coordinates);
                 }, 0);
-
             };
-
             $scope.afterLoad = function (resp, deff) {
                 var ret = deff(resp);
                 $scope.setImageUrl($scope['data'].image);
@@ -96,16 +63,13 @@
                 }
                 return ret;
             };
-
             $scope.chooseImage = function () {
                 $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')");
             };
-
         }]);
     </script>
-
-    {% include 'croper.html' %}
-
+    {% from 'macros.html' import scripts %}
+ {{ scripts(names=['croper']) }}
     {% raw %}
 
     <div ng-controller="article_edit">
@@ -160,9 +124,5 @@
     {% endraw %}
 
     </div>
-
-    <script src="/static/image_editor/dist/cropper.js"></script>
-    <script src="/static/image_editor/demo/js/main.js"></script>
-    {#TODO: OZ by OZ move this code to one file#}
 
 {% endblock portal_content %}
