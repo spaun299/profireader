@@ -16,7 +16,7 @@
     <div class="form info">
         {#<img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=256) }}"><br>#}
 
-        <div class="profile-thumbnail" style="background-image: url('{{ user.profireader_avatar_url }}');">
+        <div class="profile-thumbnail" style="background-image: url('{{ user.avatar() }}');">
             <div class="control">
                 <a ng-click="mySwitch = !mySwitch">
                     <span ng-hide="mySwitch">[upload picture]</span><span ng-show="mySwitch">[hide]</span>

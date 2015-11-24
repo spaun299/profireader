@@ -3,7 +3,7 @@
 <link href="/static/image_editor/demo/css/main.css" rel="stylesheet">
 <script>
 
-    module.controller('article_edit', ['$scope', '$modal', '$af', function ($scope, $modal, $af) {
+    module.controller('article_edit', ['$scope', '$modal', '$af', '$ok', function ($scope, $modal, $af, $ok) {
         $scope.$af = $af;
         $scope.details_article = {{ raw_url_for('article.details')|safe }};
         {% if article_company_id %}
@@ -55,7 +55,7 @@
         $scope.change_picture_in_croper = function (coordinates) {
             setTimeout(function () {
                 init_cropper($scope.cropAreaChanged, $scope.data.ratio, coordinates);
-            }, 1000);
+            }, 0);
 
         };
 
@@ -66,10 +66,10 @@
         $scope.articleAfterLoad = function (resp, deff) {
             deff(resp);
 
-            setTimeout(function () {
+{#            setTimeout(function () {#}
                 $scope.setImageUrl($scope.data);
                 $scope.change_picture_in_croper($scope.data.coordinates);
-            }, 0);
+{#            }, 0);#}
             {#                    init_cropper();#}
             return true;
         };
@@ -83,6 +83,15 @@
             {#            $scope.change_picture_in_croper(image);#}
             return model;
         };
+
+    $scope.init = function () {
+        $ok('?action=load', {}, function (resp) {
+            $scope.data = resp;
+
+            $scope.setImageUrl($scope.data);
+            if (!$scope.default_image){$scope.change_picture_in_croper($scope.data.coordinates);}
+        })
+    };
 
 
         $scope.chooseImage = function () {
@@ -114,9 +123,8 @@
 {% raw %}
 
 
-<div ng-controller="article_edit">
-    <h1 ng-show="!data.id" class="nice-title">{{ _('Create new article') }}<span></span></h1>
-
+<div ng-init="init()" ng-controller="article_edit">
+    <h1 class="nice-title">Create new article<span></span></h1>
     <h1 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company) }}<span></span></h1>
     <h1 ng-show="data.id && !company">{{ _('update your version of article') }}<span></span></h1>
     <h2 ng-show="!data.id">{{ _('Create new article') }}</h2>
@@ -127,9 +135,9 @@
 
     <h2 ng-show="data.id && !company">{{ _('update your version of article') }}</h2>
 
-    <table af af-after-load="articleAfterLoad" af-before-save="getData" af-beforeValidate="getData" ng-model="data">
-        <tr>
-            <td style="width: 60%">
+    <div af aaaf-after-load="aaarticleAfterLoad" af-before-save="getData" af-beforeValidate="getData" ng-model="data">
+
+            <div class="update_col1">
 
                 <!-- TODO: OK by OZ:   this block form should share same classes with layout to look MAXIMUM like in portal
                         maybe layout selector is apporpriate here-->
@@ -143,28 +151,28 @@
                 {{ _('KeyWords') }} <span af-validation-answer="data_validation:keywords"></span>
                 <input style="width: 100%" ng-model="data.keywords"/>
 
-            </td>
-            <td style="width: 40%">
+            </div>
+
+            <div class="update_col2">
                 <div ng-include="'image_cropper'"></div>
                 <input type="hidden" ng-model="data.image_file_id">
-            </td>
-        </tr>
-        <tr>
-            <td>
+            </div>
+
+            <div class="update_col1">
 
                 {{ _('Full text') }}<br/>
             <textarea ui-tinymce="tinymceImageOptions" style="width: 400px;"
                       ng-model="data.long"></textarea>
 
-            </td>
-            <td style="position: relative"><input style="position: absolute; bottom: 0px; right: 0px;"
+            </div>
+            <div style="position: relative; margin-top: 10px; clear: both" ><input class="create_button"
                                                   ng-disabled="!$af.isActionAllowed(data, 'save')"
                                                   ng-click="$af.save(data)"
                                                   type="submit"
                                                   value="{{ data.id ? _('save') : _('create') }}"/>
-            </td>
-        </tr>
-    </table>
+            </div>
+
+    </div>
 
 </div>
 

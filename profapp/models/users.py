@@ -3,6 +3,8 @@ from flask import request, current_app, g, flash
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from flask.ext.login import logout_user
+from flask import session, json
+from urllib import request as req
 
 # from db_init import Base, g.db
 
@@ -42,6 +44,7 @@ class User(Base, UserMixin, PRBase):
     profireader_phone = Column(TABLE_TYPES['phone'])
     about_me = Column(TABLE_TYPES['text'])
     location = Column(TABLE_TYPES['location'])
+    lang = Column(String(2), default='uk')
 
     password_hash = Column(TABLE_TYPES['password_hash'])
     confirmed = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
@@ -277,6 +280,21 @@ class User(Base, UserMixin, PRBase):
         self.last_seen = datetime.datetime.utcnow()
         g.db.add(self)
         g.db.commit()
+
+    def avatar(self, size=100):
+#        if 'logged_via' 'facebook' in session['logged_via']:
+#            avatar = json.load(req.urlopen(
+#                url='http://graph.facebook.com/{facebook_id}/picture?width='
+#                    '{size}&height={size}&redirect=0'.format(
+#                facebook_id=g.user.facebook_id, size=size)))
+#            if avatar['data'].get('is_silhouette'):
+#                avatar = self.gravatar(size=size)
+#            else:
+#                avatar = avatar['data'].get('url')
+#        else:
+        avatar = self.gravatar(size=size)
+
+        return avatar
 
     def gravatar(self, size=100, default='identicon', rating='g'):
         if request.is_secure:

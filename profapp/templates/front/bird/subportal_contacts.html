@@ -7,8 +7,8 @@
         <div class="person-item">
         <img width="50" height="50" class="round-avatar" style="background-image: url({{ company_users[user_id]['profireader_small_avatar_url'] }})"/>
         <b>{{ company_users[user_id]['profireader_name'] }}</b><br/>
-            <div class="role">Один з працівників проекту</div>
-            <div class="phone">+380638188999</div>
+            <div class="role">{{ company_users[user_id]['position'] }}&nbsp;</div>
+            <div class="phone">{{ company_users[user_id]['phone'] }}</div>
         <a style="clear: both" href="#">email@gmail.com</a>
         </div>
     {% endfor %}

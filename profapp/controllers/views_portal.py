@@ -29,7 +29,9 @@ def create(company_id):
 
     return render_template('portal/portal_create.html',
                            company_id=company_id,
-                           company_logo=company_logo)
+                           company_logo=company_logo,
+                           company_name=company.name,
+                           company=company.get_client_side_dict())
 
 
 # @portal_bp.route('/create/<string:company_id>/', methods=['POST'])
@@ -161,7 +163,12 @@ def profile(portal_id):
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template('portal/portal_profile.html',
                            company_id=company.id,
-                           company_logo=company_logo)
+                           company_logo=company_logo,
+                           company=company.get_client_side_dict()
+                           )
+
+
+# TODO: VK by OZ: remove company_* kwargs
 
 
 @portal_bp.route('/profile/<string:portal_id>/', methods=['POST'])
@@ -191,8 +198,12 @@ def profile_edit(portal_id):
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template('portal/portal_profile_edit.html',
                            company_id=company.id,
-                           company_logo=company_logo)
+                           company_logo=company_logo,
+                           company=company.get_client_side_dict()
+                           )
 
+
+# TODO: VK by OZ: remove company_* kwargs
 
 @portal_bp.route('/profile_edit/<string:portal_id>/', methods=['POST'])
 @login_required
@@ -423,8 +434,11 @@ def profile_edit_load(json, portal_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def portals_partners(company_id):
-    return render_template('company/portals_partners.html', company_id=company_id)
+    return render_template('company/portals_partners.html', company_id=company_id,
+                           company=Company.get(company_id).get_client_side_dict())
 
+
+# TODO: VK by OZ: remove company_* kwargs
 
 @portal_bp.route('/portals_partners/<string:company_id>/', methods=['POST'])
 @login_required
@@ -446,7 +460,11 @@ def portals_partners_load(json, company_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def companies_partners(company_id):
-    return render_template('company/companies_partners.html', company_id=company_id)
+    return render_template('company/companies_partners.html', company_id=company_id,
+                           company=Company.get(company_id).get_client_side_dict())
+
+
+# TODO: VK by OZ: remove company_* kwargs
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['POST'])
@@ -484,10 +502,14 @@ def publications(company_id):
 
     return render_template(
         'portal/portal_publications.html',
+        company=company.get_client_side_dict(),
         company_id=company_id,
         angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js',
         company_logo=company_logo
     )
+
+
+# TODO: VK by OZ: remove company_* kwargs
 
 
 @portal_bp.route('/publications/<string:company_id>/', methods=['POST'])
@@ -593,5 +615,4 @@ def submit_to_portal(json):
         'editor_user_id, company.name|id,portal_article.id,'
         'portal_article.division.name, portal_article.division.portal.name,portal_article.status')
     json.update({'portal': portal.name})
-    print(json['article'])
     return json

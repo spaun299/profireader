@@ -61,10 +61,15 @@ def materials(company_id):
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template(
         'company/materials.html',
+        company=company.get_client_side_dict(),
         company_id=company_id,
         angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js',
-        company_logo=company_logo
+        company_logo=company_logo,
+        company_name=company.name
     )
+
+
+# TODO: VK by OZ: remove company_* kwargs
 
 
 @company_bp.route('/materials/<string:company_id>/', methods=['POST'])
@@ -90,7 +95,7 @@ def materials_load(json, company_id):
     statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
 
     return {'materials': [{'article': a.get_client_side_dict(),
-                          'portals_count': len(a.get_client_side_dict()['portal_article']) + 1}
+                           'portals_count': len(a.get_client_side_dict()['portal_article']) + 1}
                           for a in articles],
             'portals': portals,
             'pages': {'total': pages, 'current_page': current_page,
@@ -109,7 +114,11 @@ def material_details(company_id, article_id):
     return render_template('company/material_details.html',
                            company_id=company_id,
                            article_id=article_id,
-                           company_logo=company_logo)
+                           company_logo=company_logo,
+                           company_name=company.name,
+                           company=company.get_client_side_dict())
+# TODO: VK by OZ: remove company_* kwargs
+
 
 
 @company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['POST'])
@@ -117,7 +126,6 @@ def material_details(company_id, article_id):
 @ok
 # @check_rights(simple_permissions([]))
 def load_material_details(json, company_id, article_id):
-
     article = Article.get_one_article(article_id)
     portals = {port.portal_id: port.portal.get_client_side_dict() for port in
                MemberCompanyPortal.get_portals(company_id)}
@@ -161,16 +169,13 @@ def load_material_details(json, company_id, article_id):
 @ok
 # @check_rights(simple_permissions([]))
 def delete_atricle_from_portal(json, article_portal_division_id):
-    for article in json['article']['portal_article']:
-        if article['id'] == article_portal_division_id:
-            article['status'] = json.get('new_status')
-    db(ArticlePortalDivision, id=article_portal_division_id).update({'status': json['new_status']})
-    # article = db(ArticlePortalDivision, id=article_portal_division_id).one()
-    # file_id = article.image_file_id
-    # g.db.delete(article)
-    # g.db.commit()
-    # File.remove(file_id) if file_id else None
-    return json
+    g.sql_connection.execute("DELETE FROM article_portal_division WHERE id='%s';"
+                             % article_portal_division_id)
+    new_json = json.copy()
+    for article in json:
+        if json[article]['id'] == article_portal_division_id:
+            del new_json[article]
+    return new_json
 
 
 @company_bp.route('/get_tags/<string:portal_division_id>', methods=['POST'])
@@ -203,7 +208,7 @@ def update_material_status(json, company_id, article_id):
 
 @company_bp.route('/profile/<string:company_id>/')
 @login_required
-@check_rights(simple_permissions(['manage_rights_company']))
+# @check_rights(simple_permissions(['manage_rights_company']))
 def profile(company_id):
     company = db(Company, id=company_id).one()
     user_rights = list(g.user.user_rights_in_company(company_id))
@@ -215,7 +220,8 @@ def profile(company_id):
                            company=company.to_dict('*, own_portal.*'),
                            user_rights=user_rights,
                            company_logo=company_logo,
-                           company_id=company_id
+                           company_id=company_id,
+                           company_name=company.name
                            )
 
 
@@ -224,8 +230,6 @@ def profile(company_id):
 # @check_rights(simple_permissions([]))
 def employees(company_id):
     company_user_rights = UserCompany.show_rights(company_id)
-    # print(company_user_rights[list(company_user_rights.keys())[0]])
-    # print(company_user_rights[list(company_user_rights.keys())[0]]['position'])
     ordered_rights = sorted(Right.keys(), key=lambda t: Right.RIGHT_POSITION()[t.lower()])
     ordered_rights = list(map((lambda x: getattr(x, 'lower')()), ordered_rights))
 
@@ -250,7 +254,8 @@ def employees(company_id):
                            curr_user=curr_user,
                            Right=Right,
                            RightHumnReadible=RightHumnReadible,
-                           company_logo=company_logo
+                           company_logo=company_logo,
+                           company_name=current_company.name
                            )
 
 
@@ -261,8 +266,8 @@ def update_rights():
     data = request.form
     UserCompany.update_rights(user_id=data['user_id'],
                               company_id=data['company_id'],
-                              new_rights=data.getlist('right')
-                              )
+                              new_rights=data.getlist('right'),
+                              position=data['position'])
     return redirect(url_for('company.employees',
                             company_id=data['company_id']))
 
@@ -272,8 +277,13 @@ def update_rights():
 @login_required
 # @check_rights(simple_permissions([]))
 def update(company_id=None):
-    return render_template('company/company_edit.html', company_id=company_id)
+    company = db(Company, id=company_id).first()
+    return render_template('company/company_edit.html', company_id=company_id,
+                           company_name=company.name if company else '',
+                           company=company.get_client_side_dict() if company else {})
 
+
+# TODO: VK by OZ: remove company_* kwargs
 
 @company_bp.route('/create/', methods=['POST'])
 @company_bp.route('/edit/<string:company_id>/', methods=['POST'])

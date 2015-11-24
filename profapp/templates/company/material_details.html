@@ -25,7 +25,7 @@
 
 {% block portal_content %}
     {% block company_base %}
-        {% include 'company/company_base.html' %}
+        {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
         <!--
       IE8 support, see AngularJS Internet Explorer Compatibility http://docs.angularjs.org/guide/ie
@@ -86,18 +86,29 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
     $scope.selected_portal_to_unpublish = '';
     $scope.url_get_tags = {{ raw_url_for('company.get_tags')|safe }};
     $scope.$$translate = {{ translates('SelectTagsCtrl')|safe }};
-{#    $scope.$watch("data.selected_division", function(newValue, oldValue) {
-{#        if ($scope.data && (newValue !== oldValue)){
-{#            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));
-{#		    res.success(function(data, status, headers, config) {
-{#                $scope.tagsObject.tags = []; // TODO (AA to AA): it works but...
-{#                $scope.availableTags = data.data.availableTags;
-{#		    });
-{#		    res.error(function(data, status, headers, config) {
-{#			    alert( "failure message: " + JSON.stringify({data: data}));
-{#		    });
-{#        }
-{#    });
+    $scope.$watch("data.selected_division", function(newValue, oldValue) {
+        if ($scope.data && (newValue !== oldValue)){
+            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));
+		    res.success(function(data, status, headers, config) {
+                $scope.tagsObject.tags = []; // TODO (AA to AA): it works but...
+                $scope.availableTags = data.data.availableTags;
+		    });
+		    res.error(function(data, status, headers, config) {
+			    alert( "failure message: " + JSON.stringify({data: data}));
+		    });
+        }
+    });
+
+
+
+
+
+
+
+
+
+
+
 {#    $scope.$watch("data.selected_division", function(newValue, oldValue) {#}
 {#        if ($scope.data && (newValue !== oldValue)){#}
 {#            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));#}
@@ -263,13 +274,13 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                 }
             };
             $scope.url_delete_atricle_from_portal = {{ raw_url_for('company.delete_atricle_from_portal')|safe }};
-            $scope.delete_atricle_from_portal = function (article_portal_id) {
+            $scope.delete_atricle_from_portal = function (article_portal_id, portal_name) {
                 $scope.loading = true;
                 new_data = $scope.data;
-                new_data['new_status'] = 'not_published';
-                $ok($scope.url_delete_atricle_from_portal({article_portal_division_id: article_portal_id}), new_data, function (resp) {
+                $ok($scope.url_delete_atricle_from_portal({article_portal_division_id: article_portal_id}), new_data.article.portal_article, function (resp) {
                     $scope.loading = false;
-                    $scope.data = resp;
+                    $scope.data.article.portal_article = resp;
+                    $scope.article_message = "Article was succesfuly deleted from portal " + portal_name
                 })
             };
 
@@ -362,14 +373,14 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                         </select>
                         <input disabled type="submit" value="{{_('Send article')}}">
                     </div>
-                    <!--
                     <hr/>
                     This material was published to following portals:
                     <div ng-repeat="portal in data.article.portal_article" style="width: 1000px">
                         {{ portal.division.portal.name }}    -    {{ portal.division.name }}<br>
-                        <button ng-click="delete_atricle_from_portal(portal.id)">Delete this material from this portal</button><hr/>
+                        <button ng-click="delete_atricle_from_portal(portal.id, portal.division.portal.name)">Delete this material from this portal</button><hr/>
                     </div>
-                    -->
+                    </br>
+                    {{ article_message }}
                 </div>
                 <div ng-if="data_resp_user.user">
                     {{_('Article')}} {{data.article.title}} {{_('was successfully sent to user')}}
@@ -398,7 +409,6 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                         </optgroup>
                     </select>
                     <br/>
-                    <hr>
                     <div ng-controller="SelectTagsCtrl">
                         <h3>Add tags:</h3>
                         <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;">

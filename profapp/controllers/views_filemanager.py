@@ -15,6 +15,7 @@ from utils.db_utils import db
 from ..models.company import Company
 from ..models.translate import TranslateTemplate
 
+
 def parent_folder(func):
     @wraps(func)
     def function_parent_folder(json, *args, **kwargs):
@@ -36,20 +37,24 @@ def filemanager():
     library = {}
 
     for user_company in g.user.employer_assoc:
-# TODO VK by OZ: we need function that get all emploees with specific right
-# Company.get_emploees('can_read', status = 'active')
-# Company.get_emploees(['can_read', 'can_write'], status = ['active','banned'])
-# similar function User.get_emploers ...
+        # TODO VK by OZ: we need function that get all emploees with specific right
+        # Company.get_emploees('can_read', status = 'active')
+        # Company.get_emploees(['can_read', 'can_write'], status = ['active','banned'])
+        # similar function User.get_emploers ...
         if user_company.status == 'active' and 'upload_files' in g.user.user_rights_in_company(user_company.company_id):
-            library[user_company.employer.journalist_folder_file_id] = {'name': "%s files" % (user_company.employer.name,), 'icon': ''}
+            library[user_company.employer.journalist_folder_file_id] = {
+            'name': "%s files" % (user_company.employer.name,), 'icon': ''}
 
-    file_manager_called_for = request.args['file_manager_called_for'] if 'file_manager_called_for' in request.args else ''
-    file_manager_on_action = jsonmodule.loads(request.args['file_manager_on_action']) if 'file_manager_on_action' in request.args else {}
-    file_manager_default_action = request.args['file_manager_default_action'] if 'file_manager_default_action' in request.args else ''
+    file_manager_called_for = request.args[
+        'file_manager_called_for'] if 'file_manager_called_for' in request.args else ''
+    file_manager_on_action = jsonmodule.loads(
+        request.args['file_manager_on_action']) if 'file_manager_on_action' in request.args else {}
+    file_manager_default_action = request.args[
+        'file_manager_default_action'] if 'file_manager_default_action' in request.args else ''
 
     # library = {}
     err = True if len(library) == 0 else False
-    return render_template('filemanager.html', library=library,err=err,
+    return render_template('filemanager.html', library=library, err=err,
                            file_manager_called_for=file_manager_called_for,
                            file_manager_on_action=file_manager_on_action,
                            file_manager_default_action=file_manager_default_action)
@@ -63,16 +68,19 @@ def list(json):
     ancestors = File.ancestors(json['params']['folder_id'])
     return {'list': list, 'ancestors': ancestors}
 
+
 @filemanager_bp.route('/search/', methods=['POST'])
 @ok
 def search_list(json):
     if json['params']['search_text'] != '':
-        list = File.list(json['params']['folder'], json['params']['file_manager_called_for'],json['params']['search_text'])
+        list = File.list(json['params']['folder'], json['params']['file_manager_called_for'],
+                         json['params']['search_text'])
         ancestors = File.ancestors(json['params']['folder'])
     else:
         list = []
         ancestors = File.ancestors(json['params']['folder'])
     return {'list': list, 'ancestors': ancestors}
+
 
 @filemanager_bp.route('/createdir/', methods=['POST'])
 @ok
@@ -81,23 +89,28 @@ def createdir(json, parent_id=None):
                           root_folder_id=request.json['params']['root_id'],
                           parent_id=request.json['params']['folder_id'])
 
-@filemanager_bp.route('/test/', methods=['GET','POST'])
+
+@filemanager_bp.route('/test/', methods=['GET', 'POST'])
 def test():
-    #name = TranslateTemplate.saveTranslate('article_edit', 'update your version of article', 'оновіть свою версію статті', 'update your version of article')
-    name = TranslateTemplate.saveTranslate('companies_list','Company name is `%(name)s` - YOUR OWN COMPANY', 'Ім’я компанії: `%(name)s` - ВАША ВЛАСНА КОМПАНІЯ', 'Company name is `%(name)s` - YOUR OWN COMPANY')
+    name = TranslateTemplate.getTranslate('companies_list', 'Company name is `%(name)s` - YOUR OWN COMPANY')
     return render_template('tmp-test.html', file=name)
+
 
 @filemanager_bp.route('/properties/', methods=['POST'])
 @ok
 def set_properties(json):
-    file = File.get(request.json['params']['id'],)
-    return File.set_properties(file, request.json['params']['add_all'], name=request.json['params']['name'], copyright_author_name=request.json['params']['author_name'], description=request.json['params']['description'])
+    file = File.get(request.json['params']['id'], )
+    return File.set_properties(file, request.json['params']['add_all'], name=request.json['params']['name'],
+                               copyright_author_name=request.json['params']['author_name'],
+                               description=request.json['params']['description'])
+
 
 @filemanager_bp.route('/rename/', methods=['POST'])
 @ok
 def rename(json):
-    file = File.get(request.json['params']['id'],)
+    file = File.get(request.json['params']['id'], )
     return File.rename(file, request.json['params']['name'])
+
 
 @filemanager_bp.route('/copy/', methods=['POST'])
 @ok
@@ -106,15 +119,18 @@ def copy(json):
     file.copy_file(request.json['params']['folder_id'])
     return file.id
 
+
 @filemanager_bp.route('/cut/', methods=['POST'])
 @ok
 def cut(json):
     file = File.get(request.json['params']['id'])
     return File.move_to(file, request.json['params']['folder_id'])
 
+
 @filemanager_bp.route('/remove/<string:file_id>', methods=['POST'])
 def remove(file_id):
     return File.remove(file_id)
+
 
 # @filemanager_bp.route('/upload/<string:parent_id>/', methods=['POST'])
 # def upload(parent_id):
@@ -132,7 +148,6 @@ def remove(file_id):
 @filemanager_bp.route('/uploader/', methods=['GET', 'POST'])
 @filemanager_bp.route('/uploader/<string:company_id>', methods=['GET', 'POST'])
 def uploader(company_id=None):
-
     token_db_class = GoogleToken()
     credentials_exist = token_db_class.check_credentials_exist()
     google = GoogleAuthorize()
@@ -178,5 +193,4 @@ def send(parent_id):
 
 @filemanager_bp.route('/resumeopload/', methods=['GET'])
 def resumeopload():
-
     return jsonify({'size': 0})

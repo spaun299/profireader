@@ -16,37 +16,20 @@ from ..models.pr_base import PRBase
 from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
 from ..models.translate import TranslateTemplate
-import re
+
 
 
 @article_bp.route('/translate/', methods=['POST'])
 @ok
 def translate(json):
-    phrase = TranslateTemplate.getTranslate(request.json['template'], request.json['phrase'])
-    return {'phrase': phrase}
+    translation = TranslateTemplate.getTranslate(request.json['template'], request.json['phrase'])
+    return {'phrase': translation}
 
 
 @article_bp.route('/save_translate/', methods=['POST'])
 @ok
 def save_translate(json):
-    from werkzeug.urls import url_parse
-
-    url_adapter = g.get_url_adapter()
-    try:
-        parsed_url = url_parse(request.json['url'])
-        rules = url_adapter.match(parsed_url.path, method='GET', return_rule=True)
-        urls = rules[0].rule
-    except Exception:
-        urls = ''
-
-    phrase = request.json['phrase']
-    template = request.json['template']
-    if phrase[:2] == '__':
-        phrase = phrase[2:]
-        template = '__GLOBAL'
-
-    file = TranslateTemplate.saveTranslate(template, urls, phrase, phrase, phrase)
-    return file
+    return TranslateTemplate.getTranslate(json['template'], json['phrase'], json['url'])
 
 
 @article_bp.route('/list/', methods=['GET'])

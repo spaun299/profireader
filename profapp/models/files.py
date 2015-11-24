@@ -131,7 +131,6 @@ class File(Base, PRBase):
                 nextf = g.db.query(File).get(nextf.parent_id) if nextf.parent_id else None
         return ret[::-1]
 
-
     @staticmethod
     def sort_search(name, files):
         rel_sort = []

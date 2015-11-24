@@ -2,6 +2,8 @@ from .pr_base import PRBase, Base
 from ..constants.TABLE_TYPES import TABLE_TYPES
 from sqlalchemy import Column, ForeignKey, text
 from utils.db_utils import db
+import re
+from flask import g, request, current_app
 
 
 class TranslateTemplate(Base, PRBase):
@@ -28,25 +30,43 @@ class TranslateTemplate(Base, PRBase):
         self.en = en
 
     @staticmethod
-    def getTranslate(template, phrase):
-        tr = [b for b in db(TranslateTemplate, template=template, name=phrase)]
-        if tr:
-            phrase = tr[0]
-        else:
-            return ''
-        return phrase.uk
+    def getTranslate(template, phrase, url=None):
+        url_adapter = g.get_url_adapter()
 
-    @staticmethod
-    def saveTranslate(template, url, name, uk, en):
-        if TranslateTemplate.isExist(template, name):
-            return 'null'
+        if url is None:
+            url_adapter = g.get_url_adapter()
+            rules = url_adapter.map._rules_by_endpoint.get(request.endpoint, ())
+            url = '' if len(rules) < 1 else rules[0].rule
         else:
-            tr = TranslateTemplate(template=template,
-                                   name=name,
-                                   uk=uk,
-                                   url=url,
-                                   en=en).save()
-            return tr.name
+            try:
+                from werkzeug.urls import url_parse
+
+                parsed_url = url_parse(url)
+                rules = url_adapter.match(parsed_url.path, method='GET', return_rule=True)
+                url = rules[0].rule
+            except Exception:
+                url = ''
+
+        if phrase[:2] == '__':
+            phrase = phrase[2:]
+            template = '__GLOBAL'
+
+        exist = db(TranslateTemplate, template=template, name=phrase).first()
+
+        lang = TranslateTemplate.languages[0]
+        if g.user_dict['lang'] in TranslateTemplate.languages:
+            lang = g.user_dict['lang']
+
+        if exist:
+            if current_app.config['DEBUG']:
+                # TODO: OZ by OZ change ac without changing md (md changed by trigger)
+                exist.ac_tm = None
+                exist.save()
+        else:
+            exist = TranslateTemplate(template=template, name=phrase,
+                                      url=url, **{l: phrase for l in TranslateTemplate.languages}).save()
+
+        return getattr(exist, lang)
 
     @staticmethod
     def isExist(template, phrase):

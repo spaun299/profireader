@@ -1,5 +1,5 @@
 from .blueprints_declaration import auth_bp
-from flask import g, request, url_for, render_template, flash, current_app
+from flask import g, request, url_for, render_template, flash, current_app, session
 #from db_init import db_session
 from ..constants.SOCIAL_NETWORKS import DB_FIELDS, SOC_NET_FIELDS, \
     SOC_NET_FIELDS_SHORT
@@ -71,9 +71,9 @@ def login_signup_general(*soc_network_names):
                                 setattr(user, db_fields_profireader[elem],
                                         getattr(result_user, elem))
                         user.profireader_avatar_url = \
-                            user.gravatar(size=AVATAR_SIZE)
+                            user.avatar(size=AVATAR_SIZE)
                         user.profireader_small_avatar_url = \
-                            user.gravatar(size=AVATAR_SMALL_SIZE)
+                            user.avatar(size=AVATAR_SMALL_SIZE)
 
                     g.db.add(user)
                     user.confirmed = True
@@ -87,6 +87,7 @@ def login_signup_general(*soc_network_names):
                     return redirect(url_for('general.index'))
 
                 login_user(user)
+                session['logged_via'] = soc_network_names
                 flash('You have successfully logged in.')
 
                 # session['user_id'] = user.id assignment
@@ -145,9 +146,9 @@ def signup():
             password=form.password.data  # # pass is automatically hashed
         )
         user.profireader_avatar_url = \
-            user.gravatar(size=AVATAR_SIZE)
+            user.avatar(size=AVATAR_SIZE)
         user.profireader_small_avatar_url = \
-            user.gravatar(size=AVATAR_SMALL_SIZE)
+            user.avatar(size=AVATAR_SMALL_SIZE)
         # # user.password = form.password.data  # pass is automatically hashed
 
         g.db.add(user)
@@ -168,8 +169,7 @@ def login_soc_network(soc_network_name):
 
 @auth_bp.route('/signup/<soc_network_name>', methods=['GET', 'POST'])
 def signup_soc_network(soc_network_name):
-    return redirect(url_for('auth.login_soc_network',
-                     soc_network_name=soc_network_name))
+    return redirect(url_for('auth.login_soc_network', soc_network_name=soc_network_name))
     #return login_signup_general('profireader', soc_network_name)
 
 
