@@ -61,16 +61,11 @@ def materials(company_id):
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template(
         'company/materials.html',
-        company=company.get_client_side_dict(),
+        company=company.get_client_side_dict(fields='name'),
         company_id=company_id,
         angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js',
-        company_logo=company_logo,
-        company_name=company.name
+        company_logo=company_logo
     )
-
-
-# TODO: VK by OZ: remove company_* kwargs
-
 
 @company_bp.route('/materials/<string:company_id>/', methods=['POST'])
 @login_required
@@ -94,10 +89,11 @@ def materials_load(json, company_id):
 
     statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
 
-    return {'materials': [{'article': a.get_client_side_dict(),
-                           'portals_count': len(a.get_client_side_dict().get('portal_article')
-                                                if a.get_client_side_dict().get('portal_article')
-                                                else [0]) + 1}
+    return {'materials': [{'article': a.get_client_side_dict(more_fields='portal_article.~'),
+                           'portals_count': len(a.get_client_side_dict(
+                               fields='portal_article.~').get(
+                               'portal_article') if a.get_client_side_dict(
+                               fields='portal_article.~').get('portal_article') else [0]) + 1}
                           for a in articles],
             'portals': portals,
             'pages': {'total': pages, 'current_page': current_page,
@@ -119,6 +115,8 @@ def material_details(company_id, article_id):
                            company_logo=company_logo,
                            company_name=company.name,
                            company=company.get_client_side_dict())
+
+
 # TODO: VK by OZ: remove company_* kwargs
 
 
@@ -138,7 +136,7 @@ def load_material_details(json, company_id, article_id):
                           for articles in article.portal_article
                           if articles.division.portal.id in portals}
 
-    article = article.to_dict('id, title,short, cr_tm, md_tm, '
+    article = article.get_client_side_dict(fields = 'id, title,short, cr_tm, md_tm, '
                               'company_id, status, long,'
                               'editor_user_id, company.name|id,'
                               'portal_article.id, portal_article.division.name, '
@@ -154,7 +152,7 @@ def load_material_details(json, company_id, article_id):
     return {'article': article,
             'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(article['status']),
             'portals': portals,
-            'company': Company.get(company_id).to_dict('id, employees.id|profireader_name'),
+            'company': Company.get(company_id).get_client_side_dict(fields='id, employees.id|profireader_name'),
             'selected_portal': {},
             'selected_division': {},
             # 'user_rights': ['publish', 'unpublish', 'edit'],
@@ -219,7 +217,7 @@ def profile(company_id):
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template('company/company_profile.html',
-                           company=company.to_dict('*, own_portal.*'),
+                           company=company.get_client_side_dict(more_fields='own_portal'),
                            user_rights=user_rights,
                            company_logo=company_logo,
                            company_id=company_id,

@@ -126,7 +126,7 @@ def db_session_func(db_config):
     from sqlalchemy.orm import scoped_session, sessionmaker
 
     engine = create_engine(db_config)
-    # g.sql_connection = engine.connect()
+    g.sql_connection = engine.connect()
     db_session = scoped_session(sessionmaker(autocommit=False,
                                              autoflush=False,
                                              bind=engine))

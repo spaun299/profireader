@@ -10,6 +10,8 @@ from sqlalchemy import event
 from utils.validators import validators
 from ..controllers import errors
 from utils.db_utils import db
+from html.parser import HTMLParser
+
 
 Base = declarative_base()
 
@@ -46,11 +48,30 @@ class Search(Base):
         self.relevance = relevance
         self.kind = kind
 
-    # @staticmethod
-    # def get_relevance(field_name):
-    #     rel = {'keywords': 10, 'title': 9, 'name': 8, 'short': 7, 'long_stripped': 6}
-    #     return rel[field_name]
+    @staticmethod
+    def get_relevance(field_name):
+        rel = {'keywords': 10, 'title': 9, 'name': 8, 'short': 7, 'long': 6}
+        return rel[field_name]
 
+
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs = True
+        self.fed = []
+
+    def handle_data(self, d):
+        self.fed.append(d)
+
+    def get_data(self):
+        return ''.join(self.fed)
+
+    def strip_tags(self, html):
+        self.feed(html)
+        return self.get_data()
 
 class PRBase:
     def __init__(self):
@@ -68,7 +89,7 @@ class PRBase:
         g.db.flush()
         return self
 
-# TODO: OZ by OZ: why we need two identical functions??!?!
+    # TODO: OZ by OZ: why we need two identical functions??!?!
     def updates(self, dictionary):
         for f in dictionary:
             setattr(self, f, dictionary[f])
@@ -89,19 +110,42 @@ class PRBase:
         g.db.expunge(self)
         return self
 
-    def get_client_side_dict(self, fields='id'):
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
     @classmethod
     def get(cls, id):
         return g.db().query(cls).get(id)
 
-# TODO: OZ by OZ:**kwargs should accept lambdafunction for fields formattings
+    def to_dict_object_property(self, object_name):
+        object_property = getattr(self, object_name)
+        if isinstance(object_property, datetime.datetime):
+            return object_property.strftime('%c')
+        elif isinstance(object_property, dict):
+            return object_property
+        else:
+            return object_property
+
+            # TODO: OZ by OZ:**kwargs should accept lambdafunction for fields formattings
+
     def to_dict(self, *args, prefix=''):
         ret = {}
+        __debug = True
 
         req_columns = {}
         req_relationships = {}
+
+        def add_to_req_relationships(column_name, columns):
+            if column_name not in req_relationships:
+                req_relationships[column_name] = []
+            req_relationships[column_name].append(columns)
+
+        def get_next_level(child, nextlevelargs, prefix, standard_fields_required):
+            in_next_level_dict = child.to_dict(*nextlevelargs, prefix=prefix)
+            if standard_fields_required:
+                in_next_level_dict.update(child.get_client_side_dict())
+            return in_next_level_dict
 
         for arguments in args:
             if arguments:
@@ -112,22 +156,17 @@ class PRBase:
                         if len(columnsdevided) == 0:
                             req_columns[column_name] = True
                         else:
-                            if column_name not in req_relationships:
-                                req_relationships[column_name] = []
-                            req_relationships[column_name].append(
-                                '.'.join(columnsdevided))
+                            add_to_req_relationships(column_name, '.'.join(columnsdevided))
 
         columns = class_mapper(self.__class__).columns
         relations = {a: b for (a, b) in class_mapper(self.__class__).relationships.items()}
 
-        get_key_value = lambda o: o.strftime('%c') if isinstance(
-            o, datetime.datetime) else o
         for col in columns:
-            if col.key in req_columns or '*' in req_columns:
-                ret[col.key] = get_key_value(getattr(self, col.key))
+            if col.key in req_columns or (__debug and '*' in req_columns):
+                ret[col.key] = self.to_dict_object_property(col.key)
                 if col.key in req_columns:
                     del req_columns[col.key]
-        if '*' in req_columns:
+        if '*' in req_columns and __debug:
             del req_columns['*']
 
         if len(req_columns) > 0:
@@ -137,29 +176,35 @@ class PRBase:
                     "you requested not existing attribute(s) `%s%s`" % (
                         prefix, '`, `'.join(columns_not_in_relations),))
             else:
-                raise ValueError("you requested for attribute(s) but "
-                                 "relationships found `%s%s`" % (
-                    prefix, '`, `'.join(set(relations.keys()).
-                                        intersection(
-                            req_columns.keys())),))
+                for rel_name in req_columns:
+                    add_to_req_relationships(rel_name, '~')
+                    # raise ValueError("you requested for attribute(s) but "
+                    #                  "relationships found `%s%s`" % (
+                    #                      prefix, '`, `'.join(set(relations.keys()).
+                    #                          intersection(
+                    #                          req_columns.keys())),))
 
         for relationname, relation in relations.items():
-            if relationname in req_relationships or '*' in \
-                    req_relationships:
+            if relationname in req_relationships or (__debug and '*' in req_relationships):
                 if relationname in req_relationships:
                     nextlevelargs = req_relationships[relationname]
                     del req_relationships[relationname]
                 else:
                     nextlevelargs = req_relationships['*']
                 related_obj = getattr(self, relationname)
+                standard_fields_required = False
+                while '~' in nextlevelargs:
+                    standard_fields_required = True
+                    nextlevelargs.remove('~')
+
                 if relation.uselist:
-                    ret[relationname] = [
-                        child.to_dict(*nextlevelargs,
-                                      prefix=prefix + relationname + '.'
-                                      ) for child in
-                                         related_obj]
+                    add = [get_next_level(child, nextlevelargs, prefix + relationname + '.', standard_fields_required)
+                           for child in related_obj]
                 else:
-                    ret[relationname] = None if related_obj is None else related_obj.to_dict(*nextlevelargs, prefix=prefix + relationname + '.')
+                    add = None if related_obj is None else \
+                        get_next_level(related_obj, nextlevelargs, prefix + relationname + '.', standard_fields_required)
+
+                ret[relationname] = add
 
         if '*' in req_relationships:
             del req_relationships['*']
@@ -204,10 +249,16 @@ class PRBase:
             if not target.id:
                 target.save()
             add_to_db = []
-            for field, relevance in target.search_fields.items():
+            for field in target.search_fields.keys():
+                options = {'relevance': lambda: Search.get_relevance(field),
+                           'processing': lambda: MLStripper().strip_tags(getattr(target, field)),
+                           'index': lambda: target.id}
+                field_options = target.search_fields[field]
+                field_options.update({key: options[key] for key in options
+                                      if key not in field_options.keys()})
                 search_setter = Search(index=target.id, table_name=target.__tablename__,
-                                       relevance=relevance, kind=field)
-                setattr(search_setter, 'text', getattr(target, field))
+                                       relevance=field_options['relevance'](), kind=field,
+                                       text=field_options['processing']())
                 add_to_db.append(search_setter)
             g.db.add_all(add_to_db)
 

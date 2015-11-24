@@ -4,4 +4,4 @@ class RELEVANCE:
     title = 9
     name = 8
     short = 7
-    long_stripped = 6
+    long = 6

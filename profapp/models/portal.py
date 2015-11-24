@@ -220,9 +220,9 @@ class Portal(Base, PRBase):
                     check_division.max, check_division.id)
         return ret
 
-    def get_client_side_dict(self, fields='id|name, divisions.*, layout.*, logo_file_id, company_owner_id'):
-        """This method make dictionary from portal object with fields have written above"""
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id|name, divisions.*, layout.*, logo_file_id, company_owner_id',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
     @staticmethod
     def search_for_portal_to_join(company_id, searchtext):
@@ -303,8 +303,9 @@ class PortalLayout(Base, PRBase):
     def __init__(self, name=None):
         self.name = name
 
-    def get_client_side_dict(self, fields='id|name'):
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id|name',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
 
 class MemberCompanyPortalPlan(Base, PRBase):
@@ -359,9 +360,9 @@ class PortalDivision(Base, PRBase):
             self.settings = db(PortalDivisionSettings_company_subportal).filter_by(
                 portal_division_id=self.id).one()
 
-    def get_client_side_dict(self, fields='id|name'):
-        """This method make dictionary from portal object with fields have written above"""
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id|name',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
         # @staticmethod
         # def add_new_division(portal_id, name, division_type):
