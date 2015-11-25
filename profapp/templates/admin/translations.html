@@ -49,21 +49,24 @@
                 reader.onload = setFile;
                 reader.readAsText( files[0] );
               };
+
             $scope.FilteredTemplate = function( row, rowRenderIndex, col, colRenderIndex ) {
                 if( col.filters[0].term ){
                     $scope.template = $scope.list_templates[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_templates[col.filters[0].term - 1]['label'];
                     $scope.sendData('');
                 }
               };
+
             $scope.FilteredUrls = function( row, rowRenderIndex, col, colRenderIndex ) {
                 if( col.filters[0].term ){
                     $scope.url = $scope.list_urls[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_urls[col.filters[0].term - 1]['label'];
+                    console.log($scope.url);
                     $scope.sendData('');
                 }
               };
 
             $scope.refresh = function(){
-                $scope.sendData('')
+                $scope.sendData('');
             };
 
 
@@ -82,6 +85,7 @@
                 $scope.refresh();
                 $scope.myModal.close()
             };
+
             $scope.showModal = function(isOpen,modal, list) {
                 if(isOpen){
                     modal.open(list);
@@ -90,7 +94,7 @@
                 }
               };
 
-            $scope.checkdelete = function(modal) {
+            $scope.checkdelete = function() {
                 var list = $scope.list_select;
                 my = $scope.myModal;
                 $scope.showModal(true, my, list);
@@ -111,6 +115,7 @@
 
 
             $scope.sendData = function (new_search_text) {
+                $scope.loading = true;
                 $scope.isSelectedRows = false;
                 $scope.error = '';
                 var data = {};
@@ -125,6 +130,7 @@
                     $scope.gridOptions1.totalItems = resp.total;
                     $scope.languages = resp.languages;
                     $scope.list = [];
+
                     for(var i=0;i< $scope.translations.length;i++){
                         $scope.list.push({
                             'Creation time' : $scope.translations[i].cr_tm,
@@ -137,16 +143,20 @@
                         })
                     }
                     $scope.gridOptions1.data = $scope.list;
+
                     $scope.templates = resp.templates;
                     $scope.templates.unshift({label: '-- all --', value: undefined});
 
                     $scope.urls = resp.urls;
-
                     $scope.urls.unshift({label: '-- all --', value: undefined});
+
                     $scope.create_list($scope.list_templates, $scope.templates);
                     $scope.create_list($scope.list_urls, $scope.urls);
+
                     $scope.data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
-                })
+                }).finally(function () {
+                    $scope.loading = false;
+                });
             };
              $scope.gridOptions1 = {
                     paginationPageSizes: [25, 50, 75],
@@ -207,10 +217,11 @@
                     }
                   };
              $scope.delete = function(list) {
+
                  $ok($scope.url_delete_translations(), {objects:list}, function (resp) {
                      if (resp == 'True') {
                          $scope.showModal(false, $scope.myModal, list);
-                         $scope.clearAll();
+                         location.reload();
                      } else {
                          $scope.error = 'error delete'
                      }
@@ -223,7 +234,6 @@
 
         }])
         .factory('modal', ['$compile', '$rootScope', function ($compile, $rootScope) {
-//          return function() {
             var elm;
             var modal = {
               open: function(list) {
@@ -246,9 +256,7 @@
                 }
               }
             };
-
             return modal;
-//          };
         }]);
 
     </script>
@@ -273,7 +281,7 @@
         <div ng-if="!areAllEmpty(translations)">
             <div class="grid" id="grid1" ui-grid-pagination ui-grid-selection ui-grid-edit  ui-grid="gridOptions1" ></div>
             </div>
-       <a class="btn btn-danger" ng-class="{'disabled': ( isSelectedRows === false )}"  style="text-align: center" ng-click="checkdelete(true)" >Delete selected rows</a>
+       <a ng-show="!loading" class="btn btn-danger" ng-class="{'disabled': ( isSelectedRows === false )}"  style="text-align: center" ng-click="checkdelete(true)" >Delete selected rows</a>
         <!--<table style="width:100%">-->
             <!--<tr>-->
                 <!--<th width="8em">Creation time</th>-->

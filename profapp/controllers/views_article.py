@@ -20,7 +20,7 @@ def show_mine():
 @article_bp.route('/list/', methods=['POST'])
 @ok
 def load_mine(json):
-    current_page = json.get('pages')['current_page'] if json.get('pages') else 1
+    current_page = json.get('pages') if json.get('pages') else 1
     chosen_company_id = json.get('chosen_company')['id'] if json.get('chosen_company') else 0
     params = {'search_text': json.get('search_text'), 'user_id': g.user_dict['id']}
     original_chosen_status = None
@@ -32,13 +32,19 @@ def load_mine(json):
     subquery = ArticleCompany.subquery_user_articles(**params)
 
     articles, pages, current_page = pagination(subquery,
-                                               page=current_page)
+                                               page=current_page, items_per_page=json.get('pageSize'))
 
     all, companies = ArticleCompany.get_companies_where_user_send_article(g.user_dict['id'])
     statuses = {status: status for status in ARTICLE_STATUS_IN_COMPANY.all}
     statuses['All'] = 'All'
 
     articles_with_time = []
+    company_list_for_grid = ''
+    for c in companies:
+        if companies[-1] == c and c['name'] != 'All':
+            company_list_for_grid += str(c['name'])
+        elif(c['name'] != 'All'):
+            company_list_for_grid += str(c['name'])+', '
 
     for (article, time) in articles.all():
         article_dict = article.get_client_side_dict()
@@ -46,7 +52,18 @@ def load_mine(json):
         articles_with_time.append({'article': article_dict,
                                    'company_count': len(article_dict['submitted_versions']) + 1})
 
-    return {'articles': articles_with_time,
+    articles_drid_data = []
+
+    for (article, time) in articles.all():
+        article_dict = article.get_client_side_dict()
+        article_dict['md_tm'] = time
+        articles_drid_data.append({'Date': article_dict['md_tm'],
+                                   'Title': article_dict['mine_version']['title'],
+                                   'Campanies': company_list_for_grid,
+                                   'Status': article_dict['submitted_versions'][0]['status']})
+
+    return { 'grid_data': articles_drid_data,
+            'articles': articles_with_time,
             'companies': companies,
             'search_text': json.get('search_text') or '',
             'original_search_text': json.get('search_text') or '',

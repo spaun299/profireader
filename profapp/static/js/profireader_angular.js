@@ -688,6 +688,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 scope.data = beforeload(data);
                 scope.original_data = $.extend(true, {}, scope.data);
                 if (afterload) afterload();
+                console.log(data.articles);
 
             }).finally(function () {
                 scope.loading = false;
