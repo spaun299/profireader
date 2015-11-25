@@ -133,10 +133,10 @@ def details(article_portal_division_id):
     search_text, portal, sub_query = get_params()
 
     article = ArticlePortalDivision.get(article_portal_division_id)
-    article_dict = article.to_dict('id, title,short, cr_tm, md_tm, '
-                                   'publishing_tm, keywords, status, long, image_file_id,'
-                                   'division.name, division.portal.id,'
-                                   'company.name')
+    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+                                                       'publishing_tm, keywords, status, long, image_file_id,'
+                                                       'division.name, division.portal.id,'
+                                                       'company.name')
     article_dict['tags'] = article.tags
 
     division = g.db().query(PortalDivision).filter_by(id=article.portal_division_id).one()
@@ -148,7 +148,7 @@ def details(article_portal_division_id):
     return render_template('front/bird/article_details.html',
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
-                           articles_related={a.id: a.to_dict('id, title, cr_tm, company.name|id') for a
+                           articles_related={a.id: a.get_client_side_dict(fields='id, title, cr_tm, company.name|id') for a
                                              in related_articles},
                            article=article_dict
                            )
@@ -262,8 +262,9 @@ def subportal_contacts(member_company_id, member_company_name):
     return render_template('front/bird/subportal_contacts.html',
                            subportal=True,
                            company_users={
-                           u.id: dict(u.get_client_side_dict(), position=getposition(u.id, member_company_id)) for u in
-                           company_users},
+                               u.id: dict(u.get_client_side_dict(), position=getposition(u.id, member_company_id)) for u
+                               in
+                               company_users},
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
                            current_subportal_division=False,

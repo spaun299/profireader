@@ -68,7 +68,7 @@ class PRBase:
         g.db.flush()
         return self
 
-# TODO: OZ by OZ: why we need two identical functions??!?!
+    # TODO: OZ by OZ: why we need two identical functions??!?!
     def updates(self, dictionary):
         for f in dictionary:
             setattr(self, f, dictionary[f])
@@ -89,19 +89,42 @@ class PRBase:
         g.db.expunge(self)
         return self
 
-    def get_client_side_dict(self, fields='id'):
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
     @classmethod
     def get(cls, id):
         return g.db().query(cls).get(id)
 
-# TODO: OZ by OZ:**kwargs should accept lambdafunction for fields formattings
+    def to_dict_object_property(self, object_name):
+        object_property = getattr(self, object_name)
+        if isinstance(object_property, datetime.datetime):
+            return object_property.strftime('%c')
+        elif isinstance(object_property, dict):
+            return object_property
+        else:
+            return object_property
+
+            # TODO: OZ by OZ:**kwargs should accept lambdafunction for fields formattings
+
     def to_dict(self, *args, prefix=''):
         ret = {}
+        __debug = True
 
         req_columns = {}
         req_relationships = {}
+
+        def add_to_req_relationships(column_name, columns):
+            if column_name not in req_relationships:
+                req_relationships[column_name] = []
+            req_relationships[column_name].append(columns)
+
+        def get_next_level(child, nextlevelargs, prefix, standard_fields_required):
+            in_next_level_dict = child.to_dict(*nextlevelargs, prefix=prefix)
+            if standard_fields_required:
+                in_next_level_dict.update(child.get_client_side_dict())
+            return in_next_level_dict
 
         for arguments in args:
             if arguments:
@@ -112,22 +135,17 @@ class PRBase:
                         if len(columnsdevided) == 0:
                             req_columns[column_name] = True
                         else:
-                            if column_name not in req_relationships:
-                                req_relationships[column_name] = []
-                            req_relationships[column_name].append(
-                                '.'.join(columnsdevided))
+                            add_to_req_relationships(column_name, '.'.join(columnsdevided))
 
         columns = class_mapper(self.__class__).columns
         relations = {a: b for (a, b) in class_mapper(self.__class__).relationships.items()}
 
-        get_key_value = lambda o: o.strftime('%c') if isinstance(
-            o, datetime.datetime) else o
         for col in columns:
-            if col.key in req_columns or '*' in req_columns:
-                ret[col.key] = get_key_value(getattr(self, col.key))
+            if col.key in req_columns or (__debug and '*' in req_columns):
+                ret[col.key] = self.to_dict_object_property(col.key)
                 if col.key in req_columns:
                     del req_columns[col.key]
-        if '*' in req_columns:
+        if '*' in req_columns and __debug:
             del req_columns['*']
 
         if len(req_columns) > 0:
@@ -137,29 +155,35 @@ class PRBase:
                     "you requested not existing attribute(s) `%s%s`" % (
                         prefix, '`, `'.join(columns_not_in_relations),))
             else:
-                raise ValueError("you requested for attribute(s) but "
-                                 "relationships found `%s%s`" % (
-                    prefix, '`, `'.join(set(relations.keys()).
-                                        intersection(
-                            req_columns.keys())),))
+                for rel_name in req_columns:
+                    add_to_req_relationships(rel_name, '~')
+                    # raise ValueError("you requested for attribute(s) but "
+                    #                  "relationships found `%s%s`" % (
+                    #                      prefix, '`, `'.join(set(relations.keys()).
+                    #                          intersection(
+                    #                          req_columns.keys())),))
 
         for relationname, relation in relations.items():
-            if relationname in req_relationships or '*' in \
-                    req_relationships:
+            if relationname in req_relationships or (__debug and '*' in req_relationships):
                 if relationname in req_relationships:
                     nextlevelargs = req_relationships[relationname]
                     del req_relationships[relationname]
                 else:
                     nextlevelargs = req_relationships['*']
                 related_obj = getattr(self, relationname)
+                standard_fields_required = False
+                while '~' in nextlevelargs:
+                    standard_fields_required = True
+                    nextlevelargs.remove('~')
+
                 if relation.uselist:
-                    ret[relationname] = [
-                        child.to_dict(*nextlevelargs,
-                                      prefix=prefix + relationname + '.'
-                                      ) for child in
-                                         related_obj]
+                    add = [get_next_level(child, nextlevelargs, prefix + relationname + '.', standard_fields_required)
+                           for child in related_obj]
                 else:
-                    ret[relationname] = None if related_obj is None else related_obj.to_dict(*nextlevelargs, prefix=prefix + relationname + '.')
+                    add = None if related_obj is None else \
+                        get_next_level(related_obj, nextlevelargs, prefix + relationname + '.', standard_fields_required)
+
+                ret[relationname] = add
 
         if '*' in req_relationships:
             del req_relationships['*']
