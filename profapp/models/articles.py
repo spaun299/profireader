@@ -59,10 +59,10 @@ class ArticlePortalDivision(Base, PRBase):
 
     # tag_assoc_ = relationship('TagPortalDivisionArticle',
     #                                 back_populates='article_portal_division_select')
-    search_fields = {'title': {'relevance': lambda: RELEVANCE.title},
-                     'short': {'relevance': lambda: RELEVANCE.short},
-                     'long': {'relevance': lambda: RELEVANCE.long},
-                     'keywords': {'relevance': lambda: RELEVANCE.keyword}}
+    search_fields = {'title': {'relevance': lambda field='title': RELEVANCE.title},
+                     'short': {'relevance': lambda field='short': RELEVANCE.short},
+                     'long': {'relevance': lambda field='long': RELEVANCE.long},
+                     'keywords': {'relevance': lambda field='keywords': RELEVANCE.keyword}}
     tag_assoc_select = relationship('TagPortalDivisionArticle',
                                     back_populates='article_portal_division_select',
                                     cascade="save-update, merge, delete")
@@ -354,7 +354,6 @@ class Article(Base, PRBase):
                                     'submitted_versions.company.name',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
-
 
     def get_article_with_html_tag(self, text_into_html):
         article = self.get_client_side_dict()

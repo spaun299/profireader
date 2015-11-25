@@ -11,7 +11,7 @@ from utils.validators import validators
 from ..controllers import errors
 from utils.db_utils import db
 from html.parser import HTMLParser
-
+import json
 
 Base = declarative_base()
 
@@ -58,7 +58,8 @@ class Search(Base):
 class MLStripper(HTMLParser):
     def __init__(self):
         super().__init__()
-        self.reset()
+        # TODO OZ BY VK : WHY WE ARE USING reset() method?
+        # self.reset()
         self.strict = False
         self.convert_charrefs = True
         self.fed = []
@@ -71,7 +72,10 @@ class MLStripper(HTMLParser):
 
     def strip_tags(self, html):
         self.feed(html)
-        return self.get_data()
+        data = self.get_data()
+        if data == '':
+            data = html
+        return data
 
 class PRBase:
     def __init__(self):
@@ -246,21 +250,24 @@ class PRBase:
     def add_to_search(mapper, connection, target):
 
         if hasattr(target, 'search_fields'):
-            if not target.id:
-                target.save()
-            add_to_db = []
-            for field in target.search_fields.keys():
-                options = {'relevance': lambda: Search.get_relevance(field),
-                           'processing': lambda: MLStripper().strip_tags(getattr(target, field)),
-                           'index': lambda: target.id}
+            # if not target.id:
+            # g.db.add(target)
+            # add_to_db = []
+            target_fields = ','.join(target.search_fields.keys())
+            target_dict = target.get_client_side_dict(fields=target_fields+',id')
+            options = {'relevance': lambda field_name: Search.get_relevance(field_name),
+                       'processing': lambda text: MLStripper().strip_tags(text),
+                       'index': lambda target_id: target_id}
+            for field in target_fields.split(','):
                 field_options = target.search_fields[field]
                 field_options.update({key: options[key] for key in options
                                       if key not in field_options.keys()})
-                search_setter = Search(index=target.id, table_name=target.__tablename__,
-                                       relevance=field_options['relevance'](), kind=field,
-                                       text=field_options['processing']())
-                add_to_db.append(search_setter)
-            g.db.add_all(add_to_db)
+                search_setter = Search(index=field_options['index'](target_dict['id']),
+                                       table_name=target.__tablename__,
+                                       relevance=field_options['relevance'](field), kind=field,
+                                       text=field_options['processing'](target_dict[field]))
+                # add_to_db.append(search_setter)
+                g.db.add(search_setter)
 
     @staticmethod
     def update_search_table(mapper, connection, target):
@@ -273,8 +280,8 @@ class PRBase:
         event.listen(cls, 'before_update', cls.validate_before_update)
         event.listen(cls, 'before_insert', cls.validate_before_insert)
         # event.listen(cls, 'before_delete', cls.validate_before_delete)
-        event.listen(cls, 'after_insert', cls.add_to_search)
-        event.listen(cls, 'before_update', cls.update_search_table)
+        event.listen(cls, 'before_insert', cls.add_to_search)
+        # event.listen(cls, 'before_update', cls.update_search_table)
 
 #
 #
