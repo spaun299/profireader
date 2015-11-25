@@ -7,9 +7,9 @@ import re
 from flask import g
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import event
-from utils.validators import validators
 from ..controllers import errors
 from utils.db_utils import db
+from utils.validators import validators
 
 Base = declarative_base()
 

@@ -40,7 +40,8 @@ def login_signup_general(*soc_network_names):
                 if result_user.email is None:
                     flash("you haven't confirm email bound to your soc-network account yet. "
                           "Please confirm email first or choose another way of authentication.")
-                    redirect(url_for('auth.login_signup_endpoint') + '?login_signup=login')
+                    # redirect(url_for('auth.login_signup_endpoint') + '?login_signup=login')
+                    redirect(redirect_url())
 
                 db_fields = DB_FIELDS[soc_network_names[-1]]
                 # user = g.db.query(User).filter(getattr(User, db_fields['id']) == result_user.id).first()
@@ -84,7 +85,10 @@ def login_signup_general(*soc_network_names):
                     portal_id = session['portal_id']
                     session.pop('portal_id')
                     return redirect(url_for('general.reader_subscribe', portal_id=portal_id))
-                return redirect(url_for('general.index'))  # #  http://profireader.com/
+                # return redirect(url_for('general.index'))  # #  http://profireader.com/
+                # url = redirect_url()
+                # print(url)
+                return redirect(redirect_url())  # #  http://profireader.com/
             elif result.error:
                 redirect_path = '#/?msg={}'.format(quote(soc_network_names[-1] + ' login failed.'))
                 return redirect(redirect_path)
@@ -116,7 +120,7 @@ def login_signup_endpoint():
     if g.user_init.is_authenticated():
         if 'portal_id' in session.keys():
             return redirect(url_for('general.reader_subscribe', portal_id=session['portal_id']))
-        flash('You are already logged in')
+        # flash('You are already logged in')
 
     login_signup = request.args.get('login_signup', 'login')
 
@@ -166,13 +170,6 @@ def signup():
                            signup_form=signup_form)
 
 
-@auth_bp.route('/subscribe/')
-def subscribe():
-    portal_id = request.args.get('portal_id', None)
-    session['portal_id'] = portal_id
-    return redirect(url_for('auth.login_signup_endpoint', login_signup='login'))
-
-
 @auth_bp.route('/login_signup/<soc_network_name>', methods=['GET', 'POST'])
 # @auth_bp.route('/login_signup_socnet/<soc_network_name>', methods=['GET', 'POST'])
 # @auth_bp.route('/login_signup/<string:soc_network_name>/<string:portal_id>', methods=['GET', 'POST'])
@@ -204,9 +201,12 @@ def login_signup_soc_network(soc_network_name):
 @auth_bp.route('/login/', methods=['POST'])
 def login():
     # if g.user_init and g.user_init.is_authenticated():
-    portal_id = request.args.get('subscribe', None)
+    # portal_id = request.args.get('subscribe', None)
+    portal_id = session['portal_id'] if ('portal_id' in session.keys()) else None
+
     if g.user_init.is_authenticated():
         if portal_id:
+            session.pop('portal_id')
             return redirect(url_for('general.reader_subscribe', portal_id=portal_id))
         flash('You are already logged in. If you want to login with another account logout first please')
         return redirect(url_for('general.index'))
@@ -215,20 +215,22 @@ def login():
     signup_form = RegistrationForm()
 
     if login_form.validate_on_submit():
-        user = g.db.query(User).\
-            filter(User.profireader_email == login_form.email.data).first()
+        user = g.db.query(User).filter(User.profireader_email == login_form.email.data).first()
 
         if user and user.is_banned():
+            flash('You can not be logged in. Please contact the Profireader administration.')
             return redirect(url_for('general.index'))
         if user and user.verify_password(login_form.password.data):
             login_user(user)
             if portal_id:
+                session.pop('portal_id')
                 return redirect(url_for('general.reader_subscribe', portal_id=portal_id))
-            return redirect(request.args.get('next') or url_for('general.index'))
+            # return redirect(request.args.get('next') or url_for('general.index'))
+            return redirect(redirect_url())
         flash('Invalid username or password.')
-        redirect_url = url_for('auth.login_signup_endpoint') + '?login_signup=login'
-        redirect_url += ('&' + 'portal_id=' + portal_id) if portal_id else ''
-        return redirect(redirect_url)
+        redirect_url_str = url_for('auth.login_signup_endpoint') + '?login_signup=login'
+        # redirect_url += ('&' + 'portal_id=' + portal_id) if portal_id else ''
+        return redirect(redirect_url_str)
     return render_template('auth/login_signup.html',
                            login_signup='login',
                            login_form=login_form,
