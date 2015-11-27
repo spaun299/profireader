@@ -25,6 +25,7 @@ def translations_load(json):
                                                  template=json.get('template') or None,
                                                  url=json.get('url') or None)
     translations, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('pageSize'))
+    total_items = len(subquery.all())
     tr = [t.get_client_side_dict() for t in translations]
     templates = db(TranslateTemplate.template).group_by(TranslateTemplate.template) \
         .order_by(expression.asc(expression.func.lower(TranslateTemplate.template))).all()

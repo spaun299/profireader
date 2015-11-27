@@ -221,10 +221,36 @@ class ArticleCompany(Base, PRBase):
                 companies.append(comp.company.get_client_side_dict(fields='id, name'))
         return all, [dict(comp) for comp in set([tuple(c.items()) for c in companies])]
 
+    @staticmethod
+    def get_companies_for_article(article_id):
+        companies = []
+        for article in db(Article, id=article_id).all():
+            for comp in article.submitted_versions:
+                companies.append(comp.company.get_client_side_dict(fields='id, name'))
+        return [dict(comp) for comp in set([tuple(c.items()) for c in companies])]
+
     def clone_for_company(self, company_id):
         return self.detach().attr({'company_id': company_id,
                                    'status': ARTICLE_STATUS_IN_COMPANY.
                                   submitted})
+
+    @staticmethod
+    def list_for_grid_tables(list, add_param, dict):
+        new_list = [];n=1
+        if add_param:
+            new_list.append(add_param)
+            n = 2
+        list.sort() if dict == False else list
+        for s in list:
+            if dict:
+                s = s['name']
+            new_list.append({
+                'value': str(n),
+                'label': str(s),
+            })
+            n +=1
+        return new_list
+
 
     @staticmethod
     def subquery_user_articles(search_text=None, user_id=None, **kwargs):

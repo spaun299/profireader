@@ -53,22 +53,29 @@
             $scope.FilteredTemplate = function( row, rowRenderIndex, col, colRenderIndex ) {
                 if( col.filters[0].term ){
                     $scope.template = $scope.list_templates[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_templates[col.filters[0].term - 1]['label'];
+                    console.log($scope.template);
                     $scope.sendData('');
+                }else if(!col.filters[0].term){
+                    $scope.refresh()
                 }
               };
 
             $scope.FilteredUrls = function( row, rowRenderIndex, col, colRenderIndex ) {
                 if( col.filters[0].term ){
                     $scope.url = $scope.list_urls[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_urls[col.filters[0].term - 1]['label'];
-                    console.log($scope.url);
                     $scope.sendData('');
+                }else if(!col.filters[0].term){
+                    $scope.refresh()
                 }
               };
 
             $scope.refresh = function(){
+                $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
+                $scope.gridOptions1.columnDefs[3]['filter']['term'] = '1';
+                $scope.template = null;
+                $scope.url = null;
                 $scope.sendData('');
             };
-
 
 
             $scope.saveTranslation = function (row, col, lang, newval) {
@@ -125,7 +132,7 @@
                 data.page = paginationOptions.pageNumber;
                 data.pageSize = $scope.gridOptions1.paginationPageSize;
                 $ok($scope.url_search_translations({}), data, function (resp) {
-                    $scope.data['pages'] = resp.pages;
+
                     $scope.translations = resp.translations;
                     $scope.gridOptions1.totalItems = resp.total;
                     $scope.languages = resp.languages;
@@ -181,6 +188,7 @@
                             type: uiGridConstants.filter.SELECT,
                             selectOptions: $scope.list_urls },
                           headerCellClass: $scope.FilteredUrls
+
                       },
                       { field: 'Phrase', enableSorting: false,enableCellEdit: false},
                       { field: 'uk', enableSorting: false, enableCellEdit: true},
@@ -228,10 +236,6 @@
                  });
 
              };
-                    $scope.clearAll = function() {
-                              $scope.gridApi.selection.clearSelectedRows();
-                            };
-
         }])
         .factory('modal', ['$compile', '$rootScope', function ($compile, $rootScope) {
             var elm;
@@ -259,6 +263,7 @@
             return modal;
         }]);
 
+
     </script>
     {% raw %}
     <style>
@@ -281,7 +286,7 @@
         <div ng-if="!areAllEmpty(translations)">
             <div class="grid" id="grid1" ui-grid-pagination ui-grid-selection ui-grid-edit  ui-grid="gridOptions1" ></div>
             </div>
-       <a ng-show="!loading" class="btn btn-danger" ng-class="{'disabled': ( isSelectedRows === false )}"  style="text-align: center" ng-click="checkdelete(true)" >Delete selected rows</a>
+       <a ng-show="!loading && !areAllEmpty(translations)" class="btn btn-danger" ng-class="{'disabled': ( isSelectedRows === false )}"  style="text-align: center" ng-click="checkdelete(true)" >Delete selected rows</a>
         <!--<table style="width:100%">-->
             <!--<tr>-->
                 <!--<th width="8em">Creation time</th>-->
@@ -330,7 +335,7 @@
         <div ng-show="!loading && areAllEmpty(translations)" style="float: left; margin-right: 20px; padding-top: 4px">
                     <h4>No translations</h4>
                 </div>
-            <button ng-click="sendData('')" class="btn btn-warning" ng-show="!loading && areAllEmpty(translations)">Back</button>
+            <button ng-click="refresh()" class="btn btn-warning" ng-show="!loading && areAllEmpty(translations)">Back</button>
 
     </div>
     {% endraw %}
