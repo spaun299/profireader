@@ -43,9 +43,11 @@ def index(page=1):
     if not current_user.is_authenticated():
         portal_base_profireader = 'partials/portal_base_Profireader.html'
         profireader_content = 'partials/Profireader_content.html'
+        head = 'partials/empty_page.html'
         return render_template('general/index.html',
                                portal_base_profireader=portal_base_profireader,
-                               profireader_content=profireader_content
+                               profireader_content=profireader_content,
+                               add_head=head
                                )
 
     # user_portal_reader = g.db.query(UserPortalReader).filter_by(user_id=g.user_dict['id']).all()
@@ -69,10 +71,13 @@ def index(page=1):
 
     portal_base_profireader = 'partials/portal_base_Profireader_auth_user.html'
     profireader_content = 'partials/reader/reader_content.html'
+    head = 'partials/reader/head.html'
+    # head = 'partials/empty_page.html'
 
     return render_template('general/index.html',
                            portal_base_profireader=portal_base_profireader,
                            profireader_content=profireader_content,
+                           add_head=head,
                            articles=ordered_articles,
                            pages=pages,
                            current_page=page,
