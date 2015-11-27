@@ -6,7 +6,7 @@ from ..models.portal import MemberCompanyPortal, PortalDivision, Portal, Company
 from utils.db_utils import db
 from ..models.users import User
 from ..models.company import UserCompany
-
+from ..models.pr_base import Search
 from config import Config
 # from profapp import
 from .pagination import pagination

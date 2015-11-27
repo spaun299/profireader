@@ -21,6 +21,7 @@ from ..models.files import File
 from flask import session
 from .pagination import pagination
 from config import Config
+from ..models.pr_base import Search
 
 
 @company_bp.route('/search_to_submit_article/', methods=['POST'])
@@ -43,6 +44,8 @@ def show():
 # @check_rights(simple_permissions([]))
 @ok
 def load_companies(json):
+    Search.search({'class': Company, 'fields': ('name', 'about')},
+    {'class': ArticlePortalDivision, 'fields': ('title', 'short')} , search_text='a')
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     return {'companies': [usr_cmp.employer.get_client_side_dict() for usr_cmp in user_companies
                           if usr_cmp.status == STATUS.ACTIVE()],

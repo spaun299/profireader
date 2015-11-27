@@ -11,7 +11,7 @@ from ..models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
 from config import Config
 # from ..models.tag import Tag
 from utils.db_utils import db
-from .pr_base import PRBase, Base, MLStripper
+from .pr_base import PRBase, Base, MLStripper, Search
 # from db_init import Base
 from utils.db_utils import db
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
@@ -30,7 +30,6 @@ class ArticlePortalDivision(Base, PRBase):
     article_company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('article_company.id'))
     # portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
     portal_division_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal_division.id'))
-
     image_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'), nullable=False)
 
     cr_tm = Column(TABLE_TYPES['timestamp'])
@@ -62,7 +61,7 @@ class ArticlePortalDivision(Base, PRBase):
     search_fields = {'title': {'relevance': lambda field='title': RELEVANCE.title},
                      'short': {'relevance': lambda field='short': RELEVANCE.short},
                      'long': {'relevance': lambda field='long': RELEVANCE.long},
-                     'keywords': {'relevance': lambda field='keywords': RELEVANCE.keyword}}
+                     'keywords': {'relevance': lambda field='keywords': RELEVANCE.keywords}}
     tag_assoc_select = relationship('TagPortalDivisionArticle',
                                     back_populates='article_portal_division_select',
                                     cascade="save-update, merge, delete")
@@ -180,6 +179,10 @@ class ArticleCompany(Base, PRBase):
                                               "ArticlePortalDivision."
                                               "article_company_id",
                                   backref='company_article')
+    search_fields = {'title': {'relevance': lambda field='title': RELEVANCE.title},
+                     'short': {'relevance': lambda field='short': RELEVANCE.short},
+                     'long': {'relevance': lambda field='long': RELEVANCE.long},
+                     'keywords': {'relevance': lambda field='keywords': RELEVANCE.keywords}}
 
     def get_client_side_dict(self,
                              fields='id|title|short|keywords|cr_tm|md_tm|company_id|article_id|image_file_id|status',
@@ -405,9 +408,22 @@ class Article(Base, PRBase):
         if 'portal_id' in kwargs.keys():
             portal_id = kwargs['portal_id']
             kwargs.pop('portal_id', None)
+        # search_text = 'aa'
+        # test = db(Search).filter(Search.text.ilike("%" + search_text + "%")).filter(
+        #     Search.index == db(ArticlePortalDivision).filter(
+        #         ArticlePortalDivision.portal_division_id == db(
+        #             PortalDivision, portal_id=portal_id).first().id).first()).all()
+        # for a in test:
+        #     print(a)
+        # print(**kwargs)
+        # test = db(Search, table_name=ArticlePortalDivision.__tablename__).filter(Search.text.ilike("%" + search_text + "%")).filter(
+        #     ArticlePortalDivision.portal_division_id in db(PortalDivision.id, portal_id=portal_id).all())
+        # for a in test:
+        #     print(a.text)
 
         sub_query = db(ArticlePortalDivision, status=ARTICLE_STATUS_IN_PORTAL.published, **kwargs). \
-            order_by(ArticlePortalDivision.publishing_tm.desc()).filter(text(' "publishing_tm" < clock_timestamp() '))
+            order_by(ArticlePortalDivision.publishing_tm.desc()).filter(
+            text(' "publishing_tm" < clock_timestamp() '))
 
         if portal_id:
             sub_query = sub_query.join(PortalDivision).join(Portal).filter(Portal.id == portal_id)

@@ -22,6 +22,7 @@ import hashlib
 from flask.ext.login import UserMixin, AnonymousUserMixin
 from .files import File
 from .pr_base import PRBase, Base
+from ..constants.SEARCH import RELEVANCE
 from .rights import Right
 from sqlalchemy import CheckConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -136,6 +137,9 @@ class User(Base, UserMixin, PRBase):
     yahoo_gender = Column(TABLE_TYPES['gender'])
     yahoo_link = Column(TABLE_TYPES['link'])
     yahoo_phone = Column(TABLE_TYPES['phone'])
+    search_fields = {'profireader_name': {'relevance': lambda field='profireader_name': RELEVANCE.profireader_name},
+                     'about_me': {'relevance': lambda field='about_me': RELEVANCE.about_me},
+                     'profireader_email': {'relevance': lambda field='profireader_email': RELEVANCE.profireader_email}}
 
 # get all users in company : company.employees
 # get all users companies : user.employers

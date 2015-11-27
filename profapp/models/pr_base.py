@@ -1,6 +1,6 @@
 # from db_init import g.db, Base
 from ..constants.TABLE_TYPES import TABLE_TYPES
-from sqlalchemy import Table, Column, Integer, Text, ForeignKey, String, Boolean
+from sqlalchemy import Table, Column, Integer, Text, ForeignKey, String, Boolean, or_, and_, text
 from sqlalchemy.orm import relationship, backref, make_transient, class_mapper
 import datetime
 import re
@@ -11,6 +11,7 @@ from utils.validators import validators
 from ..controllers import errors
 from utils.db_utils import db
 from html.parser import HTMLParser
+from ..constants.SEARCH import RELEVANCE
 import json
 
 Base = declarative_base()
@@ -41,18 +42,38 @@ class Search(Base):
     kind = Column(TABLE_TYPES['short_text'])
 
     def __init__(self, index=None, table_name=None, text=None, relevance=None, kind=None):
-        super(Search, self).__init__()
+        # super(Search, self).__init__()
         self.index = index
         self.table_name = table_name
         self.text = text
         self.relevance = relevance
         self.kind = kind
 
-    @staticmethod
-    def get_relevance(field_name):
-        rel = {'keywords': 10, 'title': 9, 'name': 8, 'short': 7, 'long': 6}
-        return rel[field_name]
 
+    @staticmethod
+    def search(*args, **kwargs):
+        """ *args: dictionary with following values - class = sqlalchemy table class object,
+                                                      filter: sqlalchemy filter with your own parameters,
+                                                      on: fields parameter for join,
+                                                      fields: (tuple) with fields name in table Search.kind,
+                                                      join: subquery wich you want to join.
+            For example: {'class': Company, 'filter': ~db(User, company_id=1).exists(),
+                          'on': Company.id=Portal.company_id, join=Article,
+                          'fields' = (tuple) with fields name in table Search.kind}
+            **kwargs: search_text = string text for search,
+                      index = id """
+        # class_dict = kwargs.get('class')[:]
+
+        params = []
+
+        print(params)
+        for cls in args:
+            params += (and_(Search.kind.in_(cls['fields']), Search.text.ilike("%" + kwargs.get('search_text') + "%"),
+                     Search.table_name==cls['class'].__tablename__), )
+        subquery_search = db(Search).filter(or_(param for param in params)).all()
+        print(subquery_search)
+        for a in subquery_search:
+            print(a.text)
 
 
 class MLStripper(HTMLParser):
@@ -73,7 +94,7 @@ class MLStripper(HTMLParser):
     def strip_tags(self, html):
         self.feed(html)
         data = self.get_data()
-        if data == '':
+        if data is '':
             data = html
         return data
 
@@ -250,38 +271,39 @@ class PRBase:
     def add_to_search(mapper, connection, target):
 
         if hasattr(target, 'search_fields'):
-            # if not target.id:
-            # g.db.add(target)
-            # add_to_db = []
             target_fields = ','.join(target.search_fields.keys())
             target_dict = target.get_client_side_dict(fields=target_fields+',id')
-            options = {'relevance': lambda field_name: Search.get_relevance(field_name),
+            options = {'relevance': lambda field_name: getattr(RELEVANCE, field_name),
                        'processing': lambda text: MLStripper().strip_tags(text),
                        'index': lambda target_id: target_id}
             for field in target_fields.split(','):
                 field_options = target.search_fields[field]
                 field_options.update({key: options[key] for key in options
                                       if key not in field_options.keys()})
-                search_setter = Search(index=field_options['index'](target_dict['id']),
-                                       table_name=target.__tablename__,
-                                       relevance=field_options['relevance'](field), kind=field,
-                                       text=field_options['processing'](target_dict[field]))
-                # add_to_db.append(search_setter)
-                g.db.add(search_setter)
+                g.db.add(Search(index=field_options['index'](target_dict['id']),
+                                table_name=target.__tablename__,
+                                relevance=field_options['relevance'](field), kind=field,
+                                text=field_options['processing'](str(target_dict[field]))))
 
     @staticmethod
     def update_search_table(mapper, connection, target):
+
         if hasattr(target, 'search_fields'):
+            options = {'processing': lambda text: MLStripper().strip_tags(text)}
             for field in target.search_fields:
-                db(Search, index=target.id, kind=field).update({'text': getattr(target, field)})
+                field_options = target.search_fields[field]
+                field_options.update({key: options[key] for key in options
+                                      if key not in field_options.keys()})
+                db(Search, index=target.id, kind=field).update(
+                    {'text': field_options['processing'](str(getattr(target, field)))})
 
     @classmethod
     def __declare_last__(cls):
         event.listen(cls, 'before_update', cls.validate_before_update)
         event.listen(cls, 'before_insert', cls.validate_before_insert)
         # event.listen(cls, 'before_delete', cls.validate_before_delete)
-        event.listen(cls, 'before_insert', cls.add_to_search)
-        # event.listen(cls, 'before_update', cls.update_search_table)
+        event.listen(cls, 'after_insert', cls.add_to_search)
+        event.listen(cls, 'before_update', cls.update_search_table)
 
 #
 #
