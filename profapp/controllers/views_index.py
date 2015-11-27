@@ -3,7 +3,7 @@ from .blueprints_declaration import general_bp
 from flask.ext.login import current_user, login_required
 from ..models.portal import Portal, UserPortalReader, ReaderUserPortalPlan, PortalDivision
 from ..models.articles import Article, ArticlePortalDivision
-from ..models.config import Config
+from config import Config
 from profapp.controllers.errors import BadDataProvided
 from .pagination import pagination
 from collections import OrderedDict
