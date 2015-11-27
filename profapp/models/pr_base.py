@@ -2,6 +2,7 @@
 from ..constants.TABLE_TYPES import TABLE_TYPES
 from sqlalchemy import Table, Column, Integer, Text, ForeignKey, String, Boolean, or_, and_, text
 from sqlalchemy.orm import relationship, backref, make_transient, class_mapper
+from sqlalchemy.sql import func
 import datetime
 import re
 from flask import g
@@ -49,31 +50,49 @@ class Search(Base):
         self.relevance = relevance
         self.kind = kind
 
-
     @staticmethod
     def search(*args, **kwargs):
         """ *args: dictionary with following values - class = sqlalchemy table class object,
                                                       filter: sqlalchemy filter with your own parameters,
                                                       on: fields parameter for join,
                                                       fields: (tuple) with fields name in table Search.kind,
-                                                      join: subquery wich you want to join.
+                                                      join: subquery wich you want to join without filters.
             For example: {'class': Company, 'filter': ~db(User, company_id=1).exists(),
                           'on': Company.id=Portal.company_id, join=Article,
                           'fields' = (tuple) with fields name in table Search.kind}
             **kwargs: search_text = string text for search,
                       index = id """
-        # class_dict = kwargs.get('class')[:]
 
-        params = []
-
-        print(params)
+        search_params = []
         for cls in args:
-            params += (and_(Search.kind.in_(cls['fields']), Search.text.ilike("%" + kwargs.get('search_text') + "%"),
-                     Search.table_name==cls['class'].__tablename__), )
-        subquery_search = db(Search).filter(or_(param for param in params)).all()
-        print(subquery_search)
-        for a in subquery_search:
-            print(a.text)
+            search_params.append(and_(Search.kind.in_(cls['fields']),
+                                 Search.text.ilike("%" + kwargs.get('search_text') + "%"),
+                                 Search.table_name == cls['class'].__tablename__), )
+        subquery_search = db(Search.index,
+                             func.sum(Search.relevance).label('relevance'),
+                             func.min(Search.table_name).label('table_name')).filter(
+            or_(*search_params)).group_by(Search.index).subquery()
+        # s = db(subquery_search).join(args[0]['class'], args[0]['class'].id == subquery_search.c.index)
+        # subquery_search = subquery_search.join(args[1]['class'], args[1]['class'].id == Search.index)
+        # print(getattr(args['cl']))
+        # s = db(subquery_search).join(args[0]['class'], args[0]['class'].id == subquery_search.c.index)
+        # a = next(cls for cls in args if cls['class'].__tablename__=='company')['class']
+        cls_obj = lambda table_name: [cls for cls in args if cls['class'].__tablename__ == table_name][0].get('class')
+        # print(a.about)
+        # join_search = db(subquery_search).join(args[0]['class'], args[0]['class'].id == subquery_search.c.index)
+        join_search = []
+        for arg in args:
+            join_params = text(arg.get('join')) if arg.get('join') else False
+            filter_params = text(arg.get('filter')) if arg.get('filter') else False
+            join_search.append(db(subquery_search).join(
+                join_params or arg['class'],
+                filter_params or (arg['class'].id == subquery_search.c.index)).subquery())
+        # s = db(subquery_search).join(cls_obj(subquery_search.c.table_name), args[0]['class'].id == subquery_search.c.index)
+        # print(join_search.all())
+
+        for a in join_search:
+            for b in db(a).all():
+                print(b.table_name)
 
 
 class MLStripper(HTMLParser):
