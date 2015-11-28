@@ -236,19 +236,20 @@ class ArticleCompany(Base, PRBase):
 
     @staticmethod
     def list_for_grid_tables(list, add_param, dict):
-        new_list = [];n=1
+        new_list = []
+        n = 1
         if add_param:
             new_list.append(add_param)
             n = 2
-        list.sort() if dict == False else list
-        for s in list:
+        slist = list.sort() if dict == False else list
+        for s in slist:
             if dict:
                 s = s['name']
             new_list.append({
                 'value': str(n),
                 'label': str(s),
             })
-            n +=1
+            n += 1
         return new_list
 
 
