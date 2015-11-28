@@ -38,6 +38,7 @@ def load_mine(json):
     add_param = {'value': '1','label': 'All'}
     statuses = ArticleCompany.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
     company_list_for_grid = [];b=1
+    companies.sort(key=lambda k: k['name'])
     for cp in companies:
         company_list_for_grid.append({
                 'value': str(b),
@@ -45,9 +46,6 @@ def load_mine(json):
                 'id': cp['id']
         })
         b += 1
-
-    sorted(company_list_for_grid, key=lambda k: k['value'],reverse=True)
-
     articles_with_time = []
     for (article, time) in articles.all():
         article_dict = article.get_client_side_dict()

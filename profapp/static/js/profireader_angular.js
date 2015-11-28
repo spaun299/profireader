@@ -429,7 +429,6 @@ module.config(function ($provide) {
 module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_called_for', 'file_manager_on_action',
     'file_manager_default_action',
     function ($scope, $modalInstance, file_manager_called_for, file_manager_on_action, file_manager_default_action) {
-
 //TODO: SW fix this pls
 
         closeFileManager = function () {
@@ -456,6 +455,20 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
         }
         $scope.src = $scope.src + '?' + $.param(params);
     }]);
+
+module.directive('ngEnter', function() {
+        return function(scope, element, attrs) {
+            element.bind("keydown keypress", function(event) {
+                if(event.which === 13) {
+                    scope.$apply(function(){
+                        scope.$eval(attrs.ngEnter, {'event': event});
+                    });
+
+                    event.preventDefault();
+                }
+            });
+        };
+    });
 
 module.run(function ($rootScope, $ok, $sce, $modal) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'

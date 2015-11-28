@@ -6,7 +6,7 @@
 
 
     <script>
-        module.controller('article_list', ['$scope', '$ok', '$sce', 'uiGridConstants','uiGridGroupingConstants', function ($scope, $ok, $sce, uiGridConstants, uiGridGroupingConstants) {
+        module.controller('article_list', ['$scope', '$ok', '$sce', 'uiGridConstants','uiGridGroupingConstants','$timeout', function ($scope, $ok, $sce, uiGridConstants, uiGridGroupingConstants,$timeout) {
 
             $scope.url_details = {{ raw_url_for('article.details')|safe }};
             $scope.url_create_article = '{{ url_for('article.article_show_form')|safe }}';
@@ -107,6 +107,7 @@
                     $scope.refresh()
                 }
               };
+
             $scope.FilteredCom = function( row, rowRenderIndex, col, colRenderIndex ) {
                 if(!$scope.index)
                     $scope.index = 0;
@@ -119,8 +120,21 @@
                 }
               };
 
+            $scope.SearchArticle = function( row, rowRenderIndex, col, colRenderIndex ) {
+                if(!$scope.index)
+                    $scope.index = 0;
+                if(col.filters[0].term !== undefined && $scope.index === 0){}
+//                console.log($scope.gridOptions1.columnDefs[0].filter.term);
+//                    $scope.sendData(col.filters[0].term);
+//                    $scope.gridOptions1.columnDefs[0].filter.term = undefined
+                };
+
             $scope.link = function(row){
                 window.location.href= $scope.url_details({company_id:'0',article_id:row});
+            };
+
+            $scope.update = function(){
+                $scope.sendData($scope.gridOptions1.columnDefs[0].filter.term);
             };
 
             $scope.gridOptions1 = {
@@ -134,6 +148,10 @@
                     columnDefs: [
                       { name: 'Title', enableSorting: false,enableCellEdit: false,
                           width: '35%', cellTemplate: '<div ng-class="link" style="cursor:pointer"><a ng-click="grid.appScope.link(row.entity.href)" ng-bind="grid.appScope.getTitle(row.entity)"></a></div>',
+                          filter: {
+                            type: uiGridConstants.filter.INPUT},
+
+                          headerCellClass: $scope.SearchArticle
                       },
                       { name: 'Date',enableCellEdit: false },
                       { name: 'Campanies', enableSorting: false,enableCellEdit: false,
