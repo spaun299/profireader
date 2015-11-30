@@ -92,7 +92,7 @@ class Search(Base):
 
         for a in join_search:
             for b in db(a).all():
-                print(b.table_name)
+                print(b.relevance)
 
 
 class MLStripper(HTMLParser):
