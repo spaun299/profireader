@@ -418,7 +418,7 @@ def profile_edit_load(json, portal_id):
     company = portal.own_company
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
-    return {'portal': portal.get_client_side_dict('divisions,own_company,portal_bound_tags_select'),
+    return {'portal': portal.get_client_side_dict('name,divisions,own_company,portal_bound_tags_select'),
             'company_logo': company_logo,
             'portal_id': portal_id,
             'tag': tags_dict}
