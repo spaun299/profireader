@@ -36,7 +36,7 @@ def load_mine(json):
 
     all, companies = ArticleCompany.get_companies_where_user_send_article(g.user_dict['id'])
     add_param = {'value': '1','label': 'All'}
-    statuses = ArticleCompany.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
+    statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
     company_list_for_grid = [];b=1
     companies.sort(key=lambda k: k['name'])
     for cp in companies:
@@ -64,7 +64,7 @@ def load_mine(json):
                                    'Title': article_dict['mine_version']['title'],
                                    'Campanies': capm,
                                    'Status': st,
-                                   'href': str(article_dict['id']),
+                                   'id': str(article_dict['id']),
                                    'level': True})
         if companies_for_article:
             i = 0
@@ -74,8 +74,8 @@ def load_mine(json):
                                    'Title': '',
                                    'Campanies': child['name'],
                                    'Status': st,
-                                   'href': '',
-                                    'level': False})
+                                   'id': '',
+                                   'level': False})
                 i += 1
 
 

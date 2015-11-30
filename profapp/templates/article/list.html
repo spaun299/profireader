@@ -120,15 +120,6 @@
                 }
               };
 
-            $scope.SearchArticle = function( row, rowRenderIndex, col, colRenderIndex ) {
-                if(!$scope.index)
-                    $scope.index = 0;
-                if(col.filters[0].term !== undefined && $scope.index === 0){}
-//                console.log($scope.gridOptions1.columnDefs[0].filter.term);
-//                    $scope.sendData(col.filters[0].term);
-//                    $scope.gridOptions1.columnDefs[0].filter.term = undefined
-                };
-
             $scope.link = function(row){
                 window.location.href= $scope.url_details({company_id:'0',article_id:row});
             };
@@ -147,11 +138,9 @@
                     useExternalFiltering: true,
                     columnDefs: [
                       { name: 'Title', enableSorting: false,enableCellEdit: false,
-                          width: '35%', cellTemplate: '<div ng-class="link" style="cursor:pointer"><a ng-click="grid.appScope.link(row.entity.href)" ng-bind="grid.appScope.getTitle(row.entity)"></a></div>',
+                          width: '35%', cellTemplate: '<div ng-class="link" style="cursor:pointer"><a ng-click="grid.appScope.link(row.entity.id)" ng-bind="grid.appScope.getTitle(row.entity)"></a></div>',
                           filter: {
-                            type: uiGridConstants.filter.INPUT},
-
-                          headerCellClass: $scope.SearchArticle
+                            type: uiGridConstants.filter.INPUT}
                       },
                       { name: 'Date',enableCellEdit: false },
                       { name: 'Campanies', enableSorting: false,enableCellEdit: false,

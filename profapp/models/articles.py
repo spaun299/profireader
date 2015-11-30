@@ -131,9 +131,10 @@ class ArticlePortalDivision(Base, PRBase):
         portals = {}
         # portals['0'] = {'name': 'All'}
         # portals.append(all)
+
         for article in db(ArticleCompany, company_id=company_id).all():
             for port in article.portal_article:
-                portals[port.portal.id] = port.portal.get_client_side_dict(fields='name')
+                portals[port.portal.id] = port.portal.name
         return portals
 
     @staticmethod
@@ -234,24 +235,6 @@ class ArticleCompany(Base, PRBase):
                                    'status': ARTICLE_STATUS_IN_COMPANY.
                                   submitted})
 
-    @staticmethod
-    def list_for_grid_tables(list, add_param, dict):
-        new_list = []
-        n = 1
-        if add_param:
-            new_list.append(add_param)
-            n = 2
-        slist = list.sort() if dict == False else list
-        for s in slist:
-            if dict:
-                s = s['name']
-            new_list.append({
-                'value': str(n),
-                'label': str(s),
-            })
-            n += 1
-        return new_list
-
 
     @staticmethod
     def subquery_user_articles(search_text=None, user_id=None, **kwargs):
@@ -271,17 +254,18 @@ class ArticleCompany(Base, PRBase):
     @staticmethod
     def subquery_company_articles(search_text=None, company_id=None, portal_id=None, **kwargs):
 
-        sub_query = db(ArticleCompany, company_id=company_id)
+        sub_query = db(ArticleCompany, company_id=company_id, **kwargs)
         if search_text:
             sub_query = sub_query.filter(ArticleCompany.title.ilike("%" + search_text + "%"))
-        if kwargs.get('status'):
-            sub_query = sub_query.filter(db(ArticlePortalDivision, article_company_id=ArticleCompany.id,
-                                            **kwargs).exists())
+        # if kwargs.get('status'):
+        #     sub_query = sub_query.filter(db(ArticlePortalDivision, article_company_id=ArticleCompany.id,
+        #                                     **kwargs).exists())
+
         if portal_id:
-            sub_query = sub_query.filter(db(PortalDivision, portal_id=portal_id).exists())
-
+            sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id).\
+            join(PortalDivision, PortalDivision.id == ArticlePortalDivision.portal_division_id).\
+            filter(PortalDivision.portal_id == portal_id)
         sub_query = sub_query.order_by(expression.desc(ArticleCompany.md_tm))
-
         return sub_query
 
         # self.portal_devision_id = portal_devision_id
@@ -497,6 +481,26 @@ class Article(Base, PRBase):
     def get_articles_submitted_to_company(company_id):
         articles = g.db.query(ArticleCompany).filter_by(company_id=company_id).all()
         return articles if articles else []
+
+    @staticmethod
+    def list_for_grid_tables(list, add_param, is_dict):
+        new_list = []
+        n = 1
+        if add_param:
+            new_list.append(add_param)
+            n = 2
+        if is_dict == False:
+            list.sort()
+        for s in list:
+            label = list[s] if is_dict else s
+            id = s if is_dict else ''
+            new_list.append({
+                'value': str(n),
+                'label': label,
+                'id': id
+            })
+            n += 1
+        return new_list
 
         # for article in articles:
         #     article.possible_new_statuses = ARTICLE_STATUS_IN_COMPANY.\
