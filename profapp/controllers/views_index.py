@@ -11,10 +11,10 @@ from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 from sqlalchemy import text
 
 
-def get_params(portal_id, **argv):
-    portal = g.db.query(Portal).filter_by(id=portal_id).one()
-    sub_query = Article.subquery_articles_at_portal(search_text='', portal_id=portal.id)
-    return portal, sub_query
+# def get_params(portal_id, **argv):
+#     portal = g.db.query(Portal).filter_by(id=portal_id).one()
+#     sub_query = Article.subquery_articles_at_portal(search_text='', portal_id=portal.id)
+#     return portal, sub_query
 
 
 # def subquery_articles_at_portal(search_text=None, **kwargs):
@@ -66,13 +66,12 @@ def index(page=1):
 
     ordered_articles = OrderedDict()
     for a in articles:
-        ordered_articles[a.id] = dict(list(a.get_client_side_dict().items()) +
+        ordered_articles[a.id] = dict(list(a.get_client_side_dict(more_fields='portal.host').items()) +
                                       list({'tags': a.tags}.items()))
 
     portal_base_profireader = 'partials/portal_base_Profireader_auth_user.html'
     profireader_content = 'partials/reader/reader_content.html'
     head = 'partials/reader/head.html'
-    # head = 'partials/empty_page.html'
 
     return render_template('general/index.html',
                            portal_base_profireader=portal_base_profireader,
@@ -100,7 +99,6 @@ def reader_subscribe(portal_id):
     if not portal:
         raise BadDataProvided
 
-    # user_portal_reader = g.db(UserPortalReader).filter_by(user_id=user_dict['id'], portal_id=portal_id).first()
     user_portal_reader = g.db.query(UserPortalReader).filter_by(user_id=user_dict['id'], portal_id=portal_id).first()
     if not user_portal_reader:
         user_portal_reader = UserPortalReader(
@@ -113,3 +111,33 @@ def reader_subscribe(portal_id):
         g.db.commit()
 
     return redirect(url_for('general.index'))
+
+
+@general_bp.route('details/<string:article_portal_division_id>')
+def details(article_portal_division_id):
+
+    portal = g.db().query(Portal).\
+        join(PortalDivision).\
+        join(ArticlePortalDivision).\
+        filter_by(id=article_portal_division_id).one()
+
+    article = ArticlePortalDivision.get(article_portal_division_id)
+    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+                                                       'publishing_tm, keywords, status, long, image_file_id,'
+                                                       'division.name, division.portal.id,'
+                                                       'company.name')
+    article_dict['tags'] = article.tags
+
+    division = g.db.query(PortalDivision).filter_by(id=article.portal_division_id).one()
+
+    related_articles = g.db().query(ArticlePortalDivision).filter(
+        division.portal.id == article.division.portal_id).order_by(
+        ArticlePortalDivision.cr_tm.desc()).limit(10).all()
+
+    return render_template('partials/reader/article_details.html',
+                           # portal=portal_and_settings(portal),
+                           current_division=division.get_client_side_dict(),
+                           articles_related={a.id: a.get_client_side_dict(fields='id, title, cr_tm, company.name|id')
+                                             for a in related_articles},
+                           article=article_dict
+                           )

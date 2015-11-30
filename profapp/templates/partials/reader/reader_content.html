@@ -2,13 +2,10 @@
 
         <div class="block-item list-elements">
             <div class="item-type article">
-                !!!
-{#                <a href="{{ url_for('front.division', division_name=articles[article_id]['division']['name'], page=1, search_text='') }}">{{ articles[article_id]['division']['name']|safe }}</a>#}
+                <a href="http://{{ articles[article_id]['portal']['host']|safe }}/{{ articles[article_id]['division']['name'] }}/1/?search_text=''">{{ articles[article_id]['division']['name']|safe }}</a>
             </div>
             <h2 class="item-title">
-{#                <a href="{{ url_for('front.details', article_portal_division_id=articles[article_id]['id']) }}">{{ articles[article_id]['title']|safe }}</a>#}
-                {{ articles[article_id]['title']|safe }}
-
+                <a href="http://{{ articles[article_id]['portal']['host']|safe }}/details/{{ article_id }}">{{ articles[article_id]['title']|safe }}</a>
 {#                <span class="tag_in_article">#}
 {#                    {% for tag in articles[article_id]['tags'] %}#}
 {#                        <a href="#">{{ tag }}</a>#}
@@ -28,7 +25,7 @@
             </div>
 
             <div class="item-additional-info">
-{#                <a href="{{ url_for('front.subportal', member_company_id = articles[article_id]['company']['id'], member_company_name = articles[article_id]['company']['name']) }}" class="item-company">{{ articles[article_id]['company']['name']|safe }}</a>#}
+                <a href="http://{{ articles[article_id]['portal']['host']|safe }}/_c/{{ articles[article_id]['company']['id']|safe }}/{{ articles[article_id]['company']['name']|safe }}" class="item-company">{{ articles[article_id]['company']['name']|safe }}</a>
                 <div class="item-publication-date">{{ articles[article_id]['publishing_tm']|safe }}</div>
             </div>
             <div class="bottom-hide"></div>

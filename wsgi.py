@@ -17,5 +17,5 @@ sys.path.insert(0, '/var/www/profireader/.venv/lib/python3.4/site-packages')
 
 from profapp import create_app
 
-application=create_app()
+application = create_app()
 

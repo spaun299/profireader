@@ -153,10 +153,8 @@ def details(article_portal_division_id):
                            )
 
 
-@front_bp.route(
-    '<string:division_name>/_c/<string:member_company_id>/<string:member_company_name>/')
-@front_bp.route(
-    '<string:division_name>/_c/<string:member_company_id>/<string:member_company_name>/<int:page>/')
+@front_bp.route('<string:division_name>/_c/<string:member_company_id>/<string:member_company_name>/')
+@front_bp.route('<string:division_name>/_c/<string:member_company_id>/<string:member_company_name>/<int:page>/')
 def subportal_division(division_name, member_company_id, member_company_name, page=1):
     member_company = Company.get(member_company_id)
 
