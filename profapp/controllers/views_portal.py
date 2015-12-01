@@ -179,9 +179,11 @@ def profile_load(json, portal_id):
     portal_bound_tags = portal.portal_bound_tags_select
     tags = set(tag_portal_division.tag for tag_portal_division in portal_bound_tags)
     tags_dict = {tag.id: tag.name for tag in tags}
-    return {'portal': portal.get_client_side_dict(
-        more_fields='divisions, own_company, portal_bound_tags_select.*, portal_notbound_tags_select.*'),
-            'portal_id': portal_id,
+    return {'portal': portal.get_client_side_dict('id, '
+                                                  'divisions, '
+                                                  'own_company, '
+                                                  'portal_bound_tags_select.*, '
+                                                  'portal_notbound_tags_select.*'),
             'tag': tags_dict}
 
 
@@ -420,9 +422,8 @@ def profile_edit_load(json, portal_id):
     company = portal.own_company
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
-    return {'portal': portal.get_client_side_dict('name,divisions,own_company,portal_bound_tags_select.*'),
+    return {'portal': portal.get_client_side_dict('id, name, divisions, own_company, portal_bound_tags_select.*'),
             'company_logo': company_logo,
-            'portal_id': portal_id,
             'tag': tags_dict}
 
 
