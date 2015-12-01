@@ -18,11 +18,6 @@
                 $scope.sendData(false);
             };
 
-            $scope.portal_id = ' ';
-            $scope.status = undefined;
-            $scope.statuses = {'-- all --': undefined};
-            $scope.portals = {' ': {name: '-- all --'}};
-
             var paginationOptions = {
                 pageNumber: 1,
                 pageSize: 50,
@@ -68,15 +63,11 @@
                     $scope.refresh()
                 }
               };
-            $scope.FilteredPorts = function(row) {
-                console.log(row)
-            };
-
             $scope.FilteredPort = function( row, rowRenderIndex, col, colRenderIndex ) {
                 if(!$scope.index)
                     $scope.index = 0;
                 if( col.filters[0].term && $scope.index !== col.filters[0].term){
-                    $scope.portal_id = $scope.portals[col.filters[0].term - 1]['label'] === 'All'? undefined: $scope.portals[col.filters[0].term - 1]['id'];
+                    $scope.portal_id = $scope.portals[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.portals[col.filters[0].term - 1]['id'];
                     $scope.sendData('');
                     $scope.index = col.filters[0].term;
                 }else if(!col.filters[0].term){
@@ -96,14 +87,14 @@
                     $scope.datas = resp;
                     $scope.data['pages'] = resp.pages;
                     $scope.gridOptions1.totalItems = resp.total;
-                    $scope.materials = resp.materials;
+//                    $scope.materials = resp.materials;
                     $scope.portals = resp.portals;
+                    $scope.statuses = resp.statuses;
                     for(var m=0;m<$scope.datas.grid_data.length;m++){
                         if($scope.datas.grid_data[m]['level'])
                             $scope.datas.grid_data[m].$$treeLevel = 0
                     }
-                    $scope.statuses = resp.statuses;
-                    $scope.gridOptions1.columnDefs[2]['filter']['selectOptions'] = resp.portals;
+                    $scope.gridOptions1.columnDefs[2]['filter']['selectOptions'] = $scope.portals;
                     $scope.gridOptions1.columnDefs[4]['filter']['selectOptions'] = $scope.statuses ;
                     $scope.data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 }).finally(function () {
@@ -122,8 +113,7 @@
                       { name: 'Title', enableSorting: false,enableCellEdit: false,
                           width: '35%', cellTemplate: '<div ng-class="link" style="cursor:pointer"><a ng-click="grid.appScope.link(row.entity.id)" ng-bind="grid.appScope.getTitle(row.entity)"></a></div>',
                           filter: {
-                            type: uiGridConstants.filter.INPUT},
-                          headerCellClass: $scope.SearchArticle
+                            type: uiGridConstants.filter.INPUT}
                       },
                       { name: 'Date',enableCellEdit: false },
                       { name: 'Portals', enableSorting: false,enableCellEdit: false,

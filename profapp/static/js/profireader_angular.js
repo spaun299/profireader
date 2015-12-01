@@ -492,10 +492,18 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             if (!scope.$$translate_accessed) {
                 scope.$$translate_accessed = {};
             }
+            new Date;
+            var t = Date.now()/1000;
             //TODO OZ by OZ hasOwnProperty
             var CtrlName = this.controllerName ? this.controllerName : 'None';
+            //console.log(Object.prototype.hasOwnProperty.call(scope.$$translate[0], phrase));
+                console.log(scope.$$translate);
             if (scope.$$translate[phrase] === undefined) {
+
+                console.log(phrase);
+                console.log(CtrlName);
                 scope.$$translate[phrase] = phrase;
+                scope.$$translate[phrase]['lang'] = phrase;
                 $ok('/tools/save_translate/', {
                     template: CtrlName,
                     phrase: phrase,
@@ -509,15 +517,17 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                     //}
 
                 });
-                //scope.$$translate[phrase] = phrase;
+                scope.$$translate[phrase] = phrase;
             }
-            else if(scope.$$translate_accessed[phrase] === undefined){
+            else if(scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400){
                 scope.$$translate_accessed[phrase] = true;
                 $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
 
                 });
             }
-            phrase = scope.$$translate[phrase];
+            if (scope.$$translate[phrase])
+                phrase = scope.$$translate[phrase]['lang'];
+
             //alert(scope.$$translate);
 
 

@@ -147,7 +147,7 @@ class ArticlePortalDivision(Base, PRBase):
             filter(Portal.id == portal_id).all()
         # for article in db(ArticlePortalDivision, portal_id=portal_id).all():
         for article in articles:
-            companies[article.company.id] = article.company.get_client_side_dict(fields='name')
+            companies[article.company.id] = article.company.name
         return companies
 
     def clone_for_company(self, company_id):
@@ -156,8 +156,26 @@ class ArticlePortalDivision(Base, PRBase):
                                   submitted})
 
     @staticmethod
+    def subquery_company_articles(search_text=None, company_id=None, portal_id=None, **kwargs):
+
+        sub_query = db(ArticleCompany, company_id=company_id, **kwargs)
+        if search_text:
+            sub_query = sub_query.filter(ArticleCompany.title.ilike("%" + search_text + "%"))
+        # if kwargs.get('status'):
+        #     sub_query = sub_query.filter(db(ArticlePortalDivision, article_company_id=ArticleCompany.id,
+        #                                     **kwargs).exists())
+
+        if portal_id:
+            sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id).\
+            join(PortalDivision, PortalDivision.id == ArticlePortalDivision.portal_division_id).\
+            filter(PortalDivision.portal_id == portal_id)
+        sub_query = sub_query.order_by(expression.desc(ArticleCompany.md_tm))
+        return sub_query
+
+    @staticmethod
     def subquery_portal_articles(search_text=None, portal_id=None, **kwargs):
-        sub_query = g.db.query(ArticlePortalDivision).filter_by(**kwargs). \
+        sub_query = db(ArticlePortalDivision, **kwargs)
+        sub_query = sub_query. \
             join(ArticlePortalDivision.division). \
             join(PortalDivision.portal). \
             filter(Portal.id == portal_id).order_by(expression.desc(ArticlePortalDivision.publishing_tm))
@@ -500,6 +518,7 @@ class Article(Base, PRBase):
                 'id': id
             })
             n += 1
+        new_list.append({'value': '3','label': 'dasdadasdassa'})
         return new_list
 
         # for article in articles:

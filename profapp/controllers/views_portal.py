@@ -8,7 +8,7 @@ from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDiv
     PortalDivisionSettings_company_subportal
 from ..models.tag import Tag, TagPortal, TagPortalDivision
 from .request_wrapers import ok, check_rights
-from ..models.articles import ArticlePortalDivision, ArticleCompany
+from ..models.articles import ArticlePortalDivision, ArticleCompany, Article
 from ..models.company import simple_permissions
 from ..models.rights import Right
 from profapp.models.rights import RIGHTS
@@ -519,27 +519,51 @@ def publications_load(json, company_id):
     if json.get('status'):
         params['status'] = json.get('status')
     subquery = ArticlePortalDivision.subquery_portal_articles(**params)
-    if json.get('company_id'):
-        subquery = subquery.filter(db(ArticleCompany,
-                                      company_id=json.get('company_id'),
-                                      id=ArticlePortalDivision.article_company_id).exists())
+    # if json.get('company_id'):
+    #     subquery = subquery.filter(db(ArticleCompany,
+    #                                   company_id=json.get('company_id'),
+    #                                   id=ArticlePortalDivision.article_company_id).exists())
     articles, pages, current_page = pagination(subquery,
                                                page=current_page)
 
-    companies = ArticlePortalDivision.get_companies_which_send_article_to_portal(portal.id)
-    statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
     publications = []
+    add_param = {'value': '1','label': '-- all --'}
+
+    comp_grid = Article.list_for_grid_tables(ArticlePortalDivision.get_companies_which_send_article_to_portal(portal.id), add_param, True)
+    statuses_grid = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
     for a in articles:
         a = a.get_client_side_dict()
-        del a['long']
+        if 'long' in a.keys():
+            del a['long']
         publications.append(a)
+    grid_data = []
 
-    return {'publications': publications,
-            'companies': companies,
+    for article in publications:
+        port = article['company']['name'] if article['company']['name'] else 'Not sent to any company yet'
+        grid_data.append({'Date': article['publishing_tm'],
+                            'Title': article['title'],
+                            'Company': port,
+                            'Publication status': article['status'],
+                            'id': str(article['id']),
+                            'level': True})
+        # if article.portal_article:
+        #     i = 0
+        #     for portal in article.portal_article:
+        #         grid_data.append({'Date': '',
+        #                            'Title': '',
+        #                            'Portals': portal.portal.name,
+        #                            'Publication status': portal.status,
+        #                            'id': portal.id,
+        #                            'level': False})
+
+    return {'grid_data': grid_data,
+            'publications': publications,
+            'companies': comp_grid,
             'pages': {'total': pages,
                       'current_page': current_page,
                       'page_buttons': Config.PAGINATION_BUTTONS},
-            'statuses': statuses}
+            'statuses': statuses_grid,
+            'total': len(publications)}
 
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
