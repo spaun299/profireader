@@ -452,7 +452,7 @@ def create_app(config='config.ProductionDevelopmentConfig',
     app.jinja_env.globals.update(file_url=file_url)
     app.jinja_env.globals.update(config_variables=config_variables)
     app.jinja_env.globals.update(_=translate_phrase)
-    app.jinja_env.globals.update(tinymce_formats=HtmlHelper.tinymce_formats)
+    app.jinja_env.globals.update(tinymce_format_groups=HtmlHelper.tinymce_format_groups)
 
 
     # see: http://flask.pocoo.org/docs/0.10/patterns/sqlalchemy/
