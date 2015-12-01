@@ -180,7 +180,7 @@ def profile_load(json, portal_id):
     tags = set(tag_portal_division.tag for tag_portal_division in portal_bound_tags)
     tags_dict = {tag.id: tag.name for tag in tags}
     return {'portal': portal.get_client_side_dict(
-        more_fields='divisions, own_company, portal_bound_tags_select, portal_notbound_tags_select'),
+        more_fields='divisions, own_company, portal_bound_tags_select.*, portal_notbound_tags_select.*'),
             'portal_id': portal_id,
             'tag': tags_dict}
 
@@ -387,12 +387,14 @@ def profile_edit_load(json, portal_id):
 
         g.db.add_all(add_tag_portal_bound_list + add_tag_portal_notbound_list)
         # read this: http://stackoverflow.com/questions/7892618/sqlalchemy-delete-subquery
-        g.db.query(TagPortalDivision). \
-            filter(TagPortalDivision.id.in_([x.id for x in delete_tag_portal_bound_list])). \
-            delete(synchronize_session=False)
-        g.db.query(TagPortal). \
-            filter(TagPortal.id.in_([x.id for x in delete_tag_portal_notbound_list])). \
-            delete(synchronize_session=False)
+        if delete_tag_portal_bound_list:
+            g.db.query(TagPortalDivision). \
+                filter(TagPortalDivision.id.in_([x.id for x in delete_tag_portal_bound_list])). \
+                delete(synchronize_session=False)
+        if delete_tag_portal_notbound_list:
+            g.db.query(TagPortal). \
+                filter(TagPortal.id.in_([x.id for x in delete_tag_portal_notbound_list])). \
+                delete(synchronize_session=False)
         g.db.expire_all()
 
 
@@ -418,7 +420,7 @@ def profile_edit_load(json, portal_id):
     company = portal.own_company
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
-    return {'portal': portal.get_client_side_dict('name,divisions,own_company,portal_bound_tags_select'),
+    return {'portal': portal.get_client_side_dict('name,divisions,own_company,portal_bound_tags_select.*'),
             'company_logo': company_logo,
             'portal_id': portal_id,
             'tag': tags_dict}
