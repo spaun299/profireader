@@ -577,7 +577,7 @@ def publication_details(article_id, company_id):
 @login_required
 @ok
 def publication_details_load(json, article_id, company_id):
-    statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
+    statuses = [status for status in ARTICLE_STATUS_IN_PORTAL.all]
     article = db(ArticlePortalDivision, id=article_id).one().get_client_side_dict()
     new_status = ARTICLE_STATUS_IN_PORTAL.published \
         if article['status'] != ARTICLE_STATUS_IN_PORTAL.published \
@@ -592,7 +592,8 @@ def publication_details_load(json, article_id, company_id):
 @login_required
 @ok
 def update_article_portal(json, article_id):
-    db(ArticlePortalDivision, id=article_id).update({'status': json.get('new_status')})
+    new_status = json.get('new_status')
+    db(ArticlePortalDivision, id=article_id).update({'status': new_status.strip()})
     json['article']['status'] = json.get('new_status')
     json['new_status'] = ARTICLE_STATUS_IN_PORTAL.published \
         if json.get('new_status') != ARTICLE_STATUS_IN_PORTAL.published \

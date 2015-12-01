@@ -36,7 +36,8 @@
 
             $scope.changeStatus = function () {
                 $scope.loading = true;
-
+                console.log($scope.data.new_status);
+                $scope.data.new_status.trim();
                 $ok($scope.url_change_status({article_id: $scope.data.article.id}), $scope.data, function (resp) {
                     $scope.loading = false;
                     $scope.data = resp;

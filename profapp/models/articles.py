@@ -174,15 +174,17 @@ class ArticlePortalDivision(Base, PRBase):
 
     @staticmethod
     def subquery_portal_articles(search_text=None, portal_id=None, **kwargs):
+        # sub_query = g.db.query(ArticlePortalDivision)
+        # sub_query = db(ArticlePortalDivision)
         sub_query = db(ArticlePortalDivision, **kwargs)
         sub_query = sub_query. \
             join(ArticlePortalDivision.division). \
             join(PortalDivision.portal). \
-            filter(Portal.id == portal_id).order_by(expression.desc(ArticlePortalDivision.publishing_tm))
+            filter(Portal.id == portal_id)
 
         if search_text:
             sub_query = sub_query.filter(ArticlePortalDivision.title.ilike("%" + search_text + "%"))
-        return sub_query
+        return sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
 
 
 class ArticleCompany(Base, PRBase):
@@ -518,7 +520,6 @@ class Article(Base, PRBase):
                 'id': id
             })
             n += 1
-        new_list.append({'value': '3','label': 'dasdadasdassa'})
         return new_list
 
         # for article in articles:

@@ -40,7 +40,7 @@
             };
 
             $scope.refresh = function(){
-                $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
+//                $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
                 $scope.gridOptions1.columnDefs[3]['filter']['term'] = '1';
                 $scope.company_id = null;
                 $scope.status = null;
@@ -88,7 +88,7 @@
                     $scope.gridOptions1.totalItems = resp.total;
                     $scope.statuses = resp.statuses;
                     $scope.companies = resp.companies;
-                    $scope.gridOptions1.columnDefs[2]['filter']['selectOptions'] = resp.companies;
+//                    $scope.gridOptions1.columnDefs[2]['filter']['selectOptions'] = resp.companies;
                     $scope.gridOptions1.columnDefs[3]['filter']['selectOptions'] = $scope.statuses ;
 //                    $scope.data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 }).finally(function () {
@@ -111,11 +111,8 @@
                             type: uiGridConstants.filter.INPUT}
                       },
                       { name: 'Date',enableCellEdit: false },
-                      { name: 'Company', enableSorting: false,enableCellEdit: false,
-                          filter: {
-                            term: '1',
-                            type: uiGridConstants.filter.SELECT},
-                          headerCellClass: $scope.FilteredComp
+                      { name: 'Company', enableSorting: false,enableCellEdit: false,enableFiltering: false
+
                       },
                       { name: 'Publication status', enableSorting: false, enableCellEdit: false,
                           filter: {
