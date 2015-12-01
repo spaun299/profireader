@@ -64,7 +64,6 @@ def load_mine(json):
 def article_show_form(article_company_id=None):
     return render_template('article/form.html', article_company_id=article_company_id)
 
-
 @article_bp.route('/create/', methods=['POST'])
 @article_bp.route('/update_mine/<string:mine_version_article_company_id>/', methods=['POST'])
 @article_bp.route('/update/<string:article_company_id>/', methods=['POST'])
@@ -82,6 +81,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
     if action == 'load':
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None, 'image_file_id': None}
         article_dict = articleVersion.get_client_side_dict(more_fields='long')
+        # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
         if article_dict.get('image_file_id'):
             image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
                 get_coordinates_and_original_img(article_dict.get('image_file_id'))
@@ -91,6 +91,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
         articleVersion.attr(parameters['article'])
         if action == 'validate':
+            articleVersion.detach()
             return articleVersion.validate(article_company_id is None)
         else:
             image_id = parameters['image'].get('image_file_id')
@@ -99,7 +100,6 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                                                           json['image'].get('coordinates'))
             return {'article': articleVersion.save().get_client_side_dict(more_fields='long'),
                     'image': json['image']}
-
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
@@ -139,3 +139,4 @@ def resubmit_to_company(json, article_company_id):
                         ARTICLE_STATUS_IN_COMPANY.declined)
     a.status = ARTICLE_STATUS_IN_COMPANY.submitted
     return {'article': a.save().get_client_side_dict()}
+

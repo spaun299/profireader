@@ -413,7 +413,7 @@ function file_choose(selectedfile) {
 
 // 'ui.select' uses "/static/js/select.js" included in index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
-module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid','ui.grid.pagination','ui.grid.edit','ngAnimate', 'ngTouch', 'ui.grid.selection']);
+module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection']);
 
 module.config(function ($provide) {
     $provide.decorator('$controller', function ($delegate) {
@@ -498,7 +498,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 });
                 //scope.$$translate[phrase] = phrase;
             }
-            else if(scope.$$translate_accessed[phrase] === undefined){
+            else if (scope.$$translate_accessed[phrase] === undefined) {
                 scope.$$translate_accessed[phrase] = true;
                 $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
 
@@ -571,21 +571,9 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             plugins: 'advlist autolink link image charmap print paste table',
             skin: 'lightgray',
             theme: 'modern',
-            setup: function (editor) {
-                console.log('setup', editor);
-                editor.on('PreInit', function (event) {
-                    editor.parser.addNodeFilter('aaa', function (nodes, name) {
-                        console.log(nodes);
-                        $.each(nodes, function (i, v) {
-                            v.unwrap();
-                        });
-                    });
-                    //editor.parser.addAttributeFilter('src,href', function (nodes, name) {
-                    //    console.log('addAttributeFilter', nodes, name);
-                    //    debugger;
-                    //    });
-                });
-            },
+            'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | pr_formats | bullist numlist outdent indent | link image table",
+            //'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table",
+            'valid_elements': "img,table,tbody,td,th,tr,p,h1,h2,h3,h4,h5,h6,div,ul,ol,li,strong,em,span,blockquote,sup,sub,code,pre,a",
             //init_instance_callback1: function () {
             //    console.log('init_instance_callback', arguments);
             //},
@@ -612,17 +600,8 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             },
             //valid_elements: Config['article_html_valid_elements'],
             //valid_elements: 'a[class],img[class|width|height],p[class],table[class|width|height],th[class|width|height],tr[class],td[class|width|height],span[class],div[class],ul[class],ol[class],li[class]',
-            content_css: "/static/front/bird/css/article.css",
-            aastyle_formats: [
-                {title: 'HEAD1', block: 'div', classes: 'h1'},
-                {title: 'HEAD2', block: 'div', classes: 'h2'},
-                {title: 'HEAD3', block: 'div', classes: 'h3'},
-                {title: 'BIG', inline: 'span', classes: 'big'},
-                {title: 'BIGGER', inline: 'span', classes: 'bigger'},
-                {title: 'NORMAL', inline: 'span', classes: 'small'},
-                {title: 'SMALLER', inline: 'span', classes: 'smaller'},
-                {title: 'SMALL', inline: 'span', classes: 'small'}
-            ]
+            content_css: ["/static/css/article.css", "/static/front/bird/css/article.css"],
+
 
 
             //paste_auto_cleanup_on_paste : true,

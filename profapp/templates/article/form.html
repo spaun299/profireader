@@ -7,6 +7,9 @@
     {#TODO: OZ by OZ move this code to one file#}
     <link href="/static/image_editor/dist/cropper.css" rel="stylesheet">
     <link href="/static/image_editor/demo/css/main.css" rel="stylesheet">
+    <link href="/static/css/article.css" rel="stylesheet">
+    <link href="/static/front/bird/css/article.css" rel="stylesheet">
+
 
     <script>
 
@@ -18,11 +21,12 @@
             {% else %}
                 $scope.save_article = '{{ url_for('article.load_form_create')|safe }}';
             {% endif %}
+
             $scope.data = {};
             $scope.$$translate = {{ translates('article_edit')|safe }};
             $scope.amidSave = function (resp) {
-                    window.location.href = $scope.details_article({article_id: resp['article']['article_id']});
-                    add_message('article was created', 'info', 5000);
+                window.location.href = $scope.details_article({article_id: resp['article']['article_id']});
+                add_message('article was created', 'info', 5000);
 
             };
 
@@ -31,32 +35,217 @@
                 $scope.data.image.coordinates = $image.cropper('getData');
                 return deff(model);
             };
+
+            var compile_regexps = function (format_properties) {
+                format_properties['remove_classes_on_apply'] = format_properties['remove_classes_on_apply'] ?
+                        RegExp('^' + format_properties['remove_classes_on_apply'] + '$', "i") : false;
+                if (format_properties['add_classes_on_apply']) {
+                    var classes_to_add_if_no_similar_exists = {};
+                    $.each(format_properties['add_classes_on_apply'], function (ind, add_default_class) {
+                        var class_prefix = add_default_class.split('_');
+                        class_prefix.pop();
+                        classes_to_add_if_no_similar_exists[add_default_class] = RegExp('^' + class_prefix.join('_') + '_.*$', "i")
+                    });
+                    format_properties['add_classes_on_apply'] = classes_to_add_if_no_similar_exists;
+                }
+                else {
+                    format_properties['add_classes_on_apply'] = false;
+                }
+            };
+
+            var add_or_remove_classes = function (element, classes, format_properties) {
+                var add_class = $.extend({}, format_properties['add_classes_on_apply']);
+
+                classes.map(function (class_name) {
+                    if (format_properties['remove_classes_on_apply'] &&
+                            class_name.match(format_properties['remove_classes_on_apply'])) {
+                        $(element).removeClass(class_name);
+                    }
+                    if (format_properties['add_classes_on_apply']) {
+                        $.each(format_properties['add_classes_on_apply'], function (add_if_not_exist, check_if_exist) {
+                            if (add_class[add_if_not_exist] && class_name.match(check_if_exist)) {
+                                delete add_class[add_if_not_exist];
+                            }
+                        });
+                    }
+                });
+
+                $.each(add_class, function (add_if_not_exist, check_if_exist) {
+                    $(element).addClass(add_if_not_exist);
+                })
+            };
+
+            var build_format = function (formats) {
+                var ret = [];
+
+                $.each(formats, function (format_group_name, formats_in_group) {
+                    var ret1 = {'title': format_group_name, 'items': []};
+                    $.each(formats_in_group, function (format_name, format) {
+                        ret1['items'].push(
+                                {title: format_name, format: format});
+                    });
+                    ret.push(ret1);
+                });
+
+                console.log(ret);
+
+                return ret;
+            };
+
+
+            var build_format_options = function (formats) {
+                $.each(formats, function (format_name, format_properties) {
+                    if (format_properties['remove_classes_on_apply'] || format_properties['add_classes_on_apply']) {
+
+                        compile_regexps(format_properties);
+
+                        format_properties['onformat'] = function (DOMUtils, element) {
+                            var classes = $(element).attr('class');
+                            add_or_remove_classes(element, classes ? classes.split(/\s+/) : [], format_properties);
+                        }
+                    }
+                });
+                return formats;
+            };
+
+            var build_format_toolbox = function (format_commands) {
+                var ret = [];
+
+                $.each(format_commands, function (format_group_name, formats_in_group) {
+                    ret.push(format_group_name);
+                });
+                return ret ? 'my_formats' : false;
+                {#                return ret ? ret.join(' | ') : false;#}
+
+
+            };
+
+
+            {#                editor.on('init', function () {#}
+            {#                    each(newFormats, function (format) {#}
+            {#                        editor.formatter.register(format.name, format);#}
+            {#                    });#}
+            {#                });#}
+
+
+            var build_format_buttons = function (editor, format_commands) {
+                var format_menu_items = {
+                    autohide: true,
+                    constrainToViewport: true,
+                    itemDefaults: {
+                        preview: true,
+
+                        textStyle: function () {
+                            if (this.settings.format) {
+                                return editor.formatter.getCssText(this.settings.format);
+                            }
+                        },
+
+                        onPostRender: function () {
+                            var self = this;
+
+                            self.parent().on('show', function () {
+                                var formatName, command;
+
+                                formatName = self.settings.format;
+                                if (formatName) {
+                                    self.disabled(!editor.formatter.canApply(formatName));
+                                    self.active(editor.formatter.match(formatName));
+                                }
+
+                                command = self.settings.cmd;
+                                if (command) {
+                                    self.active(editor.queryCommandState(command));
+                                }
+                            });
+                        },
+
+                        onclick: function () {
+                            editor.formatter.toggle(this.settings.format);
+                            editor.nodeChanged();
+                        }
+                    },
+                    items: [],
+                    onPostRender: function (e) {
+                        editor.fire('renderFormatsMenu', {control: e.control})
+                    },
+                    type: "menu"
+                };
+
+
+                $.each(format_commands, function (format_group_name, formats_in_group) {
+                    var format_menu_sub_items = {
+                        menu: [],
+                        text: format_group_name,
+                        type: "menuitem"
+                    };
+                    $.each(formats_in_group, function (format_human_name, format) {
+                        format_menu_sub_items['menu'].push({
+                            text: format_human_name,
+                            format: format,
+                        });
+                    });
+                    format_menu_items['items'].push(format_menu_sub_items);
+                });
+                editor.addButton('my_formats', {
+                    type: 'menubutton',
+                    text: 'My Format',
+                    menu: format_menu_items
+                    {#                    {#}
+                    {#                            type: 'menu',#}
+                    {#                            items: format_menu_items,#}
+                    {#                            itemDefaults: {#}
+                    {#                                preview: true,#}
+                    {##}
+                    {#                                textStyle: function () {#}
+                    {#                                    if (this.settings.format) {#}
+                    {#                                        return editor.formatter.getCssText(this.settings.format);#}
+                    {#                                    }#}
+                    {#                                },#}
+                    {##}
+                    {#                                onPostRender: function () {#}
+                    {#                                    var self = this;#}
+                    {##}
+                    {#                                    self.parent().on('show', function () {#}
+                    {#                                        var formatName, command;#}
+                    {##}
+                    {#                                        formatName = self.settings.format;#}
+                    {#                                        if (formatName) {#}
+                    {#                                            self.disabled(!editor.formatter.canApply(formatName));#}
+                    {#                                            self.active(editor.formatter.match(formatName));#}
+                    {#                                        }#}
+                    {##}
+                    {#                                        command = self.settings.cmd;#}
+                    {#                                        if (command) {#}
+                    {#                                            self.active(editor.queryCommandState(command));#}
+                    {#                                        }#}
+                    {#                                    });#}
+                    {#                                },#}
+                    {##}
+                    {#                                onclick: function () {#}
+                    {#                                    editor.formatter.toggle(this.settings.format);#}
+                    {#                                    editor.nodeChanged();#}
+                    {#                                }#}
+                    {#                            }#}
+                    {##}
+                    {#                        }#}
+                });
+            };
+
+
             $scope.tinymceImageOptions['height'] = '450px';
-            $scope.tinymceImageOptions['toolbar'] = "undo redo | styleselect | bold italic | link image";
-{#            $scope.tinymceImageOptions['indentation'] = "1pt";#}
-            $scope.tinymceImageOptions['valid_styles'] = {
-                "*": "",
-                "div": "width,height",
-                "table": "width,height"
-            }
+            $scope.tinymceImageOptions['formats'] = build_format_options($.extend({}, {{ tinymce_formats()|tojson }}, {{ tinymce_formats('birdy')|tojson }}));
+            {#            console.log($scope.tinymceImageOptions['formats']);#}
 
+            var formats_menu = {{ tinymce_formats('birdy', True)|tojson }};
+            {#            $scope.tinymceImageOptions['atoolbar2'] = build_format_toolbox(formats_menu);#}
+            $scope.tinymceImageOptions['pr_formats'] = build_format(formats_menu);
 
-            var allowed_tags = buildAllowedTagsAndAttributes();
-            var formats = {};
-
-
-{#            $scope.tinymceImageOptions['formats'] = {#}
-{#                #}
-{#            };#}
-
-            //});
-
-            // Register default block formats
-            //each('p h1 h2 h3 h4 h5 h6 div address pre div dt dd samp'.split(/\s/), function(name) {
-//register(name, {block: name, remove: 'all'});
-            //});
+            {#            $scope.tinymceImageOptions['setup'] = function (editor) {#}
+            {#                $scope.tinymceImageOptions['atoolbar2'] ? build_format_buttons(editor, formats_menu) : false;#}
             {#            };#}
 
+            console.log($scope.tinymceImageOptions);
 
             $scope.articleImageSelected = function (item) {
                 $scope.data.image.image_file_id = item.id;
@@ -82,6 +271,7 @@
                     init_cropper($scope.data.image.ratio, coordinates);
                 }, 0);
             };
+
             $scope.afterLoad = function (resp, deff) {
                 var ret = deff(resp);
                 $scope.setImageUrl($scope['data'].image);
@@ -90,13 +280,16 @@
                 }
                 return ret;
             };
+
             $scope.chooseImage = function () {
                 $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')");
             };
+
         }]);
+
     </script>
     {% from 'macros.html' import scripts %}
- {{ scripts(names=['croper']) }}
+    {{ scripts(names=['croper']) }}
     {% raw %}
 
     <div ng-controller="article_edit">

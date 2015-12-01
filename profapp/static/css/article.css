@@ -1,0 +1,30 @@
+/* font sizes */
+
+span.profireader_article_text_size_tiny {
+    font-size: 6px;
+}
+
+span.profireader_article_text_size_little {
+    font-size: 8px;
+}
+
+span.profireader_article_text_size_small {
+    font-size: 10px;
+}
+
+span.profireader_article_text_size_normal {
+    font-size: 12px;
+}
+
+span.profireader_article_text_size_big {
+    font-size: 16px;
+}
+
+span.profireader_article_text_size_large {
+    font-size: 24px;
+}
+
+span.profireader_article_text_size_huge {
+    font-size: 32px;
+}
+

@@ -1,0 +1,217 @@
+/* font typefaces */
+
+.profireader_article_font_family_arial {
+    font-family: Arial;
+}
+
+.profireader_article_font_family_courier {
+    font-family: Courier;
+}
+
+.profireader_article_font_family_monospace {
+    font-family: monospace;
+}
+
+/* font colors */
+
+.profireader_article_foreground_color_red {
+    text-color: #f00;
+}
+
+.profireader_article_foreground_color_green {
+    text-color: #0f0;
+}
+
+.profireader_article_foreground_color_blue {
+    text-color: #00f;
+}
+
+.profireader_article_foreground_color_gray {
+    text-color: #ccc;
+}
+
+.profireader_article_foreground_color_black {
+    text-color: #000;
+}
+
+.profireader_article_foreground_color_white {
+    text-color: #fff;
+}
+
+/* bg-colors */
+
+.profireader_article_background_color_red {
+    background-color: #f00;
+}
+
+.profireader_article_background_color_green {
+    background-color: #0f0;
+}
+
+.profireader_article_background_color_blue {
+    background-color: #00f;
+}
+
+.profireader_article_background_color_gray {
+    background-color: #ccc;
+}
+
+.profireader_article_background_color_black {
+    background-color: #000;
+}
+
+.profireader_article_background_color_white {
+    background-color: #fff;
+}
+
+/* borders placing */
+
+.profireader_article_border_placement_left.profireader_article_border_type_solid {
+    border-left-style: solid;
+}
+
+.profireader_article_border_placement_left.profireader_article_border_type_dashed {
+    border-left-style: dashed;
+}
+
+.profireader_article_border_placement_left.profireader_article_border_type_dotted {
+    border-left-style: dotted;
+}
+
+.profireader_article_border_placement_left.profireader_article_border_type_double {
+    border-left-style: double;
+}
+
+.profireader_article_border_placement_right.profireader_article_border_type_solid {
+    border-right-style: solid;
+}
+
+.profireader_article_border_placement_right.profireader_article_border_type_dashed {
+    border-right-style: dashed;
+}
+
+.profireader_article_border_placement_right.profireader_article_border_type_dotted {
+    border-right-style: dotted;
+}
+
+.profireader_article_border_placement_right.profireader_article_border_type_double {
+    border-right-style: double;
+}
+
+.profireader_article_border_placement_top.profireader_article_border_type_solid {
+    border-top-style: solid;
+}
+
+.profireader_article_border_placement_top.profireader_article_border_type_dashed {
+    border-top-style: dashed;
+}
+
+.profireader_article_border_placement_top.profireader_article_border_type_dotted {
+    border-top-style: dotted;
+}
+
+.profireader_article_border_placement_top.profireader_article_border_type_double {
+    border-top-style: double;
+}
+
+.profireader_article_border_placement_bottom.profireader_article_border_type_solid {
+    border-bottom-style: solid;
+}
+
+.profireader_article_border_placement_bottom.profireader_article_border_type_dashed {
+    border-bottom-style: dashed;
+}
+
+.profireader_article_border_placement_bottom.profireader_article_border_type_dotted {
+    border-bottom-style: dotted;
+}
+
+.profireader_article_border_placement_bottom.profireader_article_border_type_double {
+    border-bottom-style: double;
+}
+
+.profireader_article_border_placement_all.profireader_article_border_type_solid {
+    border-left-style: solid;
+    border-right-style: solid;
+    border-top-style: solid;
+    border-bottom-style: solid;
+}
+
+.profireader_article_border_placement_all.profireader_article_border_type_dashed {
+    border-left-style: dashed;
+    border-right-style: dashed;
+    border-top-style: dashed;
+    border-bottom-style: dashed;
+}
+
+.profireader_article_border_placement_all.profireader_article_border_type_dotted {
+    border-left-style: dotted;
+    border-right-style: dotted;
+    border-top-style: dotted;
+    border-bottom-style: dotted;
+}
+
+.profireader_article_border_placement_all.profireader_article_border_type_double {
+    border-left-style: dotted;
+    border-right-style: dotted;
+    border-top-style: dotted;
+    border-bottom-style: dotted;
+}
+
+/* border types */
+
+.profireader_article_border_type_solid {
+
+}
+
+.profireader_article_border_type_dashed {
+
+}
+
+.profireader_article_border_type_dotted {
+
+}
+
+.profireader_article_border_type_double {
+
+}
+
+/* border-colors */
+
+.profireader_article_border_color_red {
+    border-color: #f00;
+}
+
+.profireader_article_border_color_green {
+    border-color: #0f0;
+}
+
+.profireader_article_border_color_blue {
+    border-color: #00f;
+}
+
+.profireader_article_border_color_gray {
+    border-color: #ccc;
+}
+
+.profireader_article_border_color_black {
+    border-color: #000;
+}
+
+.profireader_article_border_color_white {
+    border-color: #fff;
+}
+
+/* border width */
+
+.profireader_article_border_width_medium {
+    border-width: medium;
+}
+
+.profireader_article_border_width_thin {
+    border-width: thin;
+}
+
+.profireader_article_border_width_thick {
+    border-width: thick;
+}
