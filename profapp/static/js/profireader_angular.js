@@ -379,7 +379,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 s.getTemp(iAttrs.ngCity);
             }
         }
-    }])
+    }]);
 
 
 areAllEmpty = function () {
@@ -401,7 +401,7 @@ areAllEmpty = function () {
         }
     });
     return are;
-}
+};
 
 function file_choose(selectedfile) {
     var args = top.tinymce.activeEditor.windowManager.getParams();
@@ -436,11 +436,11 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
             $scope.$apply(function () {
                 $modalInstance.dismiss('cancel')
             });
-        }
+        };
 
         $scope.close = function () {
             $modalInstance.dismiss('cancel');
-        }
+        };
 
         $scope.src = '/filemanager/';
         var params = {};
@@ -681,11 +681,11 @@ function cleanup_html(html) {
         });
     });
 
-    var tags = html.split(/<[^>]*>/)
+    var tags = html.split(/<[^>]*>/);
 
     $.each(tags, function (tagindex, tag) {
         console.log(tagindex, tag);
-    })
+    });
 
     return html;
 }
