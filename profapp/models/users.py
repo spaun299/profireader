@@ -261,8 +261,7 @@ class User(Base, UserMixin, PRBase):
         banned = self.banned
         if self.banned:
             flash('Sorry, you cannot login into the Profireader. Contact the profireader'
-                  'administrator, please: ' +
-                  current_app.config['PROFIREADER_MAIL_SENDER'])
+                  'administrator, please: ' + current_app.config['PROFIREADER_MAIL_SENDER'])
         return banned
 
     def ban(self):
@@ -283,23 +282,22 @@ class User(Base, UserMixin, PRBase):
         g.db.commit()
 
     def avatar(self, size=100):
-    #     if 'facebook' in session['logged_via']:
-    #         avatar = json.load(req.urlopen(
-    #             url='http://graph.facebook.com/{facebook_id}/picture?width='
-    #                 '{size}&height={size}&redirect=0'.format(
-    #                 facebook_id=g.user.facebook_id, size=size)))
-    #         if avatar['data'].get('is_silhouette'):
-    #             avatar = self.gravatar(size=size)
-    #         else:
-    #             avatar = avatar['data'].get('url')
-        # if 'google' in session['logged_via']:
-        #     url = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
-        #     a= url
+        logged_via = REGISTERED_WITH[self.logged_in_via()]
+        if logged_via == 'facebook':
+            avatar = json.load(req.urlopen(
+                url='http://graph.facebook.com/{facebook_id}/picture?width={size}&height={size}&redirect=0'.
+                    format(facebook_id=self.facebook_id, size=size)))
+            if avatar['data'].get('is_silhouette'):
+                avatar = self.gravatar(size=size)
+            else:
+                avatar = avatar['data'].get('url')
+        else:
+            avatar = self.gravatar(size=size)
 
-        # else:
-        #     avatar = self.gravatar(size=size)
-
-        return self.gravatar(size=size)
+        # if logged_via == 'google':
+        #     avatar = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
+        #     avatar = avatar['data'].get('url')
+        return avatar
 
     def gravatar(self, size=100, default='identicon', rating='g'):
         if request.is_secure:
@@ -307,12 +305,8 @@ class User(Base, UserMixin, PRBase):
         else:
             url = 'http://www.gravatar.com/avatar'
 
-        email = 'guest@profireader.com'
-        if self.profireader_email:
-            email = self.profireader_email
-
-        hash = hashlib.md5(
-            email.encode('utf-8')).hexdigest()
+        email = getattr(self, 'profireader_email', 'guest@profireader.com')
+        hash = hashlib.md5(email.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
             url=url, hash=hash, size=size, default=default, rating=rating)
 
@@ -449,6 +443,7 @@ class User(Base, UserMixin, PRBase):
         self.profireader_email = new_email
         return True
 
+    # TODO (AA to ???): file.upload(content=content).url() is wrong and should be corrected
     def avatar_update(self, passed_file):
         content = passed_file.stream.read(-1)
 

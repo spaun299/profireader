@@ -5,7 +5,7 @@ from flask.ext.login import current_user, login_required
 from ..models.portal import PortalDivisionType
 from utils.db_utils import db
 from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDivision, \
-    PortalDivisionSettings_company_subportal
+    PortalDivisionSettingsCompanySubportal
 from ..models.tag import Tag, TagPortal, TagPortalDivision
 from .request_wrapers import ok, check_rights
 from ..models.articles import ArticlePortalDivision, ArticleCompany, Article
@@ -179,9 +179,11 @@ def profile_load(json, portal_id):
     portal_bound_tags = portal.portal_bound_tags_select
     tags = set(tag_portal_division.tag for tag_portal_division in portal_bound_tags)
     tags_dict = {tag.id: tag.name for tag in tags}
-    return {'portal': portal.get_client_side_dict(
-        more_fields='divisions, own_company, portal_bound_tags_select, portal_notbound_tags_select'),
-            'portal_id': portal_id,
+    return {'portal': portal.get_client_side_dict('id, '
+                                                  'divisions, '
+                                                  'own_company, '
+                                                  'portal_bound_tags_select.*, '
+                                                  'portal_notbound_tags_select.*'),
             'tag': tags_dict}
 
 
@@ -215,9 +217,9 @@ def profile_edit_load(json, portal_id):
         # TODO (AA to AA): We have to consider the situation when divisions were changed while editting tags.
         def strip_new_tags(json):
             """ Strips tags have gotten from input prameter json
-            :param json: {'bound_tags' [{'portal_division_id': '....', 'tag_name': '  sun  '}, ...],
+            :param json: {'bound_tags': [{'portal_division_id': '....', 'tag_name': '  sun  '}, ...],
                 'notbound_tags': ['  moon  ', ...], 'confirm_profile_edit': True}
-            :return:     {'bound_tags' [{'portal_division_id': '....', 'tag_name': 'sun'}, ...],
+            :return:     {'bound_tags': [{'portal_division_id': '....', 'tag_name': 'sun'}, ...],
                 'notbound_tags': ['moon', ...], 'confirm_profile_edit': True}
             """
 
@@ -387,12 +389,14 @@ def profile_edit_load(json, portal_id):
 
         g.db.add_all(add_tag_portal_bound_list + add_tag_portal_notbound_list)
         # read this: http://stackoverflow.com/questions/7892618/sqlalchemy-delete-subquery
-        g.db.query(TagPortalDivision). \
-            filter(TagPortalDivision.id.in_([x.id for x in delete_tag_portal_bound_list])). \
-            delete(synchronize_session=False)
-        g.db.query(TagPortal). \
-            filter(TagPortal.id.in_([x.id for x in delete_tag_portal_notbound_list])). \
-            delete(synchronize_session=False)
+        if delete_tag_portal_bound_list:
+            g.db.query(TagPortalDivision). \
+                filter(TagPortalDivision.id.in_([x.id for x in delete_tag_portal_bound_list])). \
+                delete(synchronize_session=False)
+        if delete_tag_portal_notbound_list:
+            g.db.query(TagPortal). \
+                filter(TagPortal.id.in_([x.id for x in delete_tag_portal_notbound_list])). \
+                delete(synchronize_session=False)
         g.db.expire_all()
 
 
@@ -410,7 +414,7 @@ def profile_edit_load(json, portal_id):
 
         # tag0_name = curr_portal_bound_tag_port_div_objects[0].tag.name
         # y = list(curr_portal_bound_tag_port_div_objects)         # Operations with portal_bound_tags_dynamic...
-        flash('Portal tags successfully updated')
+        flash('Portal tags were successfully updated')
 
     tags = set(tag_portal_division.tag for tag_portal_division in portal.portal_bound_tags_select)
     tags_dict = {tag.id: tag.name for tag in tags}
@@ -418,9 +422,8 @@ def profile_edit_load(json, portal_id):
     company = portal.own_company
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
-    return {'portal': portal.get_client_side_dict('divisions,own_company,portal_bound_tags_select'),
+    return {'portal': portal.get_client_side_dict('id, name, divisions, own_company, portal_bound_tags_select.*'),
             'company_logo': company_logo,
-            'portal_id': portal_id,
             'tag': tags_dict}
 
 

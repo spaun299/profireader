@@ -379,7 +379,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 s.getTemp(iAttrs.ngCity);
             }
         }
-    }])
+    }]);
 
 
 areAllEmpty = function () {
@@ -401,7 +401,7 @@ areAllEmpty = function () {
         }
     });
     return are;
-}
+};
 
 function file_choose(selectedfile) {
     var args = top.tinymce.activeEditor.windowManager.getParams();
@@ -435,11 +435,11 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
             $scope.$apply(function () {
                 $modalInstance.dismiss('cancel')
             });
-        }
+        };
 
         $scope.close = function () {
             $modalInstance.dismiss('cancel');
-        }
+        };
 
         $scope.src = '/filemanager/';
         var params = {};
@@ -516,9 +516,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             }
             else if(scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400){
                 scope.$$translate_accessed[phrase] = true;
-                $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
-
-                });
+                //$ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {});
             }
             if (scope.$$translate[phrase])
                 phrase = scope.$$translate[phrase]['lang'];
@@ -702,11 +700,11 @@ function cleanup_html(html) {
         });
     });
 
-    var tags = html.split(/<[^>]*>/)
+    var tags = html.split(/<[^>]*>/);
 
     $.each(tags, function (tagindex, tag) {
         console.log(tagindex, tag);
-    })
+    });
 
     return html;
 }
