@@ -1,7 +1,7 @@
 # from db_init import g.db, Base
 from ..constants.TABLE_TYPES import TABLE_TYPES
-from sqlalchemy import Table, Column, Integer, Text, ForeignKey, String, Boolean, or_, and_, text
-from sqlalchemy.orm import relationship, backref, make_transient, class_mapper
+from sqlalchemy import Table, Column, Integer, Text, ForeignKey, String, Boolean, or_, and_, text, desc, asc, join
+from sqlalchemy.orm import relationship, backref, make_transient, class_mapper, aliased
 from sqlalchemy.sql import func
 import datetime
 import re
@@ -13,8 +13,9 @@ from ..controllers import errors
 from utils.db_utils import db
 from html.parser import HTMLParser
 from ..constants.SEARCH import RELEVANCE
-import json
-
+import math
+from config import Config
+from sqlalchemy.sql import expression, functions
 Base = declarative_base()
 
 # this event is called whenever an attribute
@@ -41,6 +42,7 @@ class Search(Base):
     text = Column(TABLE_TYPES['text'], nullable=False)
     relevance = Column(TABLE_TYPES['int'], nullable=False)
     kind = Column(TABLE_TYPES['short_text'])
+    md_tm = Column(TABLE_TYPES['timestamp'])
 
     def __init__(self, index=None, table_name=None, text=None, relevance=None, kind=None):
         # super(Search, self).__init__()
@@ -50,36 +52,82 @@ class Search(Base):
         self.relevance = relevance
         self.kind = kind
 
+    ORDER_RELEVANCE = 1
+    ORDER_TEXT = 2
+    ORDER_MD_TM = 3
+
     @staticmethod
     def search(*args, **kwargs):
         """ *args: dictionary with following values - class = sqlalchemy table class object,
                                                       filter: sqlalchemy filter with your own parameters,
-                                                      on: fields parameter for join,
                                                       fields: (tuple) with fields name in table Search.kind,
                                                       join: subquery wich you want to join without filters.
-            For example: {'class': Company, 'filter': ~db(User, company_id=1).exists(),
-                          'on': Company.id=Portal.company_id, join=Article,
-                          'fields' = (tuple) with fields name in table Search.kind}
+            For example: {'class': Company,
+                          'filter': ~db(User, company_id=1).exists(),
+                          'join': Article,
+                          'fields': (tuple) with fields name in table Search.kind}
+            ** kwargs optional
             **kwargs: search_text = string text for search,
-                      index = id """
-
+                      page = integer current page for pagination,
+                      items_per_page = integer items per page for pagination, default Config.ITEMS_PER_PAGE,
+                      order_by = string (with field for which you want sort) or integer: text
+                      , relevance, md_tm default=relevance (USE CONSTANTS IN SEARCH CLASS)
+                      desc_asc = desc or asc default = desc """
+        page = kwargs.get('page') or 1
+        items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
+        page -= 1
         search_params = []
+        order_by_to_str = {1: 'relevance', 2: 'text', 3: 'md_tm'}
+
+        def get_order(order_name, order_value, field):
+            order_name += '+' if order_value == 'desc' else '-'
+            result = {'text+': lambda field_name: desc(func.min(
+                      getattr(Search, field_name, field_name))),
+                      'text-': lambda field_name: asc(func.min(
+                          getattr(Search, field_name, field_name))),
+                      'md_tm+': lambda field_name: desc(func.min(
+                          getattr(Search, field_name, field_name))),
+                      'md_tm-': lambda field_name: asc(func.min(
+                          getattr(Search, field_name, field_name))),
+                      'relevance+': lambda field_name: desc(func.sum(
+                          getattr(Search, field_name, field_name))),
+                      'relevance-': lambda field_name: asc(func.sum(
+                          getattr(Search, field_name, field_name)))
+                      }[order_name](field)
+            return result
+
+        def add_joined_search(field_name):
+            joined = db(Search.index, func.min(Search.text).label('text'),
+                        index=subquery_search.subquery().c.index,
+                        kind=field_name).order_by(order).group_by(Search.index)
+            return joined
+
         for cls in args:
             search_params.append(and_(Search.kind.in_(cls['fields']),
                                  Search.text.ilike("%" + kwargs.get('search_text') + "%"),
                                  Search.table_name == cls['class'].__tablename__), )
-        subquery_search = db(Search.index,
+        subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
-                             func.min(Search.table_name).label('table_name')).filter(
-            or_(*search_params)).group_by(Search.index).subquery()
-        # s = db(subquery_search).join(args[0]['class'], args[0]['class'].id == subquery_search.c.index)
-        # subquery_search = subquery_search.join(args[1]['class'], args[1]['class'].id == Search.index)
-        # print(getattr(args['cl']))
-        # s = db(subquery_search).join(args[0]['class'], args[0]['class'].id == subquery_search.c.index)
-        # a = next(cls for cls in args if cls['class'].__tablename__=='company')['class']
-        cls_obj = lambda table_name: [cls for cls in args if cls['class'].__tablename__ == table_name][0].get('class')
-        # print(a.about)
-        # join_search = db(subquery_search).join(args[0]['class'], args[0]['class'].id == subquery_search.c.index)
+                             func.min(Search.table_name).label('table_name'),
+                             func.max(Search.text).label('text_title')).filter(
+            or_(*search_params)).group_by(Search.index)
+        if type(kwargs.get('order_by')) == str:
+            order = get_order('text', kwargs.get('desc_asc') or 'desc', 'text')
+            subquery_search = add_joined_search(kwargs['order_by'])
+        elif type(kwargs.get('order_by')) == int:
+            ord_to_str = order_by_to_str[kwargs['order_by']]
+            subquery_search = subquery_search.order_by(
+                get_order(ord_to_str, kwargs.get('desc_asc') or 'desc', ord_to_str))
+        else:
+            subquery_search = subquery_search.order_by(get_order('relevance', 'desc', 'relevance'))
+        pages = math.ceil(subquery_search.count()/items_per_page)
+
+        if items_per_page:
+            subquery_search = subquery_search.limit(items_per_page)
+        if page:
+            subquery_search = subquery_search.offset(page*items_per_page) if int(page) in range(
+                0, int(pages)) else subquery_search.offset(pages*items_per_page)
+        subquery_search = subquery_search.subquery()
         join_search = []
         for arg in args:
             join_params = text(arg.get('join')) if arg.get('join') else False
@@ -87,12 +135,12 @@ class Search(Base):
             join_search.append(db(subquery_search).join(
                 join_params or arg['class'],
                 filter_params or (arg['class'].id == subquery_search.c.index)).subquery())
-        # s = db(subquery_search).join(cls_obj(subquery_search.c.table_name), args[0]['class'].id == subquery_search.c.index)
-        # print(join_search.all())
+        objects = []
+        for search, cls in zip(join_search, args):
+            for b in db(cls['class']).filter(cls['class'].id == search.c.index).all():
+                objects.append(b)
 
-        for a in join_search:
-            for b in db(a).all():
-                print(b.relevance)
+        return pages, page+1, objects
 
 
 class MLStripper(HTMLParser):

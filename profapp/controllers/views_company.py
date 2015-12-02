@@ -45,7 +45,7 @@ def show():
 @ok
 def load_companies(json):
     Search.search({'class': Company, 'fields': ('name', 'about')},
-    {'class': ArticlePortalDivision, 'fields': ('title', 'short')} , search_text='a')
+    {'class': ArticlePortalDivision, 'fields': ('title', 'short')}, search_text='a', items_per_page=2)
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     return {'companies': [usr_cmp.employer.get_client_side_dict() for usr_cmp in user_companies
                           if usr_cmp.status == STATUS.ACTIVE()],
@@ -103,7 +103,6 @@ def materials_load(json, company_id):
                       'page_buttons': Config.PAGINATION_BUTTONS},
             'statuses': statuses
             }
-
 
 @company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['GET'])
 @login_required
