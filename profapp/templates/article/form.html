@@ -104,17 +104,11 @@
             };
 
 
-            {#                editor.on('init', function () {#}
-            {#                    each(newFormats, function (format) {#}
-            {#                        editor.formatter.register(format.name, format);#}
-            {#                    });#}
-            {#                });#}
-
-
             $scope.tinymceImageOptions['height'] = '450px';
 
-            var custom_formats = {{ tinymce_format_groups('birdy')|tojson }};
             var general_formats = {{ tinymce_format_groups()|tojson }};
+            var custom_formats = {};
+{#            {{  custom_formats = tinymce_format_groups('birdy')|tojson }};#}
 
             $scope.tinymceImageOptions['formats'] =
                     _.chain($.extend({}, general_formats, custom_formats)). // here we have dicd in form {group_label: {format: format_properties}}
@@ -126,14 +120,8 @@
                             value(); // get result
 
 
-            $scope.tinymceImageOptions['pr_formats'] = get_array_for_menu_build(custom_formats);
-
-            console.log($scope.tinymceImageOptions['pr_formats']);
-
-            {#            $scope.tinymceImageOptions['setup'] = function (editor) {#}
-            {#                $scope.tinymceImageOptions['atoolbar2'] ? build_format_buttons(editor, formats_menu) : false;#}
-            {#            };#}
-
+{#            $scope.tinymceImageOptions['pr_formats'] = get_array_for_menu_build(custom_formats);#}
+{#            console.log($scope.tinymceImageOptions['pr_formats']);#}
 
             $scope.articleImageSelected = function (item) {
                 $scope.data.image.image_file_id = item.id;
@@ -179,70 +167,57 @@
     {% from 'macros.html' import scripts %}
     {{ scripts(names=['croper']) }}
 
-{% raw %}
+    {% raw %}
 
 
-<div ng-init="init()" ng-controller="article_edit">
-    <h1 class="nice-title">Create new article<span></span></h1>
-    <h1 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company) }}<span></span></h1>
-    <h1 ng-show="data.id && !company">{{ _('update your version of article') }}<span></span></h1>
-    <h2 ng-show="!data.id">{{ _('Create new article') }}</h2>
+    <div ng-init="init()" ng-controller="article_edit">
+        <h1 class="nice-title">{{ _( !data.article.id?'Create new article':
+            (company?'update version of article for company `%(company.name)s`':'update your version of article') ) }}<span></span></h1>
 
-    <h2 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company)
-        }}</h2>
-
-
-    <h2 ng-show="data.id && !company">{{ _('update your version of article') }}</h2>
-
-    <div af aaaf-after-load="aaarticleAfterLoad" af-before-save="getData" af-beforeValidate="getData" ng-model="data">
+        <div af af-after-load="afterLoad" af-amid-save="amidSave" af-before-save="getData"
+                af-beforeValidate="getData" af-watch="data.article" ng-model="data">
 
             <div class="update_col1">
-
                 <!-- TODO: OK by OZ:   this block form should share same classes with layout to look MAXIMUM like in portal
-                        maybe layout selector is apporpriate here-->
-
-                <input type="hidden" ang-model="data.id"/>
-
+                                        maybe layout selector is apporpriate here-->
                 {{ _('Article title') }} <span af-validation-answer="data_validation:title"></span>
-                <input style="width: 100%" type="text" ng-model="data.title">
+                <input style="width: 100%" type="text" ng-model="data.article.title">
                 {{ _('Short Description') }} <span af-validation-answer="data_validation:short"></span>
-                <textarea style="width: 100%" placeholder="short" ng-model="data.short"></textarea>
+                <textarea style="width: 100%" placeholder="short" ng-model="data.article.short"></textarea>
                 {{ _('KeyWords') }} <span af-validation-answer="data_validation:keywords"></span>
-                <input style="width: 100%" ng-model="data.keywords"/>
+                <input style="width: 100%" ng-model="data.article.keywords"/>
 
             </div>
 
             <div class="update_col1">
-                {{ _('Select picture') }}<br/>
+                {{ _('Select picture') }}
                 <div ng-include="'image_cropper'"></div>
-                <input type="hidden" ng-model="data.image_file_id">
+                <input type="hidden" ng-model="data.article.image_file_id">
             </div>
 
             <div class="update_col1">
-
-                {{ _('Full text') }}<br/>
+                {{ _('Full text') }}
             <textarea ui-tinymce="tinymceImageOptions" style="width: 400px;"
-                      ng-model="data.long"></textarea>
+                      ng-model="data.article.long"></textarea>
 
             </div>
-            <div style="position: relative; margin-top: 10px; clear: both" ><input class="create_button"
-                                                  ng-disabled="!$af.isActionAllowed(data, 'save')"
-                                                  ng-click="$af.save(data)"
-                                                  type="submit"
-                                                  value="{{ data.id ? _('save') : _('create') }}"/>
+            <div class="update_col1">
+                <input class="create_button"
+                       ng-disabled="!$af.isActionAllowed(data, 'save')"
+                       ng-click="$af.save(data)"
+                       type="submit"
+                       value="{{ data.article.id ? _('save') : _('create') }}"/>
             </div>
+        </div>
+    </div>
+
+
+    {% endraw %}
 
     </div>
 
-</div>
-
-
-{% endraw %}
-
-</div>
-
-<script src="/static/image_editor/dist/cropper.js"></script>
-<script src="/static/image_editor/demo/js/main.js"></script>
-{#TODO: OZ by OZ move this code to one file#}
+    <script src="/static/image_editor/dist/cropper.js"></script>
+    <script src="/static/image_editor/demo/js/main.js"></script>
+    {#TODO: OZ by OZ move this code to one file#}
 
 {% endblock %}
