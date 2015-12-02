@@ -80,8 +80,10 @@ class PRBase:
         return self
 
     def detach(self):
-        g.db.expunge(self)
-        make_transient(self)
+        if self in g.db:
+            g.db.expunge(self)
+            make_transient(self)
+
         self.id = None
         return self
 
