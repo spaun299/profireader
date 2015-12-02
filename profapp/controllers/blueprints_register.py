@@ -17,6 +17,7 @@ from .blueprints_declaration import *
 from . import views_index, views_user, views_filemanager, views_article, views_image_editor, \
     views_company, views_portal, errors, views_front, views_file, views_admin, views_tools
 
+
 def register(app):
     app.register_blueprint(general_bp, url_prefix='/')
 

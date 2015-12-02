@@ -76,8 +76,8 @@
         <div class="item text-align-left"><input ng-click="saveData()" type="submit" value="{{_('Save Tags')}}"/></div>
 
 
-        {{_('Back to')}} <a href="{{ url_portal_profile({portal_id: data.portal['id']}) }}"> "{{ data.portal.name }}"</a> {{_('portal profile')}}<br/>
-        {{_('Back to')}} <a href="{{ url_company_profile({company_id: data.portal['company_owner_id']}) }}"> "{{
+        {{_('Back to')}} <a href="{{ url_portal_profile({portal_id: data.portal.id}) }}"> "{{ data.portal['name'] }}"</a> {{_('portal profile')}}<br/>
+        {{_('Back to')}} <a href="{{ url_company_profile({company_id: data.portal['own_company']['id']}) }}"> "{{
         data.portal['own_company']['name'] }}"</a> {{_('company profile')}}
 
     </div>

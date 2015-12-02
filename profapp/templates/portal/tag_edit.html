@@ -176,6 +176,9 @@
         };
 
         $scope.saveData = function () {
+            x = $scope.url_confirm_profile_edit({portal_id: $scope.data.portal.id});
+            console.log($scope.data.portal);
+            console.log(x);
             $ok($scope.url_confirm_profile_edit({portal_id: $scope.data.portal.id}), $scope.getData(), function (resp) {
                 {#                        $scope.data = resp;#}
                 $scope.afterSave(resp);
@@ -214,7 +217,7 @@
 
         $scope.afterSave = function (resp) {  // TODO: do we need resp here?
 //                window.location.href = $scope.url_after_save({portal_id: resp.portal_id})
-            window.location.href = $scope.url_after_save({portal_id: $scope.data.portal['id']})
+            window.location.href = $scope.url_after_save({portal_id: $scope.data.portal.id})
         };
     }])
 

@@ -131,9 +131,10 @@ class ArticlePortalDivision(Base, PRBase):
         portals = {}
         # portals['0'] = {'name': 'All'}
         # portals.append(all)
+
         for article in db(ArticleCompany, company_id=company_id).all():
             for port in article.portal_article:
-                portals[port.portal.id] = port.portal.get_client_side_dict(fields='name')
+                portals[port.portal.id] = port.portal.name
         return portals
 
     @staticmethod
@@ -146,7 +147,7 @@ class ArticlePortalDivision(Base, PRBase):
             filter(Portal.id == portal_id).all()
         # for article in db(ArticlePortalDivision, portal_id=portal_id).all():
         for article in articles:
-            companies[article.company.id] = article.company.get_client_side_dict(fields='name')
+            companies[article.company.id] = article.company.name
         return companies
 
     def clone_for_company(self, company_id):
@@ -156,14 +157,20 @@ class ArticlePortalDivision(Base, PRBase):
 
     @staticmethod
     def subquery_portal_articles(search_text=None, portal_id=None, **kwargs):
-        sub_query = g.db.query(ArticlePortalDivision).filter_by(**kwargs). \
+        sub_query = db(ArticlePortalDivision)
+        if kwargs['status']:
+            sub_query = db(ArticlePortalDivision, status=kwargs['status'])
+        sub_query = sub_query. \
             join(ArticlePortalDivision.division). \
             join(PortalDivision.portal). \
-            filter(Portal.id == portal_id).order_by(expression.desc(ArticlePortalDivision.publishing_tm))
-
+            filter(Portal.id == portal_id)
+        if kwargs['company_id']:
+            sub_query = sub_query. \
+            join(ArticlePortalDivision.company). \
+            filter(Company.id == kwargs['company_id'])
         if search_text:
             sub_query = sub_query.filter(ArticlePortalDivision.title.ilike("%" + search_text + "%"))
-        return sub_query
+        return sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
 
 
 class ArticleCompany(Base, PRBase):
@@ -221,10 +228,19 @@ class ArticleCompany(Base, PRBase):
                 companies.append(comp.company.get_client_side_dict(fields='id, name'))
         return all, [dict(comp) for comp in set([tuple(c.items()) for c in companies])]
 
+    @staticmethod
+    def get_companies_for_article(article_id):
+        companies = []
+        for article in db(Article, id=article_id).all():
+            for comp in article.submitted_versions:
+                companies.append(comp.company.get_client_side_dict(fields='id, name'))
+        return [dict(comp) for comp in set([tuple(c.items()) for c in companies])]
+
     def clone_for_company(self, company_id):
         return self.detach().attr({'company_id': company_id,
                                    'status': ARTICLE_STATUS_IN_COMPANY.
                                   submitted})
+
 
     @staticmethod
     def subquery_user_articles(search_text=None, user_id=None, **kwargs):
@@ -243,18 +259,19 @@ class ArticleCompany(Base, PRBase):
 
     @staticmethod
     def subquery_company_articles(search_text=None, company_id=None, portal_id=None, **kwargs):
-
         sub_query = db(ArticleCompany, company_id=company_id)
+        if kwargs['status']:
+            sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['status'])
+        if kwargs['publ_status']:
+            sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id).\
+            filter(ArticlePortalDivision.status == kwargs['publ_status'])
         if search_text:
             sub_query = sub_query.filter(ArticleCompany.title.ilike("%" + search_text + "%"))
-        if kwargs.get('status'):
-            sub_query = sub_query.filter(db(ArticlePortalDivision, article_company_id=ArticleCompany.id,
-                                            **kwargs).exists())
         if portal_id:
-            sub_query = sub_query.filter(db(PortalDivision, portal_id=portal_id).exists())
-
+            sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id).\
+            join(PortalDivision, PortalDivision.id == ArticlePortalDivision.portal_division_id).\
+            filter(PortalDivision.portal_id == portal_id)
         sub_query = sub_query.order_by(expression.desc(ArticleCompany.md_tm))
-
         return sub_query
 
         # self.portal_devision_id = portal_devision_id
@@ -369,7 +386,6 @@ class Article(Base, PRBase):
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
-
     def get_article_with_html_tag(self, text_into_html):
         article = self.get_client_side_dict()
         article['mine_version']['title'] = article['mine_version']['title'].replace(text_into_html,
@@ -470,6 +486,26 @@ class Article(Base, PRBase):
     def get_articles_submitted_to_company(company_id):
         articles = g.db.query(ArticleCompany).filter_by(company_id=company_id).all()
         return articles if articles else []
+
+    @staticmethod
+    def list_for_grid_tables(list, add_param, is_dict):
+        new_list = []
+        n = 1
+        if add_param:
+            new_list.append(add_param)
+            n = 2
+        if is_dict == False:
+            list.sort()
+        for s in list:
+            label = list[s] if is_dict else s
+            id = s if is_dict else ''
+            new_list.append({
+                'value': str(n),
+                'label': label,
+                'id': id
+            })
+            n += 1
+        return new_list
 
         # for article in articles:
         #     article.possible_new_statuses = ARTICLE_STATUS_IN_COMPANY.\

@@ -3,6 +3,7 @@ import math
 from flask import request
 from .request_wrapers import ok
 
+
 def pagination(query, page=1, items_per_page=Config.ITEMS_PER_PAGE):
     """ Pagination for pages. For use this function you have to pass subquery with all filters,
      number of current page. Also you can change page_size(items per page) from config.
@@ -13,9 +14,8 @@ def pagination(query, page=1, items_per_page=Config.ITEMS_PER_PAGE):
     if items_per_page:
         query = query.limit(items_per_page)
     if page:
-        query = query.offset(page*items_per_page) if int(page) in range(
-            0, int(pages)) else query.offset(pages*items_per_page)
-
+        query = query.offset(page*items_per_page) if int(page) in range(0, int(pages)) \
+            else query.offset(pages*items_per_page)
 
     return query, pages, page+1
 

@@ -379,7 +379,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 s.getTemp(iAttrs.ngCity);
             }
         }
-    }])
+    }]);
 
 
 areAllEmpty = function () {
@@ -401,7 +401,7 @@ areAllEmpty = function () {
         }
     });
     return are;
-}
+};
 
 function file_choose(selectedfile) {
     var args = top.tinymce.activeEditor.windowManager.getParams();
@@ -413,7 +413,7 @@ function file_choose(selectedfile) {
 
 // 'ui.select' uses "/static/js/select.js" included in index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
-module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection']);
+module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid','ui.grid.pagination','ui.grid.edit','ngAnimate', 'ngTouch', 'ui.grid.selection','ui.grid.grouping','ui.grid.treeView']);
 
 module.config(function ($provide) {
     $provide.decorator('$controller', function ($delegate) {
@@ -436,11 +436,11 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
             $scope.$apply(function () {
                 $modalInstance.dismiss('cancel')
             });
-        }
+        };
 
         $scope.close = function () {
             $modalInstance.dismiss('cancel');
-        }
+        };
 
         $scope.src = '/filemanager/';
         var params = {};
@@ -456,6 +456,20 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
         }
         $scope.src = $scope.src + '?' + $.param(params);
     }]);
+
+module.directive('ngEnter', function() {
+        return function(scope, element, attrs) {
+            element.bind("keydown keypress", function(event) {
+                if(event.which === 13) {
+                    scope.$apply(function(){
+                        scope.$eval(attrs.ngEnter, {'event': event});
+                    });
+
+                    event.preventDefault();
+                }
+            });
+        };
+    });
 
 module.run(function ($rootScope, $ok, $sce, $modal) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
@@ -479,10 +493,13 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             if (!scope.$$translate_accessed) {
                 scope.$$translate_accessed = {};
             }
+            new Date;
+            var t = Date.now()/1000;
             //TODO OZ by OZ hasOwnProperty
             var CtrlName = this.controllerName ? this.controllerName : 'None';
             if (scope.$$translate[phrase] === undefined) {
                 scope.$$translate[phrase] = phrase;
+                scope.$$translate[phrase]['lang'] = phrase;
                 $ok('/tools/save_translate/', {
                     template: CtrlName,
                     phrase: phrase,
@@ -496,15 +513,15 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                     //}
 
                 });
-                //scope.$$translate[phrase] = phrase;
+                scope.$$translate[phrase] = phrase;
             }
-            else if (scope.$$translate_accessed[phrase] === undefined) {
+            else if(scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400){
                 scope.$$translate_accessed[phrase] = true;
-                $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
-
-                });
+                //$ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {});
             }
-            phrase = scope.$$translate[phrase];
+            if (scope.$$translate[phrase])
+                phrase = scope.$$translate[phrase]['lang'];
+
             //alert(scope.$$translate);
 
 
@@ -662,11 +679,11 @@ function cleanup_html(html) {
         });
     });
 
-    var tags = html.split(/<[^>]*>/)
+    var tags = html.split(/<[^>]*>/);
 
     $.each(tags, function (tagindex, tag) {
         console.log(tagindex, tag);
-    })
+    });
 
     return html;
 }
