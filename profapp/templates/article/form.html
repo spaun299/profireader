@@ -108,7 +108,7 @@
 
             var general_formats = {{ tinymce_format_groups()|tojson }};
             var custom_formats = {};
-{#            {{  custom_formats = tinymce_format_groups('birdy')|tojson }};#}
+            {#            {{  custom_formats = tinymce_format_groups('birdy')|tojson }};#}
 
             $scope.tinymceImageOptions['formats'] =
                     _.chain($.extend({}, general_formats, custom_formats)). // here we have dicd in form {group_label: {format: format_properties}}
@@ -120,8 +120,8 @@
                             value(); // get result
 
 
-{#            $scope.tinymceImageOptions['pr_formats'] = get_array_for_menu_build(custom_formats);#}
-{#            console.log($scope.tinymceImageOptions['pr_formats']);#}
+            {#            $scope.tinymceImageOptions['pr_formats'] = get_array_for_menu_build(custom_formats);#}
+            {#            console.log($scope.tinymceImageOptions['pr_formats']);#}
 
             $scope.articleImageSelected = function (item) {
                 $scope.data.image.image_file_id = item.id;
@@ -168,14 +168,13 @@
     {{ scripts(names=['croper']) }}
 
     {% raw %}
-
-
     <div ng-init="init()" ng-controller="article_edit">
         <h1 class="nice-title">{{ _( !data.article.id?'Create new article':
-            (company?'update version of article for company `%(company.name)s`':'update your version of article') ) }}<span></span></h1>
+            (company?'update version of article for company `%(company.name)s`':'update your version of article') )
+            }}<span></span></h1>
 
         <div af af-after-load="afterLoad" af-amid-save="amidSave" af-before-save="getData"
-                af-beforeValidate="getData" af-watch="data.article" ng-model="data">
+             af-beforeValidate="getData" af-watch="data.article" ng-model="data">
 
             <div class="update_col1">
                 <!-- TODO: OK by OZ:   this block form should share same classes with layout to look MAXIMUM like in portal
@@ -186,7 +185,6 @@
                 <textarea style="width: 100%" placeholder="short" ng-model="data.article.short"></textarea>
                 {{ _('KeyWords') }} <span af-validation-answer="data_validation:keywords"></span>
                 <input style="width: 100%" ng-model="data.article.keywords"/>
-
             </div>
 
             <div class="update_col1">

@@ -324,7 +324,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
 
         <div ng-if="!data">{{ _('Loading...') }}</div>
         <div ng-if="data">
-            <h3>{{data.article.title}}</h3>
+            <h1  class="nice-title">{{data.article.title}}<span></span></h1>
             <h4>{{ _('Created at') }} {{data.article.cr_tm}}</h4>
             <h4>{{ _('Last modified at') }} {{data.article.md_tm}}</h4>
             <h4>{{ _('Short description') }}</h4>
@@ -343,51 +343,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
 
                 <br/>
             </div>
-            <div ng-if="myRights('publish', 'unpublish', 'edit')">
-                <hr/>
-                <h3> {{ _('Search for user') }} </h3>
-        <input disabled typeahead-on-select="onSelect($item, $model, $label)"
-                                               typeahead-template-url="typeaheadTemplate.html"
-                                               typeahead-loading="loadingUsers"
-                                               ng-model="selectedUser_name"
-                                               typeahead="user as user.profireader_name for user in searchForUserToJoin($viewValue)"
-                                               name="user_id"/>&nbsp;
-        <button class="btn" ng-click="joinToUser()"
-                ng-class="{'disabled': !selectedUser || selectedUser_sending}"
-                ng-disabled="!selectedUser || selectedUser_sending">{{ _('Send article to this user') }}
-        </button>
-        <i ng-show="loadingUsers" class="glyphicon glyphicon-refresh"></i>
-                <div ng-if="data_resp_user_search.user">
-                    {{_('Article %(title)s was successfully sent to user', {'title': data.article.title})}} {{
-                    data_resp_user_search.user.profireader_name }}
-                </div>
-                <div ng-if="!data_resp_user.user">
-                    <hr/>
-                    <div>
-                        {{_('Introduce user to work with this material')}}
-                        <select disabled
-                                ng-init="data.send_to_user = data.company.employees[0]"
-                                ng-model="data.send_to_user"
-                                ng-options="user.profireader_name for user in data.company.employees">
-                            <option value="" selected hidden/>
-                        </select>
-                        <input disabled type="submit" value="{{_('Send article')}}">
-                    </div>
-                    <hr/>
-                    {{_('This material was published to following portals')}}:
-                    <div ng-repeat="portal in data.article.portal_article" style="width: 1000px">
-                        {{ portal.division.portal.name }}    -    {{ portal.division.name }}<br>
-                        <button ng-click="delete_atricle_from_portal(portal.id, portal.division.portal.name)">{{_('Delete this material from this portal')}}</button><hr/>
-                    </div>
-                    </br>
-                    {{ article_message }}
-                </div>
-                <div ng-if="data_resp_user.user">
-                    {{_('Article %(title)s was successfully sent to user', {'title': data.article.title})}}
-                    {{ data_resp_user.user.profireader_name }}
-                </div>
 
-            </div>
             <div ng-if="myRights('publish')">
                 <div ng-if="!data_resp_portal.portal">
                     <hr>
@@ -427,7 +383,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                         value="Publish"> -->
                         <input ng-click="saveData(data, tagsObject.tags)" type="submit" ng-disabled="!data.selected_division[0]" value="{{_('Publish')}}">
                     </span>
-                    
+
 
                     </form>
                 </div>

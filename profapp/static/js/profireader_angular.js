@@ -572,8 +572,8 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             skin: 'lightgray',
             theme: 'modern',
             'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | pr_formats | bullist numlist outdent indent | link image table",
-            //'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table",
-            'valid_elements': "img,table,tbody,td,th,tr,p,h1,h2,h3,h4,h5,h6,div,ul,ol,li,strong,em,span,blockquote,sup,sub,code,pre,a",
+            //'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table"[*],
+            'valid_elements': "img[*],table[*],tbody[*],td[*],th[*],tr[*],p[*],h1[*],h2[*],h3[*],h4[*],h5[*],h6[*],div[*],ul[*],ol[*],li[*],strong[*],em[*],span[*],blockquote[*],sup[*],sub[*],code[*],pre[*],a[*]",
             //init_instance_callback1: function () {
             //    console.log('init_instance_callback', arguments);
             //},
