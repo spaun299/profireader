@@ -414,7 +414,7 @@ def profile_edit_load(json, portal_id):
 
         # tag0_name = curr_portal_bound_tag_port_div_objects[0].tag.name
         # y = list(curr_portal_bound_tag_port_div_objects)         # Operations with portal_bound_tags_dynamic...
-        flash('Portal tags successfully updated')
+        flash('Portal tags were successfully updated')
 
     tags = set(tag_portal_division.tag for tag_portal_division in portal.portal_bound_tags_select)
     tags_dict = {tag.id: tag.name for tag in tags}
