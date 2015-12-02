@@ -26,6 +26,7 @@ from .models.config import Config
 from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
 import json
+import time
 
 
 def req(name, allowed=None, default=None, exception=True):
@@ -264,10 +265,15 @@ def translates(template):
     else:
         user_language = 'uk'
     phrases = g.db.query(TranslateTemplate).filter_by(template=template).all()
+    ret = {}
     if user_language == 'uk':
-        ret = {ph.name: ph.uk for ph in phrases}
+        for ph in phrases:
+            tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
+            ret[ph.name] = {'lang':ph.uk,'time': tim}
     else:
-        ret = {ph.name: ph.en for ph in phrases}
+        for ph in phrases:
+            tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
+            ret[ph.name] = {'lang':ph.en,'time': tim}
     return json.dumps(ret)
 
 

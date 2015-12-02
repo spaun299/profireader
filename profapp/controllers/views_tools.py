@@ -20,7 +20,6 @@ def save_translate(json):
 @tools_bp.route('/update_last_accessed/', methods=['POST'])
 @ok
 def update_last_accessed(json):
-    return {'aa': 'bb'}
     return TranslateTemplate.update_last_accessed(json['template'], json['phrase'])
 
 

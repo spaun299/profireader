@@ -83,25 +83,63 @@ def materials_load(json, company_id):
     page = json.get('page') or 1
     search_text = json.get('search_text')
     params = {}
-    if json.get('status'):
-        params['status'] = json.get('status')
+    params['status'] = json.get('status') if json.get('status') else None
+    params['publ_status'] = json.get('publ_status') if json.get('publ_status') else None
+    if json.get('new_status'):
+        ArticleCompany.update_article(
+        company_id=company_id,
+        article_id=json.get('article_id'),
+        **{'status': json.get('new_status')})
     subquery = ArticleCompany.subquery_company_articles(search_text=search_text,
                                                         company_id=company_id,
                                                         portal_id=json.get('portal_id'),
                                                         **params)
-    articles, pages, current_page = pagination(subquery, page=page, items_per_page=Config.ITEMS_PER_PAGE)
-    portals = ArticlePortalDivision.get_portals_where_company_send_article(company_id)
+    articles, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('pageSize'))
+    #portals = ArticlePortalDivision.get_portals_where_company_send_article(company_id)
+    # statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
+    add_param = {'value': '1','label': '-- all --'}
+    statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
+    portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id), add_param, True)
+    gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
+    grid_data = []
 
-    statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
-
-    return {'materials': [{'article': a.get_client_side_dict(more_fields='portal_article.~'),
+    for article in articles:
+        allowed_statuses = []
+        art_stats = ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(article.status)
+        for s in art_stats:
+            allowed_statuses.append({'id': s,'value':s})
+        port = 'not sent' if len(article.portal_article) == 0 else ''
+        grid_data.append({'Date': article.md_tm,
+                            'Title': article.title,
+                            'Portals': port,
+                            'Publication status': '',
+                            'Material status': article.status,
+                            'id': str(article.id),
+                            'level': True,
+                            'allowed_status': allowed_statuses})
+        if article.portal_article:
+            i = 0
+            for portal in article.portal_article:
+                grid_data.append({'Date': '',
+                                   'Title': '',
+                                   'Portals': portal.portal.name,
+                                   'Publication status': portal.status,
+                                   'Material status': '',
+                                   'id': portal.id,
+                                   'level': False})
+                i += 1
+    total = [f for f in grid_data if f['level'] == True]
+    return {'grid_data': grid_data,
+            'materials': [{'article': a.get_client_side_dict(more_fields='portal_article.~'),
                            'portals_count': len(
                                a.get_client_side_dict(fields='portal_article.~')['portal_article']) + 1}
                           for a in articles],
-            'portals': portals,
+            'portals': portals_g,
             'pages': {'total': pages, 'current_page': current_page,
                       'page_buttons': Config.PAGINATION_BUTTONS},
-            'statuses': statuses
+            'statuses': statuses,
+            'publ_statuses': gr_publ_st,
+            'total': len(total)
             }
 
 
