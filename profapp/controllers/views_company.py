@@ -44,8 +44,7 @@ def show():
 # @check_rights(simple_permissions([]))
 @ok
 def load_companies(json):
-    Search.search({'class': Company, 'fields': ('name', 'about')},
-    {'class': ArticlePortalDivision, 'fields': ('title', 'short')}, search_text='a', items_per_page=2)
+    Search.search({'class': Company, 'fields': ('name', 'about')}, search_text='e', items_per_page=1, order_by='nam', desc_asc='asc', pagination=True)
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     return {'companies': [usr_cmp.employer.get_client_side_dict() for usr_cmp in user_companies
                           if usr_cmp.status == STATUS.ACTIVE()],

@@ -67,6 +67,9 @@ class PortalAlreadyExist(Error):
 class AlreadyJoined(Error):
     pass
 
+class BadTypeProvided(Error):
+    pass
+
 class TooManyCredentialsInDb(Error):
     pass
 
