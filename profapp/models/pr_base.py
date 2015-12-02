@@ -60,20 +60,26 @@ class Search(Base):
 
     @staticmethod
     def search(*args, **kwargs):
-        """ *args: dictionary with following values - class = sqlalchemy table class object,
-                                        optional:    filter: sqlalchemy filter with your own parameters,
-                                        optional:    fields: (tuple) with fields name in table Search.kind,
-                                        optional:    join: subquery wich you want to join without filters.
+        """ *args: dictionary with following values -
+                             class = sqlalchemy table class object,
+                optional:    filter: sqlalchemy filter with your own parameters,
+                optional:    fields: (tuple) with fields name in table Search.kind,
+                optional:    join: subquery wich you want to join without filters.
             For example: {'class': Company,
                           'filter': ~db(User, company_id=1).exists(),
                           'join': Article,
                           'fields': (tuple) with fields name in table Search.kind}
+            default: {'class': class,
+                      'filter': class.id == Search.index,
+                      'join': class,
+                      'fields': all_fields}
             ** kwargs optional
             **kwargs: search_text = string text for search,
                       pagination = boolean, default False
                       , if True this func return n numbers elements which produce in pagination
                       page = integer current page for pagination,
-                      items_per_page = integer items per page for pagination, default Config.ITEMS_PER_PAGE,
+                      items_per_page = integer items per page for pagination
+                      , default Config.ITEMS_PER_PAGE,
                       order_by = string (with field for which you want sort) or integer: text
                       , relevance, md_tm default=relevance (USE CONSTANTS IN SEARCH CLASS)
                       desc_asc = desc or asc default = desc """
