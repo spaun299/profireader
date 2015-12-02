@@ -516,13 +516,12 @@ def publications_load(json, company_id):
         return dict(portal_not_exist=True)
     current_page = json.get('page') or 1
     params = {'search_text': json.get('search_text'), 'portal_id': portal.id}
-    if json.get('status'):
-        params['status'] = json.get('status')
+    params['status'] = json.get('status') if json.get('status') else None
+    params['company_id'] = json.get('company_id') if json.get('company_id') else None
     subquery = ArticlePortalDivision.subquery_portal_articles(**params)
-    # if json.get('company_id'):
-    #     subquery = subquery.filter(db(ArticleCompany,
-    #                                   company_id=json.get('company_id'),
-    #                                   id=ArticlePortalDivision.article_company_id).exists())
+    if json.get('new_status'):
+        db(ArticlePortalDivision, id=json.get('article_id')).update({'status': json.get('new_status')})
+
     articles, pages, current_page = pagination(subquery,
                                                page=current_page)
 
@@ -537,24 +536,19 @@ def publications_load(json, company_id):
             del a['long']
         publications.append(a)
     grid_data = []
-
     for article in publications:
+        allowed_statuses = []
+        art_stats = ARTICLE_STATUS_IN_PORTAL.can_user_change_status_to(article['status'])
+        for s in art_stats:
+            allowed_statuses.append({'id': s,'value':s})
         port = article['company']['name'] if article['company']['name'] else 'Not sent to any company yet'
         grid_data.append({'Date': article['publishing_tm'],
                             'Title': article['title'],
                             'Company': port,
                             'Publication status': article['status'],
                             'id': str(article['id']),
-                            'level': True})
-        # if article.portal_article:
-        #     i = 0
-        #     for portal in article.portal_article:
-        #         grid_data.append({'Date': '',
-        #                            'Title': '',
-        #                            'Portals': portal.portal.name,
-        #                            'Publication status': portal.status,
-        #                            'id': portal.id,
-        #                            'level': False})
+                            'level': True,
+                            'allowed_status': allowed_statuses})
 
     return {'grid_data': grid_data,
             'publications': publications,
@@ -577,23 +571,25 @@ def publication_details(article_id, company_id):
 @login_required
 @ok
 def publication_details_load(json, article_id, company_id):
-    statuses = [status for status in ARTICLE_STATUS_IN_PORTAL.all]
     article = db(ArticlePortalDivision, id=article_id).one().get_client_side_dict()
+    allowed_statuses = ARTICLE_STATUS_IN_PORTAL.can_user_change_status_to(article['status'])
     new_status = ARTICLE_STATUS_IN_PORTAL.published \
         if article['status'] != ARTICLE_STATUS_IN_PORTAL.published \
         else ARTICLE_STATUS_IN_PORTAL.declined
     return {'article': article,
             'user_rights': list(g.user.user_rights_in_company(company_id)),
-            'statuses': statuses,
-            'new_status': new_status}
+            'new_status': new_status,
+            'allowed_statuses': allowed_statuses}
 
 
 @portal_bp.route('/update_article_portal/<string:article_id>', methods=['POST'])
 @login_required
 @ok
 def update_article_portal(json, article_id):
-    new_status = json.get('new_status')
-    db(ArticlePortalDivision, id=article_id).update({'status': new_status.strip()})
+    db(ArticlePortalDivision, id=article_id).update({'status': json.get('new_status')})
+    article = db(ArticlePortalDivision, id=article_id).one().get_client_side_dict()
+    allowed_statuses = ARTICLE_STATUS_IN_PORTAL.can_user_change_status_to(article['status'])
+    json['allowed_statuses'] = allowed_statuses
     json['article']['status'] = json.get('new_status')
     json['new_status'] = ARTICLE_STATUS_IN_PORTAL.published \
         if json.get('new_status') != ARTICLE_STATUS_IN_PORTAL.published \

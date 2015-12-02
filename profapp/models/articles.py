@@ -156,32 +156,18 @@ class ArticlePortalDivision(Base, PRBase):
                                   submitted})
 
     @staticmethod
-    def subquery_company_articles(search_text=None, company_id=None, portal_id=None, **kwargs):
-
-        sub_query = db(ArticleCompany, company_id=company_id, **kwargs)
-        if search_text:
-            sub_query = sub_query.filter(ArticleCompany.title.ilike("%" + search_text + "%"))
-        # if kwargs.get('status'):
-        #     sub_query = sub_query.filter(db(ArticlePortalDivision, article_company_id=ArticleCompany.id,
-        #                                     **kwargs).exists())
-
-        if portal_id:
-            sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id).\
-            join(PortalDivision, PortalDivision.id == ArticlePortalDivision.portal_division_id).\
-            filter(PortalDivision.portal_id == portal_id)
-        sub_query = sub_query.order_by(expression.desc(ArticleCompany.md_tm))
-        return sub_query
-
-    @staticmethod
     def subquery_portal_articles(search_text=None, portal_id=None, **kwargs):
-        # sub_query = g.db.query(ArticlePortalDivision)
-        # sub_query = db(ArticlePortalDivision)
-        sub_query = db(ArticlePortalDivision, **kwargs)
+        sub_query = db(ArticlePortalDivision)
+        if kwargs['status']:
+            sub_query = db(ArticlePortalDivision, status=kwargs['status'])
         sub_query = sub_query. \
             join(ArticlePortalDivision.division). \
             join(PortalDivision.portal). \
             filter(Portal.id == portal_id)
-
+        if kwargs['company_id']:
+            sub_query = sub_query. \
+            join(ArticlePortalDivision.company). \
+            filter(Company.id == kwargs['company_id'])
         if search_text:
             sub_query = sub_query.filter(ArticlePortalDivision.title.ilike("%" + search_text + "%"))
         return sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
@@ -273,14 +259,14 @@ class ArticleCompany(Base, PRBase):
 
     @staticmethod
     def subquery_company_articles(search_text=None, company_id=None, portal_id=None, **kwargs):
-
-        sub_query = db(ArticleCompany, company_id=company_id, **kwargs)
+        sub_query = db(ArticleCompany, company_id=company_id)
+        if kwargs['status']:
+            sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['status'])
+        if kwargs['publ_status']:
+            sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id).\
+            filter(ArticlePortalDivision.status == kwargs['publ_status'])
         if search_text:
             sub_query = sub_query.filter(ArticleCompany.title.ilike("%" + search_text + "%"))
-        # if kwargs.get('status'):
-        #     sub_query = sub_query.filter(db(ArticlePortalDivision, article_company_id=ArticleCompany.id,
-        #                                     **kwargs).exists())
-
         if portal_id:
             sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id).\
             join(PortalDivision, PortalDivision.id == ArticlePortalDivision.portal_division_id).\

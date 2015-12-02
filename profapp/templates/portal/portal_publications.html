@@ -40,7 +40,8 @@
             };
 
             $scope.refresh = function(){
-//                $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
+                $scope.gridOptions1.columnDefs[0].filter.term = '';
+                $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
                 $scope.gridOptions1.columnDefs[3]['filter']['term'] = '1';
                 $scope.company_id = null;
                 $scope.status = null;
@@ -79,6 +80,8 @@
                 console.log($scope.status);
                 data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 data.status = $scope.status ? $scope.status : null;
+                data.new_status = $scope.new_status ? $scope.new_status : null;
+                data.article_id = $scope.article_id ? $scope.article_id : null;
                 data.company_id = ($scope.company_id !== ' ') ? $scope.company_id : null;
                 data.page = paginationOptions.pageNumber;
                 data.pageSize = paginationOptions.pageSize;
@@ -88,11 +91,12 @@
                     $scope.gridOptions1.totalItems = resp.total;
                     $scope.statuses = resp.statuses;
                     $scope.companies = resp.companies;
-//                    $scope.gridOptions1.columnDefs[2]['filter']['selectOptions'] = resp.companies;
+                    $scope.gridOptions1.columnDefs[2]['filter']['selectOptions'] = resp.companies;
                     $scope.gridOptions1.columnDefs[3]['filter']['selectOptions'] = $scope.statuses ;
 //                    $scope.data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 }).finally(function () {
                     $scope.loading = false;
+                    $scope.load_contr = true
                 });
             };
 
@@ -106,15 +110,19 @@
                     useExternalFiltering: true,
                     columnDefs: [
                       { name: 'Title', enableSorting: false,enableCellEdit: false,
-                          width: '35%', cellTemplate: '<div ng-class="link" style="cursor:pointer"><a ng-click="grid.appScope.link(row.entity.id)" ng-bind="grid.appScope.getTitle(row.entity)"></a></div>',
+                          width: '35%', cellTemplate: '<div ng-class="link" style="cursor:pointer;padding-left: 10px"><a ng-click="grid.appScope.link(row.entity.id)" ng-bind="grid.appScope.getTitle(row.entity)"></a></div>',
                           filter: {
                             type: uiGridConstants.filter.INPUT}
                       },
-                      { name: 'Date',enableCellEdit: false },
-                      { name: 'Company', enableSorting: false,enableCellEdit: false,enableFiltering: false
+                      { name: 'Date',enableCellEdit: false, enableFiltering: false },
+                      { name: 'Company', enableSorting: false,enableCellEdit: false,
+                          filter: {
+                            term: '1',
+                            type: uiGridConstants.filter.SELECT},
+                          headerCellClass: $scope.FilteredComp
 
                       },
-                      { name: 'Publication status', enableSorting: false, enableCellEdit: false,
+                      { name: 'Publication status', enableSorting: false, editableCellTemplate: '<div><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',editDropdownValueLabel: 'value',
                           filter: {
                             term: '1',
                             type: uiGridConstants.filter.SELECT},
@@ -131,6 +139,12 @@
                           paginationOptions.sort = sortColumns[0].sort.direction;
                         }
                       });
+                      gridApi.edit.on.afterCellEdit($scope,function(rowEntity, colDef, newValue, oldValue){
+                              if(newValue !== oldValue){
+                                 $scope.new_status = newValue;
+                                 $scope.article_id = rowEntity.id;
+                              }
+                        });
                       gridApi.pagination.on.paginationChanged($scope, function (newPage, pageSize) {
                         paginationOptions.pageNumber = newPage;
                         paginationOptions.pageSize = pageSize;
@@ -147,9 +161,9 @@
     {% include 'company/company_base_angular.html' %}
     {% raw %}
     <div ng-init="sendData('')" ng-controller="article_list">
-        <div ng-if="loading">{{_('Loading...')}}</div>
-        <div ng-if="!loading">
-            <div ng-show="!loading && !areAllEmpty(datas.grid_data)" class="grid" id="grid" ui-grid-pagination ui-grid="gridOptions1" ></div>
+        <div ng-if="!load_contr">{{_('Loading...')}}</div>
+        <div ng-if="load_contr">
+            <div ng-show="!areAllEmpty(datas.grid_data)" class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1" ></div>
             <div ng-show="!loading && areAllEmpty(datas.grid_data)">{{_('No publications')}}</div>
             <button ng-click="refresh()" ng-show="!loading && areAllEmpty(datas.grid_data)" class="btn btn-warning" >Back</button>
         <!--<table style="width:100%">-->

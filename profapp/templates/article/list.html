@@ -48,6 +48,7 @@
             };
 
              $scope.refresh = function(){
+                $scope.gridOptions1.columnDefs[0].filter.term = '';
                 $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
                 $scope.gridOptions1.columnDefs[3]['filter']['term'] = '1';
                 $scope.chosen_company = null;
@@ -55,14 +56,14 @@
                 $scope.sendData('');
             };
 
-            $scope.setFirstPage = function () {
-                $scope.loading = true;
-                $ok($scope.url_search_article, $scope.getData(), function (resp) {
-                    $scope.data = resp;
-                }).finally(function () {
-                    $scope.loading = false;
-                });
-            };
+//            $scope.setFirstPage = function () {
+//                $scope.loading = true;
+//                $ok($scope.url_search_article, $scope.getData(), function (resp) {
+//                    $scope.data = resp;
+//                }).finally(function () {
+//                    $scope.loading = false;
+//                });
+//            };
 
             $scope.getCompanies = [];
             $scope.getCompaniesFunc = function (submitted_viersions) {
@@ -93,30 +94,35 @@
                     $scope.gridOptions1.columnDefs[2]['filter']['selectOptions'] = $scope.data.companies;
                 }).finally(function () {
                     $scope.loading = false;
+                    $scope.load_contr = true
                 });
             };
 
             $scope.FilteredSt = function( row, rowRenderIndex, col, colRenderIndex ) {
-                if(!$scope.index1)
-                    $scope.index1 = 0;
-                if( col.filters[0].term && $scope.index1 !== col.filters[0].term){
-                    $scope.chosen_status = $scope.data.statuses[col.filters[0].term - 1]['label'] === 'All'? undefined: $scope.data.statuses[col.filters[0].term - 1]['label'];
-                    $scope.sendData('');
-                    $scope.index1 = col.filters[0].term;
-                }else if(!col.filters[0].term){
-                    $scope.refresh()
+                if(!$scope.loading) {
+                    if (!$scope.index1)
+                        $scope.index1 = 0;
+                    if (col.filters[0].term && $scope.index1 !== col.filters[0].term) {
+                        $scope.chosen_status = $scope.data.statuses[col.filters[0].term - 1]['label'] === 'All' ? undefined : $scope.data.statuses[col.filters[0].term - 1]['label'];
+                        $scope.sendData('');
+                        $scope.index1 = col.filters[0].term;
+                    } else if (!col.filters[0].term) {
+                        $scope.refresh()
+                    }
                 }
               };
 
             $scope.FilteredCom = function( row, rowRenderIndex, col, colRenderIndex ) {
-                if(!$scope.index)
-                    $scope.index = 0;
-                if( col.filters[0].term && $scope.index !== col.filters[0].term){
-                    $scope.chosen_company = $scope.data.companies[col.filters[0].term - 1]['label'] === 'All'? undefined: $scope.data.companies[col.filters[0].term - 1]['id'];
-                    $scope.sendData('');
-                    $scope.index = col.filters[0].term;
-                }else if(!col.filters[0].term){
-                    $scope.refresh()
+                if(!$scope.loading) {
+                    if (!$scope.index)
+                        $scope.index = 0;
+                    if (col.filters[0].term && $scope.index !== col.filters[0].term) {
+                        $scope.chosen_company = $scope.data.companies[col.filters[0].term - 1]['label'] === 'All' ? undefined : $scope.data.companies[col.filters[0].term - 1]['id'];
+                        $scope.sendData('');
+                        $scope.index = col.filters[0].term;
+                    } else if (!col.filters[0].term) {
+                        $scope.refresh()
+                    }
                 }
               };
 
@@ -138,11 +144,11 @@
                     useExternalFiltering: true,
                     columnDefs: [
                       { name: 'Title', enableSorting: false,enableCellEdit: false,
-                          width: '35%', cellTemplate: '<div ng-class="link" style="cursor:pointer"><a ng-click="grid.appScope.link(row.entity.id)" ng-bind="grid.appScope.getTitle(row.entity)"></a></div>',
+                          width: '35%', cellTemplate: '<div ng-class="link" style="cursor:pointer;padding-left: 10px"><a ng-click="grid.appScope.link(row.entity.id)" ng-bind="grid.appScope.getTitle(row.entity)"></a></div>',
                           filter: {
                             type: uiGridConstants.filter.INPUT}
                       },
-                      { name: 'Date',enableCellEdit: false },
+                      { name: 'Date',enableSorting: false,enableCellEdit: false, enableFiltering: false },
                       { name: 'Campanies', enableSorting: false,enableCellEdit: false,
                           filter: {
                             term: '1',
@@ -186,10 +192,10 @@
         <h1 class="nice-title" style="margin-left: 125px">{{ _('Create article') }}<span></span></h1>
         <a class="h1-btn icon icon-add" href="{{ url_create_article }}" title="{{ _('CREATE NEW ARTICLE') }}"><img src="../../static/front/img/ico/articles.png" /></a>
 
-        <div ng-if="loading">{{_('Loading...')}}</div>
+        <div ng-if="!load_contr">{{_('Loading...')}}</div>
 
-        <div ng-if="!loading">
-            <div ng-show="!loading && !areAllEmpty(data.articles)" class="grid_list" id="grid" ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
+        <div ng-if="load_contr">
+            <div ng-show="!areAllEmpty(data.articles)" class="grid" id="grid1" ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
             <div ng-show="!loading && areAllEmpty(data.articles)">{{_('No publications')}}</div>
             <button ng-click="refresh()" ng-show="!loading && areAllEmpty(data.articles)" class="btn btn-warning" >Back</button>
             <!--<table style="width:100%">-->

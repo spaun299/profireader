@@ -94,9 +94,7 @@
                 <h2>{{_('Current status is')}} <span style="color: #1295bf">{{ data.article.status }}</span></h2>
 
                 <h2>{{_('Change status to')}} </h2>
-                <select ng-model="data.new_status">
-                    <option ng-repeat="status in data.statuses" ng-if="status!=data.article.status">{{ status }}
-                    </option>
+                <select ng-model="data.new_status" ng-options="status for status in data.allowed_statuses">
                 </select>
                 <input type="submit" ng-click="changeStatus()" value="{{_('change')}}">
 
@@ -104,8 +102,6 @@
                       ang-onsuccess="afterSave"
                       ang-onsubmit="getData"
                       ang-action="url_change_status({article_id:data.article.id})">
-
-
                 </form>
 
 

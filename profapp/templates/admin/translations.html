@@ -34,13 +34,9 @@
             };
 
             $scope.storeFile = function( gridRow, gridCol, files ) {
-                // ignore all but the first file, it can only select one anyway
-                // set the filename into this column
                 gridRow.entity.filename = files[0].name;
-                // read the file and set it into a hidden column, which we may do stuff with later
                 var setFile = function(fileContent){
                   gridRow.entity.file = fileContent.currentTarget.result;
-                  // put it on scope so we can display it - you'd probably do something else with it
                   $scope.lastFile = fileContent.currentTarget.result;
                   $scope.$apply();
                   $scope.saveTranslation(files[0].id, files[0].lang, $scope.lastFile, files[0])
@@ -272,7 +268,7 @@
         }
     </style>
     <div ng-init="sendData('')" ng-controller="translation_list">
-
+        <div ng-if="loading">Loading...</div>
         <form class="navbar-form navbar-right" role="search" ng-if="!areAllEmpty(translations)">
             <div class="form-group">
             <input class="form-control" ng-disabled="loading"  type="text"
@@ -283,6 +279,7 @@
 
         </form>
         <div style="clear: right"></div>
+
         <div ng-if="!areAllEmpty(translations)">
             <div class="grid" id="grid1" ui-grid-pagination ui-grid-selection ui-grid-edit  ui-grid="gridOptions1" ></div>
             </div>

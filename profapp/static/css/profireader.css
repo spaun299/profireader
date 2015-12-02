@@ -27,7 +27,7 @@ We have something similar in bootstrap? Can correct this class to look nicer?
 */
 #grid1 {
   width: inherit;
-  height: 550px;
+  height: 500px;
 }
 
 .form-control{
