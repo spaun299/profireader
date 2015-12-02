@@ -178,59 +178,71 @@
     </script>
     {% from 'macros.html' import scripts %}
     {{ scripts(names=['croper']) }}
-    {% raw %}
 
-    <div ng-controller="article_edit">
+{% raw %}
 
 
-        <h1 ng-show="!data.article.id">{{ _('Create new article') }}<span></span></h1>
+<div ng-init="init()" ng-controller="article_edit">
+    <h1 class="nice-title">Create new article<span></span></h1>
+    <h1 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company) }}<span></span></h1>
+    <h1 ng-show="data.id && !company">{{ _('update your version of article') }}<span></span></h1>
+    <h2 ng-show="!data.id">{{ _('Create new article') }}</h2>
 
-        <h1 ng-show="data.article.id && data.article.company">{{ _('update version of article for company
-            `%(data.article.company.name)s`')
-            }}<span></span></h1>
+    <h2 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company)
+        }}</h2>
 
-        <h1 ng-show="data.article.id && !company">{{ _('update your version of article') }}<span></span></h1>
 
-        <table af af-after-load="afterLoad" af-amid-save="amidSave" af-before-save="getData"
-               af-beforeValidate="getData" af-watch="data.article" ng-model="data">
-            <tr>
-                <td style="width: 60%">
-                    <!-- TODO: OK by OZ:   this block form should share same classes with layout to look MAXIMUM like in portal
-                            maybe layout selector is apporpriate here-->
-                    {{ _('Article title') }} <span af-validation-answer="data_validation:title"></span>
-                    <input style="width: 100%" type="text" ng-model="data.article.title">
-                    {{ _('Short Description') }} <span af-validation-answer="data_validation:short"></span>
-                    <textarea style="width: 100%" placeholder="short" ng-model="data.article.short"></textarea>
-                    {{ _('KeyWords') }} <span af-validation-answer="data_validation:keywords"></span>
-                    <input style="width: 100%" ng-model="data.article.keywords"/><br/>
-                </td>
-                <td style="width: 40%">
-                    <div ng-include="'image_cropper'"></div>
-                    <input type="hidden" ng-model="data.image.image_file_id">
-                </td>
-            </tr>
-            <tr>
-                <td>
+    <h2 ng-show="data.id && !company">{{ _('update your version of article') }}</h2>
 
-                    {{ _('Full text') }}<br/>
+    <div af aaaf-after-load="aaarticleAfterLoad" af-before-save="getData" af-beforeValidate="getData" ng-model="data">
+
+            <div class="update_col1">
+
+                <!-- TODO: OK by OZ:   this block form should share same classes with layout to look MAXIMUM like in portal
+                        maybe layout selector is apporpriate here-->
+
+                <input type="hidden" ang-model="data.id"/>
+
+                {{ _('Article title') }} <span af-validation-answer="data_validation:title"></span>
+                <input style="width: 100%" type="text" ng-model="data.title">
+                {{ _('Short Description') }} <span af-validation-answer="data_validation:short"></span>
+                <textarea style="width: 100%" placeholder="short" ng-model="data.short"></textarea>
+                {{ _('KeyWords') }} <span af-validation-answer="data_validation:keywords"></span>
+                <input style="width: 100%" ng-model="data.keywords"/>
+
+            </div>
+
+            <div class="update_col1">
+                {{ _('Select picture') }}<br/>
+                <div ng-include="'image_cropper'"></div>
+                <input type="hidden" ng-model="data.image_file_id">
+            </div>
+
+            <div class="update_col1">
+
+                {{ _('Full text') }}<br/>
             <textarea ui-tinymce="tinymceImageOptions" style="width: 400px;"
-                      ng-model="data.article.long"></textarea>
+                      ng-model="data.long"></textarea>
 
-                </td>
-                <td style="position: relative"><input style="position: absolute; bottom: 0px; right: 0px;"
-                                                      ng-disabled="!$af.isActionAllowed(data, 'save')"
-                                                      ng-click="$af.save(data)"
-                                                      type="submit"
-                                                      value="{{ data.article.id ? _('save') : _('create') }}"/>
-                </td>
-            </tr>
-        </table>
+            </div>
+            <div style="position: relative; margin-top: 10px; clear: both" ><input class="create_button"
+                                                  ng-disabled="!$af.isActionAllowed(data, 'save')"
+                                                  ng-click="$af.save(data)"
+                                                  type="submit"
+                                                  value="{{ data.id ? _('save') : _('create') }}"/>
+            </div>
 
     </div>
 
+</div>
 
-    {% endraw %}
 
-    </div>
+{% endraw %}
 
-{% endblock portal_content %}
+</div>
+
+<script src="/static/image_editor/dist/cropper.js"></script>
+<script src="/static/image_editor/demo/js/main.js"></script>
+{#TODO: OZ by OZ move this code to one file#}
+
+{% endblock %}
