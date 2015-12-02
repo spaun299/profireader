@@ -1,6 +1,8 @@
 <script>
     module.controller('UserLoginController', ['$scope', '$modal','$ok', function ($scope, $modal, $ok) {
         $scope.user = {{ g.user_dict|tojson|safe }};
+        login_signup = '{{ login_signup }}';  // login_signup = 'login' or 'signup' or None
+        $scope.login_signup = (login_signup === 'signup') ? 'signup':'login';
         $scope.$$translate = {{ translates('UserLoginController')|safe }};
         $scope.open_filemanager = function () {
             window.location.href = '/filemanager/';
@@ -24,7 +26,7 @@
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
                         data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                    <span class="sr-only">{{_('Toggle navigation')}}</span>
+                    <span class="sr-only">{{ '{{' }}_('Toggle navigation'){{ '}}' }}</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
@@ -38,8 +40,8 @@
                 <ul class="nav navbar-nav navbar-right">
                     <li ng-cloak ng-show="!user.id">
                         <ul class="user-auth">
-                            <li><a href="{{ url_for('auth.login') }}">{{_('Log In')}}</a></li>
-                            <li><a href="{{ url_for('auth.signup') }}">{{_('Sign Up')}}</a></li>
+                            <li><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=login' }}">{{ '{{' }}_('Log In'){{ '}}' }}</a></li>
+                            <li><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=signup' }}">{{ '{{' }}_('Sign Up'){{ '}}' }}</a></li>
                         </ul>
                     </li>
                     <li class="dropdown" ng-cloak ng-show="user.id">
@@ -47,19 +49,20 @@
                             <li class="dropdown">
                                 <a href="#" data-toggle="dropdown">
                                     {#                        <img src="{{ current_user.profireader_small_avatar_url }}" style="width:18px;border:0">#}
+{#TODO: AA by OZ: in next line http://bla-bla/None (404 error) if no user loged in #}
                                     <img class="person-small-cover" src="{{ current_user.avatar() }}">
                                     {{ '{{' }} user.name {{ '}}' }}
                                     <b class="caret"></b>
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="{{ flask_endpoint_to_angular('user.profile', user_id='user.id') }}">{{_('My Profile')}}</a></li>
-{#                                    <li><a href="{{ url_for('auth.change_password') }}">{{_('Change Password')}}</a></li>#}
-{#                                    <li><a href="{{ url_for('auth.change_email_request') }}">{{_('Change Email')}}</a></li>#}
-                                    <li><a href="{{ url_for('company.show') }}">{{_('Company')}}</a></li>
-                                    <li><a href="{{ url_for('article.show_mine') }}">{{_('My articles')}}</a>
+                                    <li><a href="{{ flask_endpoint_to_angular('user.profile', user_id='user.id') }}">{{ '{{' }}_('My Profile'){{ '}}' }}</a></li>
+{#                                    <li><a href="{{ url_for('auth.change_password') }}">{{ '{{' }}_('Change Password'){{ '}}' }}</a></li>#}
+{#                                    <li><a href="{{ url_for('auth.change_email_request') }}">{{ '{{' }}_('Change Email'){{ '}}' }}</a></li>#}
+                                    <li><a href="{{ url_for('company.show') }}">{{ '{{' }}_('Company'){{ '}}' }}</a></li>
+                                    <li><a href="{{ url_for('article.show_mine') }}">{{ '{{' }}_('My articles'){{ '}}' }}</a>
                                     </li>
-                                    <li><a href="{{ url_for('auth.logout') }}">{{_('Log Out')}}</a></li>
-{#                                    <li><a href="#" ng-click="open_filemanager()">{{_('File manager')}}</a>#}
+                                    <li><a href="{{ url_for('auth.logout') }}">{{ '{{' }}_('Log Out'){{ '}}' }}</a></li>
+{#                                    <li><a href="#" ng-click="open_filemanager()">{{ '{{' }}_('File manager'){{ '}}' }}</a>#}
 {#                                    </li>#}
                                 </ul>
                             </li>
@@ -69,12 +72,12 @@
 
                 </ul>
                 <ul class="top-menu">
-                    <li><a class="messages_btn" href="#" title="All Messages"><span class="tooltip">{{_('All Messages')}}</span></a></li>
-                    <li><a class="company_btn" href="{{ url_for('company.show') }}" title="Company"><span class="tooltip">{{_('Company')}}</span></a>
+                    <li><a class="messages_btn" href="#" title="{{_('All Messages')}}"><span class="tooltip">{{ '{{' }}_('All Messages'){{ '}}' }}</span></a></li>
+                    <li><a class="company_btn" href="{{ url_for('company.show') }}" title="{{_('Company')}}"><span class="tooltip">{{ '{{' }}_('Company'){{ '}}' }}</span></a>
                     </li>
-                    <li><a class="article_btn" href="{{ url_for('article.show_mine') }}" title="My articles"><span class="tooltip">{{_('My articles')}}</span></a>
+                    <li><a class="article_btn" href="{{ url_for('article.show_mine') }}" title="{{_('My articles')}}"><span class="tooltip">{{ '{{' }}_('My articles'){{ '}}' }}</span></a>
                     </li>
-                    <li><a class="filemanager_btn" href="#" ng-click="open_filemanager()" title="File manager"><span class="tooltip">{{_('File manager')}}</span></a>
+                    <li><a class="filemanager_btn" href="#" ng-click="open_filemanager()" title="{{_('File manager')}}"><span class="tooltip">{{ '{{' }}_('File manager'){{ '}}' }}</span></a>
                     </li>
 
                 </ul>

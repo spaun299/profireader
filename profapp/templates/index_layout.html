@@ -20,6 +20,7 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     #}
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/profireader_responsive.css">
     <link rel="stylesheet" href="/static/css/profireader.css">
     <link rel="stylesheet" href="/static/css/oles.css">
     <link rel="stylesheet" href="/static/css/icons.css">
@@ -42,7 +43,7 @@
     <script src="{{ url_for('static', filename = 'angular/angular.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-bootstrap/ui-bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-bootstrap/ui-bootstrap-tpls.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'tinymce/tinymce.jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'tinymce.pr/tinymce.jquery.pr.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ui-tinymce/tinymce.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ajax-validator/ngAjaxValidator.js') }}"></script>
 
@@ -77,8 +78,13 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 
     <!---GRID---->
-    <!--<link rel="styleSheet" href="release/ui-grid.min.css"/>-->
-    <!--<script src="/release/ui-grid.min.js"></script>-->
+    <link rel="styleSheet" href="/static/css/ui-grid.css"/>
+    <script src="/static/js/ui-grid.min.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/csv.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/pdfmake.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/vfs_fonts.js"></script>
+     <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-touch.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-animate.js"></script>
 
     <style>
         ul.dropdown-menu li a strong {
@@ -90,9 +96,8 @@
         {% for message in get_flashed_messages() %}
             add_message('{{ message }}', 'warning');
         {% endfor %}
+
     </script>
-
-
 
 {%- endblock head %}
 

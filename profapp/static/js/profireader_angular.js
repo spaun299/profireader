@@ -379,159 +379,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 s.getTemp(iAttrs.ngCity);
             }
         }
-    }])
-//.directive('ngAjaxFormOld', ['$http', '$compile', '$ok', function ($http, $compile, $ok) {
-//    return {
-//        restrict: 'A',
-//        scope: {
-//            ngAfter: '&',
-//            ngBefore: '&',
-//            ngData: '@',
-//            ngState: '@'
-//        },
-//        link: function (scope, iElement, iAttrs, ngModelCtrl) {
-//
-//            var parentscope = scope.$parent.$parent;
-//
-//            var defaultparameters = {
-//
-//                ngData: 'data',
-//
-//                ngState: 'state',
-//
-//
-//                ngBefore: function (data, validation, httpconfig, defaultfunc) {
-//                    //httpconfig['url'] = http://someurl
-//                    if (data) {
-//                        if (typeof parentscope[parameters['ngState']] === 'string') {
-//                            return false;
-//                        }
-//                        parentscope[parameters['ngState']] = validation ? 'validating' : 'sending';
-//                    }
-//                    else {
-//                        return false;
-//                    }
-//                },
-//
-//                ngAfter: function (response, validation, httpresp, defaultfunc) {
-//                    if (!response) {
-//                        return false;
-//                    }
-//                    if (!validation && response && httpresp && httpresp['headers']('Location')) {
-//                        window.location.href = httpresp['headers']('Location');
-//                    }
-//                    return response;
-//                }
-//
-//            };
-//
-//
-//            var enableSubmit = function (enablesubmit, enableinput) {
-//                if (enablesubmit) {
-//                    $('*[ng-model]', $(iElement)).prop('disabled', false);
-//                }
-//                else {
-//                    $('*[ng-model]', $(iElement)).prop('disabled', true);
-//                }
-//            }
-//
-//            scope.$parent.$parent.__validation = false;
-//            scope.$parent.$parent.__validated = false;
-//
-//            var sendValidation = _.debounce(function () {
-//                if (scope.$parent.$parent.__validation) {
-//                    return false;
-//                }
-//                var dataToSend = scope['ngOnsubmit']()();
-//                if (dataToSend) {
-//                    scope.$parent.$parent.__validation = dataToSend;
-//                    $ok(scope['ngAction'], $.extend({__validation: true}, dataToSend), function (resp) {
-//                        scope.$parent.$parent.__validated = resp;
-//                    }, function (resp) {
-//                        scope.$parent.$parent.__validated = false;
-//                    }).finally(function () {
-//                        scope.$parent.$parent.__validation = false;
-//                    });
-//                }
-//            }, 500);
-//
-//            if (scope['ngWatch']) {
-//                scope, scope.$parent.$parent.$watch(scope['ngWatch'], sendValidation, true);
-//            }
-//
-//
-//            var parameters = $.extend(defaultparameters, {
-//                ngData: scope['ngData'],
-//                ngBefore: scope['ngBefore'],
-//                ngAfter: scope['ngAfter'],
-//                ngState: scope['ngState']
-//            });
-//
-//            var sendfunction = function (validate) {
-//                var old_state = parentscope[parameters['ngState']];
-//                var default_data = parentscope[parameters['ngData']];
-//                var default_config = {url: iAttrs['action'] ? iAttrs['action'] : window.location.href};
-//                if (validate) {
-//                    default_config['headers'] = {validation: 'true'};
-//                }
-//                var dataToSend = parameters['ngBefore'](default_data, validate, default_config, defaultparameters['ngBefore']);
-//                console.log(dataToSend);
-//
-//                if (!dataToSend) {
-//                    return false;
-//                }
-//                var url = default_config['url'](dataToSend, true, defaultparameters['ngUrl']);
-//                $ok(url, dataToSend,
-//                    function (resp, errorcode, httpresp) {
-//                        var ret = parameters['ngAfter']()(resp, true, defaultparameters['ngAfter'], errorcode, httpresp);
-//                        parentscope[parameters['ngState']] = ret ? ret : old_state;
-//                    },
-//                    function (resp, errorcode, httpresp) {
-//                        var ret = parameters['ngAfter']()(null, true, defaultparameters['ngAfter'], errorcode, httpresp);
-//                        parentscope[parameters['ngState']] = ret ? ret : old_state;
-//                    });
-//            }
-//
-//
-//            if (parameters['ngData']) {
-//                parentscope.$watch(parameters['ngData'], _.debounce(function () {
-//                    sendfunction(true);
-//                }, 500), true);
-//            }
-//
-//            if (scope['ngOnsubmit']) {
-//                $(iElement).on('submit',
-//                    function () {
-//                        if (scope.$parent.$parent.__validation) {
-//                            return false;
-//                        }
-//                        enableSubmit(false);
-//                        scope.$apply(function () {
-//                            var dataToSend = scope['ngOnsubmit']()();
-//                            console.log(dataToSend);
-//                            if (dataToSend) {
-//                                $ok(scope['ngAction'], dataToSend, function (resp) {
-//                                    if (scope.ngOnsuccess) {
-//                                        scope.ngOnsuccess()(resp)
-//                                    }
-//                                }).finally(function () {
-//                                    enableSubmit(true);
-//                                });
-//                            }
-//                        });
-//                        return false;
-//                    });
-//            }
-//
-//            $(iElement).on('submit',
-//                function () {
-//                    sendfunction(false);
-//                    return false;
-//                });
-//        }
-//    }
-//}
-//])
+    }]);
 
 
 areAllEmpty = function () {
@@ -553,7 +401,7 @@ areAllEmpty = function () {
         }
     });
     return are;
-}
+};
 
 function file_choose(selectedfile) {
     var args = top.tinymce.activeEditor.windowManager.getParams();
@@ -565,7 +413,7 @@ function file_choose(selectedfile) {
 
 // 'ui.select' uses "/static/js/select.js" included in index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
-module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable']);
+module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid','ui.grid.pagination','ui.grid.edit','ngAnimate', 'ngTouch', 'ui.grid.selection','ui.grid.grouping','ui.grid.treeView']);
 
 module.config(function ($provide) {
     $provide.decorator('$controller', function ($delegate) {
@@ -588,11 +436,11 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
             $scope.$apply(function () {
                 $modalInstance.dismiss('cancel')
             });
-        }
+        };
 
         $scope.close = function () {
             $modalInstance.dismiss('cancel');
-        }
+        };
 
         $scope.src = '/filemanager/';
         var params = {};
@@ -609,7 +457,21 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
         $scope.src = $scope.src + '?' + $.param(params);
     }]);
 
-module.run(function ($rootScope, $ok, $sce) {
+module.directive('ngEnter', function() {
+        return function(scope, element, attrs) {
+            element.bind("keydown keypress", function(event) {
+                if(event.which === 13) {
+                    scope.$apply(function(){
+                        scope.$eval(attrs.ngEnter, {'event': event});
+                    });
+
+                    event.preventDefault();
+                }
+            });
+        };
+    });
+
+module.run(function ($rootScope, $ok, $sce, $modal) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
     angular.extend($rootScope, {
         fileUrl: function (file_id, down, if_no_file) {
@@ -631,11 +493,14 @@ module.run(function ($rootScope, $ok, $sce) {
             if (!scope.$$translate_accessed) {
                 scope.$$translate_accessed = {};
             }
+            new Date;
+            var t = Date.now()/1000;
             //TODO OZ by OZ hasOwnProperty
             var CtrlName = this.controllerName ? this.controllerName : 'None';
             if (scope.$$translate[phrase] === undefined) {
                 scope.$$translate[phrase] = phrase;
-                $ok('/articles/save_translate/', {
+                scope.$$translate[phrase]['lang'] = phrase;
+                $ok('/tools/save_translate/', {
                     template: CtrlName,
                     phrase: phrase,
                     url: window.location.href
@@ -648,14 +513,15 @@ module.run(function ($rootScope, $ok, $sce) {
                     //}
 
                 });
-                //scope.$$translate[phrase] = phrase;
-            } else if (scope.$$translate_accessed[phrase] === undefined) {
-                scope.$$translate_accessed[phrase] = true;
-                $ok('/articles/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
-
-                });
+                scope.$$translate[phrase] = phrase;
             }
-            phrase = scope.$$translate[phrase];
+            else if(scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400){
+                scope.$$translate_accessed[phrase] = true;
+                //$ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {});
+            }
+            if (scope.$$translate[phrase])
+                phrase = scope.$$translate[phrase]['lang'];
+
             //alert(scope.$$translate);
 
 
@@ -693,26 +559,38 @@ module.run(function ($rootScope, $ok, $sce) {
             });
         },
         areAllEmpty: areAllEmpty,
+        chooseImageinFileManager: function (do_on_action, default_action, callfor) {
+            var scope = this;
+            var callfor_ = callfor ? callfor : 'file_browse_image';
+            var default_action_ = default_action ? default_action : 'file_browse_image';
+            scope.filemanagerModal = $modal.open({
+                templateUrl: 'filemanager.html',
+                controller: 'filemanagerCtrl',
+                size: 'filemanager-halfscreen',
+                resolve: {
+                    file_manager_called_for: function () {
+                        return callfor_
+                    },
+                    file_manager_on_action: function () {
+                        return {
+                            choose: do_on_action
+                        }
+                    },
+                    file_manager_default_action: function () {
+                        return default_action_
+                    }
+                }
+            });
+        },
         tinymceImageOptions: {
             inline: false,
-            plugins: 'advlist autolink link image lists charmap print preview paste',
+            menu: [],
+            plugins: 'advlist autolink link image charmap print paste table',
             skin: 'lightgray',
             theme: 'modern',
-            setup: function (editor) {
-                console.log('setup', editor);
-                editor.on('PreInit111', function (event) {
-                    editor.parser.addNodeFilter('a', function (nodes, name) {
-                        console.log(nodes);
-                        $.each(nodes, function (i, v) {
-                            v.unwrap();
-                        });
-                    });
-                    //editor.parser.addAttributeFilter('src,href', function (nodes, name) {
-                    //    console.log('addAttributeFilter', nodes, name);
-                    //    debugger;
-                    //    });
-                });
-            },
+            'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | pr_formats | bullist numlist outdent indent | link image table",
+            //'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table"[*],
+            'valid_elements': "img[*],table[*],tbody[*],td[*],th[*],tr[*],p[*],h1[*],h2[*],h3[*],h4[*],h5[*],h6[*],div[*],ul[*],ol[*],li[*],strong[*],em[*],span[*],blockquote[*],sup[*],sub[*],code[*],pre[*],a[*]",
             //init_instance_callback1: function () {
             //    console.log('init_instance_callback', arguments);
             //},
@@ -739,17 +617,8 @@ module.run(function ($rootScope, $ok, $sce) {
             },
             //valid_elements: Config['article_html_valid_elements'],
             //valid_elements: 'a[class],img[class|width|height],p[class],table[class|width|height],th[class|width|height],tr[class],td[class|width|height],span[class],div[class],ul[class],ol[class],li[class]',
-            content_css: "/static/front/bird/css/article.css",
-            aastyle_formats: [
-                {title: 'HEAD1', block: 'div', classes: 'h1'},
-                {title: 'HEAD2', block: 'div', classes: 'h2'},
-                {title: 'HEAD3', block: 'div', classes: 'h3'},
-                {title: 'BIG', inline: 'span', classes: 'big'},
-                {title: 'BIGGER', inline: 'span', classes: 'bigger'},
-                {title: 'NORMAL', inline: 'span', classes: 'small'},
-                {title: 'SMALLER', inline: 'span', classes: 'smaller'},
-                {title: 'SMALL', inline: 'span', classes: 'small'}
-            ]
+            content_css: ["/static/css/article.css", "/static/front/bird/css/article.css"],
+
 
 
             //paste_auto_cleanup_on_paste : true,
@@ -810,11 +679,11 @@ function cleanup_html(html) {
         });
     });
 
-    var tags = html.split(/<[^>]*>/)
+    var tags = html.split(/<[^>]*>/);
 
     $.each(tags, function (tagindex, tag) {
         console.log(tagindex, tag);
-    })
+    });
 
     return html;
 }
@@ -876,11 +745,109 @@ function add_message(amessage, atype, atime) {
     return angularControllerFunction('message-controller', 'add_message')(amessage, atype, atime);
 }
 
-function randomHash()
-{
+function randomHash() {
     var text = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for( var i=0; i < 32; i++ )
+    for (var i = 0; i < 32; i++)
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     return text;
+}
+
+function buildAllowedTagsAndAttributes() {
+
+    var class_prefix_general = 'pr_article_';
+    var class_prefix_theme = 'pr_article_birdy';
+
+    var general_classes = {
+        'text_size': 'big,bigger,biggest,smallest,small,smaller,normal',
+        'text_decoration': 'underline,normal',
+        'text_style': 'b,i',
+        'text_script': 'sup,sub',
+        'float': 'left,right'
+    };
+
+    var theme_classes = {
+        'text_color': 'red,gray,normal',
+        'background_color': 'gray,normal'
+    };
+
+    var text_classes = ['text_size', 'text_decoration', 'text_style', 'text_script', 'text_color', 'background_color'];
+    var layout_classes = ['float'];
+    var wh_styles = {'width': '^[^d]*(px|em)$', 'height': '^[^d]*(px|em)$'};
+
+    var allowed_tags_skeleton = [
+        {
+            tags: 'div,table,columns',
+            classes: [].concat(text_classes, layout_classes)
+        },
+        {
+            tags: 'div,table',
+            styles: wh_styles
+        },
+        {
+            tags: 'img',
+            styles: wh_styles,
+            classes: layout_classes
+        },
+        {
+            tags: 'columns',
+            attributes: {'number': '.*'}
+        }
+    ];
+
+    var allowed_tags = {};
+    $.each(allowed_tags_skeleton, function (del_ind, tags_and_properties) {
+
+        var tags = tags_and_properties['tags'].split(',');
+
+        var styles = tags_and_properties['styles'] ? tags_and_properties['styles'] : {};
+        var attributes = tags_and_properties['attributes'] ? tags_and_properties['attributes'] : {};
+        var classes = tags_and_properties['classes'] ? tags_and_properties['classes'] : {};
+
+
+        $.each(tags, function (del_ind2, tag) {
+
+            if (!allowed_tags[tag]) allowed_tags[tag] = {'classes': [], 'attributes': {}, 'styles': {}};
+
+            $.each(styles, function (style_name, allowed_style_regexp) {
+                if (allowed_tags[tag]['styles'][style_name]) {
+                    console.error('error. regexp for style `' + style_name + '` for tag `' + tag + '` already defined as `' + allowed_tags[tag]['styles'][style_name] + '` ignored');
+                }
+                else {
+                    allowed_tags[tag]['styles'][style_name] = allowed_style_regexp;
+                }
+            });
+
+            $.each(attributes, function (attr_name, allowed_attr_regexp) {
+                if (allowed_tags[tag]['attributes'][attr_name]) {
+                    console.error('error. regexp for attribute `' + attr_name + '` for tag `' + tag + '` already defined as `' + allowed_tags[tag]['attributes'][attr_name] + '` ignored');
+                }
+                else {
+                    allowed_tags[tag]['attributes'][attr_name] = allowed_attr_regexp;
+                }
+            });
+
+            $.each(classes, function (del_ind3, classes_group_index) {
+                if (theme_classes[classes_group_index]) {
+                    class_sufixes = theme_classes[classes_group_index];
+                }
+                else if (general_classes[classes_group_index]) {
+                    class_sufixes = general_classes[classes_group_index];
+                }
+
+                if (!class_sufixes) {
+                    console.error('error. unknown class group index `' + classes_group_index + '` for tag `' + tag + '`. ignored');
+                }
+                else {
+                    if (!allowed_tags[tag]['classes'][classes_group_index]) allowed_tags[tag]['classes'][classes_group_index] = [];
+                    allowed_tags[tag]['classes'][classes_group_index] = [].concat(allowed_tags[tag]['classes'][classes_group_index],
+                        _.map(class_sufixes.split(','), function (classsufix) {
+                            return 'pr_article_' + classes_group_index + '_' + classsufix;
+                        }));
+                }
+            });
+        });
+    });
+
+    return allowed_tags;
 }

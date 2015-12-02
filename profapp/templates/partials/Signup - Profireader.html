@@ -2,14 +2,13 @@
 
 <div class="simple-register">
     <form style="background: transparent; border: none;" action="{{ url_for('auth.signup') }}" method="POST"/>
-    {{ form.email(placeholder='yourname@email.com', size="30", maxlength="100", type="email") }} <br/>
-    {{ form.displayname(placeholder="{{_('Name (your public display name)')}}", size="30", maxlength="100", type="text") }}
-    <br/>
-    {{ form.password(placeholder="{{_('Password')}}", value="", type="password") }} <br/>
-    {{ form.password2(placeholder="{{_('Confirm password')}}", value="", type="password") }} <br/>
-    {{ form.submit(type="submit", value="{{_('Sign Up')}}") }}<br/>
+    {{ signup_form.email(placeholder='yourname@email.com', size="30", maxlength="100", type="email") }} <br/>
+    {{ signup_form.displayname(placeholder="{{_('Name (your public display name)')}}", size="30", maxlength="100", type="text") }}<br/>
+    {{ signup_form.password(placeholder="{{_('Password')}}", value="", type="password") }} <br/>
+    {{ signup_form.password2(placeholder="{{_('Confirm password')}}", value="", type="password") }} <br/>
+    {{ signup_form.submit_register(type="submit", value="{{_('Sign Up')}}") }} {# <br/>#}
     <!-- <input name="submit" type="submit" value="Sign Up" /> <br/> -->
-    {{ form.csrf_token }}
+    {{ signup_form.csrf_token }}
     </form>
 </div>
 

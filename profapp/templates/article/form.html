@@ -1,203 +1,221 @@
-{#TODO: OZ by OZ move this code to one file#}
-<link href="/static/image_editor/dist/cropper.css" rel="stylesheet">
-<link href="/static/image_editor/demo/css/main.css" rel="stylesheet">
-<script>
+{% extends "index_lazy_layout.html" %}
 
-    module.controller('article_edit', ['$scope', '$modal', '$af', '$ok', function ($scope, $modal, $af, $ok) {
-        $scope.$af = $af;
-        $scope.details_article = {{ raw_url_for('article.details')|safe }};
-        {% if article_company_id %}
-            $scope.save_article = '{{ url_for('article.save', article_company_id = article_company_id)|safe }}';
-        {% else %}
-            $scope.save_article = '{{ url_for('article.load_form_create')|safe }}';
-        {% endif %}
+{% block title %}{{ _('Create article') }}{% endblock title %}
 
-        $scope.data = {};
-        $scope.$$translate = {{ translates('article_edit')|safe }};
+{% block portal_content %}
 
-        $scope.afterSave = function (resp) {
-            {#            window.location.href = $scope.details_article({article_id: resp['id']})#}
-            add_message('article was created', 'info', 5000);
-        };
+    {#TODO: OZ by OZ move this code to one file#}
+    <link href="/static/image_editor/dist/cropper.css" rel="stylesheet">
+    <link href="/static/image_editor/demo/css/main.css" rel="stylesheet">
+    <link href="/static/css/article.css" rel="stylesheet">
+    <link href="/static/front/bird/css/article.css" rel="stylesheet">
 
-        $scope.getData = function (model, deff) {
-            var x = document.getElementById("dataX");
-            var y = document.getElementById("dataY");
-            var width = document.getElementById("dataWidth");
-            var height = document.getElementById("dataHeight");
-            var rotate = document.getElementById("dataRotate");
-            model.coordinates = {
-                'x': angular.element(x).val(), 'y': angular.element(y).val(),
-                'width': angular.element(width).val(), 'height': angular.element(height).val(),
-                'rotate': angular.element(rotate).val()
+
+    <script>
+
+        module.controller('article_edit', ['$scope', '$modal', '$af', '$ok', function ($scope, $modal, $af, $ok) {
+            $scope.$af = $af;
+            $scope.details_article = {{ raw_url_for('article.details')|safe }};
+            {% if article_company_id %}
+                $scope.save_article = '{{ url_for('article.load_form_create', article_company_id = article_company_id)|safe }}';
+            {% else %}
+                $scope.save_article = '{{ url_for('article.load_form_create')|safe }}';
+            {% endif %}
+
+            $scope.data = {};
+            $scope.$$translate = {{ translates('article_edit')|safe }};
+            $scope.amidSave = function (resp) {
+                window.location.href = $scope.details_article({article_id: resp['article']['article_id']});
+                add_message('article was created', 'info', 5000);
+
             };
-            return deff(model);
-        };
 
+            $scope.getData = function (model, deff) {
+                var $image = $('.img-container > img');
+                $scope.data.image.coordinates = $image.cropper('getData');
+                return deff(model);
+            };
 
-        $scope.tinymceImageOptions['height'] = '450px';
-        $scope.articleImageSelected = function (item) {
-            $scope.data.image_file_id = item.id;
-            $scope.setImageUrl($scope.data);
-            closeFileManager();
-            var $image = $('.img-container > img');
-            $image.cropper('replace', $scope.image_file_url);
-            $scope.change_picture_in_croper();
-
-        };
-        $scope.default_image = true;
-
-        $scope.cleanUpHtml = function (data) {
-            data.long = cleanup_html(data.long);
-            return data;
-        };
-
-
-        $scope.change_picture_in_croper = function (coordinates) {
-            setTimeout(function () {
-                init_cropper($scope.cropAreaChanged, $scope.data.ratio, coordinates);
-            }, 0);
-
-        };
-
-        $scope.cropAreaChanged = function (new_coordinates) {
-            $scope.coordinates = new_coordinates;
-        };
-
-        $scope.articleAfterLoad = function (resp, deff) {
-            deff(resp);
-
-            {#            setTimeout(function () {#}
-            $scope.setImageUrl($scope.data);
-            $scope.change_picture_in_croper($scope.data.coordinates);
-            {#            }, 0);#}
-            {#                    init_cropper();#}
-            return true;
-        };
-
-        $scope.setImageUrl = function (model) {
-            $scope.image_file_url = fileUrl(model.image_file_id) || "{{ url_for('static', filename='images/choose_image.jpg') }}";
-            var image = $scope.image_file_url;
-            if (image != "{{ url_for('static', filename='images/choose_image.jpg') }}") {
-                $scope.default_image = false;
-            }
-            {#            $scope.change_picture_in_croper(image);#}
-            return model;
-        };
-
-        $scope.init = function () {
-            $ok('?action=load', {}, function (resp) {
-                $scope.data = resp;
-
-                $scope.setImageUrl($scope.data);
-                if (!$scope.default_image) {
-                    $scope.change_picture_in_croper($scope.data.coordinates);
+            var compile_regexps = function (format_properties) {
+                var rem = format_properties['remove_classes_on_apply'] ?
+                        RegExp('^' + format_properties['remove_classes_on_apply'] + '$', "i") : false;
+                var add = false;
+                if (format_properties['add_classes_on_apply']) {
+                    add = {};
+                    $.each(format_properties['add_classes_on_apply'], function (class_to_add, check_if_not_exust) {
+                        add[class_to_add] = RegExp('^' + check_if_not_exust + '$', "i")
+                    });
                 }
-            })
-        };
+                delete format_properties['add_classes_on_apply'];
+                delete format_properties['remove_classes_on_apply'];
+                return {remove: rem, add: add};
+            };
+
+            var add_or_remove_classes = function (element, classes, remove, add) {
+
+                console.log(remove);
+
+                classes.map(function (class_name) {
+                    if (remove && class_name.match(remove)) {
+                        $(element).removeClass(class_name);
+                    }
+                    if (add) {
+                        $.each(add, function (add_if_not_exist, check_if_exist) {
+                            if (add[add_if_not_exist] && class_name.match(check_if_exist)) {
+                                delete add[add_if_not_exist];
+                            }
+                        });
+                    }
+                });
+
+                $.each(add, function (add_if_not_exist, check_if_exist) {
+                    $(element).addClass(add_if_not_exist);
+                })
+            };
+
+            var get_array_for_menu_build = function (formats) {
+                console.log(formats);
+                var ret = [];
+
+                $.each(formats, function (format_group_name, formats_in_group) {
+                    var ret1 = {'title': format_group_name, 'items': []};
+                    $.each(formats_in_group, function (format_name, format) {
+                        ret1['items'].push(
+                                {title: format_name.replace(/.*_(\w+)$/, '$1'), format: format_name});
+                    });
+                    ret.push(ret1);
+                });
+                return ret;
+            };
 
 
-        {#  $scope.addAlert = function() {#}
-        {#    $scope.alerts.push({msg: 'Another alert!'});#}
-        {#  };#}
-        {##}
-        {#  $scope.closeAlert = function(index) {#}
-        {#    $scope.alerts.splice(index, 1);#}
-        {#  };#}
-        {# }); #}
+            var convert_python_format_to_tinymce_format = function (python_format) {
 
+                if (python_format['remove_classes_on_apply'] || python_format['add_classes_on_apply']) {
 
-        $scope.chooseImage = function () {
-            $scope.filemanagerModal = $modal.open({
-                templateUrl: 'filemanager.html',
-                controller: 'filemanagerCtrl',
-                size: 'filemanager-halfscreen',
-                resolve: {
-                    file_manager_called_for: function () {
-                        return 'file_browse_image'
-                    },
-                    file_manager_on_action: function () {
-                        return {
-                            choose: "parent.angularControllerFunction('article_edit', 'articleImageSelected')"
-                        }
-                    },
-                    file_manager_default_action: function () {
-                        return 'choose'
+                    var rem_add = compile_regexps(python_format);
+
+                    python_format['onformat'] = function (DOMUtils, element) {
+                        var classes = $(element).attr('class');
+                        add_or_remove_classes(element, classes ? classes.split(/\s+/) : [], rem_add['remove'], rem_add['add']);
                     }
                 }
-            });
-        };
-
-    }]);
-</script>
-
-{% include 'croper.html' %}
-
-{% raw %}
-
-<div ng-init="init()" ng-controller="article_edit">
-
-    <h1 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company)
-        }}<span></span></h1>
-
-    <h1 ng-show="data.id && !company">{{ _('update your version of article') }}<span></span></h1>
-
-    <h2 ng-show="!data.id">{{ _('Create new article') }}</h2>
-
-    <h2 ng-show="data.id && company">{{ _('update version of article for company `%(company.name)s`', company)
-        }}</h2>
+                return python_format;
+            };
 
 
-    <h2 ng-show="data.id && !company">{{ _('update your version of article') }}</h2>
+            $scope.tinymceImageOptions['height'] = '450px';
 
-    <table af aaaf-after-load="aaarticleAfterLoad" af-after-save="afterSave()" af-before-save="getData"
-           af-beforeValidate="getData" ng-model="data">
-        <tr>
-            <td style="width: 60%">
+            var general_formats = {{ tinymce_format_groups()|tojson }};
+            var custom_formats = {};
+            {#            {{  custom_formats = tinymce_format_groups('birdy')|tojson }};#}
 
+            $scope.tinymceImageOptions['formats'] =
+                    _.chain($.extend({}, general_formats, custom_formats)). // here we have dicd in form {group_label: {format: format_properties}}
+                            reduce(_.extend, {}). // flatten groups
+                            map(function (format_properties, format_name) { // convert each format to tinymce in flat dictionary
+                                return [format_name, convert_python_format_to_tinymce_format(format_properties)]; // form list of [key, val] pairs
+                            }).
+                            object(). // convert each [key, val] pair to {key: val} element
+                            value(); // get result
+
+
+            {#            $scope.tinymceImageOptions['pr_formats'] = get_array_for_menu_build(custom_formats);#}
+            {#            console.log($scope.tinymceImageOptions['pr_formats']);#}
+
+            $scope.articleImageSelected = function (item) {
+                $scope.data.image.image_file_id = item.id;
+                $scope.setImageUrl($scope.data.image);
+                closeFileManager();
+                var $image = $('.img-container > img');
+                $image.cropper('setAspectRatio', $scope.data.image.ratio);
+            };
+            $scope.default_image = true;
+            $scope.cleanUpHtml = function (data) {
+                data.long = cleanup_html(data.long);
+                return data;
+            };
+            $scope.setImageUrl = function (image) {
+                $scope.image_file_url = fileUrl(image.image_file_id, false, '{{ url_for('static', filename='images/choose_image.jpg') }}');
+                var image = $scope.image_file_url;
+                if (image != "{{ url_for('static', filename='images/choose_image.jpg') }}") {
+                    $scope.default_image = false;
+                }
+            };
+            $scope.change_picture_in_croper = function (coordinates) {
+                setTimeout(function () {
+                    init_cropper($scope.data.image.ratio, coordinates);
+                }, 0);
+            };
+
+            $scope.afterLoad = function (resp, deff) {
+                var ret = deff(resp);
+                $scope.setImageUrl($scope['data'].image);
+                if (!$scope.default_image) {
+                    $scope.change_picture_in_croper($scope.data.image.coordinates);
+                }
+                return ret;
+            };
+
+            $scope.chooseImage = function () {
+                $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')");
+            };
+
+        }]);
+
+    </script>
+    {% from 'macros.html' import scripts %}
+    {{ scripts(names=['croper']) }}
+
+    {% raw %}
+    <div ng-init="init()" ng-controller="article_edit">
+        <h1 class="nice-title">{{ _( !data.article.id?'Create new article':
+            (company?'update version of article for company `%(company.name)s`':'update your version of article') )
+            }}<span></span></h1>
+
+        <div af af-after-load="afterLoad" af-amid-save="amidSave" af-before-save="getData"
+             af-beforeValidate="getData" af-watch="data.article" ng-model="data">
+
+            <div class="update_col1">
                 <!-- TODO: OK by OZ:   this block form should share same classes with layout to look MAXIMUM like in portal
-                        maybe layout selector is apporpriate here-->
-
-                <input type="hidden" ang-model="data.id"/>
-
+                                        maybe layout selector is apporpriate here-->
                 {{ _('Article title') }} <span af-validation-answer="data_validation:title"></span>
-                <input style="width: 100%" type="text" ng-model="data.title">
+                <input style="width: 100%" type="text" ng-model="data.article.title">
                 {{ _('Short Description') }} <span af-validation-answer="data_validation:short"></span>
-                <textarea style="width: 100%" placeholder="short" ng-model="data.short"></textarea>
+                <textarea style="width: 100%" placeholder="short" ng-model="data.article.short"></textarea>
                 {{ _('KeyWords') }} <span af-validation-answer="data_validation:keywords"></span>
-                <input style="width: 100%" ng-model="data.keywords"/>
+                <input style="width: 100%" ng-model="data.article.keywords"/>
+            </div>
 
-            </td>
-            <td style="width: 40%">
+            <div class="update_col1">
+                {{ _('Select picture') }}
                 <div ng-include="'image_cropper'"></div>
-                <input type="hidden" ng-model="data.image_file_id">
-            </td>
-        </tr>
-        <tr>
-            <td>
+                <input type="hidden" ng-model="data.article.image_file_id">
+            </div>
 
-                {{ _('Full text') }}<br/>
+            <div class="update_col1">
+                {{ _('Full text') }}
             <textarea ui-tinymce="tinymceImageOptions" style="width: 400px;"
-                      ng-model="data.long"></textarea>
+                      ng-model="data.article.long"></textarea>
 
-            </td>
-            <td style="position: relative"><input style="position: absolute; bottom: 0px; right: 0px;"
-                                                  ng-disabled="!$af.isActionAllowed(data, 'save')"
-                                                  ng-click="$af.save(data)"
-                                                  type="submit"
-                                                  value="{{ data.id ? _('save') : _('create') }}"/>
-            </td>
-        </tr>
-    </table>
+            </div>
+            <div class="update_col1">
+                <input class="create_button"
+                       ng-disabled="!$af.isActionAllowed(data, 'save')"
+                       ng-click="$af.save(data)"
+                       type="submit"
+                       value="{{ data.article.id ? _('save') : _('create') }}"/>
+            </div>
+        </div>
+    </div>
 
-</div>
 
+    {% endraw %}
 
-{% endraw %}
+    </div>
 
-</div>
+    <script src="/static/image_editor/dist/cropper.js"></script>
+    <script src="/static/image_editor/demo/js/main.js"></script>
+    {#TODO: OZ by OZ move this code to one file#}
 
-<script src="/static/image_editor/dist/cropper.js"></script>
-<script src="/static/image_editor/demo/js/main.js"></script>
-{#TODO: OZ by OZ move this code to one file#}
-
+{% endblock %}

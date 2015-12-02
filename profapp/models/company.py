@@ -99,8 +99,7 @@ class Company(Base, PRBase):
     def suspended_employees(self):
         """ Show all suspended employees from company. Before define method you should have
         query with one company """
-        suspended_employees = [x.to_dict('md_tm, employee.*,'
-                                         'employee.employers.*')
+        suspended_employees = [x.get_client_side_dict(more_fields='md_tm, employee, employee.employers')
                                for x in self.employee_assoc
                                if x.status == STATUS.DELETED()]
         return suspended_employees
@@ -151,9 +150,9 @@ class Company(Base, PRBase):
                 filter(Company.name.ilike("%" + searchtext + "%")
                        ).all()]
 
-    def get_client_side_dict(self, fields='id,name,author_user_id,country,region,address,phone,phone2,email,short_description,logo_file_id,about,own_portal.id|host'):
-        """This method make dictionary from portal object with fields have written above"""
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id,name,author_user_id,country,region,address,phone,phone2,email,short_description,logo_file_id,about,own_portal.id|host',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
 
 def forbidden_for_current_user(**kwargs):
@@ -345,7 +344,7 @@ class UserCompany(Base, PRBase):
     def search_for_user_to_join(company_id, searchtext):
         """Return all users in current company which have characters
         in their name like searchtext"""
-        return [user.to_dict('profireader_name|id') for user in
+        return [user.get_client_side_dict(fields='profireader_name|id') for user in
                 db(User).filter(~db(UserCompany, user_id=User.id, company_id=company_id).exists()).
                 filter(User.profireader_name.ilike("%" + searchtext + "%")).all()]
 

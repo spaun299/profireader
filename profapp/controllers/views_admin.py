@@ -1,6 +1,6 @@
 from .blueprints_declaration import admin_bp
 from flask import g, request, url_for, render_template, flash, current_app
-from .request_wrapers import ok, object_to_dict
+from .request_wrapers import ok
 from .pagination import pagination
 from ..models.translate import TranslateTemplate
 from config import Config
@@ -20,10 +20,12 @@ def translations_load(json):
     page = json.get('page') or 1
 
     params = {}
-
+    total_items = len(g.db.query(TranslateTemplate).all())
     subquery = TranslateTemplate.subquery_search(search_text=json.get('search_text') or None,
-                                                 template=json.get('template') or None)
-    translations, pages, current_page = pagination(subquery, page=page, items_per_page=Config.ITEMS_PER_PAGE*10)
+                                                 template=json.get('template') or None,
+                                                 url=json.get('url') or None)
+    translations, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('pageSize'))
+    total_items = len(subquery.all())
     tr = [t.get_client_side_dict() for t in translations]
     templates = db(TranslateTemplate.template).group_by(TranslateTemplate.template) \
         .order_by(expression.asc(expression.func.lower(TranslateTemplate.template))).all()
@@ -33,16 +35,18 @@ def translations_load(json):
             'pages': {'total': pages, 'current_page': current_page,
                       'page_buttons': Config.PAGINATION_BUTTONS},
             'templates': [{'label': t.template, 'value': t.template} for t in templates],
-            'urls': [{'label': t[0], 'value': t[0]} for t in urls]
+            'urls': [{'label': t[0], 'value': t[0]} for t in urls],
+            'total': total_items
             }
 
 
 @admin_bp.route('/translations_save', methods=['POST'])
 @ok
 def translations_save(json):
-    return TranslateTemplate.get(json['id']).attr({json['lang']: json['val']}).save().get_client_side_dict()
+    exist = db(TranslateTemplate, template=json['row'], name=json['col']).first()
+    return TranslateTemplate.get(exist.id).attr({json['lang']: json['val']}).save().get_client_side_dict()
 
 @admin_bp.route('/delete', methods=['POST'])
 @ok
 def delete(json):
-    return TranslateTemplate.delete(json['id'])
+    return TranslateTemplate.delete(json['objects'])

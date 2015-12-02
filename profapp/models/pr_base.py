@@ -7,10 +7,9 @@ import re
 from flask import g
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import event
-from utils.validators import validators
 from ..controllers import errors
 from utils.db_utils import db
-
+from utils.validators import validators
 
 Base = declarative_base()
 
@@ -52,11 +51,12 @@ class Search(Base):
         rel = {'keywords': 10, 'title': 9, 'name': 8, 'short': 7, 'long_stripped': 6}
         return rel[field_name]
 
+
 class PRBase:
     def __init__(self):
         self.query = g.db.query_property()
 
-    def validate(self, action):
+    def validate(self, is_new):
         return {'errors': {}, 'warnings': {}, 'notices': {}}
 
     def delfile(self):
@@ -68,6 +68,7 @@ class PRBase:
         g.db.flush()
         return self
 
+    # TODO: OZ by OZ: why we need two identical functions??!?!
     def updates(self, dictionary):
         for f in dictionary:
             setattr(self, f, dictionary[f])
@@ -79,8 +80,10 @@ class PRBase:
         return self
 
     def detach(self):
-        g.db.expunge(self)
-        make_transient(self)
+        if self in g.db:
+            g.db.expunge(self)
+            make_transient(self)
+
         self.id = None
         return self
 
@@ -88,8 +91,9 @@ class PRBase:
         g.db.expunge(self)
         return self
 
-    def get_client_side_dict(self, fields='id'):
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
     @classmethod
     def get(cls, id):
@@ -108,32 +112,42 @@ class PRBase:
 
     def to_dict(self, *args, prefix=''):
         ret = {}
+        __debug = True
 
         req_columns = {}
         req_relationships = {}
 
+        def add_to_req_relationships(column_name, columns):
+            if column_name not in req_relationships:
+                req_relationships[column_name] = []
+            req_relationships[column_name].append(columns)
+
+        def get_next_level(child, nextlevelargs, prefix, standard_fields_required):
+            in_next_level_dict = child.to_dict(*nextlevelargs, prefix=prefix)
+            if standard_fields_required:
+                in_next_level_dict.update(child.get_client_side_dict())
+            return in_next_level_dict
+
         for arguments in args:
-            for argument in re.compile('\s*,\s*').split(arguments):
-                columnsdevided = argument.split('.')
-                column_names = columnsdevided.pop(0)
-                for column_name in column_names.split('|'):
-                    if len(columnsdevided) == 0:
-                        req_columns[column_name] = True
-                    else:
-                        if column_name not in req_relationships:
-                            req_relationships[column_name] = []
-                        req_relationships[column_name].append(
-                            '.'.join(columnsdevided))
+            if arguments:
+                for argument in re.compile('\s*,\s*').split(arguments):
+                    columnsdevided = argument.split('.')
+                    column_names = columnsdevided.pop(0)
+                    for column_name in column_names.split('|'):
+                        if len(columnsdevided) == 0:
+                            req_columns[column_name] = True
+                        else:
+                            add_to_req_relationships(column_name, '.'.join(columnsdevided))
 
         columns = class_mapper(self.__class__).columns
         relations = {a: b for (a, b) in class_mapper(self.__class__).relationships.items()}
 
         for col in columns:
-            if col.key in req_columns or '*' in req_columns:
+            if col.key in req_columns or (__debug and '*' in req_columns):
                 ret[col.key] = self.to_dict_object_property(col.key)
                 if col.key in req_columns:
                     del req_columns[col.key]
-        if '*' in req_columns:
+        if '*' in req_columns and __debug:
             del req_columns['*']
 
         if len(req_columns) > 0:
@@ -143,34 +157,35 @@ class PRBase:
                     "you requested not existing attribute(s) `%s%s`" % (
                         prefix, '`, `'.join(columns_not_in_relations),))
             else:
-                raise ValueError("you requested for attribute(s) but "
-                                 "relationships found `%s%s`" % (
-                                     prefix, '`, `'.join(set(relations.keys()).
-                                         intersection(
-                                         req_columns.keys())),))
+                for rel_name in req_columns:
+                    add_to_req_relationships(rel_name, '~')
+                    # raise ValueError("you requested for attribute(s) but "
+                    #                  "relationships found `%s%s`" % (
+                    #                      prefix, '`, `'.join(set(relations.keys()).
+                    #                          intersection(
+                    #                          req_columns.keys())),))
 
         for relationname, relation in relations.items():
-            if relationname in req_relationships or '*' in \
-                    req_relationships:
+            if relationname in req_relationships or (__debug and '*' in req_relationships):
                 if relationname in req_relationships:
                     nextlevelargs = req_relationships[relationname]
                     del req_relationships[relationname]
                 else:
                     nextlevelargs = req_relationships['*']
                 related_obj = getattr(self, relationname)
-                require_standard_fields_for_object = '~' in relationname
+                standard_fields_required = False
+                while '~' in nextlevelargs:
+                    standard_fields_required = True
+                    nextlevelargs.remove('~')
+
                 if relation.uselist:
-                    if require_standard_fields_for_object:
-                        ret[relationname] = [child.get_client_side_dict() for child in related_obj]
-                    else:
-                        ret[relationname] = [child.to_dict(*nextlevelargs, prefix=prefix + relationname + '.') for child
-                                             in related_obj]
+                    add = [get_next_level(child, nextlevelargs, prefix + relationname + '.', standard_fields_required)
+                           for child in related_obj]
                 else:
-                    if require_standard_fields_for_object:
-                        ret[relationname] = None if related_obj is None else related_obj.get_client_side_dict()
-                    else:
-                        ret[relationname] = None if related_obj is None else related_obj.to_dict(*nextlevelargs,
-                                                                                                 prefix=prefix + relationname + '.')
+                    add = None if related_obj is None else \
+                        get_next_level(related_obj, nextlevelargs, prefix + relationname + '.', standard_fields_required)
+
+                ret[relationname] = add
 
         if '*' in req_relationships:
             del req_relationships['*']
@@ -185,20 +200,20 @@ class PRBase:
             else:
                 raise ValueError("you requested for relation(s) but "
                                  "column(s) found `%s%s`" % (
-                    prefix, '`, `'.join(set(columns).intersection(
-                        req_relationships)),))
+                                     prefix, '`, `'.join(set(columns).intersection(
+                                         req_relationships)),))
 
         return ret
 
     @staticmethod
     def validate_before_update(mapper, connection, target):
-        ret = target.validate('update')
+        ret = target.validate(False)
         if len(ret['errors'].keys()):
             raise errors.ValidationException(ret)
 
     @staticmethod
     def validate_before_insert(mapper, connection, target):
-        ret = target.validate('insert')
+        ret = target.validate(True)
         if len(ret['errors'].keys()):
             raise errors.ValidationException(ret)
 

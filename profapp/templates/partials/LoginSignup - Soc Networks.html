@@ -1,0 +1,9 @@
+<div class="via-social">
+    !!!
+    <a class="login-by login-by-google" href="{{ url_for('auth.login_signup_soc_network', soc_network_name='google', portal_id=request.args.get('subscribe', None)) }}"></a>
+    <a class="login-by login-by-facebook" href="{{ url_for('auth.login_signup_soc_network', soc_network_name='facebook', portal_id=request.args.get('subscribe', None)) }}"></a>
+    <a class="login-by login-by-linkedin" href="{{ url_for('auth.login_signup_soc_network', soc_network_name='linkedin', portal_id=request.args.get('subscribe', None)) }}"></a>
+    {#<a href="{{ url_for('auth.login_signup_soc_network', soc_network_name='twitter', portal_id=request.args.get('subscribe', None)) }}">twitter</a>#}
+    <a class="login-by login-by-microsoft" href="{{ url_for('auth.login_signup_soc_network', soc_network_name='microsoft', portal_id=request.args.get('subscribe', None)) }}"></a>
+    {#<a href="{{ url_for('auth.login_signup_soc_network', soc_network_name='yahoo', portal_id=request.args.get('subscribe', None)) }}">yahoo</a>#}
+</div>

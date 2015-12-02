@@ -78,8 +78,7 @@
                 <div class="company-item">
                     <img pr-image="my_employer.logo_file_id" class="company-logo"/>
                     <a href="{{ url_company_profile({company_id: my_employer.id}) }}">
-                        {{ _('Company: `%(name)s`', my_employer ) }} {{ _((my_employer.author_user_id==data.user_id?'
-                        Type: OWN COMPANY':''), my_employer) }}
+                        {{ _('Company: `%(name)s`'+(my_employer.author_user_id==data.user_id? ' Type: OWN COMPANY':'') , my_employer) }}
                     </a>
                     <br/>
                     <span ng-if="!my_employer.own_portal.host"><b>{{_('Portals')}}: </b>{{_('No')}}</span>
@@ -88,8 +87,7 @@
                         <a href="http://{{ my_employer.own_portal.host }}">
                             http://{{my_employer.own_portal.host }}
                         </a>
-                        <a href="{{ url_portal_profile({portal_id: my_employer.own_portal.id}) }}">[{{_('edit portal
-                            profile')}}]</a>
+                        <a href="{{ url_portal_profile({portal_id: my_employer.own_portal.id}) }}">[{{_('portal profile')}}]</a>
                     </div>
                     <br/>
                 </div>

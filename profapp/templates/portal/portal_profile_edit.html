@@ -25,7 +25,7 @@
         <!-- ???{{ PortDivCheckbox }}<br/><br/> -->
         <!-- ***{{ data.PortalDivisionTags4 }}<br/><br/> -->
 
-        <h3>{{_('Portal')}} <strong>{{ data.portal.name }}</strong> {{_('profile')}}</h3>
+        <h3>{{_('Portal %(name)s profile', {'name' : data.portal.name })}}</h3>
         <br/>
         <h4>{{_('Portal tags')}}:</h4>
         <table style="width:100%">
@@ -76,8 +76,8 @@
         <div class="item text-align-left"><input ng-click="saveData()" type="submit" value="{{_('Save Tags')}}"/></div>
 
 
-        {{_('Back to')}} <a href="{{ url_portal_profile({portal_id: data.portal['id']}) }}"> "{{ data.portal.name }}"</a> {{_('portal profile')}}<br/>
-        {{_('Back to')}} <a href="{{ url_company_profile({company_id: data.portal['company_owner_id']}) }}"> "{{
+        {{_('Back to')}} <a href="{{ url_portal_profile({portal_id: data.portal.id}) }}"> "{{ data.portal['name'] }}"</a> {{_('portal profile')}}<br/>
+        {{_('Back to')}} <a href="{{ url_company_profile({company_id: data.portal['own_company']['id']}) }}"> "{{
         data.portal['own_company']['name'] }}"</a> {{_('company profile')}}
 
     </div>

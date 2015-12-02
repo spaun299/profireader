@@ -25,7 +25,9 @@ from .models.users import User
 from .models.config import Config
 from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
+from .models.tools import HtmlHelper
 import json
+import time
 
 
 def req(name, allowed=None, default=None, exception=True):
@@ -40,7 +42,7 @@ def req(name, allowed=None, default=None, exception=True):
         return None
 
 
-def filter_json(json, *args, prefix='', NoneTo='', ExceptionOnNotPresent=False):
+def filter_json(json, *args, NoneTo='', ExceptionOnNotPresent=False, prefix=''):
     ret = {}
     req_columns = {}
     req_relationships = {}
@@ -86,23 +88,21 @@ def filter_json(json, *args, prefix='', NoneTo='', ExceptionOnNotPresent=False):
                                      req_columns.keys())),))
 
     for relationname, relation in json.items():
-        if relationname in req_relationships or '*' in \
-                req_relationships:
+        if relationname in req_relationships or '*' in req_relationships:
             if relationname in req_relationships:
                 nextlevelargs = req_relationships[relationname]
                 del req_relationships[relationname]
             else:
                 nextlevelargs = req_relationships['*']
-            related_obj = relation
-            if type(json) is dict:
+            if type(relation) is list:
                 ret[relationname] = [
-                    child.filter_json(*nextlevelargs,
-                                      prefix=prefix + relationname + '.'
-                                      ) for child in
-                    related_obj]
+                    filter_json(child, *nextlevelargs,
+                                prefix=prefix + relationname + '.'
+                                ) for child in
+                    relation]
             else:
-                ret[relationname] = None if related_obj is None else related_obj.filter_json(*nextlevelargs,
-                                                                                             prefix=prefix + relationname + '.')
+                ret[relationname] = None if relation is None else filter_json(relation, *nextlevelargs,
+                                                                              prefix=prefix + relationname + '.')
 
     if '*' in req_relationships:
         del req_relationships['*']
@@ -128,7 +128,7 @@ def db_session_func(db_config):
     from sqlalchemy.orm import scoped_session, sessionmaker
 
     engine = create_engine(db_config)
-    g.sql_connection = engine.connect()
+    # g.sql_connection = engine.connect()
     db_session = scoped_session(sessionmaker(autocommit=False,
                                              autoflush=False,
                                              bind=engine))
@@ -209,6 +209,7 @@ def load_user():
     g.user_init = user_init
     g.user = user
     g.user_dict = user_dict
+    g.user_id = user_dict['id']
 
     for variable in g.db.query(Config).filter_by(server_side=1).all():
 
@@ -265,10 +266,15 @@ def translates(template):
     else:
         user_language = 'uk'
     phrases = g.db.query(TranslateTemplate).filter_by(template=template).all()
+    ret = {}
     if user_language == 'uk':
-        ret = {ph.name: ph.uk for ph in phrases}
+        for ph in phrases:
+            tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
+            ret[ph.name] = {'lang':ph.uk,'time': tim}
     else:
-        ret = {ph.name: ph.en for ph in phrases}
+        for ph in phrases:
+            tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
+            ret[ph.name] = {'lang':ph.en,'time': tim}
     return json.dumps(ret)
 
 
@@ -352,7 +358,7 @@ login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 #  The login_view attribute sets the endpoint for the login page.
 #  I am not sure that it is necessary
-login_manager.login_view = 'auth.login'
+login_manager.login_view = 'auth.login_signup_endpoint'
 
 
 class AnonymousUser(AnonymousUserMixin):
@@ -388,9 +394,26 @@ class AnonymousUser(AnonymousUserMixin):
     def user_name():
         return 'Guest'
 
-    @staticmethod
-    def avatar(size=0):
-        pass
+    def avatar(self, size=100):
+        avatar = self.gravatar(size=size)
+        return avatar
+
+    def gravatar(self, size=100, default='identicon', rating='g'):
+        if request.is_secure:
+            url = 'https://secure.gravatar.com/avatar'
+        else:
+            url = 'http://www.gravatar.com/avatar'
+
+        email = getattr(self, 'profireader_email', 'guest@profireader.com')
+
+        # email = 'guest@profireader.com'
+        # if self.profireader_email:
+        #     email = self.profireader_email
+
+        hash = hashlib.md5(
+            email.encode('utf-8')).hexdigest()
+        return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
+            url=url, hash=hash, size=size, default=default, rating=rating)
 
     def __repr__(self):
         return "<User(id = %r)>" % self.id
@@ -452,6 +475,7 @@ def create_app(config='config.ProductionDevelopmentConfig',
     app.jinja_env.globals.update(file_url=file_url)
     app.jinja_env.globals.update(config_variables=config_variables)
     app.jinja_env.globals.update(_=translate_phrase)
+    app.jinja_env.globals.update(tinymce_format_groups=HtmlHelper.tinymce_format_groups)
 
 
     # see: http://flask.pocoo.org/docs/0.10/patterns/sqlalchemy/

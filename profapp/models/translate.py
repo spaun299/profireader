@@ -51,7 +51,9 @@ class TranslateTemplate(Base, PRBase):
             phrase = phrase[2:]
             template = '__GLOBAL'
 
+
         exist = db(TranslateTemplate, template=template, name=phrase).first()
+
 
         lang = TranslateTemplate.languages[0]
         if g.user_dict['lang'] in TranslateTemplate.languages:
@@ -60,9 +62,10 @@ class TranslateTemplate(Base, PRBase):
         if exist:
             if current_app.config['DEBUG']:
                 # TODO: OZ by OZ change ac without changing md (md changed by trigger)
-                exist.ac_tm = None
+                # exist.ac_tm = None
                 exist.save()
         else:
+
             exist = TranslateTemplate(template=template, name=phrase,
                                       url=url, **{l: phrase for l in TranslateTemplate.languages}).save()
 
@@ -71,14 +74,15 @@ class TranslateTemplate(Base, PRBase):
     @staticmethod
     def update_last_accessed(template, phrase):
         i = datetime.datetime.now()
-        obj = [b for b in db(TranslateTemplate, template=template, name=phrase)]
-        obj[0].updates({'ac_tm': i})
+        obj = db(TranslateTemplate, template=template, name=phrase).first()
+        obj.updates({'ac_tm': i})
         return 'True'
 
     @staticmethod
-    def delete(id):
-        obj = TranslateTemplate.get(id)
-        TranslateTemplate.delfile(obj)
+    def delete(objects):
+        for obj in objects:
+            f = db(TranslateTemplate, template=obj['Template'], name=obj['Phrase']).first()
+            TranslateTemplate.delfile(f)
         return 'True'
 
     @staticmethod
@@ -103,5 +107,6 @@ class TranslateTemplate(Base, PRBase):
 
         return sub_query
 
-    def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url'):
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)

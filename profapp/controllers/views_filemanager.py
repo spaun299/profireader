@@ -191,6 +191,6 @@ def send(parent_id):
     return jsonify({'result': {'size': 0}})
 
 
-@filemanager_bp.route('/resumeopload/', methods=['GET'])
-def resumeopload():
+@filemanager_bp.route('/resumeupload/', methods=['GET'])
+def resumeupload():
     return jsonify({'size': 0})
