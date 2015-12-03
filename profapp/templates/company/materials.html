@@ -10,9 +10,12 @@
 
             $scope.url_details = {{ raw_url_for('company.material_details')|safe }};
             $scope.url_search_article = {{ raw_url_for('company.materials_load')|safe }};
+            $scope.url_edit_article_portal = {{ raw_url_for('article.article_show_form')|safe }};
 
             $scope.company_id = '{{ company_id }}';
             $scope.$$translate = {{ translates('article_list')|safe }};
+
+            {% raw %}
 
             var paginationOptions = {
                 pageNumber: 1,
@@ -43,6 +46,8 @@
                 $scope.status = null;
                 $scope.sendData('');
             };
+
+// TODO: SS by OZ: this 3 functions (Filtered*) should be rewriten as one
             $scope.FilteredMat = function( row, rowRenderIndex, col, colRenderIndex ) {
                 if(!$scope.index1)
                     $scope.index1 = 0;
@@ -88,7 +93,8 @@
                 data.article_id = $scope.article_id ? $scope.article_id : null;
                 data.page = paginationOptions.pageNumber;
                 data.pageSize = paginationOptions.pageSize;
-                $ok($scope.url_search_article({company_id: '{{ company_id }}'}), data, function (resp) {
+// TODO: SS by OZ: all data what wee need is presented in resp.data? if yes, y we cant fetch data from there, why we need grid_data?
+                $ok($scope.url_search_article({company_id: $scope.company_id}), data, function (resp) {
                     $scope.datas = resp;
                     $scope.gridOptions1.totalItems = resp.total;
                     $scope.portals = resp.portals;
@@ -123,6 +129,7 @@
                       },
                       { name: 'Date',enableCellEdit: false,enableFiltering: false },
                       { name: 'Portals', enableSorting: false,enableCellEdit: false,
+                          cellTemplate: '<a href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{ row.entity.Portals }}</a>',
                           filter: {
                             term: '1',
                             type: uiGridConstants.filter.SELECT},
@@ -168,7 +175,7 @@
 
 
         }]);
-
+        {% endraw %}
     </script>
     {% include 'company/company_base_angular.html' %}
     {% raw %}

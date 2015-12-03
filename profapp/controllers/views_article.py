@@ -95,21 +95,25 @@ def load_mine(json):
 
 
 @article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
+@article_bp.route('/updateatportal/<string:article_portal_division_id>/', methods=['GET'])
 @article_bp.route('/create/', methods=['GET'])
-def article_show_form(article_company_id=None):
-    return render_template('article/form.html', article_company_id=article_company_id)
+def article_show_form(article_company_id=None, article_portal_division_id = None):
+    return render_template('article/form.html', article_company_id=(article_company_id or article_portal_division_id))
 
 @article_bp.route('/create/', methods=['POST'])
 @article_bp.route('/update_mine/<string:mine_version_article_company_id>/', methods=['POST'])
 @article_bp.route('/update/<string:article_company_id>/', methods=['POST'])
+@article_bp.route('/updateatportal/<string:article_portal_division_id>/', methods=['POST'])
 @ok
-def load_form_create(json, article_company_id=None, mine_version_article_company_id=None):
+def load_form_create(json, article_company_id=None, mine_version_article_company_id=None, article_portal_division_id = None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
 
     if article_company_id:  # companys version. always updating existing
         articleVersion = ArticleCompany.get(article_company_id)
     elif mine_version_article_company_id:  # updating personal version
         articleVersion = ArticleCompany.get(mine_version_article_company_id)
+    elif article_portal_division_id:  # updating portal version
+        articleVersion = ArticlePortalDivision.get(article_portal_division_id)
     else:  # creating personal version
         articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
 
@@ -117,9 +121,13 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None, 'image_file_id': None}
         article_dict = articleVersion.get_client_side_dict(more_fields='long')
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
-        if article_dict.get('image_file_id'):
-            image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
-                get_coordinates_and_original_img(article_dict.get('image_file_id'))
+#TODO: VK by OZ: this code should be moved to model
+        try:
+            if article_dict.get('image_file_id'):
+                image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
+                    get_coordinates_and_original_img(article_dict.get('image_file_id'))
+        except Exception as e:
+            pass
         return {'article': article_dict, 'image': image_dict}
     else:
         parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
