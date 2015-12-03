@@ -33,6 +33,17 @@
                 sort: null
             };
 
+            $scope.update = function(row){
+                if(row.field === 'Phrase'){
+                    $scope.search_in_phrase = $scope.gridOptions1.columnDefs[4].filter.term;
+                }else if(row.field === 'uk'){
+                    $scope.search_in_uk = $scope.gridOptions1.columnDefs[5].filter.term;
+                }else if(row.field === 'en'){
+                    $scope.search_in_en = $scope.gridOptions1.columnDefs[6].filter.term;
+                }
+//                $scope.sendData($scope.gridOptions1.columnDefs[0].filter.term);
+            };
+
             $scope.storeFile = function( gridRow, gridCol, files ) {
                 gridRow.entity.filename = files[0].name;
                 var setFile = function(fileContent){
@@ -47,19 +58,26 @@
               };
 
             $scope.FilteredTemplate = function( row, rowRenderIndex, col, colRenderIndex ) {
-                if( col.filters[0].term ){
+                if(!$scope.index1)
+                    $scope.index1 = 0;
+                if( col.filters[0].term && $scope.index1 !== col.filters[0].term){
                     $scope.template = $scope.list_templates[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_templates[col.filters[0].term - 1]['label'];
-                    console.log($scope.template);
+                    console.log('sda');
                     $scope.sendData('');
+                    $scope.index1 = col.filters[0].term;
                 }else if(!col.filters[0].term){
                     $scope.refresh()
                 }
               };
 
             $scope.FilteredUrls = function( row, rowRenderIndex, col, colRenderIndex ) {
-                if( col.filters[0].term ){
+                if(!$scope.index)
+                    $scope.index = 0;
+                if( col.filters[0].term && $scope.index !== col.filters[0].term){
                     $scope.url = $scope.list_urls[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_urls[col.filters[0].term - 1]['label'];
                     $scope.sendData('');
+                    console.log('vpn');
+                    $scope.index = col.filters[0].term;
                 }else if(!col.filters[0].term){
                     $scope.refresh()
                 }
@@ -68,6 +86,9 @@
             $scope.refresh = function(){
                 $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
                 $scope.gridOptions1.columnDefs[3]['filter']['term'] = '1';
+                $scope.gridOptions1.columnDefs[4].filter.term = '';
+                $scope.gridOptions1.columnDefs[5].filter.term = '';
+                $scope.gridOptions1.columnDefs[6].filter.term = '';
                 $scope.template = null;
                 $scope.url = null;
                 $scope.sendData('');
@@ -127,6 +148,9 @@
                 data.url = $scope.url ? $scope.url : null;
                 data.page = paginationOptions.pageNumber;
                 data.pageSize = $scope.gridOptions1.paginationPageSize;
+                data.search_in_phrase = $scope.search_in_phrase ? $scope.search_in_phrase: null;
+                data.search_in_uk = $scope.search_in_uk ? $scope.search_in_uk: null;
+                data.search_in_en = $scope.search_in_en ? $scope.search_in_en: null;
                 $ok($scope.url_search_translations({}), data, function (resp) {
 
                     $scope.translations = resp.translations;
@@ -156,7 +180,6 @@
                     $scope.create_list($scope.list_templates, $scope.templates);
                     $scope.create_list($scope.list_urls, $scope.urls);
 
-                    $scope.data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 }).finally(function () {
                     $scope.loading = false;
                 });
@@ -169,8 +192,8 @@
                     useExternalSorting: true,
                     useExternalFiltering: true,
                     columnDefs: [
-                      { field: 'Creation time',enableCellEdit: false },
-                      { field: 'Last accessed', enableSorting: false,enableCellEdit: false },
+                      { field: 'Creation time',enableCellEdit: false, enableFiltering: false },
+                      { field: 'Last accessed', enableSorting: false,enableCellEdit: false, enableFiltering: false },
                       { field: 'Template', enableSorting: false,enableCellEdit: false,
                           filter: {
                             term: '1',
@@ -186,9 +209,18 @@
                           headerCellClass: $scope.FilteredUrls
 
                       },
-                      { field: 'Phrase', enableSorting: false,enableCellEdit: false},
-                      { field: 'uk', enableSorting: false, enableCellEdit: true},
-                      { field: 'en', enableSorting: false,enableCellEdit: false}
+                      { field: 'Phrase', enableSorting: false,enableCellEdit: false,
+                          filter: {
+                                type: uiGridConstants.filter.INPUT}
+                      },
+                      { field: 'uk', enableSorting: false, enableCellEdit: true,
+                          filter: {
+                                type: uiGridConstants.filter.INPUT}
+                      },
+                      { field: 'en', enableSorting: false,enableCellEdit: false,
+                          filter: {
+                                type: uiGridConstants.filter.INPUT}
+                      }
 
                     ],
                     onRegisterApi: function(gridApi) {
@@ -268,16 +300,7 @@
         }
     </style>
     <div ng-init="sendData('')" ng-controller="translation_list">
-        <div ng-if="loading">Loading...</div>
-        <form class="navbar-form navbar-right" role="search" ng-if="!areAllEmpty(translations)">
-            <div class="form-group">
-            <input class="form-control" ng-disabled="loading"  type="text"
-                                                                    placeholder="Search"
-                                                                    ng-model="new_search_text" >
-            </div>
-                <button id='toggleGender' ng-click="sendData(new_search_text)" value="{{ loading?'loading...':'search' }}" class="btn btn-success" ng-disabled="loading" ng-model="new_search_text">Search</button>
 
-        </form>
         <div style="clear: right"></div>
 
         <div ng-if="!areAllEmpty(translations)">
