@@ -32,6 +32,7 @@
             };
 
             $scope.update = function(){
+                paginationOptions.pageNumber = 1;
                 $scope.sendData($scope.gridOptions1.columnDefs[0].filter.term);
             };
 
@@ -53,6 +54,7 @@
                     $scope.index1 = 0;
                 if( col.filters[0].term && $scope.index1 !== col.filters[0].term){
                     $scope.status = $scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.statuses[col.filters[0].term - 1]['label'];
+                    paginationOptions.pageNumber = 1;
                     $scope.sendData('');
                     $scope.index1 = col.filters[0].term;
                 }else if(!col.filters[0].term){
@@ -64,6 +66,7 @@
                     $scope.index = 0;
                 if( col.filters[0].term && $scope.index !== col.filters[0].term){
                     $scope.company_id = $scope.companies[col.filters[0].term - 1]['label'] === 'All'? undefined: $scope.companies[col.filters[0].term - 1]['id'];
+                    paginationOptions.pageNumber = 1;
                     $scope.sendData('');
                     $scope.index = col.filters[0].term;
                 }else if(!col.filters[0].term){

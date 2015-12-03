@@ -20,10 +20,12 @@ def translations_load(json):
     page = json.get('page') or 1
 
     params = {}
-    total_items = len(g.db.query(TranslateTemplate).all())
-    subquery = TranslateTemplate.subquery_search(search_text=json.get('search_text') or None,
-                                                 template=json.get('template') or None,
-                                                 url=json.get('url') or None)
+    params['search_in_phrase'] = json.get('search_in_phrase') if json.get('search_in_phrase') else None
+    params['search_in_uk'] = json.get('search_in_uk') if json.get('search_in_uk') else None
+    params['search_in_en'] = json.get('search_in_en') if json.get('search_in_en') else None
+    subquery = TranslateTemplate.subquery_search(template=json.get('template') or None,
+                                                 url=json.get('url') or None,
+                                                 **params)
     translations, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('pageSize'))
     total_items = len(subquery.all())
     tr = [t.get_client_side_dict() for t in translations]

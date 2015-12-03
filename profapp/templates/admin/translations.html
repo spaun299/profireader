@@ -34,6 +34,7 @@
             };
 
             $scope.update = function(row){
+                paginationOptions.pageNumber = 1;
                 if(row.field === 'Phrase'){
                     $scope.search_in_phrase = $scope.gridOptions1.columnDefs[4].filter.term;
                 }else if(row.field === 'uk'){
@@ -41,7 +42,7 @@
                 }else if(row.field === 'en'){
                     $scope.search_in_en = $scope.gridOptions1.columnDefs[6].filter.term;
                 }
-//                $scope.sendData($scope.gridOptions1.columnDefs[0].filter.term);
+                $scope.sendData('');
             };
 
             $scope.storeFile = function( gridRow, gridCol, files ) {
@@ -58,11 +59,11 @@
               };
 
             $scope.FilteredTemplate = function( row, rowRenderIndex, col, colRenderIndex ) {
+                paginationOptions.pageNumber = 1;
                 if(!$scope.index1)
                     $scope.index1 = 0;
                 if( col.filters[0].term && $scope.index1 !== col.filters[0].term){
                     $scope.template = $scope.list_templates[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_templates[col.filters[0].term - 1]['label'];
-                    console.log('sda');
                     $scope.sendData('');
                     $scope.index1 = col.filters[0].term;
                 }else if(!col.filters[0].term){
@@ -71,12 +72,12 @@
               };
 
             $scope.FilteredUrls = function( row, rowRenderIndex, col, colRenderIndex ) {
+                paginationOptions.pageNumber = 1;
                 if(!$scope.index)
                     $scope.index = 0;
                 if( col.filters[0].term && $scope.index !== col.filters[0].term){
                     $scope.url = $scope.list_urls[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_urls[col.filters[0].term - 1]['label'];
                     $scope.sendData('');
-                    console.log('vpn');
                     $scope.index = col.filters[0].term;
                 }else if(!col.filters[0].term){
                     $scope.refresh()
@@ -86,9 +87,9 @@
             $scope.refresh = function(){
                 $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
                 $scope.gridOptions1.columnDefs[3]['filter']['term'] = '1';
-                $scope.gridOptions1.columnDefs[4].filter.term = '';
-                $scope.gridOptions1.columnDefs[5].filter.term = '';
-                $scope.gridOptions1.columnDefs[6].filter.term = '';
+                $scope.search_in_phrase = null;
+                $scope.search_in_uk = null;
+                $scope.search_in_en = null;
                 $scope.template = null;
                 $scope.url = null;
                 $scope.sendData('');
@@ -137,13 +138,11 @@
                     }
             };
 
-
             $scope.sendData = function (new_search_text) {
                 $scope.loading = true;
                 $scope.isSelectedRows = false;
                 $scope.error = '';
                 var data = {};
-                data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 data.template = $scope.template ? $scope.template : null;
                 data.url = $scope.url ? $scope.url : null;
                 data.page = paginationOptions.pageNumber;
@@ -182,6 +181,7 @@
 
                 }).finally(function () {
                     $scope.loading = false;
+                    $scope.load_contr = true
                 });
             };
              $scope.gridOptions1 = {
@@ -262,6 +262,7 @@
                          $scope.error = 'error delete'
                      }
                  });
+                 $scope.sendData('');
 
              };
         }])
@@ -306,7 +307,7 @@
         <div ng-if="!areAllEmpty(translations)">
             <div class="grid" id="grid1" ui-grid-pagination ui-grid-selection ui-grid-edit  ui-grid="gridOptions1" ></div>
             </div>
-       <a ng-show="!loading && !areAllEmpty(translations)" class="btn btn-danger" ng-class="{'disabled': ( isSelectedRows === false )}"  style="text-align: center" ng-click="checkdelete(true)" >Delete selected rows</a>
+       <a ng-show="load_contr && !areAllEmpty(translations)" class="btn btn-danger" ng-class="{'disabled': ( isSelectedRows === false )}"  style="text-align: center" ng-click="checkdelete(true)" >Delete selected rows</a>
         <!--<table style="width:100%">-->
             <!--<tr>-->
                 <!--<th width="8em">Creation time</th>-->
@@ -355,7 +356,7 @@
         <div ng-show="!loading && areAllEmpty(translations)" style="float: left; margin-right: 20px; padding-top: 4px">
                     <h4>No translations</h4>
                 </div>
-            <button ng-click="refresh()" class="btn btn-warning" ng-show="!loading && areAllEmpty(translations)">Back</button>
+            <button ng-click="refresh()" class="btn btn-warning" ng-show="load_contr && areAllEmpty(translations)">Back</button>
 
     </div>
     {% endraw %}

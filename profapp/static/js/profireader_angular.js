@@ -517,7 +517,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             }
             else if(scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400){
                 scope.$$translate_accessed[phrase] = true;
-                //$ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {});
+                $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {});
             }
             if (scope.$$translate[phrase])
                 phrase = scope.$$translate[phrase]['lang'];
