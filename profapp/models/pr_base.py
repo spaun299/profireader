@@ -17,6 +17,7 @@ from html.parser import HTMLParser
 from ..constants.SEARCH import RELEVANCE
 import math
 from config import Config
+import collections
 from sqlalchemy.sql import expression, functions
 Base = declarative_base()
 
@@ -101,9 +102,10 @@ class Search(Base):
                 'Args should be dictionaries with class of model but %s inspected' % type(args[0])
             assert type(pagination) is bool, \
                 'Parameter pagination should be boolean but %s given' % type(pagination)
-            assert (type(page), type(items_per_page) is int and page >= 0), \
-                'Parameter page is not integer, or page < 0 .'
-            assert getattr(args[0]['class'], kwargs.get('order_by'), False) is not False, \
+            assert (type(page), type(items_per_page) is int) and page >= 0, \
+                'Parameter page is not integer, or page < 1 .'
+            assert (getattr(args[0]['class'], str(kwargs.get('order_by')), False) is not False) or \
+                   (type(kwargs.get('order_by')) is int), \
                 'You requested attribute which is not in class %s' % args[0]['class']
         except AssertionError as e:
             _, _, tb = sys.exc_info()
@@ -133,19 +135,27 @@ class Search(Base):
 
         def add_joined_search(field_name):
             joined = db(Search.index, func.min(Search.text).label('text'),
+                        func.min(Search.table_name).label('table_name'),
                         index=subquery_search.subquery().c.index,
                         kind=field_name).order_by(order).group_by(Search.index)
             return joined
-
         for cls in args:
-            search_params.append(and_(Search.kind.in_(cls['fields']),
-                                 Search.text.ilike("%" + search_text + "%"),
-                                 Search.table_name == cls['class'].__tablename__), )
-        subquery_search = db(Search.index.label('index'),
+
+            filter_params = cls.get('filter')
+            fields = cls.get('fields') or \
+                [key for key in vars(cls['class']).keys() if key[0] != '_']
+
+            assert type(fields) is list or tuple, \
+                'Arg parameter fields should be list or tuple but %s given' % type(fields)
+            search_params.append(and_(Search.index == db(cls['class'].id).filter(
+                                 filter_params).subquery().c.id, Search.text.ilike(
+                "%" + search_text + "%"), Search.table_name == cls['class'].__tablename__,
+                Search.kind.in_(fields)), )
+        subquery_search = db(Search.index,
                              func.sum(Search.relevance).label('relevance'),
                              func.min(Search.table_name).label('table_name'),
                              func.min(Search.md_tm).label('md_tm'),
-                             func.min(Search.text).label('text_title')).filter(
+                             func.min(Search.text).label('text')).filter(
             or_(*search_params)).group_by(Search.index)
         if type(kwargs.get('order_by')) == str:
             order = get_order('text', desc_asc, 'text')
@@ -166,16 +176,19 @@ class Search(Base):
         subquery_search = subquery_search.subquery()
         join_search = []
         for arg in args:
-            join_params = text(arg.get('join')) if arg.get('join') else False
-            filter_params = text(arg.get('filter')) if arg.get('filter') else False
+            join_params = arg.get('join') or False
             join_search.append(db(subquery_search).join(
                 join_params or arg['class'],
-                filter_params or (arg['class'].id == subquery_search.c.index)).subquery())
-        objects = []
-        for search, cls in zip(join_search, args):
-            for b in db(cls['class']).filter(cls['class'].id == search.c.index).all():
-                print(b.name)
-                objects.append(b)
+                arg['class'].id == subquery_search.c.index).subquery())
+        objects = {}
+        ord_by = 'text' if type(kwargs.get('order_by')) is str \
+            else order_by_to_str[kwargs['order_by']]
+        for search in join_search:
+            for cls in db(search).all():
+                objects[getattr(cls, ord_by)] = {'id': cls.index,
+                                                 'table_name': cls.table_name}
+        objects = [obj for obj in collections.OrderedDict(sorted(objects.items())).values()]
+        print(objects)
 
         return objects, pages, page+1
 

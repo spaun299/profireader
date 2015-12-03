@@ -9,7 +9,7 @@ from flask.ext.login import login_required
 from ..models.articles import Article
 from ..models.portal import PortalDivision
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
-from ..models.portal import MemberCompanyPortal
+from ..models.portal import MemberCompanyPortal, Portal
 from ..models.articles import ArticleCompany, ArticlePortalDivision
 from utils.db_utils import db
 from collections import OrderedDict
@@ -37,14 +37,17 @@ def search_to_submit_article(json):
 # @check_rights(simple_permissions([]))
 def show():
     return render_template('company/companies.html')
-
+from sqlalchemy import and_
 
 @company_bp.route('/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([]))
 @ok
 def load_companies(json):
-    Search.search({'class': Company, 'fields': ('name', 'about')}, search_text='e', items_per_page=1, order_by='nam', desc_asc='asc', pagination=True)
+    Search.search({'class': Company, 'fields': ('name', 'about'), 'filter': and_(Company.author_user_id == g.user.id,
+                                                                            Company.name.in_(['neewww', 'aaa', 'Second']))},
+                  {'class': Portal, 'fields': ('name', ), 'filter': Portal.company_owner_id == '5656f2ca-1765-4001-9c06-cc298797b404'},
+                  search_text='o', items_per_page=3, order_by=3, desc_asc='desc', pagination=True, page=1)
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     return {'companies': [usr_cmp.employer.get_client_side_dict() for usr_cmp in user_companies
                           if usr_cmp.status == STATUS.ACTIVE()],

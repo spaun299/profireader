@@ -531,7 +531,8 @@ def publications_load(json, company_id):
     publications = []
     for a in articles:
         a = a.get_client_side_dict()
-        del a['long']
+        if a.get('long'):
+            del a['long']
         publications.append(a)
 
     return {'publications': publications,
@@ -546,7 +547,7 @@ def publications_load(json, company_id):
 @login_required
 def publication_details(article_id, company_id):
     return render_template('company/publication_details.html',
-                           company_id=company_id)
+                           company=db(Company, id=company_id).one())
 
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['POST'])
