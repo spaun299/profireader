@@ -379,7 +379,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 s.getTemp(iAttrs.ngCity);
             }
         }
-    }])
+    }]);
 
 
 areAllEmpty = function () {
@@ -401,7 +401,7 @@ areAllEmpty = function () {
         }
     });
     return are;
-}
+};
 
 function file_choose(selectedfile) {
     var args = top.tinymce.activeEditor.windowManager.getParams();
@@ -429,17 +429,18 @@ module.config(function ($provide) {
 module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_called_for', 'file_manager_on_action',
     'file_manager_default_action',
     function ($scope, $modalInstance, file_manager_called_for, file_manager_on_action, file_manager_default_action) {
+
 //TODO: SW fix this pls
 
         closeFileManager = function () {
             $scope.$apply(function () {
                 $modalInstance.dismiss('cancel')
             });
-        }
+        };
 
         $scope.close = function () {
             $modalInstance.dismiss('cancel');
-        }
+        };
 
         $scope.src = '/filemanager/';
         var params = {};
@@ -516,9 +517,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             }
             else if(scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400){
                 scope.$$translate_accessed[phrase] = true;
-                $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
-
-                });
+                //$ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {});
             }
             if (scope.$$translate[phrase])
                 phrase = scope.$$translate[phrase]['lang'];
@@ -554,7 +553,6 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 scope.data = beforeload(data);
                 scope.original_data = $.extend(true, {}, scope.data);
                 if (afterload) afterload();
-                console.log(data.articles);
 
             }).finally(function () {
                 scope.loading = false;
@@ -590,21 +588,9 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             plugins: 'advlist autolink link image charmap print paste table',
             skin: 'lightgray',
             theme: 'modern',
-            setup: function (editor) {
-                console.log('setup', editor);
-                editor.on('PreInit', function (event) {
-                    editor.parser.addNodeFilter('aaa', function (nodes, name) {
-                        console.log(nodes);
-                        $.each(nodes, function (i, v) {
-                            v.unwrap();
-                        });
-                    });
-                    //editor.parser.addAttributeFilter('src,href', function (nodes, name) {
-                    //    console.log('addAttributeFilter', nodes, name);
-                    //    debugger;
-                    //    });
-                });
-            },
+            'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | pr_formats | bullist numlist outdent indent | link image table",
+            //'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table"[*],
+            'valid_elements': "img[*],table[*],tbody[*],td[*],th[*],tr[*],p[*],h1[*],h2[*],h3[*],h4[*],h5[*],h6[*],div[*],ul[*],ol[*],li[*],strong[*],em[*],span[*],blockquote[*],sup[*],sub[*],code[*],pre[*],a[*]",
             //init_instance_callback1: function () {
             //    console.log('init_instance_callback', arguments);
             //},
@@ -631,17 +617,8 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             },
             //valid_elements: Config['article_html_valid_elements'],
             //valid_elements: 'a[class],img[class|width|height],p[class],table[class|width|height],th[class|width|height],tr[class],td[class|width|height],span[class],div[class],ul[class],ol[class],li[class]',
-            content_css: "/static/front/bird/css/article.css",
-            aastyle_formats: [
-                {title: 'HEAD1', block: 'div', classes: 'h1'},
-                {title: 'HEAD2', block: 'div', classes: 'h2'},
-                {title: 'HEAD3', block: 'div', classes: 'h3'},
-                {title: 'BIG', inline: 'span', classes: 'big'},
-                {title: 'BIGGER', inline: 'span', classes: 'bigger'},
-                {title: 'NORMAL', inline: 'span', classes: 'small'},
-                {title: 'SMALLER', inline: 'span', classes: 'smaller'},
-                {title: 'SMALL', inline: 'span', classes: 'small'}
-            ]
+            content_css: ["/static/css/article.css", "/static/front/bird/css/article.css"],
+
 
 
             //paste_auto_cleanup_on_paste : true,
@@ -702,11 +679,11 @@ function cleanup_html(html) {
         });
     });
 
-    var tags = html.split(/<[^>]*>/)
+    var tags = html.split(/<[^>]*>/);
 
     $.each(tags, function (tagindex, tag) {
         console.log(tagindex, tag);
-    })
+    });
 
     return html;
 }

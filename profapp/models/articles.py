@@ -386,7 +386,6 @@ class Article(Base, PRBase):
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
-
     def get_article_with_html_tag(self, text_into_html):
         article = self.get_client_side_dict()
         article['mine_version']['title'] = article['mine_version']['title'].replace(text_into_html,

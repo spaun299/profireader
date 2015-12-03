@@ -170,7 +170,7 @@ class Portal(Base, PRBase):
 
         for division in self.divisions:
             if division.portal_division_type_id == 'company_subportal':
-                PortalDivisionSettings_company_subportal(
+                PortalDivisionSettingsCompanySubportal(
                     member_company_portal=division.settings['member_company_portal'],
                     portal_division=division).save()
 
@@ -285,18 +285,17 @@ class MemberCompanyPortal(Base, PRBase):
 
 class ReaderUserPortalPlan(Base, PRBase):
     __tablename__ = 'reader_user_portal_plan'
-    id = Column(TABLE_TYPES['id_profireader'], nullable=False,
-                primary_key=True)
+    id = Column(TABLE_TYPES['id_profireader'], nullable=False, primary_key=True)
     name = Column(TABLE_TYPES['name'], nullable=False)
 
     def __init__(self, name=None):
+        super(ReaderUserPortalPlan, self).__init__()
         self.name = name
 
 
 class PortalLayout(Base, PRBase):
     __tablename__ = 'portal_layout'
-    id = Column(TABLE_TYPES['id_profireader'], nullable=False,
-                primary_key=True)
+    id = Column(TABLE_TYPES['id_profireader'], nullable=False, primary_key=True)
     name = Column(TABLE_TYPES['name'], nullable=False)
     path = Column(TABLE_TYPES['name'], nullable=False)
 
@@ -348,16 +347,16 @@ class PortalDivision(Base, PRBase):
     #     #     pass
     #     if target.portal_division_type_id == 'company_subportal':
     #         # member_company_portal = db(MemberCompanyPortal, company_id = target.settings['company_id'], portal_id = target.portal_id).one()
-    #         addsettings = PortalDivisionSettings_company_subportal(
+    #         addsettings = PortalDivisionSettingsCompanySubportal(
     #             member_company_portal=target.settings['member_company_portal'], portal_division=target)
     #         g.db.add(addsettings)
-    #         # target.settings = db(PortalDivisionSettings_company_subportal).filter_by(
+    #         # target.settings = db(PortalDivisionSettingsCompanySubportal).filter_by(
     #         #     portal_division_id=self.id).one()
 
     @orm.reconstructor
     def init_on_load(self):
         if self.portal_division_type_id == 'company_subportal':
-            self.settings = db(PortalDivisionSettings_company_subportal).filter_by(
+            self.settings = db(PortalDivisionSettingsCompanySubportal).filter_by(
                 portal_division_id=self.id).one()
 
     def get_client_side_dict(self, fields='id|name',
@@ -376,7 +375,7 @@ class PortalDivision(Base, PRBase):
 # event.listen(PortalDivision, 'after_attach', PortalDivision.after_attach)
 
 
-class PortalDivisionSettings_company_subportal(Base, PRBase):
+class PortalDivisionSettingsCompanySubportal(Base, PRBase):
     __tablename__ = 'portal_division_settings_company_subportal'
 
     id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
@@ -391,6 +390,7 @@ class PortalDivisionSettings_company_subportal(Base, PRBase):
     portal_division = relationship(PortalDivision)
 
     def __init__(self, member_company_portal=member_company_portal, portal_division=portal_division):
+        super(PortalDivisionSettingsCompanySubportal, self).__init__()
         self.portal_division = portal_division
         self.member_company_portal = member_company_portal
 
@@ -410,17 +410,17 @@ class PortalDivisionType(Base, PRBase):
 class UserPortalReader(Base, PRBase):
     __tablename__ = 'user_portal_reader'
     id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
-    user_id = Column(TABLE_TYPES['id_profireader'],
-                     ForeignKey('user.id'))
-    company_id = Column(TABLE_TYPES['id_profireader'],
-                        ForeignKey('company.id'))
-    status = Column(TABLE_TYPES['id_profireader'])
-    portal_plan_id = Column(TABLE_TYPES['id_profireader'],
-                            ForeignKey('reader_user_portal_plan.id'))
+    user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'))
+    portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
+    status = Column(TABLE_TYPES['id_profireader'], default='active', nullable=False)
+    portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('reader_user_portal_plan.id'))
 
-    def __init__(self, user_id=None, company_id=None, status=None,
-                 portal_plan_id=None):
+    portal = relationship('Portal')
+    user = relationship('User')
+
+    def __init__(self, user_id=None, portal_id=None, status='active', portal_plan_id=None):
+        super(UserPortalReader, self).__init__()
         self.user_id = user_id
-        self.company_id = company_id
+        self.portal_id = portal_id
         self.status = status
-        self.portal_plan_id = portal_plan_id
+        self.portal_plan_id = portal_plan_id or g.db(ReaderUserPortalPlan.id).filter_by(name='free').one()[0]

@@ -25,6 +25,7 @@ from .models.users import User
 from .models.config import Config
 from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
+from .models.tools import HtmlHelper
 import json
 import time
 
@@ -357,7 +358,7 @@ login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 #  The login_view attribute sets the endpoint for the login page.
 #  I am not sure that it is necessary
-login_manager.login_view = 'auth.login'
+login_manager.login_view = 'auth.login_signup_endpoint'
 
 
 class AnonymousUser(AnonymousUserMixin):
@@ -393,9 +394,26 @@ class AnonymousUser(AnonymousUserMixin):
     def user_name():
         return 'Guest'
 
-    @staticmethod
-    def avatar(size=0):
-        pass
+    def avatar(self, size=100):
+        avatar = self.gravatar(size=size)
+        return avatar
+
+    def gravatar(self, size=100, default='identicon', rating='g'):
+        if request.is_secure:
+            url = 'https://secure.gravatar.com/avatar'
+        else:
+            url = 'http://www.gravatar.com/avatar'
+
+        email = getattr(self, 'profireader_email', 'guest@profireader.com')
+
+        # email = 'guest@profireader.com'
+        # if self.profireader_email:
+        #     email = self.profireader_email
+
+        hash = hashlib.md5(
+            email.encode('utf-8')).hexdigest()
+        return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
+            url=url, hash=hash, size=size, default=default, rating=rating)
 
     def __repr__(self):
         return "<User(id = %r)>" % self.id
@@ -457,6 +475,7 @@ def create_app(config='config.ProductionDevelopmentConfig',
     app.jinja_env.globals.update(file_url=file_url)
     app.jinja_env.globals.update(config_variables=config_variables)
     app.jinja_env.globals.update(_=translate_phrase)
+    app.jinja_env.globals.update(tinymce_format_groups=HtmlHelper.tinymce_format_groups)
 
 
     # see: http://flask.pocoo.org/docs/0.10/patterns/sqlalchemy/
