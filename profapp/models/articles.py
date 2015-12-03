@@ -111,6 +111,7 @@ class ArticlePortalDivision(Base, PRBase):
         self.portal_division_id = portal_division_id
         # self.portal_id = portal_id
 
+
     def get_client_side_dict(self, fields='id|image_file_id|title|short|image_file_id|'
                                           'keywords|cr_tm|md_tm|'
                                           'status|publishing_tm, '
@@ -191,6 +192,7 @@ class ArticleCompany(Base, PRBase):
     md_tm = Column(TABLE_TYPES['timestamp'])
     image_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'), nullable=False)
     keywords = Column(TABLE_TYPES['keywords'], nullable=False)
+# TODO: OZ by OZ: we need keywords in ArticleCompany ??
 
     company = relationship(Company)
     editor = relationship(User)
