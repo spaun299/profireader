@@ -170,7 +170,11 @@ class ArticlePortalDivision(Base, PRBase):
             filter(Company.id == kwargs['company_id'])
         if search_text:
             sub_query = sub_query.filter(ArticlePortalDivision.title.ilike("%" + search_text + "%"))
-        return sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
+        if kwargs['sort_date']:
+            sub_query = sub_query.order_by(ArticlePortalDivision.publishing_tm.asc()) if kwargs['sort_date'] == 'asc' else sub_query.order_by(ArticlePortalDivision.publishing_tm.desc())
+        else:
+            sub_query = sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
+        return sub_query
 
 
 class ArticleCompany(Base, PRBase):
@@ -243,19 +247,21 @@ class ArticleCompany(Base, PRBase):
 
 
     @staticmethod
-    def subquery_user_articles(search_text=None, user_id=None, **kwargs):
+    def subquery_user_articles(sort=None, search_text=None, user_id=None, **kwargs):
         article_filter = db(ArticleCompany, article_id=Article.id, **kwargs)
         if search_text:
             article_filter = article_filter.filter(ArticleCompany.title.ilike(
                 "%" + repr(search_text).strip("'") + "%"))
 
         own_article = aliased(ArticleCompany, name="OwnArticle")
-
-        return db(Article, own_article.md_tm, author_user_id=user_id). \
+        sub_query = db(Article, own_article.md_tm, author_user_id=user_id). \
             join(own_article,
-                 and_(Article.id == own_article.article_id, own_article.company_id == None)). \
-            order_by(expression.desc(own_article.md_tm)). \
-            filter(article_filter.exists())
+                 and_(Article.id == own_article.article_id, own_article.company_id == None))
+        if sort:
+            sub_query = sub_query.order_by(own_article.md_tm.asc()) if sort == 'asc' else sub_query.order_by(own_article.md_tm.desc())
+        else:
+            sub_query = sub_query.order_by(own_article.md_tm.desc())
+        return sub_query.filter(article_filter.exists())
 
     @staticmethod
     def subquery_company_articles(search_text=None, company_id=None, portal_id=None, **kwargs):
@@ -271,7 +277,10 @@ class ArticleCompany(Base, PRBase):
             sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id).\
             join(PortalDivision, PortalDivision.id == ArticlePortalDivision.portal_division_id).\
             filter(PortalDivision.portal_id == portal_id)
-        sub_query = sub_query.order_by(expression.desc(ArticleCompany.md_tm))
+        if kwargs['sort_date']:
+            sub_query = sub_query.order_by(ArticleCompany.md_tm.asc()) if kwargs['sort_date'] == 'asc' else sub_query.order_by(ArticleCompany.md_tm.desc())
+        else:
+            sub_query = sub_query.order_by(expression.desc(ArticleCompany.md_tm))
         return sub_query
 
         # self.portal_devision_id = portal_devision_id

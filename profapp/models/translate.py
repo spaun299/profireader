@@ -5,6 +5,7 @@ from utils.db_utils import db
 import datetime
 import re
 from flask import g, request, current_app
+from sqlalchemy.sql import expression
 
 class TranslateTemplate(Base, PRBase):
     __tablename__ = 'translate'
@@ -106,7 +107,13 @@ class TranslateTemplate(Base, PRBase):
             sub_query = sub_query.filter(TranslateTemplate.uk.ilike("%" + kwargs['search_in_uk'] + "%"))
         if kwargs['search_in_en']:
             sub_query = sub_query.filter(TranslateTemplate.en.ilike("%" + kwargs['search_in_en'] + "%"))
-        sub_query = sub_query.order_by(TranslateTemplate.template)
+
+        if kwargs['sort_creation_time']:
+            sub_query = sub_query.order_by(TranslateTemplate.cr_tm.asc()) if kwargs['sort_creation_time'] == 'asc' else sub_query.order_by(TranslateTemplate.cr_tm.desc())
+        elif kwargs['sort_last_accessed_time']:
+            sub_query = sub_query.order_by(TranslateTemplate.ac_tm.asc()) if kwargs['sort_last_accessed_time'] == 'asc' else sub_query.order_by(TranslateTemplate.ac_tm.desc())
+        else:
+            sub_query = sub_query.order_by(TranslateTemplate.template)
 
         return sub_query
 

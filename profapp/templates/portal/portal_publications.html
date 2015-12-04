@@ -16,28 +16,11 @@
             $scope.own_company_id = '{{ company_id }}';
             $scope.$$translate = {{ translates('article_list')|safe }};
 
-            $scope.page_changed = function () {
-                $scope.sendData(false);
-                return false;
-            };
-
-            var paginationOptions = {
-                pageNumber: 1,
-                pageSize: 50,
-                sort: null
-            };
-
-            $scope.link = function(row){
-                window.location.href= $scope.url_details({company_id:$scope.own_company_id,article_id:row});
-            };
+            {% raw %}
 
             $scope.update = function(){
-                paginationOptions.pageNumber = 1;
-                $scope.sendData($scope.gridOptions1.columnDefs[0].filter.term);
-            };
-
-            $scope.getTitle = function (row) {
-                return row['Title']
+                $scope.paginationOptions.pageNumber = 1;
+                $scope.sendData($scope.gridOptions1.columnDefs[0].filter.term, $scope.paginationOptions);
             };
 
             $scope.refresh = function(){
@@ -46,7 +29,7 @@
                 $scope.gridOptions1.columnDefs[3]['filter']['term'] = '1';
                 $scope.company_id = null;
                 $scope.status = null;
-                $scope.sendData('');
+                $scope.sendData('', $scope.paginationOptions);
             };
 
             $scope.FilteredSt = function( row, rowRenderIndex, col, colRenderIndex ) {
@@ -54,8 +37,8 @@
                     $scope.index1 = 0;
                 if( col.filters[0].term && $scope.index1 !== col.filters[0].term){
                     $scope.status = $scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.statuses[col.filters[0].term - 1]['label'];
-                    paginationOptions.pageNumber = 1;
-                    $scope.sendData('');
+                    $scope.paginationOptions.pageNumber = 1;
+                    $scope.sendData('', $scope.paginationOptions);
                     $scope.index1 = col.filters[0].term;
                 }else if(!col.filters[0].term){
                     $scope.refresh()
@@ -66,29 +49,29 @@
                     $scope.index = 0;
                 if( col.filters[0].term && $scope.index !== col.filters[0].term){
                     $scope.company_id = $scope.companies[col.filters[0].term - 1]['label'] === 'All'? undefined: $scope.companies[col.filters[0].term - 1]['id'];
-                    paginationOptions.pageNumber = 1;
-                    $scope.sendData('');
+                    $scope.paginationOptions.pageNumber = 1;
+                    $scope.sendData('', $scope.paginationOptions);
                     $scope.index = col.filters[0].term;
                 }else if(!col.filters[0].term){
                     $scope.refresh()
                 }
               };
 
-            $scope.new_search_text = '';
 
-
-            $scope.sendData = function (new_search_text) {
+            $scope.sendData = function (new_search_text, paginationOptions) {
                 var data = {};
                 $scope.loading = true;
-                console.log($scope.status);
-                data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
-                data.status = $scope.status ? $scope.status : null;
-                data.new_status = $scope.new_status ? $scope.new_status : null;
                 data.article_id = $scope.article_id ? $scope.article_id : null;
                 data.company_id = ($scope.company_id !== ' ') ? $scope.company_id : null;
-                data.page = paginationOptions.pageNumber;
-                data.pageSize = paginationOptions.pageSize;
-                $ok($scope.url_search_article({company_id: '{{ company_id }}'}), data, function (resp) {
+                data.grid_data = {
+                    'status': $scope.status ? $scope.status : null,
+                    'new_status': $scope.new_status ? $scope.new_status : null,
+                    'page': $scope.paginationOptions.pageNumber,
+                    'pageSize': $scope.paginationOptions.pageSize,
+                    'search_text': (new_search_text !== false) ? new_search_text : $scope.data['search_text'],
+                    'sort_date':$scope.paginationOptions.sort
+                };
+                $ok($scope.url_search_article({company_id: $scope.own_company_id}), data, function (resp) {
                     $scope.datas = resp;
                     $scope.publications = resp.publications;
                     $scope.gridOptions1.totalItems = resp.total;
@@ -96,7 +79,6 @@
                     $scope.companies = resp.companies;
                     $scope.gridOptions1.columnDefs[2]['filter']['selectOptions'] = resp.companies;
                     $scope.gridOptions1.columnDefs[3]['filter']['selectOptions'] = $scope.statuses ;
-//                    $scope.data.search_text = (new_search_text !== false) ? new_search_text : $scope.data['search_text'];
                 }).finally(function () {
                     $scope.loading = false;
                     $scope.load_contr = true
@@ -112,20 +94,21 @@
                     useExternalSorting: true,
                     useExternalFiltering: true,
                     columnDefs: [
-                      { name: 'Title', enableSorting: false,enableCellEdit: false,
-                          width: '35%', cellTemplate: '<div ng-class="link" style="cursor:pointer;padding-left: 10px"><a ng-click="grid.appScope.link(row.entity.id)" ng-bind="grid.appScope.getTitle(row.entity)"></a></div>',
+                      { name: 'Title', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
+                          width: '35%', cellTemplate: '<div ng-class="link" style="cursor:pointer;padding-left: 10px"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.own_company_id,article_id:row.entity.id})}}" ng-bind="row.entity.Title"></a></div>',
                           filter: {
                             type: uiGridConstants.filter.INPUT}
                       },
                       { name: 'Date',enableCellEdit: false, enableFiltering: false },
-                      { name: 'Company', enableSorting: false,enableCellEdit: false,
+                      { name: 'Company', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
                           filter: {
                             term: '1',
                             type: uiGridConstants.filter.SELECT},
                           headerCellClass: $scope.FilteredComp
 
                       },
-                      { name: 'Publication status', enableSorting: false, editableCellTemplate: '<div><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',editDropdownValueLabel: 'value',
+                      { name: 'Publication status', enableSorting: false, cellClass:'blue', editableCellTemplate: '<div class = "ui_dropdown"><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',editDropdownValueLabel: 'value',
+                          enableColumnMenu: false,
                           filter: {
                             term: '1',
                             type: uiGridConstants.filter.SELECT},
@@ -133,37 +116,17 @@
                       }
 
                     ],
-                    onRegisterApi: function(gridApi) {
-                      $scope.gridApi = gridApi;
-                      $scope.gridApi.core.on.sortChanged($scope, function(grid, sortColumns) {
-                        if (sortColumns.length == 0) {
-                          paginationOptions.sort = null;
-                        } else {
-                          paginationOptions.sort = sortColumns[0].sort.direction;
-                        }
-                      });
-                      gridApi.edit.on.afterCellEdit($scope,function(rowEntity, colDef, newValue, oldValue){
-                              if(newValue !== oldValue){
-                                 $scope.new_status = newValue;
-                                 $scope.article_id = rowEntity.id;
-                              }
-                        });
-                      gridApi.pagination.on.paginationChanged($scope, function (newPage, pageSize) {
-                        paginationOptions.pageNumber = newPage;
-                        paginationOptions.pageSize = pageSize;
-                        $scope.sendData('');
-                      });
-                    }
+                    onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions)}
                   };
 
 
 
         }]);
-
+    {% endraw %}
     </script>
     {% include 'company/company_base_angular.html' %}
     {% raw %}
-    <div ng-init="sendData('')" ng-controller="article_list">
+    <div ng-init="sendData('', $scope.paginationOptions)" ng-controller="article_list">
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
         <div ng-if="load_contr">
             <div ng-show="!areAllEmpty(datas.grid_data)" class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1" ></div>

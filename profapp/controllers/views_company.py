@@ -80,21 +80,24 @@ def materials_load(json, company_id):
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
 
-    page = json.get('page') or 1
-    search_text = json.get('search_text')
+    page = json.get('grid_data')['page'] or 1
+    search_text = json.get('grid_data')['search_text']
     params = {}
-    params['status'] = json.get('status') if json.get('status') else None
-    params['publ_status'] = json.get('publ_status') if json.get('publ_status') else None
-    if json.get('new_status'):
+    params['status'] = json.get('grid_data')['status'] if json.get('grid_data')['status'] else None
+
+    params['publ_status'] = json.get('grid_data')['publ_status'] if json.get('grid_data')['publ_status'] else None
+    params['sort_date'] = json.get('grid_data')['sort_date'] if json.get('grid_data')['sort_date'] else None
+    print(json.get('grid_data'))
+    if json.get('grid_data')['new_status']:
         ArticleCompany.update_article(
         company_id=company_id,
         article_id=json.get('article_id'),
-        **{'status': json.get('new_status')})
+        **{'status': json.get('grid_data')['new_status']})
     subquery = ArticleCompany.subquery_company_articles(search_text=search_text,
                                                         company_id=company_id,
                                                         portal_id=json.get('portal_id'),
                                                         **params)
-    articles, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('pageSize'))
+    articles, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('grid_data')['pageSize'])
     #portals = ArticlePortalDivision.get_portals_where_company_send_article(company_id)
     # statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
     add_param = {'value': '1','label': '-- all --'}

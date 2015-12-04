@@ -23,6 +23,8 @@ def translations_load(json):
     params['search_in_phrase'] = json.get('search_in_phrase') if json.get('search_in_phrase') else None
     params['search_in_uk'] = json.get('search_in_uk') if json.get('search_in_uk') else None
     params['search_in_en'] = json.get('search_in_en') if json.get('search_in_en') else None
+    params['sort_creation_time'] = json.get('sort_creation_time') if json.get('sort_creation_time') else None
+    params['sort_last_accessed_time'] = json.get('sort_last_accessed_time') if json.get('sort_last_accessed_time') else None
     subquery = TranslateTemplate.subquery_search(template=json.get('template') or None,
                                                  url=json.get('url') or None,
                                                  **params)

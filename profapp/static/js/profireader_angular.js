@@ -413,7 +413,7 @@ function file_choose(selectedfile) {
 
 // 'ui.select' uses "/static/js/select.js" included in index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
-module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid','ui.grid.pagination','ui.grid.edit','ngAnimate', 'ngTouch', 'ui.grid.selection','ui.grid.grouping','ui.grid.treeView']);
+module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView']);
 
 module.config(function ($provide) {
     $provide.decorator('$controller', function ($delegate) {
@@ -457,19 +457,19 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
         $scope.src = $scope.src + '?' + $.param(params);
     }]);
 
-module.directive('ngEnter', function() {
-        return function(scope, element, attrs) {
-            element.bind("keydown keypress", function(event) {
-                if(event.which === 13) {
-                    scope.$apply(function(){
-                        scope.$eval(attrs.ngEnter, {'event': event});
-                    });
+module.directive('ngEnter', function () {
+    return function (scope, element, attrs) {
+        element.bind("keydown keypress", function (event) {
+            if (event.which === 13) {
+                scope.$apply(function () {
+                    scope.$eval(attrs.ngEnter, {'event': event});
+                });
 
-                    event.preventDefault();
-                }
-            });
-        };
-    });
+                event.preventDefault();
+            }
+        });
+    };
+});
 
 module.run(function ($rootScope, $ok, $sce, $modal) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
@@ -494,7 +494,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 scope.$$translate_accessed = {};
             }
             new Date;
-            var t = Date.now()/1000;
+            var t = Date.now() / 1000;
             //TODO OZ by OZ hasOwnProperty
             var CtrlName = this.controllerName ? this.controllerName : 'None';
             if (scope.$$translate[phrase] === undefined) {
@@ -515,9 +515,10 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 });
                 scope.$$translate[phrase] = phrase;
             }
-            else if(scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400){
+            else if (scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400) {
                 scope.$$translate_accessed[phrase] = true;
-                $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {});
+                $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
+                });
             }
             if (scope.$$translate[phrase])
                 phrase = scope.$$translate[phrase]['lang'];
@@ -543,6 +544,51 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 return phrase
             }
         },
+        paginationOptions :{
+                pageNumber: 1,
+                pageSize: 50,
+                sort: null
+            },
+        //FilteredMat:function(row, rowRenderIndex, col, colRenderIndex, paginationOptions ) {
+        //        console.log(col);
+        //        var scope = this;
+        //        if(!scope.index1)
+        //            scope.index1 = 0;
+        //        if( col.filters[0].term && scope.index1 !== col.filters[0].term){
+        //            scope.status = scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: scope.statuses[col.filters[0].term - 1]['label'];
+        //            scope.paginationOptions.pageNumber = 1;
+        //            scope.sendData('', scope.paginationOptions);
+        //            scope.index1 = col.filters[0].term;
+        //        }else if(!col.filters[0].term){
+        //            scope.refresh()
+        //        }
+        //      },
+        setGridExtarnals: function (gridApi, externalFunction, paginationOptions) {
+            var scope = this;
+            scope.gridApi = gridApi;
+            scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {
+                if (sortColumns.length === 0) {
+                    paginationOptions.sort = null;
+                    externalFunction('',paginationOptions)
+                } else {
+                    paginationOptions.sort = sortColumns[0].sort.direction;
+                    externalFunction('',paginationOptions)
+                }
+            });
+            gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
+                if (newValue !== oldValue) {
+                    scope.new_status = newValue;
+                    scope.article_id = rowEntity.id;
+                    externalFunction('',paginationOptions);
+                }
+            });
+            gridApi.pagination.on.paginationChanged(scope, function (newPage, pageSize) {
+                paginationOptions.pageNumber = newPage;
+                paginationOptions.pageSize = pageSize;
+                externalFunction('',paginationOptions)
+            });
+        },
+
         loadData: function (url, senddata, beforeload, afterload) {
             var scope = this;
             scope.loading = true;
@@ -618,7 +664,6 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             //valid_elements: Config['article_html_valid_elements'],
             //valid_elements: 'a[class],img[class|width|height],p[class],table[class|width|height],th[class|width|height],tr[class],td[class|width|height],span[class],div[class],ul[class],ol[class],li[class]',
             content_css: ["/static/css/article.css", "/static/front/bird/css/article.css"],
-
 
 
             //paste_auto_cleanup_on_paste : true,
