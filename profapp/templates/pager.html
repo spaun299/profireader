@@ -15,27 +15,24 @@
     <div class="">
         <button ng-disabled="!data.image.image_file_id" ng-click="cropper('zoom', 0.1)" class="btn btn-primary"
                 type="button" title="Zoom In">
-           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;zoom&quot;, 0.1)">
-             <span class="cropericon cropericon-zoom-in"></span>
-           </span>
+                  <span class="docs-tooltip" data-toggle="tooltip"><span
+                        class="glyphicon glyphicon-zoom-in" ></span></span>
         </button>
-        <button ng-click="cropper('zoom', -0.1)" class="btn btn-primary" type="button"
+        <button ng-disabled="!data.image.image_file_id" ng-click="cropper('zoom', -0.1)" class="btn btn-primary" type="button"
                 title="Zoom Out">
-           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;zoom&quot;, -0.1)">
-             <span class="cropericon cropericon-zoom-out"></span>
-           </span>
+                 <span class="docs-tooltip" data-toggle="tooltip"><span
+                        class="glyphicon glyphicon-zoom-out"></span></span>
         </button>
-        <button ng-click="cropper('rotate', -90)" class="btn btn-primary" type="button"
+
+        <button ng-disabled="!data.image.image_file_id" ng-click="cropper('rotate', -90)" class="btn btn-primary" type="button"
                 title="Rotate Left">
-           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;rotate&quot;, -90)">
-             <span class="cropericon cropericon-rotate-left"></span>
-           </span>
+               <span class="rotate" data-toggle="tooltip"><span
+                        class="icon-transform-rotate-counterclockwise"></span></span>
         </button>
-        <button ng-click="cropper('rotate', 90)" class="btn btn-primary" type="button"
+        <button class="btn btn-primary" ng-disabled="!data.image.image_file_id" ng-click="cropper('rotate', 90)"  type="button"
                 title="Rotate Right">
-           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;rotate&quot;, 90)">
-             <span class="cropericon cropericon-rotate-right"></span>
-           </span>
+             <span class="rotate" data-toggle="tooltip"><span
+                        class="icon-transform-rotate-clockwise"></span></span>
         </button>
         <button class="btn btn-primary" id="replace-toggle" type="button" value="{{ image_file_url }}"
                 ng-click="chooseImage()">
