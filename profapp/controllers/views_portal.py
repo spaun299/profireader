@@ -517,13 +517,14 @@ def publications_load(json, company_id):
     portal = db(Company, id=company_id).one().own_portal
     if not portal:
         return dict(portal_not_exist=True)
-    current_page = json.get('page') or 1
-    params = {'search_text': json.get('search_text'), 'portal_id': portal.id}
-    params['status'] = json.get('status') if json.get('status') else None
+    current_page = json.get('grid_data')['page'] or 1
+    params = {'search_text': json.get('grid_data')['search_text'], 'portal_id': portal.id}
+    params['status'] = json.get('grid_data')['status'] if json.get('grid_data')['status'] else None
     params['company_id'] = json.get('company_id') if json.get('company_id') else None
+    params['sort_date'] = json.get('grid_data')['sort_date'] if json.get('grid_data')['sort_date'] else None
     subquery = ArticlePortalDivision.subquery_portal_articles(**params)
-    if json.get('new_status'):
-        db(ArticlePortalDivision, id=json.get('article_id')).update({'status': json.get('new_status')})
+    if json.get('grid_data')['new_status']:
+        db(ArticlePortalDivision, id=json.get('article_id')).update({'status': json.get('grid_data')['new_status']})
 
     articles, pages, current_page = pagination(subquery,
                                                page=current_page)

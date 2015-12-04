@@ -30,7 +30,8 @@ def load_mine(json):
         params['company_id'] = chosen_company_id
     if article_status and article_status != 'All':
         params['status']  = article_status
-    subquery = ArticleCompany.subquery_user_articles(**params)
+    date_sort = json.get('sort_date') if json.get('sort_date') else None
+    subquery = ArticleCompany.subquery_user_articles(sort=date_sort,**params)
     articles, pages, current_page = pagination(subquery,
                                                page=current_page, items_per_page=json.get('pageSize'))
 

@@ -665,7 +665,8 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             }
             else if (scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400) {
                 scope.$$translate_accessed[phrase] = true;
-                //$ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {});
+                $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
+                });
             }
             if (scope.$$translate[phrase])
                 phrase = scope.$$translate[phrase]['lang'];
@@ -691,6 +692,51 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 return phrase
             }
         },
+        paginationOptions :{
+                pageNumber: 1,
+                pageSize: 50,
+                sort: null
+            },
+        //FilteredMat:function(row, rowRenderIndex, col, colRenderIndex, paginationOptions ) {
+        //        console.log(col);
+        //        var scope = this;
+        //        if(!scope.index1)
+        //            scope.index1 = 0;
+        //        if( col.filters[0].term && scope.index1 !== col.filters[0].term){
+        //            scope.status = scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: scope.statuses[col.filters[0].term - 1]['label'];
+        //            scope.paginationOptions.pageNumber = 1;
+        //            scope.sendData('', scope.paginationOptions);
+        //            scope.index1 = col.filters[0].term;
+        //        }else if(!col.filters[0].term){
+        //            scope.refresh()
+        //        }
+        //      },
+        setGridExtarnals: function (gridApi, externalFunction, paginationOptions) {
+            var scope = this;
+            scope.gridApi = gridApi;
+            scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {
+                if (sortColumns.length === 0) {
+                    paginationOptions.sort = null;
+                    externalFunction('',paginationOptions)
+                } else {
+                    paginationOptions.sort = sortColumns[0].sort.direction;
+                    externalFunction('',paginationOptions)
+                }
+            });
+            gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
+                if (newValue !== oldValue) {
+                    scope.new_status = newValue;
+                    scope.article_id = rowEntity.id;
+                    externalFunction('',paginationOptions);
+                }
+            });
+            gridApi.pagination.on.paginationChanged(scope, function (newPage, pageSize) {
+                paginationOptions.pageNumber = newPage;
+                paginationOptions.pageSize = pageSize;
+                externalFunction('',paginationOptions)
+            });
+        },
+
         loadData: function (url, senddata, beforeload, afterload) {
             var scope = this;
             scope.loading = true;

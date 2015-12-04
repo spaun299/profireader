@@ -5,6 +5,7 @@ from utils.db_utils import db
 import datetime
 import re
 from flask import g, request, current_app
+from sqlalchemy.sql import expression
 
 class TranslateTemplate(Base, PRBase):
     __tablename__ = 'translate'
@@ -91,7 +92,7 @@ class TranslateTemplate(Base, PRBase):
         return True if list else False
 
     @staticmethod
-    def subquery_search(search_text=None, template=None, url=None, **kwargs):
+    def subquery_search(template=None, url=None, **kwargs):
 
         sub_query = db(TranslateTemplate)
         if template:
@@ -100,10 +101,19 @@ class TranslateTemplate(Base, PRBase):
         if url:
             sub_query = sub_query.filter_by(url=url)
 
-        if search_text:
-            sub_query = sub_query.filter(TranslateTemplate.name.ilike("%" + search_text + "%"))
+        if kwargs['search_in_phrase']:
+            sub_query = sub_query.filter(TranslateTemplate.name.ilike("%" + kwargs['search_in_phrase'] + "%"))
+        if kwargs['search_in_uk']:
+            sub_query = sub_query.filter(TranslateTemplate.uk.ilike("%" + kwargs['search_in_uk'] + "%"))
+        if kwargs['search_in_en']:
+            sub_query = sub_query.filter(TranslateTemplate.en.ilike("%" + kwargs['search_in_en'] + "%"))
 
-        sub_query = sub_query.order_by(TranslateTemplate.template)
+        if kwargs['sort_creation_time']:
+            sub_query = sub_query.order_by(TranslateTemplate.cr_tm.asc()) if kwargs['sort_creation_time'] == 'asc' else sub_query.order_by(TranslateTemplate.cr_tm.desc())
+        elif kwargs['sort_last_accessed_time']:
+            sub_query = sub_query.order_by(TranslateTemplate.ac_tm.asc()) if kwargs['sort_last_accessed_time'] == 'asc' else sub_query.order_by(TranslateTemplate.ac_tm.desc())
+        else:
+            sub_query = sub_query.order_by(TranslateTemplate.template)
 
         return sub_query
 
