@@ -186,7 +186,7 @@
                 {{ _('Select picture') }}
                 <div ng-include="'cropper.html'"></div>
                 <div class="update_col1">
-                    {#TODO: OZ by OZ move this code to one file#}
+
                     <link href="/static/css/article.css" rel="stylesheet">
                     <link href="/static/front/bird/css/article.css" rel="stylesheet">
                     {{ _('Full text') }}
@@ -195,7 +195,6 @@
 
                 </div>
 
-                {#TODO: AA by OZ#}
                 <div ng-if="data.article.division" class="update_col1">
                     we have division ({{ data.article.division.name }} - {{ data.article.division.id }})<br/>
                     so tags goes here<br/>
