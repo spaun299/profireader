@@ -14,7 +14,12 @@
   width: 320px;
   text-align: center;
 }
-
+.btn{
+    width: 45px;  height: 45px;
+}
+.rotate{
+            margin-left: -2px;
+        }
 .img-container {
   min-height: 250px;
   max-height: 250px;
