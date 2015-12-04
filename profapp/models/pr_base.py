@@ -65,7 +65,9 @@ class Search(Base):
         """ *args: dictionary with following values -
                              class = sqlalchemy table class object,
                 optional:    filter: sqlalchemy filter with your own parameters,
-                optional:    fields: (tuple) with fields name in table Search.kind,
+                optional:    fields: (tuple ot list) with fields name in table Search.kind,
+                if you want to pass one fieldname you almost should make tuple
+                or list. example: ('title', ):
                 optional:    join: subquery wich you want to join without filters.
             For example: {'class': Company,
                           'filter': ~db(User, company_id=1).exists(),
