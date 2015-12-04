@@ -86,6 +86,154 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             );
         }
     }])
+    .directive('prCropper', function () {
+        return {
+            restrict: 'A',
+            scope: {
+                prCropper: '=',
+                ngModel: '='
+            },
+            link: function (scope, element, attrs) {
+
+                scope.cropper = null;
+                scope.options = {};
+                var $image = $(element);
+
+                var reset = function () {
+                    console.log('aaa');
+                    if (scope.ngModel && scope.ngModel.ratio) scope.options.aspectRatio = scope.ngModel.ratio;
+                    if (scope.ngModel && scope.ngModel.coordinates) scope.options.data = scope.ngModel.coordinates;
+                    $image.cropper('destroy').cropper(scope.options);
+                    scope.prCropper = function () {
+                        $image.cropper.apply($image, arguments);
+                    }
+                };
+
+                var changeImage = function () {
+                    console.log(scope.ngModel);
+                    if (scope.ngModel) {
+                        $image.attr('src', fileUrl(scope.ngModel.image_file_id));
+                        console.log(scope.ngModel.image_file_id, fileUrl(scope.ngModel.image_file_id));
+                        }
+                };
+
+                $image.on({'load': reset});
+
+                scope.$watch('ngModel.image_file_id', changeImage);
+
+                scope.$watch('ngModel.ratio', reset);
+                scope.$watch('ngModel.coordinates', reset);
+
+                reset();
+
+
+                //if (0) {
+                //
+                //    $(document.body).on('click', '[data-method]', function () {
+                //        var data = $(this).data(),
+                //            $target,
+                //            result;
+                //        if (!$image.data('cropper')) {
+                //            return;
+                //        }
+                //
+                //        if (data.method) {
+                //            data = $.extend({}, data); // Clone a new one
+                //
+                //            if (typeof data.target !== 'undefined') {
+                //                $target = $(data.target);
+                //
+                //                if (typeof data.option === 'undefined') {
+                //                    try {
+                //                        data.option = JSON.parse($target.val());
+                //                    } catch (e) {
+                //                        console.log(e.message);
+                //                    }
+                //                }
+                //            }
+                //
+                //            result = $image.cropper(data.method, data.option);
+                //            if (data.method === 'getCroppedCanvas') {
+                //                $('#getCroppedCanvasModal').modal().find('.modal-body').html(result);
+                //            }
+                //
+                //            if ($.isPlainObject(result) && $target) {
+                //                try {
+                //                    $target.val(JSON.stringify(result));
+                //                } catch (e) {
+                //                    console.log(e.message);
+                //                }
+                //            }
+                //
+                //        }
+                //    });
+                //}
+
+                //if (0) {
+                //
+                //
+                //    // Import image
+                //    var $inputImage = $('#inputImage'),
+                //        URL = window.URL || window.webkitURL,
+                //        blobURL;
+                //
+                //    if (URL) {
+                //        $inputImage.change(function () {
+                //            var files = this.files,
+                //                file;
+                //
+                //            if (!$image.data('cropper')) {
+                //                return;
+                //            }
+                //
+                //            if (files && files.length) {
+                //                file = files[0];
+                //
+                //                if (/^image\/\w+$/.test(file.type)) {
+                //                    blobURL = URL.createObjectURL(file);
+                //                    $image.one('built.cropper', function () {
+                //                        URL.revokeObjectURL(blobURL); // Revoke when load complete
+                //                    }).cropper('reset').cropper('replace', blobURL);
+                //                    $inputImage.val('');
+                //                } else {
+                //                    showMessage('Please choose an image file.');
+                //                }
+                //            }
+                //        });
+                //    } else {
+                //        $inputImage.parent().remove();
+                //    }
+                //
+                //
+                //    // Options
+                //    $('.docs-options :checkbox').on('change', function () {
+                //        var $this = $(this),
+                //            cropBoxData,
+                //            canvasData;
+                //
+                //        if (!$image.data('cropper')) {
+                //            return;
+                //        }
+                //
+                //        options[$this.val()] = $this.prop('checked');
+                //
+                //        cropBoxData = $image.cropper('getCropBoxData');
+                //        canvasData = $image.cropper('getCanvasData');
+                //        options.built = function () {
+                //            $image.cropper('setCropBoxData', cropBoxData);
+                //            $image.cropper('setCanvasData', canvasData);
+                //        };
+                //
+                //        $image.cropper('destroy').cropper(options);
+                //    });
+                //
+                //
+                //    // Tooltips
+                //    $('[data-toggle="tooltip"]').tooltip();
+                //}
+            }
+        };
+    })
     .directive('dateTimestampFormat', function () {
         return {
             require: 'ngModel',
@@ -413,7 +561,7 @@ function file_choose(selectedfile) {
 
 // 'ui.select' uses "/static/js/select.js" included in index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
-module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid','ui.grid.pagination','ui.grid.edit','ngAnimate', 'ngTouch', 'ui.grid.selection','ui.grid.grouping','ui.grid.treeView']);
+module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView']);
 
 module.config(function ($provide) {
     $provide.decorator('$controller', function ($delegate) {
@@ -457,19 +605,19 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
         $scope.src = $scope.src + '?' + $.param(params);
     }]);
 
-module.directive('ngEnter', function() {
-        return function(scope, element, attrs) {
-            element.bind("keydown keypress", function(event) {
-                if(event.which === 13) {
-                    scope.$apply(function(){
-                        scope.$eval(attrs.ngEnter, {'event': event});
-                    });
+module.directive('ngEnter', function () {
+    return function (scope, element, attrs) {
+        element.bind("keydown keypress", function (event) {
+            if (event.which === 13) {
+                scope.$apply(function () {
+                    scope.$eval(attrs.ngEnter, {'event': event});
+                });
 
-                    event.preventDefault();
-                }
-            });
-        };
-    });
+                event.preventDefault();
+            }
+        });
+    };
+});
 
 module.run(function ($rootScope, $ok, $sce, $modal) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
@@ -494,7 +642,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 scope.$$translate_accessed = {};
             }
             new Date;
-            var t = Date.now()/1000;
+            var t = Date.now() / 1000;
             //TODO OZ by OZ hasOwnProperty
             var CtrlName = this.controllerName ? this.controllerName : 'None';
             if (scope.$$translate[phrase] === undefined) {
@@ -515,7 +663,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 });
                 scope.$$translate[phrase] = phrase;
             }
-            else if(scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400){
+            else if (scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400) {
                 scope.$$translate_accessed[phrase] = true;
                 //$ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {});
             }
@@ -617,7 +765,6 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             //valid_elements: Config['article_html_valid_elements'],
             //valid_elements: 'a[class],img[class|width|height],p[class],table[class|width|height],th[class|width|height],tr[class],td[class|width|height],span[class],div[class],ul[class],ol[class],li[class]',
             content_css: ["/static/css/article.css", "/static/front/bird/css/article.css"],
-
 
 
             //paste_auto_cleanup_on_paste : true,
@@ -850,3 +997,121 @@ function buildAllowedTagsAndAttributes() {
 
     return allowed_tags;
 }
+
+var init_cropper = null;
+function a() {
+    'use strict';
+    init_cropper = function (ratio, coordinates) {
+        console.log(coordinates);
+        var $image = $('.img-container > img'),
+            options = {
+                aspectRatio: ratio,
+                crop: function (data) {
+                    console.log(data.x);
+                }
+            };
+        if (coordinates) options.data = coordinates;
+        $image.on({}).cropper(options);
+        $(document.body).on('click', '[data-method]', function () {
+            var data = $(this).data(),
+                $target,
+                result;
+            if (!$image.data('cropper')) {
+                return;
+            }
+
+            if (data.method) {
+                data = $.extend({}, data); // Clone a new one
+
+                if (typeof data.target !== 'undefined') {
+                    $target = $(data.target);
+
+                    if (typeof data.option === 'undefined') {
+                        try {
+                            data.option = JSON.parse($target.val());
+                        } catch (e) {
+                            console.log(e.message);
+                        }
+                    }
+                }
+
+                result = $image.cropper(data.method, data.option);
+                if (data.method === 'getCroppedCanvas') {
+                    $('#getCroppedCanvasModal').modal().find('.modal-body').html(result);
+                }
+
+                if ($.isPlainObject(result) && $target) {
+                    try {
+                        $target.val(JSON.stringify(result));
+                    } catch (e) {
+                        console.log(e.message);
+                    }
+                }
+
+            }
+        });
+
+
+        // Import image
+        var $inputImage = $('#inputImage'),
+            URL = window.URL || window.webkitURL,
+            blobURL;
+
+        if (URL) {
+            $inputImage.change(function () {
+                var files = this.files,
+                    file;
+
+                if (!$image.data('cropper')) {
+                    return;
+                }
+
+                if (files && files.length) {
+                    file = files[0];
+
+                    if (/^image\/\w+$/.test(file.type)) {
+                        blobURL = URL.createObjectURL(file);
+                        $image.one('built.cropper', function () {
+                            URL.revokeObjectURL(blobURL); // Revoke when load complete
+                        }).cropper('reset').cropper('replace', blobURL);
+                        $inputImage.val('');
+                    } else {
+                        showMessage('Please choose an image file.');
+                    }
+                }
+            });
+        } else {
+            $inputImage.parent().remove();
+        }
+
+
+        // Options
+        $('.docs-options :checkbox').on('change', function () {
+            var $this = $(this),
+                cropBoxData,
+                canvasData;
+
+            if (!$image.data('cropper')) {
+                return;
+            }
+
+            options[$this.val()] = $this.prop('checked');
+
+            cropBoxData = $image.cropper('getCropBoxData');
+            canvasData = $image.cropper('getCanvasData');
+            options.built = function () {
+                $image.cropper('setCropBoxData', cropBoxData);
+                $image.cropper('setCanvasData', canvasData);
+            };
+
+            $image.cropper('destroy').cropper(options);
+        });
+
+
+        // Tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+
+    };
+
+};
+a();
