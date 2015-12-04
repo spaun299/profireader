@@ -189,8 +189,8 @@ class Search(Base):
             for cls in db(search).all():
                 objects[getattr(cls, ord_by)] = {'id': cls.index,
                                                  'table_name': cls.table_name}
-        objects = [obj for obj in collections.OrderedDict(sorted(objects.items())).values()]
-        print(objects)
+        objects = {obj['id']: obj for obj in
+                   collections.OrderedDict(sorted(objects.items())).values()}
 
         return objects, pages, page+1
 

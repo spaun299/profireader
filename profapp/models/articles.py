@@ -420,6 +420,7 @@ class Article(Base, PRBase):
         #     ArticlePortalDivision.portal_division_id in db(PortalDivision.id, portal_id=portal_id).all())
         # for a in test:
         #     print(a.text)
+        print(kwargs)
 
         sub_query = db(ArticlePortalDivision, status=ARTICLE_STATUS_IN_PORTAL.published, **kwargs). \
             order_by(ArticlePortalDivision.publishing_tm.desc()).filter(

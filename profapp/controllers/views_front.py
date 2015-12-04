@@ -14,6 +14,8 @@ from sqlalchemy import Column, ForeignKey, text
 import os
 from flask import send_from_directory
 import collections
+from sqlalchemy import and_
+from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 
 
 def get_division_for_subportal(portal_id, member_company_id):
@@ -65,20 +67,21 @@ def favicon():
 @front_bp.route('/', methods=['GET'])
 @front_bp.route('<int:page>/', methods=['GET'])
 def index(page=1):
-    search_text, portal, sub_query = get_params()
+    search_text, portal, _ = get_params()
     division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                       portal_division_type_id='index').one()
-    articles, pages, page = pagination(query=sub_query, page=page)
-
-    ordered_articles = collections.OrderedDict()
-    for a in articles:
+    articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
+                                              'filter': and_(ArticlePortalDivision.
+                                                             portal_division_id == division.id,
+                                                             ArticlePortalDivision.status ==
+                                                             ARTICLE_STATUS_IN_PORTAL.published)},
+                                             search_text=search_text, page=page,
+                                             order_by=Search.ORDER_MD_TM, pagination=True)
+    ordered_articles = dict()
+    for a in db(ArticlePortalDivision).filter(
+            ArticlePortalDivision.id.in_(articles_id.keys())).all():
         ordered_articles[a.id] = dict(list(a.get_client_side_dict().items()) +
                                       list({'tags': a.tags}.items()))
-    articles = Search.search({'class': ArticlePortalDivision,
-                              'filter': ArticlePortalDivision.portal_division_id == division.id},
-                             search_text=search_text, page=page,
-                             order_by=Search.ORDER_MD_TM, pagination=True)
-
     return render_template('front/bird/index.html',
                            articles=ordered_articles,
                            portal=portal_and_settings(portal),
@@ -92,18 +95,21 @@ def index(page=1):
 @front_bp.route('<string:division_name>/', methods=['GET'])
 @front_bp.route('<string:division_name>/<int:page>/', methods=['GET'])
 def division(division_name, page=1):
-    search_text, portal, sub_query = get_params()
+    search_text, portal, _ = get_params()
     division = g.db().query(PortalDivision).filter_by(portal_id=portal.id, name=division_name).one()
     if division.portal_division_type_id == 'catalog' and search_text:
         return redirect(url_for('front.index', search_text=search_text))
     if division.portal_division_type_id == 'news' or division.portal_division_type_id == 'events':
-        sub_query = Article.subquery_articles_at_portal(search_text=search_text,
-                                                        portal_division_id=division.id)
-        articles, pages, page = pagination(query=sub_query, page=page)
-        ordered_articles = collections.OrderedDict()
-        for a in articles:
+        order = Search.ORDER_MD_TM if not search_text else Search.ORDER_RELEVANCE
+        articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
+                                                  'filter': ArticlePortalDivision.
+                                                  portal_division_id == division.id},
+                                                 search_text=search_text, page=page,
+                                                 order_by=order, pagination=True)
+        ordered_articles = dict()
+        for a in db(ArticlePortalDivision).filter(
+            ArticlePortalDivision.id.in_(articles_id.keys())).all():
             ordered_articles[a.id] = a.get_client_side_dict()
-
         return render_template('front/bird/division.html',
                                articles=ordered_articles,
                                current_division=division.get_client_side_dict(),
@@ -134,8 +140,9 @@ def division(division_name, page=1):
 
 @front_bp.route('details/<string:article_portal_division_id>')
 def details(article_portal_division_id):
-    search_text, portal, sub_query = get_params()
-
+    search_text, portal, _ = get_params()
+    if search_text:
+        return redirect(url_for('front.index', search_text=search_text))
     article = ArticlePortalDivision.get(article_portal_division_id)
     article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
                                                        'publishing_tm, keywords, status, long, image_file_id,'
