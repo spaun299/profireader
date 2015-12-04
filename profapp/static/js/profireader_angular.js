@@ -645,7 +645,6 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                     '&file_manager_default_action=choose&file_manager_on_action=' + encodeURIComponent(angular.toJson({choose: 'parent.file_choose'}));
                 tinymce.activeEditor.windowManager.open({
                         file: cmsURL,
-                        title: 'Select an Image',
                         width: 950,  // Your dimensions may differ - toy around with them!
                         height: 700,
                         resizable: "yes",

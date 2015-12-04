@@ -10,6 +10,7 @@
 
             $scope.url_details = {{ raw_url_for('company.material_details')|safe }};
             $scope.url_search_article = {{ raw_url_for('company.materials_load')|safe }};
+            $scope.url_edit_article_portal = {{ raw_url_for('article.article_show_form')|safe }};
 
             $scope.company_id = '{{ company_id }}';
             $scope.$$translate = {{ translates('article_list')|safe }};
@@ -31,7 +32,8 @@
                 $scope.sendData('', $scope.paginationOptions);
             };
 
-            $scope.FilteredMat = function(row, rowRenderIndex, col, colRenderIndex) {
+// TODO: SS by OZ: this 3 functions (Filtered*) should be rewriten as one
+            $scope.FilteredMat = function( row, rowRenderIndex, col, colRenderIndex ) {
                 if(!$scope.index1)
                     $scope.index1 = 0;
                 if( col.filters[0].term && $scope.index1 !== col.filters[0].term){
@@ -82,6 +84,7 @@
                     'pageSize': $scope.paginationOptions.pageSize,
                     'sort_date':$scope.paginationOptions.sort
                 };
+                // TODO: SS by OZ: all data what wee need is presented in resp.data? if yes, y we cant fetch data from there, why we need grid_data?
                 $ok($scope.url_search_article({company_id: $scope.company_id}), data, function (resp) {
                     $scope.datas = resp;
                     $scope.gridOptions1.totalItems = resp.total;
