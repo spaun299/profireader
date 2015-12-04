@@ -206,7 +206,7 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
     ordered_articles = dict()
 
     for a in db(ArticlePortalDivision).filter(ArticlePortalDivision.id.in_
-                                                  (articles_id.keys())).all():
+                                              (articles_id.keys())).all():
         ordered_articles[a.id] = a.get_client_side_dict()
     return render_template('front/bird/subportal_division.html',
                            articles=ordered_articles,

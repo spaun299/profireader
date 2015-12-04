@@ -66,6 +66,10 @@ class Search(Base):
                              class = sqlalchemy table class object,
                 optional:    filter: sqlalchemy filter with your own parameters,
                 optional:    fields: (tuple ot list) with fields name in table Search.kind,
+                optional:    return_more_fields: String. If return_objects = True and
+                             return_more_fields provided, this function return object with function
+                             wrapper get_client_side_dict(more_fields=return_more_fields).
+                             example: "name,country,region"
                 if you want to pass one fieldname you almost should make tuple
                 or list. example: ('title', ):
                 optional:    join: subquery wich you want to join without filters.
@@ -86,7 +90,10 @@ class Search(Base):
                       , default Config.ITEMS_PER_PAGE,
                       order_by = string (with field for which you want sort) or integer: text
                       , relevance, md_tm default=relevance (USE CONSTANTS IN SEARCH CLASS)
-                      desc_asc = desc or asc default = desc """
+                      desc_asc = desc or asc default = desc,
+                      return_objects = boolean, if True objects instead of id's, default False,
+                       :return id's objects or objects which you want, all pages for pagination
+                       and current page """
         page = kwargs.get('page') or 1
         items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
         page -= 1
@@ -96,6 +103,7 @@ class Search(Base):
         desc_asc = kwargs.get('desc_asc') or 'desc'
         pages = None
         search_text = kwargs.get('search_text') or ''
+        return_objects = kwargs.get('return_objects') or False
         try:
             assert (desc_asc == 'desc' or desc_asc == 'asc'), \
                 'Parameter desc_asc should be desc or asc but %s given' % desc_asc
@@ -111,6 +119,8 @@ class Search(Base):
                    (type(kwargs.get('order_by')) is int), \
                 'Bad value for parameter "order_by".' \
                 'You requested attribute which is not in class %s' % args[0]['class']
+            assert type(return_objects) is bool, \
+                'Parameter "return_objects" must be boolean but %s given' % type(return_objects)
         except AssertionError as e:
             _, _, tb = sys.exc_info()
             traceback.print_tb(tb)
@@ -194,7 +204,15 @@ class Search(Base):
                                                  'table_name': cls.table_name}
         objects = {obj['id']: obj for obj in
                    collections.OrderedDict(sorted(objects.items())).values()}
-
+        if return_objects:
+            ordered_articles = collections.OrderedDict()
+            for cls in args:
+                more_fields = cls.get('return_more_fields') or 'id'
+                assert type(more_fields) is str, \
+                    'Arg parameter return_more_fields must be string but %s given' % more_fields
+                for a in db(cls).filter(cls.id.in_(objects.keys())).all():
+                    ordered_articles[a.id] = a.get_client_side_dict(more_fields=more_fields)
+            objects = ordered_articles
         return objects, pages, page+1
 
 

@@ -390,6 +390,12 @@ def subscribe(company_id):
 @ok
 # @check_rights(simple_permissions([]))
 def search_for_company_to_join(json):
+            return [company.get_client_side_dict() for company in
+                db(Company).filter(~db(UserCompany, user_id=user_id,
+                                       company_id=Company.id).exists()).
+                filter(Company.name.ilike("%" + searchtext + "%")
+                       ).all()]
+    Search.search({'class': Company, 'fields': ('name', )})
     companies = Company().search_for_company_to_join(g.user_dict['id'], json['search'])
     return companies
 
