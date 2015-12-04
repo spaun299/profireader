@@ -89,39 +89,49 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
     .directive('prCropper', function () {
         return {
             restrict: 'A',
-            scope: {
-                prCropper: '=',
-                ngModel: '='
-            },
-            link: function (scope, element, attrs) {
+            require: 'ngModel',
+            link: function (scope, element, attrs, model) {
+                console.log(scope, element, attrs, model);
 
-                scope.cropper = null;
-                scope.options = {};
                 var $image = $(element);
+                var options = {
+                    crop: function (e) {
+                        if (model.$modelValue && model.$modelValue.image_file_id) {
+                            e['image_file_id'] = model.$modelValue.image_file_id;
+                        }
+                        model.$setViewValue(e);
+                    }
+                }
 
-                var reset = function () {
-                    if (scope.ngModel && scope.ngModel.ratio) scope.options.aspectRatio = scope.ngModel.ratio;
-                    if (scope.ngModel && scope.ngModel.coordinates) scope.options.data = scope.ngModel.coordinates;
-                    $image.cropper('destroy').cropper(scope.options);
-                    scope.prCropper = function () {
+                if (model) {
+                    if (model.$modelValue && model.$modelValue.ratio) options.aspectRatio = model.$modelValue.ratio;
+                    if (model.$modelValue && model.$modelValue.coordinates) options.data = model.$modelValue.coordinates;
+                }
+                $image.cropper(options);
+
+                if (attrs['prCropper']) {
+                    scope[attrs['prCropper']] = function () {
                         $image.cropper.apply($image, arguments);
+                    };
+                }
+
+                scope.$watch(attrs['ngModel'] + '.image_file_id', function () {
+                    if (model && model.$modelValue && model.$modelValue.image_file_id) {
+                        $image.cropper('replace', fileUrl(model.$modelValue.image_file_id));
                     }
-                };
+                });
 
-                var changeImage = function () {
-                    if (scope.ngModel) {
-                        $image.attr('src', fileUrl(scope.ngModel.image_file_id));
+                scope.$watch(attrs['ngModel'] + '.ratio', function () {
+                    if (model.$modelValue && model.$modelValue.ratio) {
+                        $image.cropper('setAspectRatio', model.$modelValue.ratio);
                     }
-                };
+                });
 
-                $image.on({'load': reset});
-
-                scope.$watch('ngModel.image_file_id', changeImage);
-
-                scope.$watch('ngModel.ratio', reset);
-                scope.$watch('ngModel.coordinates', reset);
-
-                reset();
+                scope.$watch(attrs['ngModel'] + '.coordinates', function () {
+                    if (model.$modelValue && model.$modelValue.coordinates) {
+                        $image.cropper('setData', model.$modelValue.coordinates);
+                    }
+                });
 
             }
         };
