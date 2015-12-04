@@ -2,157 +2,14 @@
 
 {% block title %}Profireader - Company materials{% endblock title %}
 
-
-{% block styles %}
-    {{ super() }}
-    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.css"> -->
-    <!-- ui-select files -->
-    <link rel="stylesheet" href="/static/css/select.css">
-
-        <!-- Select2 theme -->
-    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
-
-    <!--
-      Selectize theme
-      Less versions are available at https://github.com/brianreavis/selectize.js/tree/master/dist/less
-    -->
-    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.default.css">
-    <!-- <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.bootstrap2.css"> -->
-    <!-- <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.bootstrap3.css"> -->
-
-    <link rel="stylesheet" href="/static/css/andriy.css">
-{%- endblock styles %}
-
 {% block portal_content %}
     {% block company_base %}
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
-        <!--
-      IE8 support, see AngularJS Internet Explorer Compatibility http://docs.angularjs.org/guide/ie
-      For Firefox 3.6, you will also need to include jQuery and ECMAScript 5 shim
-    -->
-    <!--[if lt IE 9]>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/es5-shim/2.2.0/es5-shim.js"></script>
-    <script>
-        document.createElement('ui-select');
-        document.createElement('ui-select-match');
-        document.createElement('ui-select-choices');
-    </script>
-    <![endif]-->
 
-    <script>
-    /**
- * AngularJS default filter with the following expression:
- * "tag in tags | filter: {name: $select.search, age: $select.search}"
- * performs a AND between 'name: $select.search' and 'age: $select.search'.
- * We want to perform a OR.
- */
-module.filter('propsFilter', function() {
-    return function(items, props) {
-        var out = [];
+<script>
 
-        if (angular.isArray(items)) {
-            items.forEach(function(item) {
-                var itemMatches = false;
-
-                var keys = Object.keys(props);
-                for (var i = 0; i < keys.length; i++) {
-                    var prop = keys[i];
-                    var text = props[prop].toLowerCase();
-                    if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
-                        itemMatches = true;
-                        break;
-                    }
-                }
-
-                if (itemMatches) {
-                    out.push(item);
-                }
-            });
-        } else {
-            // Let the output be the input untouched
-            out = items;
-        }
-
-        return out;
-    };
-});
-
-module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, $http, $ok) {
-
-    $scope.disabled = undefined;
-    $scope.searchEnabled = undefined;
-    $scope.selected_portal_to_unpublish = '';
-    $scope.url_get_tags = {{ raw_url_for('company.get_tags')|safe }};
-    $scope.$$translate = {{ translates('SelectTagsCtrl')|safe }};
-    $scope.$watch("data.selected_division", function(newValue, oldValue) {
-        if ($scope.data && (newValue !== oldValue)){
-            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));
-		    res.success(function(data, status, headers, config) {
-                $scope.tagsObject.tags = []; // TODO (AA to AA): it works but...
-                $scope.availableTags = data.data.availableTags;
-		    });
-		    res.error(function(data, status, headers, config) {
-			    alert( "failure message: " + JSON.stringify({data: data}));
-		    });
-        }
-    });
-
-
-
-
-
-
-
-
-
-
-
-{#    $scope.$watch("data.selected_division", function(newValue, oldValue) {#}
-{#        if ($scope.data && (newValue !== oldValue)){#}
-{#            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));#}
-{#		    res.success(function(data, status, headers, config) {#}
-{#                $scope.tagsObject.tags = []; // TODO (AA to AA): it works but...#}
-{#                $scope.availableTags = data.data.availableTags;#}
-{#		    });#}
-{#		    res.error(function(data, status, headers, config) {#}
-{#			    alert( "failure message: " + JSON.stringify({data: data}));#}
-{#		    });#}
-{#        }#}
-{#    });#}
-{##}
-    $scope.getData = function () {
-        $scope.loading = true;
-    };
-
-    $scope.respData = function () {
-        $scope.loading = false;
-        return true;
-    };
-
-    $scope.enable = function() {
-        $scope.disabled = false;
-    };
-
-    $scope.disable = function() {
-        $scope.disabled = true;
-    };
-
-    $scope.enableSearch = function() {
-        $scope.searchEnabled = true;
-    };
-
-    $scope.disableSearch = function() {
-        $scope.searchEnabled = false;
-    };
-
-    $scope.availableTags = [];
-    $scope.selectedTags = [];
-
-}]);
-        module.controller('materials_articles', ['$scope','$ok', function ($scope, $ok) {
-{#            $scope.$af = $af;#}
+    module.controller('materials_articles', ['$scope','$ok', function ($scope, $ok) {
             $scope.url_search_for_user = {{ raw_url_for('company.search_for_user')|safe }};
             $scope.selectedUser_name = '';
             $scope.selectedUser = null;
@@ -160,7 +17,6 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
             $scope.url_article_details = {{ raw_url_for('company.material_details')|safe }};
             $scope.url_update_status = {{ raw_url_for('company.update_material_status')|safe }};
             $scope.url_submit_to_portal = '{{ url_for('portal.submit_to_portal')|safe }}';
-{#            $scope.url_submit_to_portal = {{ raw_url_for('portal.submit_to_portal')|safe }};#}
             $scope.url_send_article_to_user = '{{ url_for('company.send_article_to_user')|safe }}';
             $scope.url_send_article_user = {{ raw_url_for('company.send_article_to_user')|safe }};
             $scope.data_resp = '';
@@ -177,11 +33,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
             };
 
             $scope.saveData =function(data, tags){
-{#                var passData = {#}
-{#                    article: data.article,#}
-{#                    tags: tags,#}
-{#                    selected_division: data.selected_division#}
-{#                };#}
+
                 data['tags'] = tags;
                 $ok($scope.url_submit_to_portal,
                         data,
@@ -192,12 +44,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                 );
             };
 
-{#            $ok($scope.url_search_for_company(), {article_id: $scope.data.id, search: val}, function (resp) {#}
-{#                    return resp.length ? resp : [{id: false, name: 'No results'}];#}
-{#                });#}
 
-
-{#            (data, tagsObject.tags)#}
 
             $scope.changeStatus = function(new_status) {
                 url_send_request = $scope.url_update_status({'company_id': $scope.data.article.company_id, 'article_id': $scope.data.article.id});
@@ -313,15 +160,6 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
     {% raw %}
     <div ng-init="loadArticle()" ng-controller="materials_articles">
 
-<!--        <div af
-             af-before-load="beforeLoadArticle"
-             af-before-save="getData"
-             af-before-validate="getData"
-             af-after-load="afterLoadArticle"
-             af-url-validate="{{ url_submit_to_portal({action: 'validate'}) }}"
-             af-url-save="{{ url_submit_to_portal({action: 'save'}) }}"
-             ang-model="data"> -->
-
         <div ng-if="!data">{{ _('Loading...') }}</div>
         <div ng-if="data">
             <h1  class="nice-title">{{data.article.title}}<span></span></h1>
@@ -365,17 +203,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                         </optgroup>
                     </select>
                     <br/>
-                    <div ng-controller="SelectTagsCtrl">
-                        <h3>{{_('Add tags:')}}</h3>
-                        <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;">
-                            <ui-select-match placeholder="Select tags...">{{$item}}</ui-select-match>
-                            <ui-select-choices repeat="tag in availableTags | filter:$select.search">
-                                {{ tag }}
-                            </ui-select-choices>
-                        </ui-select>
-                        <!-- <p>Selected: {{tagsObject.tags}}</p> -->
 
-                    </div>
                     <br/>
                     <span>
                         <!--<input ng-click="$af.save(data)" type="submit"

@@ -193,7 +193,11 @@ def get(file_id):
     image_query = file_query(File, file_id)
     image_query_content = g.db.query(FileContent).filter_by(id=file_id).first()
 
-    allowedreferrer = re.sub(r'^(https?://[^/]+).*$', r'\1', request.headers.environ['HTTP_REFERER'])
+    if 'HTTP_REFERER' in request.headers.environ:
+        allowedreferrer = re.sub(r'^(https?://[^/]+).*$', r'\1', request.headers.environ['HTTP_REFERER'])
+    else:
+        allowedreferrer = ''
+
     if allowed_referrers(allowedreferrer):
         return send_file(BytesIO(image_query_content.content),
                          mimetype=image_query.mime, as_attachment=False,

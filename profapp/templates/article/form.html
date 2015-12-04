@@ -3,16 +3,11 @@
 {% block title %}{{ _('Create article') }}{% endblock title %}
 
 {% block portal_content %}
-
-    {#TODO: OZ by OZ move this code to one file#}
-    <link href="/static/image_editor/dist/cropper.css" rel="stylesheet">
-    <link href="/static/image_editor/demo/css/main.css" rel="stylesheet">
-    <link href="/static/css/article.css" rel="stylesheet">
-    <link href="/static/front/bird/css/article.css" rel="stylesheet">
-
+    {#TODO: VH by OZ remove below line#}
+    {% from 'macros.html' import scripts %}
+    {{ scripts(names=['croper']) }}
 
     <script>
-
         module.controller('article_edit', ['$scope', '$modal', '$af', '$ok', function ($scope, $modal, $af, $ok) {
             $scope.$af = $af;
             $scope.details_article = {{ raw_url_for('article.details')|safe }};
@@ -28,6 +23,10 @@
                 window.location.href = $scope.details_article({article_id: resp['article']['article_id']});
                 add_message('article was created', 'info', 5000);
 
+            };
+
+            $scope.typeofo = function (o) {
+                return (typeof o)
             };
 
             $scope.getData = function (model, deff) {
@@ -52,8 +51,6 @@
             };
 
             var add_or_remove_classes = function (element, classes, remove, add) {
-
-                console.log(remove);
 
                 classes.map(function (class_name) {
                     if (remove && class_name.match(remove)) {
@@ -119,43 +116,43 @@
                             object(). // convert each [key, val] pair to {key: val} element
                             value(); // get result
 
-
             {#            $scope.tinymceImageOptions['pr_formats'] = get_array_for_menu_build(custom_formats);#}
             {#            console.log($scope.tinymceImageOptions['pr_formats']);#}
 
             $scope.articleImageSelected = function (item) {
                 $scope.data.image.image_file_id = item.id;
-                $scope.setImageUrl($scope.data.image);
+                {#                $scope.setImageUrl($scope.data.image);#}
                 closeFileManager();
-                var $image = $('.img-container > img');
-                $image.cropper('setAspectRatio', $scope.data.image.ratio);
+                {#                var $image = $('.img-container > img');#}
+                {#                $image.cropper('setAspectRatio', $scope.data.image.ratio);#}
             };
-            $scope.default_image = true;
+            {#            $scope.default_image = true;#}
+
             $scope.cleanUpHtml = function (data) {
                 data.long = cleanup_html(data.long);
                 return data;
             };
-            $scope.setImageUrl = function (image) {
-                $scope.image_file_url = fileUrl(image.image_file_id, false, '{{ url_for('static', filename='images/choose_image.jpg') }}');
-                var image = $scope.image_file_url;
-                if (image != "{{ url_for('static', filename='images/choose_image.jpg') }}") {
-                    $scope.default_image = false;
-                }
-            };
-            $scope.change_picture_in_croper = function (coordinates) {
-                setTimeout(function () {
-                    init_cropper($scope.data.image.ratio, coordinates);
-                }, 0);
-            };
+            {#            $scope.setImageUrl = function (image) {#}
+            {#                $scope.image_file_url = fileUrl(image.image_file_id, false, '{{ url_for('static', filename='images/choose_image.jpg') }}');#}
+            {#                var image = $scope.image_file_url;#}
+            {#                if (image != "{{ url_for('static', filename='images/choose_image.jpg') }}") {#}
+            {#                    $scope.default_image = false;#}
+            {#                }#}
+            {#            };#}
+            {#            $scope.change_picture_in_croper = function (coordinates) {#}
+            {#                setTimeout(function () {#}
+            {#                    init_cropper($scope.data.image.ratio, coordinates);#}
+            {#                }, 0);#}
+            {#            };#}
 
-            $scope.afterLoad = function (resp, deff) {
-                var ret = deff(resp);
-                $scope.setImageUrl($scope['data'].image);
-                if (!$scope.default_image) {
-                    $scope.change_picture_in_croper($scope.data.image.coordinates);
-                }
-                return ret;
-            };
+            {#            $scope.afterLoad = function (resp, deff) {#}
+            {#                var ret = deff(resp);#}
+            {#                $scope.setImageUrl($scope['data'].image);#}
+            {#                if (!$scope.default_image) {#}
+            {#                    $scope.change_picture_in_croper($scope.data.image.coordinates);#}
+            {#                }#}
+            {#                return ret;#}
+            {#            };#}
 
             $scope.chooseImage = function () {
                 $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')");
@@ -164,8 +161,6 @@
         }]);
 
     </script>
-    {% from 'macros.html' import scripts %}
-    {{ scripts(names=['croper']) }}
 
     {% raw %}
     <div ng-init="init()" ng-controller="article_edit">
@@ -182,48 +177,48 @@
                 {{ _('Article title') }} <span af-validation-answer="data_validation:title"></span>
                 <input style="width: 100%" type="text" ng-model="data.article.title">
                 {{ _('Short Description') }} <span af-validation-answer="data_validation:short"></span>
-                <textarea style="width: 100%" placeholder="short" ng-model="data.article.short"></textarea>
+                <textarea style="width: 100%" placeholder="{{_('short')}}" ng-model="data.article.short"></textarea>
                 {{ _('KeyWords') }} <span af-validation-answer="data_validation:keywords"></span>
                 <input style="width: 100%" ng-model="data.article.keywords"/>
             </div>
 
             <div class="update_col1">
                 {{ _('Select picture') }}
-                <div ng-include="'image_cropper'"></div>
-                <input type="hidden" ng-model="data.article.image_file_id">
-            </div>
-
-            <div class="update_col1">
-                {{ _('Full text') }}
+                <div ng-include="'cropper.html'"></div>
+                <div class="update_col1">
+                    {#TODO: OZ by OZ move this code to one file#}
+                    <link href="/static/css/article.css" rel="stylesheet">
+                    <link href="/static/front/bird/css/article.css" rel="stylesheet">
+                    {{ _('Full text') }}
             <textarea ui-tinymce="tinymceImageOptions" style="width: 400px;"
                       ng-model="data.article.long"></textarea>
 
-            </div>
+                </div>
 
-{#TODO: AA by OZ#}
-            <div ng-if="data.article.division" class="update_col1">
-                we have division ({{ data.article.division.name }} - {{ data.article.division.id }})<br/>
-                so tags goes here<br/>
-                TAG TAG TAG!
-            </div>
+                {#TODO: AA by OZ#}
+                <div ng-if="data.article.division" class="update_col1">
+                    we have division ({{ data.article.division.name }} - {{ data.article.division.id }})<br/>
+                    so tags goes here<br/>
+                    TAG TAG TAG!
+                </div>
 
 
-            <div class="update_col1">
-                <input class="create_button"
-                       ng-disabled="!$af.isActionAllowed(data, 'save')"
-                       ng-click="$af.save(data)"
-                       type="submit"
-                       value="{{ data.article.id ? _('save') : _('create') }}"/>
+                <div class="update_col1">
+                    <input class="create_button"
+                           ng-disabled="!$af.isActionAllowed(data, 'save')"
+                           ng-click="$af.save(data)"
+                           type="submit"
+                           value="{{ data.article.id ? _('save') : _('create') }}"/>
+                </div>
             </div>
         </div>
+
+
+        {% endraw %}
+
     </div>
 
 
-    {% endraw %}
-
-    </div>
-
-    <script src="/static/image_editor/dist/cropper.js"></script>
     <script src="/static/image_editor/demo/js/main.js"></script>
     {#TODO: OZ by OZ move this code to one file#}
 
