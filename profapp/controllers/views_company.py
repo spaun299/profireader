@@ -101,11 +101,6 @@ def materials_load(json, company_id):
 
     statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
 
-    return {'materials': [{'article': a.get_client_side_dict(more_fields='portal_article.~'),
-                           'portals_count': len(a.get_client_side_dict(
-                               fields='portal_article.~').get(
-                               'portal_article') if a.get_client_side_dict(
-                               fields='portal_article.~').get('portal_article') else [0]) + 1}
     for article in articles:
         allowed_statuses = []
         art_stats = ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(article.status)
