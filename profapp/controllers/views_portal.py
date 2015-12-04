@@ -535,7 +535,7 @@ def publications_load(json, company_id):
     statuses_grid = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
     for a in articles:
         a = a.get_client_side_dict()
-        if 'long' in a.keys():
+        if a.get('long'):
             del a['long']
         publications.append(a)
     grid_data = []
@@ -567,7 +567,7 @@ def publications_load(json, company_id):
 @login_required
 def publication_details(article_id, company_id):
     return render_template('company/publication_details.html',
-                           company_id=company_id)
+                           company=db(Company, id=company_id).one())
 
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['POST'])

@@ -9,7 +9,7 @@ from flask.ext.login import login_required
 from ..models.articles import Article
 from ..models.portal import PortalDivision
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
-from ..models.portal import MemberCompanyPortal
+from ..models.portal import MemberCompanyPortal, Portal
 from ..models.articles import ArticleCompany, ArticlePortalDivision
 from utils.db_utils import db
 from collections import OrderedDict
@@ -18,9 +18,10 @@ from ..models.tag import TagPortalDivisionArticle
 # from ..models.rights import list_of_RightAtomic_attributes
 from profapp.models.rights import RIGHTS
 from ..models.files import File
-# from flask import session
+from flask import session
 from .pagination import pagination
 from config import Config
+from ..models.pr_base import Search
 
 
 @company_bp.route('/search_to_submit_article/', methods=['POST'])
@@ -36,7 +37,7 @@ def search_to_submit_article(json):
 # @check_rights(simple_permissions([]))
 def show():
     return render_template('company/companies.html')
-
+from sqlalchemy import and_
 
 @company_bp.route('/', methods=['POST'])
 @login_required
@@ -61,16 +62,11 @@ def materials(company_id):
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template(
         'company/materials.html',
-        company=company.get_client_side_dict(),
+        company=company.get_client_side_dict(fields='name'),
         company_id=company_id,
         angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js',
-        company_logo=company_logo,
-        company_name=company.name
+        company_logo=company_logo
     )
-
-
-# TODO: VK by OZ: remove company_* kwargs
-
 
 @company_bp.route('/materials/<string:company_id>/', methods=['POST'])
 @login_required
@@ -102,6 +98,8 @@ def materials_load(json, company_id):
     portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id), add_param, True)
     gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
     grid_data = []
+
+    statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
 
     for article in articles:
         allowed_statuses = []
@@ -141,7 +139,6 @@ def materials_load(json, company_id):
             'publ_statuses': gr_publ_st,
             'total': len(total)
             }
-
 
 @company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['GET'])
 @login_required

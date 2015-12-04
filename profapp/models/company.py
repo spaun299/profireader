@@ -16,12 +16,13 @@ from flask import abort
 from .rights import Right, RightHumnReadible
 from ..controllers.request_wrapers import check_rights
 from .files import File
-from .pr_base import PRBase, Base
+from .pr_base import PRBase, Base, Search
 from ..controllers import errors
 from ..constants.STATUS import STATUS_NAME
 from ..models.rights import get_my_attributes
 from functools import wraps
 from .files import YoutubePlaylist
+from ..constants.SEARCH import RELEVANCE
 
 
 class Company(Base, PRBase):
@@ -59,6 +60,11 @@ class Company(Base, PRBase):
     #                           foreign_keys='Portal.company_owner_id')
 
     user_owner = relationship('User', back_populates='companies')
+    search_fields = {'name': {'relevance': lambda field='name': RELEVANCE.name},
+                     'short_description': {'relevance': lambda field='short_description': RELEVANCE.short_description},
+                     'about': {'relevance': lambda field='about': RELEVANCE.about},
+                     'country': {'relevance': lambda field='country': RELEVANCE.country},
+                     'phone': {'relevance': lambda field='phone': RELEVANCE.phone}}
 
 # TODO: AA by OZ: we need employees.position (from user_company table) (also search and fix #ERROR employees.position.2#)
 #ERROR employees.position.1#

@@ -9,7 +9,7 @@ from .pr_base import PRBase, Base
 import re
 from .tag import TagPortalDivision
 from sqlalchemy import event
-
+from ..constants.SEARCH import RELEVANCE
 import itertools
 from sqlalchemy import orm
 import itertools
@@ -58,6 +58,8 @@ class Portal(Base, PRBase):
                                    # back_populates='portal',
                                    # lazy='dynamic'
                                    )
+    search_fields = {'name': {'relevance': lambda field='name': RELEVANCE.name},
+                     'host': {'relevance': lambda field='host': RELEVANCE.host}}
     # see: http://docs.sqlalchemy.org/en/rel_0_9/orm/join_conditions.html#composite-secondary-joins
     # see: http://docs.sqlalchemy.org/en/rel_0_9/orm/join_conditions.html#creating-custom-foreign-conditions
     # see!!!: http://docs.sqlalchemy.org/en/rel_0_8/orm/relationships.html#association-object
@@ -330,6 +332,7 @@ class PortalDivision(Base, PRBase):
     portal_division_type = relationship('PortalDivisionType', uselist=False)
 
     settings = None
+
 
     def __init__(self, portal=portal,
                  portal_division_type_id=portal_division_type_id,
