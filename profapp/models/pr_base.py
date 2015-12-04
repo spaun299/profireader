@@ -106,15 +106,17 @@ class Search(Base):
                 'Parameter page is not integer, or page < 1 .'
             assert (getattr(args[0]['class'], str(kwargs.get('order_by')), False) is not False) or \
                    (type(kwargs.get('order_by')) is int), \
+                'Bad value for parameter "order_by".' \
                 'You requested attribute which is not in class %s' % args[0]['class']
         except AssertionError as e:
             _, _, tb = sys.exc_info()
             traceback.print_tb(tb)
             tb_info = traceback.extract_tb(tb)
             filename_, line_, func_, text_ = tb_info[-1]
-            raise errors.BadDataProvided({'message': 'An error occurred on line {line}\n'
-                                          '{assert_message}'.format(line=line_,
-                                                                    assert_message=e.args)})
+            message = 'An error occurred on File "{file}" line {line}\n {assert_message}'.format(
+                line=line_, assert_message=e.args, file=filename_)
+            print(message)
+            raise errors.BadDataProvided({'message': message})
 
         def get_order(order_name, order_value, field):
             order_name += '+' if order_value == 'desc' else '-'
@@ -414,6 +416,11 @@ class PRBase:
                 db(Search, index=target.id, kind=field).update(
                     {'text': field_options['processing'](str(getattr(target, field)))})
 
+    @staticmethod
+    def delete_from_search(mapper, connection, target):
+        if hasattr(target, 'search_fields') and db(Search, index=target.id).count():
+            db(Search, index=target.id).delete()
+
     @classmethod
     def __declare_last__(cls):
         event.listen(cls, 'before_update', cls.validate_before_update)
@@ -421,6 +428,7 @@ class PRBase:
         # event.listen(cls, 'before_delete', cls.validate_before_delete)
         event.listen(cls, 'after_insert', cls.add_to_search)
         event.listen(cls, 'before_update', cls.update_search_table)
+        event.listen(cls, 'before_delete', cls.delete_from_search)
 
 #
 #

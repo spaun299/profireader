@@ -74,6 +74,10 @@ def index(page=1):
     for a in articles:
         ordered_articles[a.id] = dict(list(a.get_client_side_dict().items()) +
                                       list({'tags': a.tags}.items()))
+    articles = Search.search({'class': ArticlePortalDivision,
+                              'filter': ArticlePortalDivision.portal_division_id == division.id},
+                             search_text=search_text, page=page,
+                             order_by=Search.ORDER_MD_TM, pagination=True)
 
     return render_template('front/bird/index.html',
                            articles=ordered_articles,

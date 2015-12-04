@@ -44,11 +44,10 @@ from sqlalchemy import and_
 # @check_rights(simple_permissions([]))
 @ok
 def load_companies(json):
-    # Search.search({'class': Company, 'fields': ('name', 'about'),
-    # 'filter': and_(Company.author_user_id == g.user.id,
-    #                                                                         Company.name.in_(['neewww', 'aaa', 'Second']))},
-    #               {'class': Portal, 'fields': ('name', ), 'filter': Portal.company_owner_id == '5656f2ca-1765-4001-9sc06-cc298797b404'},
-    #               search_text='o', items_per_page=3, order_by='title', desc_asc='desc', pagination=True, page=1)
+    Search.search({'class': Company, 'fields': ('name', 'about'),
+    'filter': and_(Company.author_user_id == g.user.id, Company.name.in_(['neewww', 'aaa', 'Second']))},
+                  {'class': Portal, 'fields': ('name', ), 'filter': Portal.company_owner_id == '5656f2ca-1765-4001-9c06-cc298797b404'},
+                  search_text='o', items_per_page=3, order_by='name', desc_asc='desc', pagination=True, page=1)
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     return {'companies': [usr_cmp.employer.get_client_side_dict() for usr_cmp in user_companies
                           if usr_cmp.status == STATUS.ACTIVE()],
