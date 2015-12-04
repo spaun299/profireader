@@ -10,7 +10,6 @@ import traceback
 from flask import g
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import event
-from utils.validators import validators
 from ..controllers import errors
 from utils.db_utils import db
 from html.parser import HTMLParser
@@ -19,6 +18,8 @@ import math
 from config import Config
 import collections
 from sqlalchemy.sql import expression, functions
+from utils.validators import validators
+
 Base = declarative_base()
 
 # this event is called whenever an attribute
@@ -245,8 +246,10 @@ class PRBase:
         return self
 
     def detach(self):
-        g.db.expunge(self)
-        make_transient(self)
+        if self in g.db:
+            g.db.expunge(self)
+            make_transient(self)
+
         self.id = None
         return self
 

@@ -84,6 +84,9 @@ class ValidationException(Error):
         pass
 
 
+class WrongNumberOfParameters(Error):
+    pass
+
 
 
 @csrf.error_handler

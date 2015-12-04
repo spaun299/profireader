@@ -22,8 +22,10 @@ def translations_load(json):
     params = {}
     total_items = len(g.db.query(TranslateTemplate).all())
     subquery = TranslateTemplate.subquery_search(search_text=json.get('search_text') or None,
-                                                 template=json.get('template') or None)
+                                                 template=json.get('template') or None,
+                                                 url=json.get('url') or None)
     translations, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('pageSize'))
+    total_items = len(subquery.all())
     tr = [t.get_client_side_dict() for t in translations]
     templates = db(TranslateTemplate.template).group_by(TranslateTemplate.template) \
         .order_by(expression.asc(expression.func.lower(TranslateTemplate.template))).all()
@@ -47,4 +49,4 @@ def translations_save(json):
 @admin_bp.route('/delete', methods=['POST'])
 @ok
 def delete(json):
-    return TranslateTemplate.delete(json['id'])
+    return TranslateTemplate.delete(json['objects'])

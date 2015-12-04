@@ -25,15 +25,17 @@ body {
 TODO: OK by OZ:   this class `highlights` changed element (see js function highligh, its just add and remove this class).
 We have something similar in bootstrap? Can correct this class to look nicer?
 */
-.grid {
-  width: 100%;
-  height: 550px;
+#grid1 {
+  width: inherit;
+  height: 500px;
 }
-/*#searchGrid{*/
-    /*float: right;*/
-/*}*/
+
 .form-control{
     float: none!important;
+}
+a.disabled {
+   pointer-events: none;
+   cursor: default;
 }
 
 .highlight {

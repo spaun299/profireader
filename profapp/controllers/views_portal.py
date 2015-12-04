@@ -5,10 +5,10 @@ from flask.ext.login import current_user, login_required
 from ..models.portal import PortalDivisionType
 from utils.db_utils import db
 from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDivision, \
-    PortalDivisionSettings_company_subportal
+    PortalDivisionSettingsCompanySubportal
 from ..models.tag import Tag, TagPortal, TagPortalDivision
 from .request_wrapers import ok, check_rights
-from ..models.articles import ArticlePortalDivision, ArticleCompany
+from ..models.articles import ArticlePortalDivision, ArticleCompany, Article
 from ..models.company import simple_permissions
 from ..models.rights import Right
 from profapp.models.rights import RIGHTS
@@ -179,9 +179,11 @@ def profile_load(json, portal_id):
     portal_bound_tags = portal.portal_bound_tags_select
     tags = set(tag_portal_division.tag for tag_portal_division in portal_bound_tags)
     tags_dict = {tag.id: tag.name for tag in tags}
-    return {'portal': portal.get_client_side_dict(
-        more_fields='divisions, own_company, portal_bound_tags_select, portal_notbound_tags_select'),
-            'portal_id': portal_id,
+    return {'portal': portal.get_client_side_dict('id, '
+                                                  'divisions, '
+                                                  'own_company, '
+                                                  'portal_bound_tags_select.*, '
+                                                  'portal_notbound_tags_select.*'),
             'tag': tags_dict}
 
 
@@ -215,9 +217,9 @@ def profile_edit_load(json, portal_id):
         # TODO (AA to AA): We have to consider the situation when divisions were changed while editting tags.
         def strip_new_tags(json):
             """ Strips tags have gotten from input prameter json
-            :param json: {'bound_tags' [{'portal_division_id': '....', 'tag_name': '  sun  '}, ...],
+            :param json: {'bound_tags': [{'portal_division_id': '....', 'tag_name': '  sun  '}, ...],
                 'notbound_tags': ['  moon  ', ...], 'confirm_profile_edit': True}
-            :return:     {'bound_tags' [{'portal_division_id': '....', 'tag_name': 'sun'}, ...],
+            :return:     {'bound_tags': [{'portal_division_id': '....', 'tag_name': 'sun'}, ...],
                 'notbound_tags': ['moon', ...], 'confirm_profile_edit': True}
             """
 
@@ -387,12 +389,14 @@ def profile_edit_load(json, portal_id):
 
         g.db.add_all(add_tag_portal_bound_list + add_tag_portal_notbound_list)
         # read this: http://stackoverflow.com/questions/7892618/sqlalchemy-delete-subquery
-        g.db.query(TagPortalDivision). \
-            filter(TagPortalDivision.id.in_([x.id for x in delete_tag_portal_bound_list])). \
-            delete(synchronize_session=False)
-        g.db.query(TagPortal). \
-            filter(TagPortal.id.in_([x.id for x in delete_tag_portal_notbound_list])). \
-            delete(synchronize_session=False)
+        if delete_tag_portal_bound_list:
+            g.db.query(TagPortalDivision). \
+                filter(TagPortalDivision.id.in_([x.id for x in delete_tag_portal_bound_list])). \
+                delete(synchronize_session=False)
+        if delete_tag_portal_notbound_list:
+            g.db.query(TagPortal). \
+                filter(TagPortal.id.in_([x.id for x in delete_tag_portal_notbound_list])). \
+                delete(synchronize_session=False)
         g.db.expire_all()
 
 
@@ -410,7 +414,7 @@ def profile_edit_load(json, portal_id):
 
         # tag0_name = curr_portal_bound_tag_port_div_objects[0].tag.name
         # y = list(curr_portal_bound_tag_port_div_objects)         # Operations with portal_bound_tags_dynamic...
-        flash('Portal tags successfully updated')
+        flash('Portal tags were successfully updated')
 
     tags = set(tag_portal_division.tag for tag_portal_division in portal.portal_bound_tags_select)
     tags_dict = {tag.id: tag.name for tag in tags}
@@ -418,9 +422,8 @@ def profile_edit_load(json, portal_id):
     company = portal.own_company
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
-    return {'portal': portal.get_client_side_dict('divisions,own_company,portal_bound_tags_select'),
+    return {'portal': portal.get_client_side_dict('id, name, divisions, own_company, portal_bound_tags_select.*'),
             'company_logo': company_logo,
-            'portal_id': portal_id,
             'tag': tags_dict}
 
 
@@ -516,31 +519,48 @@ def publications_load(json, company_id):
         return dict(portal_not_exist=True)
     current_page = json.get('page') or 1
     params = {'search_text': json.get('search_text'), 'portal_id': portal.id}
-    if json.get('status'):
-        params['status'] = json.get('status')
+    params['status'] = json.get('status') if json.get('status') else None
+    params['company_id'] = json.get('company_id') if json.get('company_id') else None
     subquery = ArticlePortalDivision.subquery_portal_articles(**params)
-    if json.get('company_id'):
-        subquery = subquery.filter(db(ArticleCompany,
-                                      company_id=json.get('company_id'),
-                                      id=ArticlePortalDivision.article_company_id).exists())
+    if json.get('new_status'):
+        db(ArticlePortalDivision, id=json.get('article_id')).update({'status': json.get('new_status')})
+
     articles, pages, current_page = pagination(subquery,
                                                page=current_page)
 
-    companies = ArticlePortalDivision.get_companies_which_send_article_to_portal(portal.id)
-    statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
     publications = []
+    add_param = {'value': '1','label': '-- all --'}
+
+    comp_grid = Article.list_for_grid_tables(ArticlePortalDivision.get_companies_which_send_article_to_portal(portal.id), add_param, True)
+    statuses_grid = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
     for a in articles:
         a = a.get_client_side_dict()
         if a.get('long'):
             del a['long']
         publications.append(a)
+    grid_data = []
+    for article in publications:
+        allowed_statuses = []
+        art_stats = ARTICLE_STATUS_IN_PORTAL.can_user_change_status_to(article['status'])
+        for s in art_stats:
+            allowed_statuses.append({'id': s,'value':s})
+        port = article['company']['name'] if article['company']['name'] else 'Not sent to any company yet'
+        grid_data.append({'Date': article['publishing_tm'],
+                            'Title': article['title'],
+                            'Company': port,
+                            'Publication status': article['status'],
+                            'id': str(article['id']),
+                            'level': True,
+                            'allowed_status': allowed_statuses})
 
-    return {'publications': publications,
-            'companies': companies,
+    return {'grid_data': grid_data,
+            'publications': publications,
+            'companies': comp_grid,
             'pages': {'total': pages,
                       'current_page': current_page,
                       'page_buttons': Config.PAGINATION_BUTTONS},
-            'statuses': statuses}
+            'statuses': statuses_grid,
+            'total': len(publications)}
 
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
@@ -554,15 +574,15 @@ def publication_details(article_id, company_id):
 @login_required
 @ok
 def publication_details_load(json, article_id, company_id):
-    statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
     article = db(ArticlePortalDivision, id=article_id).one().get_client_side_dict()
+    allowed_statuses = ARTICLE_STATUS_IN_PORTAL.can_user_change_status_to(article['status'])
     new_status = ARTICLE_STATUS_IN_PORTAL.published \
         if article['status'] != ARTICLE_STATUS_IN_PORTAL.published \
         else ARTICLE_STATUS_IN_PORTAL.declined
     return {'article': article,
             'user_rights': list(g.user.user_rights_in_company(company_id)),
-            'statuses': statuses,
-            'new_status': new_status}
+            'new_status': new_status,
+            'allowed_statuses': allowed_statuses}
 
 
 @portal_bp.route('/update_article_portal/<string:article_id>', methods=['POST'])
@@ -570,6 +590,9 @@ def publication_details_load(json, article_id, company_id):
 @ok
 def update_article_portal(json, article_id):
     db(ArticlePortalDivision, id=article_id).update({'status': json.get('new_status')})
+    article = db(ArticlePortalDivision, id=article_id).one().get_client_side_dict()
+    allowed_statuses = ARTICLE_STATUS_IN_PORTAL.can_user_change_status_to(article['status'])
+    json['allowed_statuses'] = allowed_statuses
     json['article']['status'] = json.get('new_status')
     json['new_status'] = ARTICLE_STATUS_IN_PORTAL.published \
         if json.get('new_status') != ARTICLE_STATUS_IN_PORTAL.published \

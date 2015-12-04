@@ -15,18 +15,11 @@ class Config(object):
     # http://flask.pocoo.org/docs/0.10/config/ (SERVER_NAME variable)
     # and this:
     # http://kronosapiens.github.io/blog/2014/08/14/understanding-contexts-in-flask.html
-    # see also http://flask.pocoo.org/docs/0.10/config/
-    # SERVER_NAME variable.
     # we also have to add line
     # 0.0.0.0    profireader.a
     # to /etc/hosts
 
-    #SERVER_NAME = 'aprofi.a.ntaxa.com'
     SERVER_NAME = 'profireader.com'
-    #SERVER_NAME = 'aprofi.d.ntaxa.com'
-    #SERVER_NAME = 'profireader.a:8080'
-    #SERVER_NAME = 'profireader.net:8080'
-
     SITE_TITLE = 'Profireader'
 
     # Statement for enabling the development environment
