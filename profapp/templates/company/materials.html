@@ -122,8 +122,9 @@
                           groupingShowGroupingMenu: false
                       },
                       { name: 'Portals', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
+                          cellTemplate: '<a href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{ row.entity.Portals }}</a>',
                           filter: {
-                            term: '1',
+                              term: '1',
                             type: uiGridConstants.filter.SELECT},
                           headerCellClass: $scope.FilteredPort
                       },

@@ -252,12 +252,12 @@ def flask_endpoint_to_angular(endpoint, **kwargs):
     return url
 
 
-# TODO OZ by OZ rename this func and add two parameters
-def file_url(id):
+def fileUrl(id, down, if_no_file):
     if not id:
-        return ''
+        return if_no_file if if_no_file else ''
+
     server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', id)
-    return 'http://file' + server + '.profireader.com/' + id + '/'
+    return 'http://file' + server + '.profireader.com/' + id + '/' + ('?d' if down else '')
 
 
 def translates(template):
@@ -270,11 +270,11 @@ def translates(template):
     if user_language == 'uk':
         for ph in phrases:
             tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
-            ret[ph.name] = {'lang':ph.uk,'time': tim}
+            ret[ph.name] = {'lang': ph.uk, 'time': tim}
     else:
         for ph in phrases:
             tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
-            ret[ph.name] = {'lang':ph.en,'time': tim}
+            ret[ph.name] = {'lang': ph.en, 'time': tim}
     return json.dumps(ret)
 
 
@@ -334,13 +334,14 @@ def raw_url_for(endpoint):
     rules = url_adapter.map._rules_by_endpoint.get(endpoint, ())
 
     if len(rules) < 1:
-        return ''
+        raise Exception('You requsted url for endpoint `%s` but no endpoint found' % (endpoint,))
 
-    ret = re.compile('<[^:]*:').sub('<',
-                                    url_adapter.map._rules_by_endpoint.get(endpoint, ())[0].rule)
+    rules_simplified = [re.compile('<[^:]*:').sub('<', rule.rule) for rule in rules]
 
-    return "function (dict) { var ret = '" + ret + "'; " \
-                                                   " for (prop in dict) ret = ret.replace('<'+prop+'>',dict[prop]); return ret; }"
+    return "function (dict) { return find_and_build_url_for_endpoint(dict, %s); }" % (json.dumps(rules_simplified))
+    # \
+    #        " { var ret = '" + ret + "'; " \
+    #                                                " for (prop in dict) ret = ret.replace('<'+prop+'>',dict[prop]); return ret; }"
 
 
 def pre(value):
@@ -472,7 +473,7 @@ def create_app(config='config.ProductionDevelopmentConfig',
     app.jinja_env.globals.update(raw_url_for=raw_url_for)
     app.jinja_env.globals.update(pre=pre)
     app.jinja_env.globals.update(translates=translates)
-    app.jinja_env.globals.update(file_url=file_url)
+    app.jinja_env.globals.update(fileUrl=fileUrl)
     app.jinja_env.globals.update(config_variables=config_variables)
     app.jinja_env.globals.update(_=translate_phrase)
     app.jinja_env.globals.update(tinymce_format_groups=HtmlHelper.tinymce_format_groups)

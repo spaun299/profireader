@@ -4,7 +4,7 @@
     <div class="block-item full-block-info" style="height: auto;">
 
 {#        <img class="article-cover"#}
-{#             style="background-size: cover; background-image: url({{ file_url(article['image_file_id']) }});"/>#}
+{#             style="background-size: cover; background-image: url({{ fileUrl(article['image_file_id']) }});"/>#}
 {#        <div class="item-type article">{{ article['division']['name']|safe }}</div>#}
         <h2 class="item-title">{{ article['title']|safe }}</h2>
 
@@ -21,9 +21,9 @@
         </div>
         <div class="article-content">
 {#            <img class="article-cover"#}
-{#             style="background-image: url({{ file_url(article['image_file_id']) }});"/>#}
+{#             style="background-image: url({{ fileUrl(article['image_file_id']) }});"/>#}
             <div class="s-cover-l"
-             style="background-image: url({{ file_url(article['image_file_id']) }});"></div>
+             style="background-image: url({{ fileUrl(article['image_file_id']) }});"></div>
            {{ article['long'] | safe }}
         </div>
 

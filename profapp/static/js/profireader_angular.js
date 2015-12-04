@@ -100,7 +100,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 var $image = $(element);
 
                 var reset = function () {
-                    console.log('aaa');
                     if (scope.ngModel && scope.ngModel.ratio) scope.options.aspectRatio = scope.ngModel.ratio;
                     if (scope.ngModel && scope.ngModel.coordinates) scope.options.data = scope.ngModel.coordinates;
                     $image.cropper('destroy').cropper(scope.options);
@@ -110,11 +109,9 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 };
 
                 var changeImage = function () {
-                    console.log(scope.ngModel);
                     if (scope.ngModel) {
                         $image.attr('src', fileUrl(scope.ngModel.image_file_id));
-                        console.log(scope.ngModel.image_file_id, fileUrl(scope.ngModel.image_file_id));
-                        }
+                    }
                 };
 
                 $image.on({'load': reset});
@@ -126,111 +123,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
 
                 reset();
 
-
-                //if (0) {
-                //
-                //    $(document.body).on('click', '[data-method]', function () {
-                //        var data = $(this).data(),
-                //            $target,
-                //            result;
-                //        if (!$image.data('cropper')) {
-                //            return;
-                //        }
-                //
-                //        if (data.method) {
-                //            data = $.extend({}, data); // Clone a new one
-                //
-                //            if (typeof data.target !== 'undefined') {
-                //                $target = $(data.target);
-                //
-                //                if (typeof data.option === 'undefined') {
-                //                    try {
-                //                        data.option = JSON.parse($target.val());
-                //                    } catch (e) {
-                //                        console.log(e.message);
-                //                    }
-                //                }
-                //            }
-                //
-                //            result = $image.cropper(data.method, data.option);
-                //            if (data.method === 'getCroppedCanvas') {
-                //                $('#getCroppedCanvasModal').modal().find('.modal-body').html(result);
-                //            }
-                //
-                //            if ($.isPlainObject(result) && $target) {
-                //                try {
-                //                    $target.val(JSON.stringify(result));
-                //                } catch (e) {
-                //                    console.log(e.message);
-                //                }
-                //            }
-                //
-                //        }
-                //    });
-                //}
-
-                //if (0) {
-                //
-                //
-                //    // Import image
-                //    var $inputImage = $('#inputImage'),
-                //        URL = window.URL || window.webkitURL,
-                //        blobURL;
-                //
-                //    if (URL) {
-                //        $inputImage.change(function () {
-                //            var files = this.files,
-                //                file;
-                //
-                //            if (!$image.data('cropper')) {
-                //                return;
-                //            }
-                //
-                //            if (files && files.length) {
-                //                file = files[0];
-                //
-                //                if (/^image\/\w+$/.test(file.type)) {
-                //                    blobURL = URL.createObjectURL(file);
-                //                    $image.one('built.cropper', function () {
-                //                        URL.revokeObjectURL(blobURL); // Revoke when load complete
-                //                    }).cropper('reset').cropper('replace', blobURL);
-                //                    $inputImage.val('');
-                //                } else {
-                //                    showMessage('Please choose an image file.');
-                //                }
-                //            }
-                //        });
-                //    } else {
-                //        $inputImage.parent().remove();
-                //    }
-                //
-                //
-                //    // Options
-                //    $('.docs-options :checkbox').on('change', function () {
-                //        var $this = $(this),
-                //            cropBoxData,
-                //            canvasData;
-                //
-                //        if (!$image.data('cropper')) {
-                //            return;
-                //        }
-                //
-                //        options[$this.val()] = $this.prop('checked');
-                //
-                //        cropBoxData = $image.cropper('getCropBoxData');
-                //        canvasData = $image.cropper('getCanvasData');
-                //        options.built = function () {
-                //            $image.cropper('setCropBoxData', cropBoxData);
-                //            $image.cropper('setCanvasData', canvasData);
-                //        };
-                //
-                //        $image.cropper('destroy').cropper(options);
-                //    });
-                //
-                //
-                //    // Tooltips
-                //    $('[data-toggle="tooltip"]').tooltip();
-                //}
             }
         };
     })
@@ -633,49 +525,40 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             return $sce.trustAsHtml(full_text);
         },
         _: function (phrase, dict) {
+            if (typeof phrase !== 'string') {
+                return '';
+            }
             var scope = this;
+
             if (!scope.$$translate) {
                 scope.$$translate = {};
             }
 
-            if (!scope.$$translate_accessed) {
-                scope.$$translate_accessed = {};
-            }
             new Date;
             var t = Date.now() / 1000;
+
             //TODO OZ by OZ hasOwnProperty
             var CtrlName = this.controllerName ? this.controllerName : 'None';
             if (scope.$$translate[phrase] === undefined) {
-                scope.$$translate[phrase] = phrase;
-                scope.$$translate[phrase]['lang'] = phrase;
+                scope.$$translate[phrase] = {'lang': phrase, 'time': t};
                 $ok('/tools/save_translate/', {
                     template: CtrlName,
                     phrase: phrase,
                     url: window.location.href
                 }, function (resp) {
-                    //console.log(resp['phrase']);
-                    //if(resp['phrase'] === ''){
-                    //    scope.$$translate[phrase] = phrase
-                    //}else{
-                    //    scope.$$translate[phrase] = resp;
-                    //}
 
                 });
-                scope.$$translate[phrase] = phrase;
             }
-            else if (scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400) {
-                scope.$$translate_accessed[phrase] = true;
+
+            if ((t - scope.$$translate[phrase]['time']) > 86400) {
+                scope.$$translate[phrase]['time'] = t;
                 $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
                 });
             }
-            if (scope.$$translate[phrase])
-                phrase = scope.$$translate[phrase]['lang'];
-
-            //alert(scope.$$translate);
-
 
             try {
-                return phrase.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
+                var ret = scope.$$translate[phrase]['lang']
+                return ret.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
                     var indexes = g1.split('.');
                     var d = dict ? dict : scope;
                     for (var i in indexes) {
@@ -692,11 +575,11 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 return phrase
             }
         },
-        paginationOptions :{
-                pageNumber: 1,
-                pageSize: 50,
-                sort: null
-            },
+        paginationOptions: {
+            pageNumber: 1,
+            pageSize: 50,
+            sort: null
+        },
         //FilteredMat:function(row, rowRenderIndex, col, colRenderIndex, paginationOptions ) {
         //        console.log(col);
         //        var scope = this;
@@ -717,23 +600,23 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {
                 if (sortColumns.length === 0) {
                     paginationOptions.sort = null;
-                    externalFunction('',paginationOptions)
+                    externalFunction('', paginationOptions)
                 } else {
                     paginationOptions.sort = sortColumns[0].sort.direction;
-                    externalFunction('',paginationOptions)
+                    externalFunction('', paginationOptions)
                 }
             });
             gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
                 if (newValue !== oldValue) {
                     scope.new_status = newValue;
                     scope.article_id = rowEntity.id;
-                    externalFunction('',paginationOptions);
+                    externalFunction('', paginationOptions);
                 }
             });
             gridApi.pagination.on.paginationChanged(scope, function (newPage, pageSize) {
                 paginationOptions.pageNumber = newPage;
                 paginationOptions.pageSize = pageSize;
-                externalFunction('',paginationOptions)
+                externalFunction('', paginationOptions)
             });
         },
 
@@ -1044,120 +927,30 @@ function buildAllowedTagsAndAttributes() {
     return allowed_tags;
 }
 
-var init_cropper = null;
-function a() {
-    'use strict';
-    init_cropper = function (ratio, coordinates) {
-        console.log(coordinates);
-        var $image = $('.img-container > img'),
-            options = {
-                aspectRatio: ratio,
-                crop: function (data) {
-                    console.log(data.x);
-                }
-            };
-        if (coordinates) options.data = coordinates;
-        $image.on({}).cropper(options);
-        $(document.body).on('click', '[data-method]', function () {
-            var data = $(this).data(),
-                $target,
-                result;
-            if (!$image.data('cropper')) {
-                return;
-            }
-
-            if (data.method) {
-                data = $.extend({}, data); // Clone a new one
-
-                if (typeof data.target !== 'undefined') {
-                    $target = $(data.target);
-
-                    if (typeof data.option === 'undefined') {
-                        try {
-                            data.option = JSON.parse($target.val());
-                        } catch (e) {
-                            console.log(e.message);
-                        }
-                    }
-                }
-
-                result = $image.cropper(data.method, data.option);
-                if (data.method === 'getCroppedCanvas') {
-                    $('#getCroppedCanvasModal').modal().find('.modal-body').html(result);
-                }
-
-                if ($.isPlainObject(result) && $target) {
-                    try {
-                        $target.val(JSON.stringify(result));
-                    } catch (e) {
-                        console.log(e.message);
-                    }
-                }
-
-            }
-        });
-
-
-        // Import image
-        var $inputImage = $('#inputImage'),
-            URL = window.URL || window.webkitURL,
-            blobURL;
-
-        if (URL) {
-            $inputImage.change(function () {
-                var files = this.files,
-                    file;
-
-                if (!$image.data('cropper')) {
-                    return;
-                }
-
-                if (files && files.length) {
-                    file = files[0];
-
-                    if (/^image\/\w+$/.test(file.type)) {
-                        blobURL = URL.createObjectURL(file);
-                        $image.one('built.cropper', function () {
-                            URL.revokeObjectURL(blobURL); // Revoke when load complete
-                        }).cropper('reset').cropper('replace', blobURL);
-                        $inputImage.val('');
-                    } else {
-                        showMessage('Please choose an image file.');
-                    }
-                }
-            });
-        } else {
-            $inputImage.parent().remove();
+function find_and_build_url_for_endpoint(dict, rules) {
+    var found = false;
+    var dict1 = {};
+    $.each(rules, function (ind, rule) {
+        var ret = rule;
+        var prop = null;
+        var dict1 = $.extend({}, dict);
+        for (prop in dict1) {
+            ret = ret.replace('<' + prop + '>', dict[prop]);
+            delete dict1[prop];
         }
+        if (!ret.match('<[^<]*>')) {
+            found = ret;
+            return false;
+        }
+    });
 
-
-        // Options
-        $('.docs-options :checkbox').on('change', function () {
-            var $this = $(this),
-                cropBoxData,
-                canvasData;
-
-            if (!$image.data('cropper')) {
-                return;
-            }
-
-            options[$this.val()] = $this.prop('checked');
-
-            cropBoxData = $image.cropper('getCropBoxData');
-            canvasData = $image.cropper('getCanvasData');
-            options.built = function () {
-                $image.cropper('setCropBoxData', cropBoxData);
-                $image.cropper('setCanvasData', canvasData);
-            };
-
-            $image.cropper('destroy').cropper(options);
-        });
-
-
-        // Tooltips
-        $('[data-toggle="tooltip"]').tooltip();
-
-    };
-
-};
-a();
+    if (found === false) {
+        console.error('Can\'t found flask endpoint for passed dictionary', dict, rules);
+    }
+    else {
+        if (_.size(dict1) > 0) {
+            console.warn("To many parameters passed in dictionary for endpoint rule", dict, rules);
+        }
+        return found;
+    }
+}

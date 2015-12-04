@@ -198,7 +198,7 @@ class ArticleCompany(Base, PRBase):
                      'keywords': {'relevance': lambda field='keywords': RELEVANCE.keywords}}
 
     def get_client_side_dict(self,
-                             fields='id|title|short|keywords|cr_tm|md_tm|company_id|article_id|image_file_id|status',
+                             fields='id|title|short|keywords|cr_tm|md_tm|company_id|article_id|image_file_id|status|company_id',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
