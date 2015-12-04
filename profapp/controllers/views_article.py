@@ -118,8 +118,8 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
 
     if action == 'load':
-        image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None, 'image_file_id': None}
         article_dict = articleVersion.get_client_side_dict(more_fields='long')
+        image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None, 'image_file_id': article_dict['image_file_id']}
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
 #TODO: VK by OZ: this code should be moved to model
         try:

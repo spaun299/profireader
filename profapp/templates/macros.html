@@ -1,7 +1,8 @@
 {% macro scripts(names = [], type='text/javascript') -%}
     {% if 'croper' in names %}
-        {% include 'croper.html' %}
-        <script src="/static/image_editor/dist/cropper.js"></script>
-        <script src="/static/image_editor/demo/js/main.js"></script>
+        <link href="{{ url_for('static', filename = 'cropper/cropper.css') }}" rel="stylesheet">
+{#TODO: VH by OZ remove below line#}
+        <link href="/static/image_editor/demo/css/main.css" rel="stylesheet">
+        <script src="/static/cropper/cropper.js"></script>
     {% endif %}
 {%- endmacro %}
