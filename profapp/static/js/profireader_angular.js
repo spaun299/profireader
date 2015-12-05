@@ -91,7 +91,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             restrict: 'A',
             require: 'ngModel',
             link: function (scope, element, attrs, model) {
-                console.log(scope, element, attrs, model);
 
                 var $image = $(element);
                 var options = {
@@ -675,7 +674,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             plugins: 'advlist autolink link image charmap print paste table',
             skin: 'lightgray',
             theme: 'modern',
-            'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | pr_formats | bullist numlist outdent indent | link image table",
+            'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table",
             //'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table"[*],
             'valid_elements': "img[*],table[*],tbody[*],td[*],th[*],tr[*],p[*],h1[*],h2[*],h3[*],h4[*],h5[*],h6[*],div[*],ul[*],ol[*],li[*],strong[*],em[*],span[*],blockquote[*],sup[*],sub[*],code[*],pre[*],a[*]",
             //init_instance_callback1: function () {
@@ -964,3 +963,119 @@ function find_and_build_url_for_endpoint(dict, rules) {
         return found;
     }
 }
+
+var compile_regexps = function (format_properties) {
+    //var rem = format_properties['remove_classes_on_apply'] ?
+    //    RegExp('^' + format_properties['remove_classes_on_apply'] + '$', "i") : false;
+    //console.log(format_properties);
+
+    var rem = false;
+    if (format_properties['remove_classes_on_apply']) {
+        rem = {};
+        $.each(format_properties['remove_classes_on_apply'], function (del, class_to_rem) {
+            rem[class_to_rem] = RegExp('^' + class_to_rem + '$', "i")
+        });
+    }
+
+    var add = false;
+    if (format_properties['add_classes_on_apply']) {
+        add = {};
+        $.each(format_properties['add_classes_on_apply'], function (class_to_add, check_if_not_exust) {
+            add[class_to_add] = RegExp('^' + check_if_not_exust + '$', "i")
+        });
+    }
+    delete format_properties['add_classes_on_apply'];
+    delete format_properties['remove_classes_on_apply'];
+    //console.log({remove: rem, add: add});
+    return {remove: rem, add: add};
+};
+
+var add_or_remove_classes = function (element, classes, remove, add) {
+
+    console.log(element, classes, remove, add);
+
+    classes.map(function (class_name) {
+        if (add) {
+            $.each(add, function (add_if_not_exist, check_if_exist) {
+                if (check_if_exist && class_name.match(check_if_exist)) {
+                    delete add[add_if_not_exist];
+                }
+            });
+        }
+    });
+
+    $.each(add, function (add_if_not_exist, check_if_exist) {
+        $(element).addClass(add_if_not_exist);
+    });
+
+    $.each(remove, function (del, remove_regexp) {
+        classes.map(function (class_name) {
+            if (class_name.match(remove_regexp))
+                $(element).removeClass(class_name);
+        });
+
+    });
+};
+
+var extract_formats_items_from_group = function (formats_in_group) {
+    var ret = [];
+    $.each(formats_in_group, function (format_name, format) {
+        ret.push(
+            {title: format_name.replace(/.*_(\w+)$/, '$1'), format: format_name});
+    });
+    return ret;
+}
+
+
+var get_complex_menu = function (formats, name, subformats) {
+    var ret = [];
+    $.each(subformats, function (del, group_label) {
+        ret.push({
+            'title': group_label,
+            items: extract_formats_items_from_group(formats[name + '_' + group_label])
+        });
+    });
+    return ret;
+}
+
+var get_array_for_menu_build = function (formats) {
+    var menu = {};
+    menu['foreground'] = [{items: extract_formats_items_from_group(formats['foreground_color'])}];
+    menu['background'] = [{items: extract_formats_items_from_group(formats['background_color'])}];
+    menu['font'] = [{items: extract_formats_items_from_group(formats['font_family'])}];
+    menu['border'] = get_complex_menu(formats, 'border', ['placement', 'type', 'width', 'color']);
+    menu['margin'] = get_complex_menu(formats, 'margin', ['placement', 'size']);
+    menu['padding'] = get_complex_menu(formats, 'padding', ['placement', 'size']);
+
+
+    //menu['background_color'] = {
+    //    'title': 'background',
+    //    'items': extract_formats_items_from_group(formats['background_color'])
+    //};
+    //menu['font_family'] = {'title': 'font', 'items': extract_formats_items_from_group(formats['font_family'])};
+    //
+    //$.each(formats, function (format_group_name, formats_in_group) {
+    //    var ret1 = {'title': format_group_name, 'items': []};
+    //    $.each(formats_in_group, function (format_name, format) {
+    //        ret1['items'].push(
+    //            {title: format_name.replace(/.*_(\w+)$/, '$1'), format: format_name});
+    //    });
+    //    ret.push(ret1);
+    //});
+    return menu;
+};
+
+
+var convert_python_format_to_tinymce_format = function (python_format) {
+
+    if (python_format['remove_classes_on_apply'] || python_format['add_classes_on_apply']) {
+
+        var rem_add = compile_regexps(python_format);
+
+        python_format['onformat'] = function (DOMUtils, element) {
+            var classes = $(element).attr('class');
+            add_or_remove_classes(element, classes ? classes.split(/\s+/) : [], rem_add['remove'], rem_add['add']);
+        }
+    }
+    return python_format;
+};
