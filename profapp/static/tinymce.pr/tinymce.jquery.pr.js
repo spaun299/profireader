@@ -36031,20 +36031,30 @@
             }
 
 
-
-
             editor.addButton('styleselect', {
                 type: 'menubutton',
                 text: 'Formats',
                 menu: formatMenu
             });
 
+            console.log(formatMenu);
+
             if (editor.settings['pr_formats']) {
-                editor.addButton('pr_formats', {
-                    type: 'menubutton',
-                    text: 'pr_formats',
-                    menu: createFormatMenu(editor.settings['pr_formats'])
+                $.each(editor.settings['pr_formats'], function (button_name, menu) {
+                    console.log(menu);
+                    var custom_menu = createFormatMenu(menu);
+                    console.log(custom_menu)
+                    if (menu.length === 1) {
+                        custom_menu = custom_menu['items'][0]['menu']
+                    }
+
+                    editor.addButton(button_name, {
+                        type: 'menubutton',
+                        text: button_name,
+                        menu: custom_menu
+                    });
                 });
+
             }
 
             //

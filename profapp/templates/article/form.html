@@ -45,77 +45,20 @@
                 return deff(model);
             };
 
-            var compile_regexps = function (format_properties) {
-                var rem = format_properties['remove_classes_on_apply'] ?
-                        RegExp('^' + format_properties['remove_classes_on_apply'] + '$', "i") : false;
-                var add = false;
-                if (format_properties['add_classes_on_apply']) {
-                    add = {};
-                    $.each(format_properties['add_classes_on_apply'], function (class_to_add, check_if_not_exust) {
-                        add[class_to_add] = RegExp('^' + check_if_not_exust + '$', "i")
-                    });
-                }
-                delete format_properties['add_classes_on_apply'];
-                delete format_properties['remove_classes_on_apply'];
-                return {remove: rem, add: add};
-            };
-
-            var add_or_remove_classes = function (element, classes, remove, add) {
-
-                classes.map(function (class_name) {
-                    if (remove && class_name.match(remove)) {
-                        $(element).removeClass(class_name);
-                    }
-                    if (add) {
-                        $.each(add, function (add_if_not_exist, check_if_exist) {
-                            if (add[add_if_not_exist] && class_name.match(check_if_exist)) {
-                                delete add[add_if_not_exist];
-                            }
-                        });
-                    }
-                });
-
-                $.each(add, function (add_if_not_exist, check_if_exist) {
-                    $(element).addClass(add_if_not_exist);
-                })
-            };
-
-            var get_array_for_menu_build = function (formats) {
-                console.log(formats);
-                var ret = [];
-
-                $.each(formats, function (format_group_name, formats_in_group) {
-                    var ret1 = {'title': format_group_name, 'items': []};
-                    $.each(formats_in_group, function (format_name, format) {
-                        ret1['items'].push(
-                                {title: format_name.replace(/.*_(\w+)$/, '$1'), format: format_name});
-                    });
-                    ret.push(ret1);
-                });
-                return ret;
-            };
-
-
-            var convert_python_format_to_tinymce_format = function (python_format) {
-
-                if (python_format['remove_classes_on_apply'] || python_format['add_classes_on_apply']) {
-
-                    var rem_add = compile_regexps(python_format);
-
-                    python_format['onformat'] = function (DOMUtils, element) {
-                        var classes = $(element).attr('class');
-                        add_or_remove_classes(element, classes ? classes.split(/\s+/) : [], rem_add['remove'], rem_add['add']);
-                    }
-                }
-                return python_format;
-            };
-
-
             $scope.tinymceImageOptions['height'] = '450px';
 
             var general_formats = {{ tinymce_format_groups()|tojson }};
-            var custom_formats = {};
-            {#            {{  custom_formats = tinymce_format_groups('birdy')|tojson }};#}
+
+            {% if  article_portal_division_id %}
+                var custom_formats = {{ tinymce_format_groups('birdy')|tojson }};
+                console.log(custom_formats);
+                $scope.tinymceImageOptions['toolbar2'] = 'foreground | background | font | border | margin | padding';
+            {% else %}
+                var custom_formats = {};
+
+            {% endif %}
+
+
 
             $scope.tinymceImageOptions['formats'] =
                     _.chain($.extend({}, general_formats, custom_formats)). // here we have dicd in form {group_label: {format: format_properties}}
@@ -126,8 +69,20 @@
                             object(). // convert each [key, val] pair to {key: val} element
                             value(); // get result
 
-            {#            $scope.tinymceImageOptions['pr_formats'] = get_array_for_menu_build(custom_formats);#}
-            {#            console.log($scope.tinymceImageOptions['pr_formats']);#}
+            var custom_formats_menu = get_array_for_menu_build(custom_formats);
+
+            $scope.tinymceImageOptions['pr_formats'] = custom_formats_menu;
+
+
+{#            $scope.tinymceImageOptions['pr_formats'] = {#}
+{#                'background': custom_formats_menu['background_color'],#}
+{#                    'foreground': custom_formats_menu['foreground_color'],#}
+{#                    'font': custom_formats_menu['font_family'],#}
+{#                'border': custom_formats_menu['font_family'],#}
+{#            }#}
+
+            console.log($scope.tinymceImageOptions['pr_formats']);
+
 
             $scope.articleImageSelected = function (item) {
                 $scope.data.image.image_file_id = item.id;
