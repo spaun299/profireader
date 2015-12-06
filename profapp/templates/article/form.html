@@ -18,9 +18,10 @@
             {% endif %}
 
             $scope.data = {};
+
             $scope.$$translate = {{ translates('article_edit')|safe }};
             $scope.amidSave = function (resp) {
-                window.location.href = $scope.details_article({article_id: resp['article']['article_id']});
+                window.location.href = $scope.details_article({article_id: resp['article']['id']});
                 add_message('article was created', 'info', 5000);
 
             };
@@ -40,9 +41,20 @@
             }
 
             $scope.getData = function (model, deff) {
-                var $image = $('.img-container > img');
-                $scope.data.image.coordinates = $image.cropper('getData');
+                console.log(model, deff);
+                if (model.article_position.current === 0)
+                    model.article_position.insert_before = none;
+                else if (model.article_position.current === model.portal_division['positioned_articles'].length + 1)
+                    model.article_position.insert_before = true;
+                else
+                    model.article_position.insert_before = model.portal_division.positioned_articles[model.article_position.current - 1].id;
                 return deff(model);
+            };
+
+            $scope.amidLoad = function (resp) {
+                resp.article.publishing_tm = new Date(resp.article.publishing_tm);
+                resp.article_position = {min: 0, max: resp.portal_division.positioned_articles.length + 1, current: 0, insert_before: false}
+                return resp;
             };
 
             $scope.tinymceImageOptions['height'] = '450px';
@@ -74,12 +86,12 @@
             $scope.tinymceImageOptions['pr_formats'] = custom_formats_menu;
 
 
-{#            $scope.tinymceImageOptions['pr_formats'] = {#}
-{#                'background': custom_formats_menu['background_color'],#}
-{#                    'foreground': custom_formats_menu['foreground_color'],#}
-{#                    'font': custom_formats_menu['font_family'],#}
-{#                'border': custom_formats_menu['font_family'],#}
-{#            }#}
+            {#            $scope.tinymceImageOptions['pr_formats'] = {#}
+            {#                'background': custom_formats_menu['background_color'],#}
+            {#                    'foreground': custom_formats_menu['foreground_color'],#}
+            {#                    'font': custom_formats_menu['font_family'],#}
+            {#                'border': custom_formats_menu['font_family'],#}
+            {#            }#}
 
             console.log($scope.tinymceImageOptions['pr_formats']);
 
@@ -107,7 +119,7 @@
 
         <h1 class="nice-title">{{ _(getTitle()) }}<span></span></h1>
 
-        <div af af-after-load="afterLoad" af-amid-save="amidSave" af-before-save="getData"
+        <div af af-amid-load="amidLoad" af-amid-save="amidSave" af-before-save="getData"
              af-beforeValidate="getData" af-watch="data.article" ng-model="data">
 
             <div class="update_col1">
@@ -125,6 +137,33 @@
                 {{ _('Select picture') }}
                 <div ng-include="'cropper.html'"></div>
             </div>
+
+
+            <div ng-if="data.article.division" class="update_col1">
+                <!-- TODO: VH BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line, and move this layout in some angular template (e.g. 'datetimepicker.html') -->
+                {{ _('Select publication date and time') }}<br/>
+                <input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup
+                       ng-model="data.article.publishing_tm" ng-required="true"
+                       datepicker-options="dateOptions" close-text="Close"/><span class="input-group-btn"></span>
+                <uib-timepicker ng-if="0"
+                                ng-model="data.article.publishing_tm" hour-step="1" minute-step="1"
+                                show-meridian="ismeridian"></uib-timepicker>
+            </div>
+
+            <div ng-if="data.article.division" class="update_col1">
+                {{ _('Select publication priority') }}<br/>
+                <div style="width: 20em" ui-slider min="{{ data.article_position.min }}"
+                     max="{{ data.article_position.max }}" step="1" ng-model="data.article_position.current"></div>
+                <div class="nowrap">
+                <span ng-if="data.article_position.current == 0 ">{{ _('Do not use priority. Stay with publishing date') }}</span>
+                <span ng-if="data.article_position.current == data.article_position.max ">{{ _('Show first in division') }}</span>
+                <span ng-if="data.article_position.current > 0 && data.article_position.current < data.article_position.max">
+                    {{ _('Show this article just before `%(title)s`', {title: data.portal_division.positioned_articles[data.article_position.current - 1].title}) }}</span>
+                </div>
+
+            </div>
+
+
             <div class="update_col1">
                 <!-- TODO: OZ by OZ move this code to one file -->
                 <link href="/static/css/article.css" rel="stylesheet">

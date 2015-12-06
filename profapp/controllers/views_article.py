@@ -9,6 +9,9 @@ from .views_file import crop_image, update_croped_image
 from ..models.files import ImageCroped
 from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql import expression
+from sqlalchemy import and_
+
 import time
 
 
@@ -113,12 +116,21 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                      article_portal_division_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
 
+    portal_division_dict = None
     if article_company_id:  # companys version. always updating existing
         articleVersion = ArticleCompany.get(article_company_id)
     elif mine_version_article_company_id:  # updating personal version
         articleVersion = ArticleCompany.get(mine_version_article_company_id)
     elif article_portal_division_id:  # updating portal version
         articleVersion = ArticlePortalDivision.get(article_portal_division_id)
+        portal_position_filter = and_(ArticlePortalDivision.portal_division_id == articleVersion.portal_division_id,
+                                      ArticlePortalDivision.position > 0)
+        portal_division_dict = {'positioned_articles':
+                                    [pda.get_client_side_dict(fields='id|position|title') for pda in
+                                     db(ArticlePortalDivision).filter(portal_position_filter).
+                                         order_by(*articleVersion.position_order()).all()]
+                                }
+
     else:  # creating personal version
         articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
 
@@ -134,7 +146,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                     get_coordinates_and_original_img(article_dict.get('image_file_id'))
         except Exception as e:
             pass
-        return {'article': article_dict, 'image': image_dict}
+        return {'article': article_dict, 'image': image_dict, 'portal_division': portal_division_dict}
     else:
         parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
 
@@ -144,11 +156,17 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             return articleVersion.validate(article_company_id is None)
         else:
             image_id = parameters['image'].get('image_file_id')
-            if image_id:
-                articleVersion.image_file_id = crop_image(image_id,
-                                                          json['image'].get('coordinates'))
-            return {'article': articleVersion.save().get_client_side_dict(more_fields='long'),
-                    'image': json['image']}
+            # TODO: VK by OZ: this code dont work if ArticlePortalDivision updated
+            # if image_id:
+            #     articleVersion.image_file_id = crop_image(image_id,
+            #
+            #
+            #                            json['image'].get('coordinates'))
+            a = articleVersion.save()
+            if article_portal_division_id:
+                a = a.insert_before(json['article_position']['insert_before'], portal_position_filter)
+            a = a.get_client_side_dict(more_fields='long')
+            return {'article': a, 'image': json['image']}
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])

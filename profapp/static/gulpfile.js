@@ -69,7 +69,13 @@ gulp.task('install_cropper', function () {
         .pipe(gulp.dest('cropper/'));
 });
 
+gulp.task('install_slider', function () {
+    return gulp.src([src + 'angular-ui-slider/src/slider.js'])
+        .pipe(gulp.dest('angular-ui-slider/'));
+});
+
 
 gulp.task('default', ['clean', 'install_filemanager', 'install_fileuploader', 'install_angular', 'install_angular_translate', 'install_angular_cookies', 
-'install_angular_ui_tinymce', 'install_tinymce', 'install_angular_bootstrap', 'install_angular_animate', 'install_angular_xeditable', 'install_cropper']);
+'install_angular_ui_tinymce', 'install_tinymce', 'install_angular_bootstrap', 'install_angular_animate', 'install_angular_xeditable', 'install_cropper',
+'install_slider']);
 

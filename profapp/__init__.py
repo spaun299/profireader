@@ -252,7 +252,7 @@ def flask_endpoint_to_angular(endpoint, **kwargs):
     return url
 
 
-def fileUrl(id, down, if_no_file):
+def fileUrl(id, down = False, if_no_file = None):
     if not id:
         return if_no_file if if_no_file else ''
 

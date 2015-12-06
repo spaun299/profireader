@@ -17,8 +17,9 @@ from ..constants.SEARCH import RELEVANCE
 import math
 from config import Config
 import collections
-from sqlalchemy.sql import expression, functions
+from sqlalchemy.sql import expression, functions, update
 from utils.validators import validators
+from sqlalchemy import and_
 
 Base = declarative_base()
 
@@ -134,7 +135,7 @@ class Search(Base):
         def get_order(order_name, order_value, field):
             order_name += '+' if order_value == 'desc' else '-'
             result = {'text+': lambda field_name: desc(func.min(
-                      getattr(Search, field_name, Search.text))),
+                getattr(Search, field_name, Search.text))),
                       'text-': lambda field_name: asc(func.min(
                           getattr(Search, field_name, Search.text))),
                       'md_tm+': lambda field_name: desc(func.min(
@@ -154,18 +155,18 @@ class Search(Base):
                         index=subquery_search.subquery().c.index,
                         kind=field_name).order_by(order).group_by(Search.index)
             return joined
-        for cls in args:
 
+        for cls in args:
             filter_params = cls.get('filter')
             fields = cls.get('fields') or \
-                [key for key in vars(cls['class']).keys() if key[0] != '_']
+                     [key for key in vars(cls['class']).keys() if key[0] != '_']
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
             search_params.append(and_(Search.index == db(cls['class'].id).filter(
-                                 filter_params).subquery().c.id, Search.text.ilike(
+                filter_params).subquery().c.id, Search.text.ilike(
                 "%" + search_text + "%"), Search.table_name == cls['class'].__tablename__,
-                Search.kind.in_(fields)), )
+                                      Search.kind.in_(fields)), )
         subquery_search = db(Search.index,
                              func.sum(Search.relevance).label('relevance'),
                              func.min(Search.table_name).label('table_name'),
@@ -182,12 +183,12 @@ class Search(Base):
         else:
             subquery_search = subquery_search.order_by(get_order('relevance', 'desc', 'relevance'))
         if pagination:
-            pages = math.ceil(subquery_search.count()/items_per_page)
+            pages = math.ceil(subquery_search.count() / items_per_page)
             if items_per_page:
                 subquery_search = subquery_search.limit(items_per_page)
             if page:
-                subquery_search = subquery_search.offset(page*items_per_page) if int(page) in range(
-                    0, int(pages)) else subquery_search.offset(pages*items_per_page)
+                subquery_search = subquery_search.offset(page * items_per_page) if int(page) in range(
+                    0, int(pages)) else subquery_search.offset(pages * items_per_page)
         subquery_search = subquery_search.subquery()
         join_search = []
         for arg in args:
@@ -213,7 +214,7 @@ class Search(Base):
                 for a in db(cls).filter(cls.id.in_(objects.keys())).all():
                     ordered_articles[a.id] = a.get_client_side_dict(more_fields=more_fields)
             objects = ordered_articles
-        return objects, pages, page+1
+        return objects, pages, page + 1
 
 
 class MLStripper(HTMLParser):
@@ -238,9 +239,75 @@ class MLStripper(HTMLParser):
             data = html
         return data
 
+
 class PRBase:
     def __init__(self):
         self.query = g.db.query_property()
+
+    def position_order(self, sort_asc=False):
+
+        columns_names = self.__table__.columns._data.keys()
+
+        ret = [expression.asc(self.__class__.position) if sort_asc else expression.desc(self.__class__.position)]
+
+        if 'md_tm' in columns_names:
+            ret.append(
+                expression.asc(self.__class__.md_tm) if sort_asc else expression.desc(self.__class__.md_tm))
+
+        elif 'cr_tm' in columns_names:
+            ret.append(
+                expression.asc(self.__class__.cr_tm) if sort_asc else expression.desc(self.__class__.cr_tm))
+
+        elif 'id' in columns_names:
+            ret.append(
+                expression.asc(self.__class__.id) if sort_asc else expression.desc(self.__class__.id))
+
+        return ret
+        # expression.desc(ArticlePortalDivision.position)
+
+    def also_can_affect_position(self):
+
+        columns_names = self.__table__.columns._data.keys()
+
+        ret = self.__class__.position >= self.position
+
+        if 'md_tm' in columns_names:
+            ret = and_(ret, self.__class__.md_tm >= self.md_tm)
+        elif 'cr_tm' in columns_names:
+            ret = and_(ret, self.__class__.cr_tm >= self.cr_tm)
+        elif 'id' in columns_names:
+            ret = and_(ret, self.__class__.id >= self.id)
+
+        return ret
+
+    # if insert_before_id == True - insert at top
+    # if insert_before_id == False - insert at bottom
+    # if else - insert before given id
+    def insert_before(self, insert_before_id, filter=None):
+
+        tochange = db(self.__class__)
+        if filter is not None:
+            tochange = tochange.filter(filter)
+
+        if insert_before_id == True:
+            tochange = tochange.order_by(*self.position_order(sort_asc=False)).first()
+            self.position = tochange.position + 1 if tochange else 1
+        elif insert_before_id == False:
+            tochange.update({self.c.position: self.c.position + 1})
+            self.position = 1
+        else:
+            insert_before_object = self.get(insert_before_id)
+            tochange = tochange.filter(insert_before_object.also_can_affect_position())
+            utmost = tochange.order_by(*self.position_order(sort_asc=True)).first()
+
+            if utmost:
+                if utmost.position == insert_before_object.position:
+                    tochange.update({'position': self.position + 2})
+                else:
+                    tochange.update({'position': self.position + 1})
+            self.position = insert_before_object.position + 1
+
+        return self
 
     def validate(self, is_new):
         return {'errors': {}, 'warnings': {}, 'notices': {}}
@@ -288,7 +355,8 @@ class PRBase:
     def to_dict_object_property(self, object_name):
         object_property = getattr(self, object_name)
         if isinstance(object_property, datetime.datetime):
-            return object_property.strftime('%c')
+            # return object_property.timestamp()
+            return object_property
         elif isinstance(object_property, dict):
             return object_property
         else:
@@ -369,7 +437,8 @@ class PRBase:
                            for child in related_obj]
                 else:
                     add = None if related_obj is None else \
-                        get_next_level(related_obj, nextlevelargs, prefix + relationname + '.', standard_fields_required)
+                        get_next_level(related_obj, nextlevelargs, prefix + relationname + '.',
+                                       standard_fields_required)
 
                 ret[relationname] = add
 
@@ -414,7 +483,7 @@ class PRBase:
 
         if hasattr(target, 'search_fields'):
             target_fields = ','.join(target.search_fields.keys())
-            target_dict = target.get_client_side_dict(fields=target_fields+',id')
+            target_dict = target.get_client_side_dict(fields=target_fields + ',id')
             options = {'relevance': lambda field_name: getattr(RELEVANCE, field_name),
                        'processing': lambda text: MLStripper().strip_tags(text),
                        'index': lambda target_id: target_id}
