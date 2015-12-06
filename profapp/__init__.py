@@ -25,7 +25,9 @@ from .models.users import User
 from .models.config import Config
 from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
+from .models.tools import HtmlHelper
 import json
+import time
 
 
 def req(name, allowed=None, default=None, exception=True):
@@ -40,7 +42,7 @@ def req(name, allowed=None, default=None, exception=True):
         return None
 
 
-def filter_json(json, *args, prefix='', NoneTo='', ExceptionOnNotPresent=False):
+def filter_json(json, *args, NoneTo='', ExceptionOnNotPresent=False, prefix=''):
     ret = {}
     req_columns = {}
     req_relationships = {}
@@ -86,23 +88,21 @@ def filter_json(json, *args, prefix='', NoneTo='', ExceptionOnNotPresent=False):
                                      req_columns.keys())),))
 
     for relationname, relation in json.items():
-        if relationname in req_relationships or '*' in \
-                req_relationships:
+        if relationname in req_relationships or '*' in req_relationships:
             if relationname in req_relationships:
                 nextlevelargs = req_relationships[relationname]
                 del req_relationships[relationname]
             else:
                 nextlevelargs = req_relationships['*']
-            related_obj = relation
-            if type(json) is dict:
+            if type(relation) is list:
                 ret[relationname] = [
-                    child.filter_json(*nextlevelargs,
-                                      prefix=prefix + relationname + '.'
-                                      ) for child in
-                    related_obj]
+                    filter_json(child, *nextlevelargs,
+                                prefix=prefix + relationname + '.'
+                                ) for child in
+                    relation]
             else:
-                ret[relationname] = None if related_obj is None else related_obj.filter_json(*nextlevelargs,
-                                                                                             prefix=prefix + relationname + '.')
+                ret[relationname] = None if relation is None else filter_json(relation, *nextlevelargs,
+                                                                              prefix=prefix + relationname + '.')
 
     if '*' in req_relationships:
         del req_relationships['*']
@@ -209,6 +209,7 @@ def load_user():
     g.user_init = user_init
     g.user = user
     g.user_dict = user_dict
+    g.user_id = user_dict['id']
 
     for variable in g.db.query(Config).filter_by(server_side=1).all():
 
@@ -251,18 +252,29 @@ def flask_endpoint_to_angular(endpoint, **kwargs):
     return url
 
 
-# TODO OZ by OZ rename this func and add two parameters
-def file_url(id):
+def fileUrl(id, down = False, if_no_file = None):
     if not id:
-        return ''
+        return if_no_file if if_no_file else ''
+
     server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', id)
-    return 'http://file' + server + '.profireader.com/' + id + '/'
+    return 'http://file' + server + '.profireader.com/' + id + '/' + ('?d' if down else '')
 
 
 def translates(template):
-    #     pass
+    if g.user:
+        user_language = g.user.lang
+    else:
+        user_language = 'uk'
     phrases = g.db.query(TranslateTemplate).filter_by(template=template).all()
-    ret = {ph.name: ph.uk for ph in phrases}
+    ret = {}
+    if user_language == 'uk':
+        for ph in phrases:
+            tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
+            ret[ph.name] = {'lang': ph.uk, 'time': tim}
+    else:
+        for ph in phrases:
+            tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
+            ret[ph.name] = {'lang': ph.en, 'time': tim}
     return json.dumps(ret)
 
 
@@ -322,13 +334,14 @@ def raw_url_for(endpoint):
     rules = url_adapter.map._rules_by_endpoint.get(endpoint, ())
 
     if len(rules) < 1:
-        return ''
+        raise Exception('You requsted url for endpoint `%s` but no endpoint found' % (endpoint,))
 
-    ret = re.compile('<[^:]*:').sub('<',
-                                    url_adapter.map._rules_by_endpoint.get(endpoint, ())[0].rule)
+    rules_simplified = [re.compile('<[^:]*:').sub('<', rule.rule) for rule in rules]
 
-    return "function (dict) { var ret = '" + ret + "'; " \
-                                                   " for (prop in dict) ret = ret.replace('<'+prop+'>',dict[prop]); return ret; }"
+    return "function (dict) { return find_and_build_url_for_endpoint(dict, %s); }" % (json.dumps(rules_simplified))
+    # \
+    #        " { var ret = '" + ret + "'; " \
+    #                                                " for (prop in dict) ret = ret.replace('<'+prop+'>',dict[prop]); return ret; }"
 
 
 def pre(value):
@@ -346,7 +359,7 @@ login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 #  The login_view attribute sets the endpoint for the login page.
 #  I am not sure that it is necessary
-login_manager.login_view = 'auth.login'
+login_manager.login_view = 'auth.login_signup_endpoint'
 
 
 class AnonymousUser(AnonymousUserMixin):
@@ -382,9 +395,26 @@ class AnonymousUser(AnonymousUserMixin):
     def user_name():
         return 'Guest'
 
-    @staticmethod
-    def avatar(size=0):
-        pass
+    def avatar(self, size=100):
+        avatar = self.gravatar(size=size)
+        return avatar
+
+    def gravatar(self, size=100, default='identicon', rating='g'):
+        if request.is_secure:
+            url = 'https://secure.gravatar.com/avatar'
+        else:
+            url = 'http://www.gravatar.com/avatar'
+
+        email = getattr(self, 'profireader_email', 'guest@profireader.com')
+
+        # email = 'guest@profireader.com'
+        # if self.profireader_email:
+        #     email = self.profireader_email
+
+        hash = hashlib.md5(
+            email.encode('utf-8')).hexdigest()
+        return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
+            url=url, hash=hash, size=size, default=default, rating=rating)
 
     def __repr__(self):
         return "<User(id = %r)>" % self.id
@@ -443,9 +473,10 @@ def create_app(config='config.ProductionDevelopmentConfig',
     app.jinja_env.globals.update(raw_url_for=raw_url_for)
     app.jinja_env.globals.update(pre=pre)
     app.jinja_env.globals.update(translates=translates)
-    app.jinja_env.globals.update(file_url=file_url)
+    app.jinja_env.globals.update(fileUrl=fileUrl)
     app.jinja_env.globals.update(config_variables=config_variables)
     app.jinja_env.globals.update(_=translate_phrase)
+    app.jinja_env.globals.update(tinymce_format_groups=HtmlHelper.tinymce_format_groups)
 
 
     # see: http://flask.pocoo.org/docs/0.10/patterns/sqlalchemy/

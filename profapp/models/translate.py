@@ -2,9 +2,10 @@ from .pr_base import PRBase, Base
 from ..constants.TABLE_TYPES import TABLE_TYPES
 from sqlalchemy import Column, ForeignKey, text
 from utils.db_utils import db
+import datetime
 import re
 from flask import g, request, current_app
-
+from sqlalchemy.sql import expression
 
 class TranslateTemplate(Base, PRBase):
     __tablename__ = 'translate'
@@ -17,8 +18,8 @@ class TranslateTemplate(Base, PRBase):
     md_tm = Column(TABLE_TYPES['timestamp'])
     template = Column(TABLE_TYPES['short_name'], default='')
     name = Column(TABLE_TYPES['name'], default='')
-    uk = Column(TABLE_TYPES['name'], default='')
     url = Column(TABLE_TYPES['keywords'], default='')
+    uk = Column(TABLE_TYPES['name'], default='')
     en = Column(TABLE_TYPES['name'], default='')
 
     def __init__(self, id=None, template=None, url='', name=None, uk=None, en=None):
@@ -51,7 +52,9 @@ class TranslateTemplate(Base, PRBase):
             phrase = phrase[2:]
             template = '__GLOBAL'
 
+
         exist = db(TranslateTemplate, template=template, name=phrase).first()
+
 
         lang = TranslateTemplate.languages[0]
         if g.user_dict['lang'] in TranslateTemplate.languages:
@@ -60,13 +63,28 @@ class TranslateTemplate(Base, PRBase):
         if exist:
             if current_app.config['DEBUG']:
                 # TODO: OZ by OZ change ac without changing md (md changed by trigger)
-                exist.ac_tm = None
+                # exist.ac_tm = None
                 exist.save()
         else:
+
             exist = TranslateTemplate(template=template, name=phrase,
                                       url=url, **{l: phrase for l in TranslateTemplate.languages}).save()
 
         return getattr(exist, lang)
+
+    @staticmethod
+    def update_last_accessed(template, phrase):
+        i = datetime.datetime.now()
+        obj = db(TranslateTemplate, template=template, name=phrase).first()
+        obj.updates({'ac_tm': i})
+        return 'True'
+
+    @staticmethod
+    def delete(objects):
+        for obj in objects:
+            f = db(TranslateTemplate, template=obj['Template'], name=obj['Phrase']).first()
+            TranslateTemplate.delfile(f)
+        return 'True'
 
     @staticmethod
     def isExist(template, phrase):
@@ -74,7 +92,7 @@ class TranslateTemplate(Base, PRBase):
         return True if list else False
 
     @staticmethod
-    def subquery_search(search_text=None, template=None, url=None, **kwargs):
+    def subquery_search(template=None, url=None, **kwargs):
 
         sub_query = db(TranslateTemplate)
         if template:
@@ -83,12 +101,22 @@ class TranslateTemplate(Base, PRBase):
         if url:
             sub_query = sub_query.filter_by(url=url)
 
-        if search_text:
-            sub_query = sub_query.filter(TranslateTemplate.name.ilike("%" + search_text + "%"))
+        if kwargs['search_in_phrase']:
+            sub_query = sub_query.filter(TranslateTemplate.name.ilike("%" + kwargs['search_in_phrase'] + "%"))
+        if kwargs['search_in_uk']:
+            sub_query = sub_query.filter(TranslateTemplate.uk.ilike("%" + kwargs['search_in_uk'] + "%"))
+        if kwargs['search_in_en']:
+            sub_query = sub_query.filter(TranslateTemplate.en.ilike("%" + kwargs['search_in_en'] + "%"))
 
-        sub_query = sub_query.order_by(TranslateTemplate.template)
+        if kwargs['sort_creation_time']:
+            sub_query = sub_query.order_by(TranslateTemplate.cr_tm.asc()) if kwargs['sort_creation_time'] == 'asc' else sub_query.order_by(TranslateTemplate.cr_tm.desc())
+        elif kwargs['sort_last_accessed_time']:
+            sub_query = sub_query.order_by(TranslateTemplate.ac_tm.asc()) if kwargs['sort_last_accessed_time'] == 'asc' else sub_query.order_by(TranslateTemplate.ac_tm.desc())
+        else:
+            sub_query = sub_query.order_by(TranslateTemplate.template)
 
         return sub_query
 
-    def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url'):
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)

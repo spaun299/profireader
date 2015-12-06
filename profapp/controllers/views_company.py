@@ -9,7 +9,7 @@ from flask.ext.login import login_required
 from ..models.articles import Article
 from ..models.portal import PortalDivision
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
-from ..models.portal import MemberCompanyPortal
+from ..models.portal import MemberCompanyPortal, Portal
 from ..models.articles import ArticleCompany, ArticlePortalDivision
 from utils.db_utils import db
 from collections import OrderedDict
@@ -21,6 +21,7 @@ from ..models.files import File
 from flask import session
 from .pagination import pagination
 from config import Config
+from ..models.pr_base import Search
 
 
 @company_bp.route('/search_to_submit_article/', methods=['POST'])
@@ -36,7 +37,7 @@ def search_to_submit_article(json):
 # @check_rights(simple_permissions([]))
 def show():
     return render_template('company/companies.html')
-
+from sqlalchemy import and_
 
 @company_bp.route('/', methods=['POST'])
 @login_required
@@ -61,16 +62,11 @@ def materials(company_id):
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template(
         'company/materials.html',
-        company=company.get_client_side_dict(),
+        company=company.get_client_side_dict(fields='name'),
         company_id=company_id,
         angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js',
-        company_logo=company_logo,
-        company_name=company.name
+        company_logo=company_logo
     )
-
-
-# TODO: VK by OZ: remove company_* kwargs
-
 
 @company_bp.route('/materials/<string:company_id>/', methods=['POST'])
 @login_required
@@ -80,29 +76,72 @@ def materials_load(json, company_id):
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
 
-    page = json.get('page') or 1
-    search_text = json.get('search_text')
+    page = json.get('grid_data')['page'] or 1
+    search_text = json.get('grid_data')['search_text']
     params = {}
-    if json.get('status'):
-        params['status'] = json.get('status')
+    params['status'] = json.get('grid_data')['status'] if json.get('grid_data')['status'] else None
+
+    params['publ_status'] = json.get('grid_data')['publ_status'] if json.get('grid_data')['publ_status'] else None
+    params['sort_date'] = json.get('grid_data')['sort_date'] if json.get('grid_data')['sort_date'] else None
+    print(json.get('grid_data'))
+    if json.get('grid_data')['new_status']:
+        ArticleCompany.update_article(
+        company_id=company_id,
+        article_id=json.get('article_id'),
+        **{'status': json.get('grid_data')['new_status']})
     subquery = ArticleCompany.subquery_company_articles(search_text=search_text,
                                                         company_id=company_id,
                                                         portal_id=json.get('portal_id'),
                                                         **params)
-    articles, pages, current_page = pagination(subquery, page=page, items_per_page=Config.ITEMS_PER_PAGE)
-    portals = ArticlePortalDivision.get_portals_where_company_send_article(company_id)
+    articles, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('grid_data')['pageSize'])
+    #portals = ArticlePortalDivision.get_portals_where_company_send_article(company_id)
+    # statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
+    add_param = {'value': '1','label': '-- all --'}
+    statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
+    portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id), add_param, True)
+    gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
+    grid_data = []
 
     statuses = {status: status for status in ARTICLE_STATUS_IN_PORTAL.all}
 
-    return {'materials': [{'article': a.get_client_side_dict(),
-                           'portals_count': len(a.get_client_side_dict()['portal_article']) + 1}
+    for article in articles:
+        allowed_statuses = []
+        art_stats = ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(article.status)
+        for s in art_stats:
+            allowed_statuses.append({'id': s,'value':s})
+        port = 'not sent' if len(article.portal_article) == 0 else ''
+        grid_data.append({'Date': article.md_tm,
+                            'Title': article.title,
+                            'Portals': port,
+                            'Publication status': '',
+                            'Material status': article.status,
+                            'id': str(article.id),
+                            'level': True,
+                            'allowed_status': allowed_statuses})
+        if article.portal_article:
+            i = 0
+            for portal in article.portal_article:
+                grid_data.append({'Date': '',
+                                   'Title': '',
+                                   'Portals': portal.portal.name,
+                                   'Publication status': portal.status,
+                                   'Material status': '',
+                                   'id': portal.id,
+                                   'level': False})
+                i += 1
+    total = [f for f in grid_data if f['level'] == True]
+    return {'grid_data': grid_data,
+            'materials': [{'article': a.get_client_side_dict(more_fields='portal_article.~'),
+                           'portals_count': len(
+                               a.get_client_side_dict(fields='portal_article.~')['portal_article']) + 1}
                           for a in articles],
-            'portals': portals,
+            'portals': portals_g,
             'pages': {'total': pages, 'current_page': current_page,
                       'page_buttons': Config.PAGINATION_BUTTONS},
-            'statuses': statuses
+            'statuses': statuses,
+            'publ_statuses': gr_publ_st,
+            'total': len(total)
             }
-
 
 @company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['GET'])
 @login_required
@@ -117,6 +156,8 @@ def material_details(company_id, article_id):
                            company_logo=company_logo,
                            company_name=company.name,
                            company=company.get_client_side_dict())
+
+
 # TODO: VK by OZ: remove company_* kwargs
 
 
@@ -136,7 +177,7 @@ def load_material_details(json, company_id, article_id):
                           for articles in article.portal_article
                           if articles.division.portal.id in portals}
 
-    article = article.to_dict('id, title,short, cr_tm, md_tm, '
+    article = article.get_client_side_dict(fields = 'id, title,short, cr_tm, md_tm, '
                               'company_id, status, long,'
                               'editor_user_id, company.name|id,'
                               'portal_article.id, portal_article.division.name, '
@@ -152,7 +193,7 @@ def load_material_details(json, company_id, article_id):
     return {'article': article,
             'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(article['status']),
             'portals': portals,
-            'company': Company.get(company_id).to_dict('id, employees.id|profireader_name'),
+            'company': Company.get(company_id).get_client_side_dict(fields='id, employees.id|profireader_name'),
             'selected_portal': {},
             'selected_division': {},
             # 'user_rights': ['publish', 'unpublish', 'edit'],
@@ -217,7 +258,7 @@ def profile(company_id):
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template('company/company_profile.html',
-                           company=company.to_dict('*, own_portal.*'),
+                           company=company.get_client_side_dict(more_fields='own_portal'),
                            user_rights=user_rights,
                            company_logo=company_logo,
                            company_id=company_id,
@@ -307,7 +348,7 @@ def load(json, company_id=None):
         else:
             if company_id is not None:
                 company.detach()
-            return company.validate('insert' if company_id is None else 'update')
+            return company.validate(company_id is None)
 
 
 # @company_bp.route('/confirm_create/', methods=['POST'])

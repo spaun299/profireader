@@ -89,72 +89,72 @@ def need_we_column(name, arr, is_relationship=False):
             return False
 
 
-def object_to_dict(obj, *args, prefix=''):
-    ret = {}
-
-    req_columns = {}
-    req_relationships = {}
-    for argument in args:
-        columnsdevided = argument.split('.')
-        if len(columnsdevided) == 1:
-            req_columns[argument] = True
-        else:
-            req_relationname = columnsdevided.pop(0)
-            if req_relationname not in req_relationships:
-                req_relationships[req_relationname] = []
-            req_relationships[req_relationname].append('.'.join(columnsdevided))
-
-    # req_columns = list(set(req_columns))
-    # req_relationships = {relationname:convert_col_to_arrays(*nextlevelcols) for relationname,nextlevelcols in relationships}
-
-    columns = class_mapper(obj.__class__).columns
-    realations = {a:b for (a,b) in  class_mapper(obj.__class__).relationships.items()}
-
-    get_key_value = lambda o: o.isoformat() if isinstance(o, datetime.datetime) else o
-    for col in columns:
-        if col.key in req_columns or '*' in req_columns:
-            ret[col.key] = get_key_value(getattr(obj, col.key))
-            if col.key in req_columns:
-                del req_columns[col.key]
-    if '*' in req_columns:
-        del req_columns['*']
-
-    if len(req_columns) > 0:
-        columns_not_in_relations = list(set(req_columns.keys()) - set(realations.keys()))
-        if len(columns_not_in_relations) > 0:
-            raise ValueError(
-                "you requested not existing attribute(s) `%s%s`" % (prefix, '`, `'.join(columns_not_in_relations),))
-        else:
-            raise ValueError("you requested for attribute(s) but relationships found `%s%s`" % (
-            prefix, '`, `'.join(set(realations.keys()).intersection(req_columns.keys())),))
-
-    for relationname, relation in realations.items():
-        if relationname in req_relationships or '*' in req_relationships:
-            if relationname in req_relationships:
-                nextlevelargs = req_relationships[relationname]
-                del req_relationships[relationname]
-            else:
-                nextlevelargs = req_relationships['*']
-            related_obj = getattr(obj, relationname)
-            if relation.uselist:
-                ret[relationname] = [object_to_dict(child, *nextlevelargs, prefix = prefix + relationname + '.') for child in
-                                     related_obj]
-            else:
-                ret[relationname] = object_to_dict(related_obj, *nextlevelargs, prefix = prefix + relationname + '.')
-
-    if '*' in req_relationships:
-        del req_relationships['*']
-
-    if len(req_relationships) > 0:
-        relations_not_in_columns = list(set(req_relationships.keys()) - set(columns))
-        if len(relations_not_in_columns) > 0:
-            raise ValueError(
-                "you requested not existing relation(s) `%s%s`" % (prefix, '`, `'.join(relations_not_in_columns),))
-        else:
-            raise ValueError("you requested for relation(s) but column(s) found `%s%s`" % (
-            prefix, '`, `'.join(set(columns).intersection(req_relationships)),))
-
-    return ret
+# def object_to_dict(obj, *args, prefix=''):
+#     ret = {}
+#
+#     req_columns = {}
+#     req_relationships = {}
+#     for argument in args:
+#         columnsdevided = argument.split('.')
+#         if len(columnsdevided) == 1:
+#             req_columns[argument] = True
+#         else:
+#             req_relationname = columnsdevided.pop(0)
+#             if req_relationname not in req_relationships:
+#                 req_relationships[req_relationname] = []
+#             req_relationships[req_relationname].append('.'.join(columnsdevided))
+#
+#     # req_columns = list(set(req_columns))
+#     # req_relationships = {relationname:convert_col_to_arrays(*nextlevelcols) for relationname,nextlevelcols in relationships}
+#
+#     columns = class_mapper(obj.__class__).columns
+#     realations = {a:b for (a,b) in  class_mapper(obj.__class__).relationships.items()}
+#
+#     get_key_value = lambda o: o.isoformat() if isinstance(o, datetime.datetime) else o
+#     for col in columns:
+#         if col.key in req_columns or '*' in req_columns:
+#             ret[col.key] = get_key_value(getattr(obj, col.key))
+#             if col.key in req_columns:
+#                 del req_columns[col.key]
+#     if '*' in req_columns:
+#         del req_columns['*']
+#
+#     if len(req_columns) > 0:
+#         columns_not_in_relations = list(set(req_columns.keys()) - set(realations.keys()))
+#         if len(columns_not_in_relations) > 0:
+#             raise ValueError(
+#                 "you requested not existing attribute(s) `%s%s`" % (prefix, '`, `'.join(columns_not_in_relations),))
+#         else:
+#             raise ValueError("you requested for attribute(s) but relationships found `%s%s`" % (
+#             prefix, '`, `'.join(set(realations.keys()).intersection(req_columns.keys())),))
+#
+#     for relationname, relation in realations.items():
+#         if relationname in req_relationships or '*' in req_relationships:
+#             if relationname in req_relationships:
+#                 nextlevelargs = req_relationships[relationname]
+#                 del req_relationships[relationname]
+#             else:
+#                 nextlevelargs = req_relationships['*']
+#             related_obj = getattr(obj, relationname)
+#             if relation.uselist:
+#                 ret[relationname] = [object_to_dict(child, *nextlevelargs, prefix = prefix + relationname + '.') for child in
+#                                      related_obj]
+#             else:
+#                 ret[relationname] = object_to_dict(related_obj, *nextlevelargs, prefix = prefix + relationname + '.')
+#
+#     if '*' in req_relationships:
+#         del req_relationships['*']
+#
+#     if len(req_relationships) > 0:
+#         relations_not_in_columns = list(set(req_relationships.keys()) - set(columns))
+#         if len(relations_not_in_columns) > 0:
+#             raise ValueError(
+#                 "you requested not existing relation(s) `%s%s`" % (prefix, '`, `'.join(relations_not_in_columns),))
+#         else:
+#             raise ValueError("you requested for relation(s) but column(s) found `%s%s`" % (
+#             prefix, '`, `'.join(set(columns).intersection(req_relationships)),))
+#
+#     return ret
 
 
 

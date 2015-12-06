@@ -1,8 +1,8 @@
 {% for article_id in articles %}
 
         <div class="block-item list-elements">
-            <div class="item-type article"><a
-                    href="{{ url_for('front.division', division_name=articles[article_id]['division']['name'], page=1, search_text='') }}">{{ articles[article_id]['division']['name']|safe }}</a>
+            <div class="item-type article">
+                <a href="{{ url_for('front.division', division_name=articles[article_id]['division']['name'], page=1, search_text='') }}">{{ articles[article_id]['division']['name']|safe }}</a>
             </div>
             <h2 class="item-title">
                 <a href="{{ url_for('front.details', article_portal_division_id=articles[article_id]['id']) }}">{{ articles[article_id]['title']|safe }}</a>
@@ -13,7 +13,7 @@
 {#                </span>#}
             </h2>
 
-{# TODO (AA to AA): the div below should be deleted and commented block above should be uncommented when class="tag_in_article" is developed #}
+{# TODO (AA to AA): the div below should be deleted and commented, block above should be uncommented when class="tag_in_article" is developed #}
             <div class="tag-list">
                 {% for tag in articles[article_id]['tags'] %}
                     <a href="#">{{ tag }}</a>
@@ -30,7 +30,7 @@
             </div>
             <div class="bottom-hide"></div>
 
-            <img src="/static/images/0.gif" class="block-item-img" style="background-image: url({{ file_url(articles[article_id]['image_file_id']) }})"/>
+            <img src="/static/images/0.gif" class="block-item-img" style="background-image: url({{ fileUrl(articles[article_id]['image_file_id']) }})"/>
         </div>
 
     {% endfor %}

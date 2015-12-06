@@ -1,12 +1,8 @@
-
-
 {% extends "index_lazy_layout.html" %}
 
 {% block title %}Profireader - Articles{% endblock title %}
 
 {% block portal_content %}
-
-
     <script>
         module.controller('article_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
 
@@ -40,7 +36,8 @@
 
             $scope.changeStatus = function () {
                 $scope.loading = true;
-
+                console.log($scope.data.new_status);
+                $scope.data.new_status.trim();
                 $ok($scope.url_change_status({article_id: $scope.data.article.id}), $scope.data, function (resp) {
                     $scope.loading = false;
                     $scope.data = resp;
@@ -80,14 +77,14 @@
         }]);
 
     </script>
-    {% include 'company/company_base_angular.html' %}
+    {% include 'company/company_base.html' %}
     {% raw %}
     <div ng-init="loadPublicationDetails()" ng-controller="article_list">
 
         <div ng-if="loading">{{_('Loading...')}}</div>
         <div ng-if="!loading">
             <div ng-if="myRights('publish')">
-                <h2>Article <span style="color: #1295bf">{{ data.article.title }}</span> {{_('was sent from company')}} <span
+                <h2>{{_('Article %(data.article.title)s was sent from company')}} <span
                         style="color: #1295bf">'{{ data.article.company.name }}'</span></h2><br>
                 {{_('Short description')}}
                 <input type="text" value="{{ data.article.short }}" disabled><br>
@@ -97,9 +94,7 @@
                 <h2>{{_('Current status is')}} <span style="color: #1295bf">{{ data.article.status }}</span></h2>
 
                 <h2>{{_('Change status to')}} </h2>
-                <select ng-model="data.new_status">
-                    <option ng-repeat="status in data.statuses" ng-if="status!=data.article.status">{{ status }}
-                    </option>
+                <select ng-model="data.new_status" ng-options="status for status in data.allowed_statuses">
                 </select>
                 <input type="submit" ng-click="changeStatus()" value="{{_('change')}}">
 
@@ -107,8 +102,6 @@
                       ang-onsuccess="afterSave"
                       ang-onsubmit="getData"
                       ang-action="url_change_status({article_id:data.article.id})">
-
-
                 </form>
 
 

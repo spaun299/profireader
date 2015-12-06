@@ -22,6 +22,7 @@ import hashlib
 from flask.ext.login import UserMixin, AnonymousUserMixin
 from .files import File
 from .pr_base import PRBase, Base
+from ..constants.SEARCH import RELEVANCE
 from .rights import Right
 from sqlalchemy import CheckConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -136,6 +137,9 @@ class User(Base, UserMixin, PRBase):
     yahoo_gender = Column(TABLE_TYPES['gender'])
     yahoo_link = Column(TABLE_TYPES['link'])
     yahoo_phone = Column(TABLE_TYPES['phone'])
+    search_fields = {'profireader_name': {'relevance': lambda field='profireader_name': RELEVANCE.profireader_name},
+                     'about_me': {'relevance': lambda field='about_me': RELEVANCE.about_me},
+                     'profireader_email': {'relevance': lambda field='profireader_email': RELEVANCE.profireader_email}}
 
 # get all users in company : company.employees
 # get all users companies : user.employers
@@ -158,6 +162,7 @@ class User(Base, UserMixin, PRBase):
                  password=None,
                  confirmed=False,
                  banned=False,
+                 lang=None,
 
                  email_conf_key=None,
                  email_conf_tm=None,
@@ -181,7 +186,7 @@ class User(Base, UserMixin, PRBase):
         self.confirmed = confirmed
         self.banned = banned
         self.registered_tm = datetime.datetime.utcnow()   # here problems are possible
-
+        self.lang = lang
         self.email_conf_key = email_conf_key
         self.email_conf_tm = email_conf_tm
         self.pass_reset_key = pass_reset_key
@@ -260,8 +265,7 @@ class User(Base, UserMixin, PRBase):
         banned = self.banned
         if self.banned:
             flash('Sorry, you cannot login into the Profireader. Contact the profireader'
-                  'administrator, please: ' +
-                  current_app.config['PROFIREADER_MAIL_SENDER'])
+                  'administrator, please: ' + current_app.config['PROFIREADER_MAIL_SENDER'])
         return banned
 
     def ban(self):
@@ -282,18 +286,21 @@ class User(Base, UserMixin, PRBase):
         g.db.commit()
 
     def avatar(self, size=100):
-#        if 'logged_via' 'facebook' in session['logged_via']:
-#            avatar = json.load(req.urlopen(
-#                url='http://graph.facebook.com/{facebook_id}/picture?width='
-#                    '{size}&height={size}&redirect=0'.format(
-#                facebook_id=g.user.facebook_id, size=size)))
-#            if avatar['data'].get('is_silhouette'):
-#                avatar = self.gravatar(size=size)
-#            else:
-#                avatar = avatar['data'].get('url')
-#        else:
-        avatar = self.gravatar(size=size)
+        logged_via = REGISTERED_WITH[self.logged_in_via()]
+        if logged_via == 'facebook':
+            avatar = json.load(req.urlopen(
+                url='http://graph.facebook.com/{facebook_id}/picture?width={size}&height={size}&redirect=0'.
+                    format(facebook_id=self.facebook_id, size=size)))
+            if avatar['data'].get('is_silhouette'):
+                avatar = self.gravatar(size=size)
+            else:
+                avatar = avatar['data'].get('url')
+        else:
+            avatar = self.gravatar(size=size)
 
+        # if logged_via == 'google':
+        #     avatar = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
+        #     avatar = avatar['data'].get('url')
         return avatar
 
     def gravatar(self, size=100, default='identicon', rating='g'):
@@ -302,12 +309,8 @@ class User(Base, UserMixin, PRBase):
         else:
             url = 'http://www.gravatar.com/avatar'
 
-        email = 'guest@profireader.com'
-        if self.profireader_email:
-            email = self.profireader_email
-
-        hash = hashlib.md5(
-            email.encode('utf-8')).hexdigest()
+        email = getattr(self, 'profireader_email', 'guest@profireader.com')
+        hash = hashlib.md5(email.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
             url=url, hash=hash, size=size, default=default, rating=rating)
 
@@ -444,6 +447,7 @@ class User(Base, UserMixin, PRBase):
         self.profireader_email = new_email
         return True
 
+    # TODO (AA to ???): file.upload(content=content).url() is wrong and should be corrected
     def avatar_update(self, passed_file):
         content = passed_file.stream.read(-1)
 
@@ -474,8 +478,9 @@ class User(Base, UserMixin, PRBase):
         user_company = self.employer_assoc.filter_by(company_id=company_id).first()
         return user_company.rights_set if user_company else []
 
-    def get_client_side_dict(self, fields='id|profireader_name|profireader_avatar_url|profireader_small_avatar_url'):
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id|profireader_name|profireader_avatar_url|profireader_small_avatar_url',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
 
 class Group(Base, PRBase):

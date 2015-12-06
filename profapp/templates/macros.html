@@ -1,0 +1,6 @@
+{% macro scripts(names = [], type='text/javascript') -%}
+    {% if 'croper' in names %}
+        <link href="{{ url_for('static', filename = 'cropper/cropper.css') }}" rel="stylesheet">
+        <script src="/static/cropper/cropper.js"></script>
+    {% endif %}
+{%- endmacro %}

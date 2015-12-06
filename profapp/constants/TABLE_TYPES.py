@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, TIMESTAMP, SMALLINT, BOOLEAN, Column, ForeignKey, UnicodeText, BigInteger, Binary
+from sqlalchemy import Integer, String, TIMESTAMP, SMALLINT, BOOLEAN, Column, ForeignKey, UnicodeText, BigInteger, Binary, Float
 from sqlalchemy.dialects.postgresql import BIGINT, INTEGER
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from sqlalchemy_utils import URLType
@@ -20,6 +20,8 @@ TABLE_TYPES = {
     'rights': String(40),
     'bigint': BIGINT,
     'int': INTEGER,
+    'position': INTEGER,
+    'float': Float,
 
     # http://sqlalchemy-utils.readthedocs.org/en/latest/data_types.html#module-sqlalchemy_utils.types.phone_number
     # 'phone': PhoneNumberType(country_code='UA'),  # (country_code='UA')
@@ -39,6 +41,7 @@ TABLE_TYPES = {
     'credentials': String(1000),
     'text': UnicodeText(length=65535),
     'gender': String(6),
+    'language': String(3),
     'avatar_url': String(100), #URLType,
     'binary': Binary
 }

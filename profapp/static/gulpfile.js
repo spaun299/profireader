@@ -13,6 +13,7 @@ gulp.task('clean', function (cb) {
 });
 
 gulp.task('install_filemanager', function () {
+    return true;
     return gulp.src(src + 'filemanager/dist/*')
         .pipe(gulp.dest('filemanager/'));
 });
@@ -63,7 +64,18 @@ gulp.task('install_angular_xeditable', function () {
         .pipe(gulp.dest('angular-xeditable/'));
 });
 
+gulp.task('install_cropper', function () {
+    return gulp.src([src + 'cropper/dist/cropper.css', src + 'cropper/dist/cropper.js'])
+        .pipe(gulp.dest('cropper/'));
+});
 
-gulp.task('default', ['clean', 'install_filemanager', 'install_fileuploader', 'install_angular', 'install_angular_translate', 'install_angular_cookies', 'install_angular_ui_tinymce', 'install_tinymce', 'install_angular_bootstrap', 'install_angular_animate', 
-			'install_angular_xeditable']);
+gulp.task('install_slider', function () {
+    return gulp.src([src + 'angular-ui-slider/src/slider.js'])
+        .pipe(gulp.dest('angular-ui-slider/'));
+});
+
+
+gulp.task('default', ['clean', 'install_filemanager', 'install_fileuploader', 'install_angular', 'install_angular_translate', 'install_angular_cookies', 
+'install_angular_ui_tinymce', 'install_tinymce', 'install_angular_bootstrap', 'install_angular_animate', 'install_angular_xeditable', 'install_cropper',
+'install_slider']);
 

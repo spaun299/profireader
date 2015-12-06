@@ -63,7 +63,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 }
             }
 
-            return $http.post(url, $.extend({},data, translate?{__translate:translate}:{})).then(
+            return $http.post(url, $.extend({}, data, translate ? {__translate: translate} : {})).then(
                 function (resp) {
                     if (!resp || !resp['data'] || typeof resp['data'] !== 'object' || resp === null) {
                         return error('wrong response', -1);
@@ -86,6 +86,55 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             );
         }
     }])
+    .directive('prCropper', function () {
+        return {
+            restrict: 'A',
+            require: 'ngModel',
+            link: function (scope, element, attrs, model) {
+
+                var $image = $(element);
+                var options = {
+                    crop: function (e) {
+                        if (model.$modelValue && model.$modelValue.image_file_id) {
+                            e['image_file_id'] = model.$modelValue.image_file_id;
+                        }
+                        model.$setViewValue(e);
+                    }
+                }
+
+                if (model) {
+                    if (model.$modelValue && model.$modelValue.ratio) options.aspectRatio = model.$modelValue.ratio;
+                    if (model.$modelValue && model.$modelValue.coordinates) options.data = model.$modelValue.coordinates;
+                }
+                $image.cropper(options);
+
+                if (attrs['prCropper']) {
+                    scope[attrs['prCropper']] = function () {
+                        $image.cropper.apply($image, arguments);
+                    };
+                }
+
+                scope.$watch(attrs['ngModel'] + '.image_file_id', function () {
+                    if (model && model.$modelValue && model.$modelValue.image_file_id) {
+                        $image.cropper('replace', fileUrl(model.$modelValue.image_file_id));
+                    }
+                });
+
+                scope.$watch(attrs['ngModel'] + '.ratio', function () {
+                    if (model.$modelValue && model.$modelValue.ratio) {
+                        $image.cropper('setAspectRatio', model.$modelValue.ratio);
+                    }
+                });
+
+                scope.$watch(attrs['ngModel'] + '.coordinates', function () {
+                    if (model.$modelValue && model.$modelValue.coordinates) {
+                        $image.cropper('setData', model.$modelValue.coordinates);
+                    }
+                });
+
+            }
+        };
+    })
     .directive('dateTimestampFormat', function () {
         return {
             require: 'ngModel',
@@ -115,6 +164,36 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     if (nv !== ov) {
                         highlight($(element));
                     }
+                });
+            }
+        };
+    }])
+    .directive('prImage', ['$timeout', function ($timeout) {
+        return {
+            restrict: 'A',
+            scope: {
+                prImage: '&',
+                prNoImage: '@'
+            },
+            link: function (scope, element, attrs) {
+
+                var image_reference = attrs['prImage'].split('.').pop();
+                var no_image = attrs['prNoImage'] ? attrs['prNoImage'] : false;
+
+                if (!no_image) {
+                    if (image_reference === 'logo_file_id')
+                        no_image = '/static/images/company_no_logo.png';
+                    else {
+                        no_image = '/static/images/no_image.png';
+                    }
+                }
+
+                element.attr('src', '/static/images/0.gif');
+                element.css({
+                    backgroundPosition: 'center',
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundImage: "url('" + fileUrl(scope['prImage'](), false, no_image) + "')"
                 });
             }
         };
@@ -349,157 +428,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 s.getTemp(iAttrs.ngCity);
             }
         }
-    }])
-    .directive('ngAjaxFormOld', ['$http', '$compile', '$ok', function ($http, $compile, $ok) {
-        return {
-            restrict: 'A',
-            scope: {
-                ngAfter: '&',
-                ngBefore: '&',
-                ngData: '@',
-                ngState: '@'
-            },
-            link: function (scope, iElement, iAttrs, ngModelCtrl) {
-
-                var parentscope = scope.$parent.$parent;
-
-                var defaultparameters = {
-
-                    ngData: 'data',
-
-                    ngState: 'state',
-
-
-                    ngBefore: function (data, validation, httpconfig, defaultfunc) {
-                        //httpconfig['url'] = http://someurl
-                        if (data) {
-                            if (typeof parentscope[parameters['ngState']] === 'string') {
-                                return false;
-                            }
-                            parentscope[parameters['ngState']] = validation ? 'validating' : 'sending';
-                        }
-                        else {
-                            return false;
-                        }
-                    },
-
-                    ngAfter: function (response, validation, httpresp, defaultfunc) {
-                        if (!response) {
-                            return false;
-                        }
-                        if (!validation && response && httpresp && httpresp['headers']('Location')) {
-                            window.location.href = httpresp['headers']('Location');
-                        }
-                        return response;
-                    }
-
-                };
-
-
-                var enableSubmit = function (enablesubmit, enableinput) {
-                    if (enablesubmit) {
-                        $('*[ng-model]', $(iElement)).prop('disabled', false);
-                    }
-                    else {
-                        $('*[ng-model]', $(iElement)).prop('disabled', true);
-                    }
-                }
-
-                scope.$parent.$parent.__validation = false;
-                scope.$parent.$parent.__validated = false;
-
-                var sendValidation = _.debounce(function () {
-                    if (scope.$parent.$parent.__validation) {
-                        return false;
-                    }
-                    var dataToSend = scope['ngOnsubmit']()();
-                    if (dataToSend) {
-                        scope.$parent.$parent.__validation = dataToSend;
-                        $ok(scope['ngAction'], $.extend({__validation: true}, dataToSend), function (resp) {
-                            scope.$parent.$parent.__validated = resp;
-                        }, function (resp) {
-                            scope.$parent.$parent.__validated = false;
-                        }).finally(function () {
-                            scope.$parent.$parent.__validation = false;
-                        });
-                    }
-                }, 500);
-
-                if (scope['ngWatch']) {
-                    scope, scope.$parent.$parent.$watch(scope['ngWatch'], sendValidation, true);
-                }
-
-
-                var parameters = $.extend(defaultparameters, {
-                    ngData: scope['ngData'],
-                    ngBefore: scope['ngBefore'],
-                    ngAfter: scope['ngAfter'],
-                    ngState: scope['ngState']
-                });
-
-                var sendfunction = function (validate) {
-                    var old_state = parentscope[parameters['ngState']];
-                    var default_data = parentscope[parameters['ngData']];
-                    var default_config = {url: iAttrs['action'] ? iAttrs['action'] : window.location.href};
-                    if (validate) {
-                        default_config['headers'] = {validation: 'true'};
-                    }
-                    var dataToSend = parameters['ngBefore'](default_data, validate, default_config, defaultparameters['ngBefore']);
-                    console.log(dataToSend);
-
-                    if (!dataToSend) {
-                        return false;
-                    }
-                    var url = default_config['url'](dataToSend, true, defaultparameters['ngUrl']);
-                    $ok(url, dataToSend,
-                        function (resp, errorcode, httpresp) {
-                            var ret = parameters['ngAfter']()(resp, true, defaultparameters['ngAfter'], errorcode, httpresp);
-                            parentscope[parameters['ngState']] = ret ? ret : old_state;
-                        },
-                        function (resp, errorcode, httpresp) {
-                            var ret = parameters['ngAfter']()(null, true, defaultparameters['ngAfter'], errorcode, httpresp);
-                            parentscope[parameters['ngState']] = ret ? ret : old_state;
-                        });
-                }
-
-
-                if (parameters['ngData']) {
-                    parentscope.$watch(parameters['ngData'], _.debounce(function () {
-                        sendfunction(true);
-                    }, 500), true);
-                }
-
-                if (scope['ngOnsubmit']) {
-                    $(iElement).on('submit',
-                        function () {
-                            if (scope.$parent.$parent.__validation) {
-                                return false;
-                            }
-                            enableSubmit(false);
-                            scope.$apply(function () {
-                                var dataToSend = scope['ngOnsubmit']()();
-                                console.log(dataToSend);
-                                if (dataToSend) {
-                                    $ok(scope['ngAction'], dataToSend, function (resp) {
-                                        if (scope.ngOnsuccess) {
-                                            scope.ngOnsuccess()(resp)
-                                        }
-                                    }).finally(function () {
-                                        enableSubmit(true);
-                                    });
-                                }
-                            });
-                            return false;
-                        });
-                }
-
-                $(iElement).on('submit',
-                    function () {
-                        sendfunction(false);
-                        return false;
-                    });
-            }
-        }
     }]);
 
 
@@ -522,7 +450,7 @@ areAllEmpty = function () {
         }
     });
     return are;
-}
+};
 
 function file_choose(selectedfile) {
     var args = top.tinymce.activeEditor.windowManager.getParams();
@@ -534,7 +462,7 @@ function file_choose(selectedfile) {
 
 // 'ui.select' uses "/static/js/select.js" included in index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
-module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable']);
+module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView', 'ui.slider']);
 
 module.config(function ($provide) {
     $provide.decorator('$controller', function ($delegate) {
@@ -557,11 +485,11 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
             $scope.$apply(function () {
                 $modalInstance.dismiss('cancel')
             });
-        }
+        };
 
         $scope.close = function () {
             $modalInstance.dismiss('cancel');
-        }
+        };
 
         $scope.src = '/filemanager/';
         var params = {};
@@ -578,7 +506,21 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
         $scope.src = $scope.src + '?' + $.param(params);
     }]);
 
-module.run(function ($rootScope, $ok, $sce) {
+module.directive('ngEnter', function () {
+    return function (scope, element, attrs) {
+        element.bind("keydown keypress", function (event) {
+            if (event.which === 13) {
+                scope.$apply(function () {
+                    scope.$eval(attrs.ngEnter, {'event': event});
+                });
+
+                event.preventDefault();
+            }
+        });
+    };
+});
+
+module.run(function ($rootScope, $ok, $sce, $modal) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
     angular.extend($rootScope, {
         fileUrl: function (file_id, down, if_no_file) {
@@ -592,31 +534,40 @@ module.run(function ($rootScope, $ok, $sce) {
             return $sce.trustAsHtml(full_text);
         },
         _: function (phrase, dict) {
+            if (typeof phrase !== 'string') {
+                return '';
+            }
             var scope = this;
+
             if (!scope.$$translate) {
                 scope.$$translate = {};
             }
+
+            new Date;
+            var t = Date.now() / 1000;
+
             //TODO OZ by OZ hasOwnProperty
-            var CtrlName = this.controllerName ? this.controllerName: 'None';
+            var CtrlName = this.controllerName ? this.controllerName : 'None';
             if (scope.$$translate[phrase] === undefined) {
-                scope.$$translate[phrase] = phrase;
-                $ok('/articles/save_translate/', {template: CtrlName, phrase: phrase, url: window.location.href}, function (resp) {
-                    //console.log(resp['phrase']);
-                    //if(resp['phrase'] === ''){
-                    //    scope.$$translate[phrase] = phrase
-                    //}else{
-                    //    scope.$$translate[phrase] = resp;
-                    //}
+                scope.$$translate[phrase] = {'lang': phrase, 'time': t};
+                $ok('/tools/save_translate/', {
+                    template: CtrlName,
+                    phrase: phrase,
+                    url: window.location.href
+                }, function (resp) {
 
                 });
-                //scope.$$translate[phrase] = phrase;
             }
-            phrase = scope.$$translate[phrase];
-            //alert(scope.$$translate);
 
+            if ((t - scope.$$translate[phrase]['time']) > 86400) {
+                scope.$$translate[phrase]['time'] = t;
+                $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
+                });
+            }
 
             try {
-                return phrase.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
+                var ret = scope.$$translate[phrase]['lang']
+                return ret.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
                     var indexes = g1.split('.');
                     var d = dict ? dict : scope;
                     for (var i in indexes) {
@@ -633,6 +584,51 @@ module.run(function ($rootScope, $ok, $sce) {
                 return phrase
             }
         },
+        paginationOptions: {
+            pageNumber: 1,
+            pageSize: 50,
+            sort: null
+        },
+        //FilteredMat:function(row, rowRenderIndex, col, colRenderIndex, paginationOptions ) {
+        //        console.log(col);
+        //        var scope = this;
+        //        if(!scope.index1)
+        //            scope.index1 = 0;
+        //        if( col.filters[0].term && scope.index1 !== col.filters[0].term){
+        //            scope.status = scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: scope.statuses[col.filters[0].term - 1]['label'];
+        //            scope.paginationOptions.pageNumber = 1;
+        //            scope.sendData('', scope.paginationOptions);
+        //            scope.index1 = col.filters[0].term;
+        //        }else if(!col.filters[0].term){
+        //            scope.refresh()
+        //        }
+        //      },
+        setGridExtarnals: function (gridApi, externalFunction, paginationOptions) {
+            var scope = this;
+            scope.gridApi = gridApi;
+            scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {
+                if (sortColumns.length === 0) {
+                    paginationOptions.sort = null;
+                    externalFunction('', paginationOptions)
+                } else {
+                    paginationOptions.sort = sortColumns[0].sort.direction;
+                    externalFunction('', paginationOptions)
+                }
+            });
+            gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
+                if (newValue !== oldValue) {
+                    scope.new_status = newValue;
+                    scope.article_id = rowEntity.id;
+                    externalFunction('', paginationOptions);
+                }
+            });
+            gridApi.pagination.on.paginationChanged(scope, function (newPage, pageSize) {
+                paginationOptions.pageNumber = newPage;
+                paginationOptions.pageSize = pageSize;
+                externalFunction('', paginationOptions)
+            });
+        },
+
         loadData: function (url, senddata, beforeload, afterload) {
             var scope = this;
             scope.loading = true;
@@ -649,26 +645,42 @@ module.run(function ($rootScope, $ok, $sce) {
             });
         },
         areAllEmpty: areAllEmpty,
+        chooseImageinFileManager: function (do_on_action, default_action, callfor) {
+            var scope = this;
+            var callfor_ = callfor ? callfor : 'file_browse_image';
+            var default_action_ = default_action ? default_action : 'file_browse_image';
+            scope.filemanagerModal = $modal.open({
+                templateUrl: 'filemanager.html',
+                controller: 'filemanagerCtrl',
+                size: 'filemanager-halfscreen',
+                resolve: {
+                    file_manager_called_for: function () {
+                        return callfor_
+                    },
+                    file_manager_on_action: function () {
+                        return {
+                            choose: do_on_action
+                        }
+                    },
+                    file_manager_default_action: function () {
+                        return default_action_
+                    }
+                }
+            });
+        },
+        dateOptions: {
+            formatYear: 'yy',
+            startingDay: 1
+        },
         tinymceImageOptions: {
             inline: false,
-            plugins: 'advlist autolink link image lists charmap print preview paste',
+            menu: [],
+            plugins: 'advlist autolink link image charmap print paste table',
             skin: 'lightgray',
             theme: 'modern',
-            setup: function (editor) {
-                console.log('setup', editor);
-                editor.on('PreInit111', function (event) {
-                    editor.parser.addNodeFilter('a', function (nodes, name) {
-                        console.log(nodes);
-                        $.each(nodes, function (i, v) {
-                            v.unwrap();
-                        });
-                    });
-                    //editor.parser.addAttributeFilter('src,href', function (nodes, name) {
-                    //    console.log('addAttributeFilter', nodes, name);
-                    //    debugger;
-                    //    });
-                });
-            },
+            'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table",
+            //'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table"[*],
+            'valid_elements': "img[*],table[*],tbody[*],td[*],th[*],tr[*],p[*],h1[*],h2[*],h3[*],h4[*],h5[*],h6[*],div[*],ul[*],ol[*],li[*],strong[*],em[*],span[*],blockquote[*],sup[*],sub[*],code[*],pre[*],a[*]",
             //init_instance_callback1: function () {
             //    console.log('init_instance_callback', arguments);
             //},
@@ -677,7 +689,6 @@ module.run(function ($rootScope, $ok, $sce) {
                     '&file_manager_default_action=choose&file_manager_on_action=' + encodeURIComponent(angular.toJson({choose: 'parent.file_choose'}));
                 tinymce.activeEditor.windowManager.open({
                         file: cmsURL,
-                        title: 'Select an Image',
                         width: 950,  // Your dimensions may differ - toy around with them!
                         height: 700,
                         resizable: "yes",
@@ -695,17 +706,7 @@ module.run(function ($rootScope, $ok, $sce) {
             },
             //valid_elements: Config['article_html_valid_elements'],
             //valid_elements: 'a[class],img[class|width|height],p[class],table[class|width|height],th[class|width|height],tr[class],td[class|width|height],span[class],div[class],ul[class],ol[class],li[class]',
-            content_css: "/static/front/bird/css/article.css",
-            aastyle_formats: [
-                {title: 'HEAD1', block: 'div', classes: 'h1'},
-                {title: 'HEAD2', block: 'div', classes: 'h2'},
-                {title: 'HEAD3', block: 'div', classes: 'h3'},
-                {title: 'BIG', inline: 'span', classes: 'big'},
-                {title: 'BIGGER', inline: 'span', classes: 'bigger'},
-                {title: 'NORMAL', inline: 'span', classes: 'small'},
-                {title: 'SMALLER', inline: 'span', classes: 'smaller'},
-                {title: 'SMALL', inline: 'span', classes: 'small'}
-            ]
+            content_css: ["/static/css/article.css", "/static/front/bird/css/article.css"],
 
 
             //paste_auto_cleanup_on_paste : true,
@@ -766,11 +767,11 @@ function cleanup_html(html) {
         });
     });
 
-    var tags = html.split(/<[^>]*>/)
+    var tags = html.split(/<[^>]*>/);
 
     $.each(tags, function (tagindex, tag) {
         console.log(tagindex, tag);
-    })
+    });
 
     return html;
 }
@@ -827,3 +828,258 @@ function fileUrl(id, down, if_no_file) {
 function cloneObject(o) {
     return (o === null || typeof o !== 'object') ? o : $.extend(true, {}, o);
 }
+
+function add_message(amessage, atype, atime) {
+    return angularControllerFunction('message-controller', 'add_message')(amessage, atype, atime);
+}
+
+function randomHash() {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for (var i = 0; i < 32; i++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    return text;
+}
+
+function buildAllowedTagsAndAttributes() {
+
+    var class_prefix_general = 'pr_article_';
+    var class_prefix_theme = 'pr_article_birdy';
+
+    var general_classes = {
+        'text_size': 'big,bigger,biggest,smallest,small,smaller,normal',
+        'text_decoration': 'underline,normal',
+        'text_style': 'b,i',
+        'text_script': 'sup,sub',
+        'float': 'left,right'
+    };
+
+    var theme_classes = {
+        'text_color': 'red,gray,normal',
+        'background_color': 'gray,normal'
+    };
+
+    var text_classes = ['text_size', 'text_decoration', 'text_style', 'text_script', 'text_color', 'background_color'];
+    var layout_classes = ['float'];
+    var wh_styles = {'width': '^[^d]*(px|em)$', 'height': '^[^d]*(px|em)$'};
+
+    var allowed_tags_skeleton = [
+        {
+            tags: 'div,table,columns',
+            classes: [].concat(text_classes, layout_classes)
+        },
+        {
+            tags: 'div,table',
+            styles: wh_styles
+        },
+        {
+            tags: 'img',
+            styles: wh_styles,
+            classes: layout_classes
+        },
+        {
+            tags: 'columns',
+            attributes: {'number': '.*'}
+        }
+    ];
+
+    var allowed_tags = {};
+    $.each(allowed_tags_skeleton, function (del_ind, tags_and_properties) {
+
+        var tags = tags_and_properties['tags'].split(',');
+
+        var styles = tags_and_properties['styles'] ? tags_and_properties['styles'] : {};
+        var attributes = tags_and_properties['attributes'] ? tags_and_properties['attributes'] : {};
+        var classes = tags_and_properties['classes'] ? tags_and_properties['classes'] : {};
+
+
+        $.each(tags, function (del_ind2, tag) {
+
+            if (!allowed_tags[tag]) allowed_tags[tag] = {'classes': [], 'attributes': {}, 'styles': {}};
+
+            $.each(styles, function (style_name, allowed_style_regexp) {
+                if (allowed_tags[tag]['styles'][style_name]) {
+                    console.error('error. regexp for style `' + style_name + '` for tag `' + tag + '` already defined as `' + allowed_tags[tag]['styles'][style_name] + '` ignored');
+                }
+                else {
+                    allowed_tags[tag]['styles'][style_name] = allowed_style_regexp;
+                }
+            });
+
+            $.each(attributes, function (attr_name, allowed_attr_regexp) {
+                if (allowed_tags[tag]['attributes'][attr_name]) {
+                    console.error('error. regexp for attribute `' + attr_name + '` for tag `' + tag + '` already defined as `' + allowed_tags[tag]['attributes'][attr_name] + '` ignored');
+                }
+                else {
+                    allowed_tags[tag]['attributes'][attr_name] = allowed_attr_regexp;
+                }
+            });
+
+            $.each(classes, function (del_ind3, classes_group_index) {
+                if (theme_classes[classes_group_index]) {
+                    class_sufixes = theme_classes[classes_group_index];
+                }
+                else if (general_classes[classes_group_index]) {
+                    class_sufixes = general_classes[classes_group_index];
+                }
+
+                if (!class_sufixes) {
+                    console.error('error. unknown class group index `' + classes_group_index + '` for tag `' + tag + '`. ignored');
+                }
+                else {
+                    if (!allowed_tags[tag]['classes'][classes_group_index]) allowed_tags[tag]['classes'][classes_group_index] = [];
+                    allowed_tags[tag]['classes'][classes_group_index] = [].concat(allowed_tags[tag]['classes'][classes_group_index],
+                        _.map(class_sufixes.split(','), function (classsufix) {
+                            return 'pr_article_' + classes_group_index + '_' + classsufix;
+                        }));
+                }
+            });
+        });
+    });
+
+    return allowed_tags;
+}
+
+function find_and_build_url_for_endpoint(dict, rules) {
+    var found = false;
+    var dict1 = {};
+    $.each(rules, function (ind, rule) {
+        var ret = rule;
+        var prop = null;
+        var dict1 = $.extend({}, dict);
+        for (prop in dict1) {
+            ret = ret.replace('<' + prop + '>', dict[prop]);
+            delete dict1[prop];
+        }
+        if (!ret.match('<[^<]*>')) {
+            found = ret;
+            return false;
+        }
+    });
+
+    if (found === false) {
+        console.error('Can\'t found flask endpoint for passed dictionary', dict, rules);
+    }
+    else {
+        if (_.size(dict1) > 0) {
+            console.warn("To many parameters passed in dictionary for endpoint rule", dict, rules);
+        }
+        return found;
+    }
+}
+
+var compile_regexps = function (format_properties) {
+    //var rem = format_properties['remove_classes_on_apply'] ?
+    //    RegExp('^' + format_properties['remove_classes_on_apply'] + '$', "i") : false;
+    //console.log(format_properties);
+
+    var rem = false;
+    if (format_properties['remove_classes_on_apply']) {
+        rem = {};
+        $.each(format_properties['remove_classes_on_apply'], function (del, class_to_rem) {
+            rem[class_to_rem] = RegExp('^' + class_to_rem + '$', "i")
+        });
+    }
+
+    var add = false;
+    if (format_properties['add_classes_on_apply']) {
+        add = {};
+        $.each(format_properties['add_classes_on_apply'], function (class_to_add, check_if_not_exust) {
+            add[class_to_add] = RegExp('^' + check_if_not_exust + '$', "i")
+        });
+    }
+    delete format_properties['add_classes_on_apply'];
+    delete format_properties['remove_classes_on_apply'];
+    //console.log({remove: rem, add: add});
+    return {remove: rem, add: add};
+};
+
+var add_or_remove_classes = function (element, classes, remove, add) {
+
+    console.log(element, classes, remove, add);
+
+    classes.map(function (class_name) {
+        if (add) {
+            $.each(add, function (add_if_not_exist, check_if_exist) {
+                if (check_if_exist && class_name.match(check_if_exist)) {
+                    delete add[add_if_not_exist];
+                }
+            });
+        }
+    });
+
+    $.each(add, function (add_if_not_exist, check_if_exist) {
+        $(element).addClass(add_if_not_exist);
+    });
+
+    $.each(remove, function (del, remove_regexp) {
+        classes.map(function (class_name) {
+            if (class_name.match(remove_regexp))
+                $(element).removeClass(class_name);
+        });
+
+    });
+};
+
+var extract_formats_items_from_group = function (formats_in_group) {
+    var ret = [];
+    $.each(formats_in_group, function (format_name, format) {
+        ret.push(
+            {title: format_name.replace(/.*_(\w+)$/, '$1'), format: format_name});
+    });
+    return ret;
+}
+
+
+var get_complex_menu = function (formats, name, subformats) {
+    var ret = [];
+    $.each(subformats, function (del, group_label) {
+        ret.push({
+            'title': group_label,
+            items: extract_formats_items_from_group(formats[name + '_' + group_label])
+        });
+    });
+    return ret;
+}
+
+var get_array_for_menu_build = function (formats) {
+    var menu = {};
+    menu['foreground'] = [{items: extract_formats_items_from_group(formats['foreground_color'])}];
+    menu['background'] = [{items: extract_formats_items_from_group(formats['background_color'])}];
+    menu['font'] = [{items: extract_formats_items_from_group(formats['font_family'])}];
+    menu['border'] = get_complex_menu(formats, 'border', ['placement', 'type', 'width', 'color']);
+    menu['margin'] = get_complex_menu(formats, 'margin', ['placement', 'size']);
+    menu['padding'] = get_complex_menu(formats, 'padding', ['placement', 'size']);
+
+
+    //menu['background_color'] = {
+    //    'title': 'background',
+    //    'items': extract_formats_items_from_group(formats['background_color'])
+    //};
+    //menu['font_family'] = {'title': 'font', 'items': extract_formats_items_from_group(formats['font_family'])};
+    //
+    //$.each(formats, function (format_group_name, formats_in_group) {
+    //    var ret1 = {'title': format_group_name, 'items': []};
+    //    $.each(formats_in_group, function (format_name, format) {
+    //        ret1['items'].push(
+    //            {title: format_name.replace(/.*_(\w+)$/, '$1'), format: format_name});
+    //    });
+    //    ret.push(ret1);
+    //});
+    return menu;
+};
+
+
+var convert_python_format_to_tinymce_format = function (python_format) {
+
+    if (python_format['remove_classes_on_apply'] || python_format['add_classes_on_apply']) {
+
+        var rem_add = compile_regexps(python_format);
+
+        python_format['onformat'] = function (DOMUtils, element) {
+            var classes = $(element).attr('class');
+            add_or_remove_classes(element, classes ? classes.split(/\s+/) : [], rem_add['remove'], rem_add['add']);
+        }
+    }
+    return python_format;
+};

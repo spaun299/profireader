@@ -126,7 +126,7 @@
     <!-- ???{{ PortDivCheckbox }}<br/><br/> -->
     <!-- ***{{ data.PortalDivisionTags4 }}<br/><br/> -->
 
-    <h3>{{_('Portal')}} <strong>"{{ data.portal.name }}"</strong> {{_('profile')}}</h3>
+    <h3>{{_('Portal %(name)s profile', {'name' : data.portal.name })}}</h3>
     <br/>
     <h4>{{_('Portal tags')}}:</h4>
     <table style="width:100%">
@@ -152,7 +152,7 @@
     <br/>
     <br/>
 
-    {{_('Back to')}} <a href="{{ url_company_profile({company_id: data.portal['company_owner_id']}) }}"> "{{ data.portal['own_company']['name'] }}"</a> {{_('company profile')}}
+    {{_('Back to')}} <a href="{{ url_company_profile({company_id: data.portal['own_company']['id']}) }}"> "{{ data.portal['own_company']['name'] }}"</a> {{_('company profile')}}
 
 
 </div>

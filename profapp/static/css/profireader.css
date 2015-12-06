@@ -25,6 +25,18 @@ body {
 TODO: OK by OZ:   this class `highlights` changed element (see js function highligh, its just add and remove this class).
 We have something similar in bootstrap? Can correct this class to look nicer?
 */
+#grid1 {
+  width: inherit;
+  height: 500px;
+}
+
+.form-control{
+    float: none!important;
+}
+a.disabled {
+   pointer-events: none;
+   cursor: default;
+}
 
 .highlight {
     color: #ca2027;
@@ -73,6 +85,7 @@ ul.user-auth li a {
 
 .dropdown-menu {
     width: 100%;
+    max-width: 30em;
     border-radius: 0;
     margin: 0;
     padding: 0;
@@ -2101,11 +2114,11 @@ a.title-btn {
 
 }
 th{
-    padding-top: 7px;
+
 }
 
 td{
-    padding-top: 12px;
+
 }
 .row{
     margin-left: 0px;

@@ -20,10 +20,12 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     #}
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/profireader_responsive.css">
     <link rel="stylesheet" href="/static/css/profireader.css">
+    <link rel="stylesheet" href="/static/jquery/smoothness/jquery-ui.css">
     <link rel="stylesheet" href="/static/css/oles.css">
     <link rel="stylesheet" href="/static/css/icons.css">
-    <link rel="stylesheet" href="/static/angular-xeditable/xeditable.css">
+
 {%- endblock styles %}
 
 {%- block head %}
@@ -38,17 +40,22 @@
     {#    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>#}
 
 
-    <script src="{{ bootstrap_find_resource('jquery.js', cdn='jquery') }}"></script>
+{#    <script src="{{ bootstrap_find_resource('jquery.js', cdn='jquery') }}"></script>#}
+    <script src="{{ url_for('static', filename = 'jquery/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'jquery/jquery-ui.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular/angular.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-bootstrap/ui-bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-bootstrap/ui-bootstrap-tpls.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'tinymce/tinymce.jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'tinymce.pr/tinymce.jquery.pr.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ui-tinymce/tinymce.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'angular-ui-slider/slider.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ajax-validator/ngAjaxValidator.js') }}"></script>
 
+    {#TODO: SS by OZ: remove this two lines when ng-grid is up and running #}
+    <link rel="stylesheet" href="/static/angular-xeditable/xeditable.css">
     <script src="{{ url_for('static', filename = 'angular-xeditable/xeditable.js') }}"></script>
 
-    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.13.2.js"></script>
+    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>
     {#    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>#}
 
     {#    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.js"></script>#}
@@ -57,7 +64,6 @@
     {% if angular_ui_bootstrap_version %}
         <script src="{{ angular_ui_bootstrap_version }}"></script>
     {% endif %}
-    <script src="{{ url_for('static', filename = 'image_editor/dist/cropper.js') }}"></script>
     {#<script src="{{ url_for('static', filename = 'image_editor/demo/js/main.js') }}"></script>#}
     {#    <script src="/static/filemanager/angular-filemanager.min.js"></script><!-- Comment if you need to use raw source code -->#}
 
@@ -74,6 +80,14 @@
     <script src="/static/js/jquery.smooth-scroll.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 
+    <!---GRID---->
+    <link rel="styleSheet" href="/static/css/ui-grid.css"/>
+    <script src="/static/js/ui-grid.min.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/csv.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/pdfmake.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/vfs_fonts.js"></script>
+     <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-touch.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-animate.js"></script>
 
     <style>
         ul.dropdown-menu li a strong {
@@ -81,7 +95,12 @@
         }
     </style>
 
+    <script>
+        {% for message in get_flashed_messages() %}
+            add_message('{{ message }}', 'warning');
+        {% endfor %}
 
+    </script>
 
 {%- endblock head %}
 
@@ -99,17 +118,11 @@
 
 {% block content %}
 
+    {% include 'templates-angular.html' %}
 
     <div class="container widewrapper">
-        {% for message in get_flashed_messages() %}
-            <div class="alert alert-warning">
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                {{ message }}
-            </div>
-        {% endfor %}
-
-
         {% block portal_content %}
+            {% include 'flashed-messages.html' %}
             {% include 'partials/Profireader_content' %}
         {% endblock portal_content %}
         <br/>
@@ -118,6 +131,6 @@
 {% endblock content %}
 
 {% block scripts %}
-   {% include 'partials/portal_footer_Profireader.html' %}
+    {% include 'partials/portal_footer_Profireader.html' %}
 {% endblock scripts %}
 

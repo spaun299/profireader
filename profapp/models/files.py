@@ -578,10 +578,10 @@ class ImageCroped(Base, PRBase):
     id = Column(TABLE_TYPES['id_profireader'], nullable=False, unique=True, primary_key=True)
     original_image_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'), nullable=False)
     croped_image_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'), nullable=False)
-    x = Column(TABLE_TYPES['int'], nullable=False)
-    y = Column(TABLE_TYPES['int'], nullable=False)
-    width = Column(TABLE_TYPES['int'], nullable=False)
-    height = Column(TABLE_TYPES['int'], nullable=False)
+    x = Column(TABLE_TYPES['float'], nullable=False)
+    y = Column(TABLE_TYPES['float'], nullable=False)
+    width = Column(TABLE_TYPES['float'], nullable=False)
+    height = Column(TABLE_TYPES['float'], nullable=False)
     rotate = Column(TABLE_TYPES['int'], nullable=False)
 
     def __init__(self, original_image_id=None, x=None, y=None, width=None, height=None, rotate=None,
@@ -595,14 +595,14 @@ class ImageCroped(Base, PRBase):
         self.height = height
         self.rotate = rotate
 
-    def get_client_side_dict(self, fields='x,y,width,height,rotate'):
-        """This method make dictionary from portal object with fields have written above"""
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='x,y,width,height,rotate',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
     @staticmethod
     def get_coordinates_and_original_img(croped_image_id):
         coor_img = db(ImageCroped, croped_image_id=croped_image_id).one()
-        return coor_img.original_image_id, {'coordinates': coor_img.get_client_side_dict()}
+        return coor_img.original_image_id, coor_img.get_client_side_dict()
 
 
 class YoutubeApi(GoogleAuthorize):

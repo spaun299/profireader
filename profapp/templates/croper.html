@@ -1,160 +1,85 @@
 <script type="text/ng-template" id="image_cropper">
     {% raw %}
-    <div class="container" style="width: 320px; background-size: cover;">
-        <div class="row">
-            <div class="col-md-9">
-                <!-- <h3 class="page-header">Demo:</h3> -->
+
+    <div class="row">
 
 
-                <div class="img-container">
-                    <img src="{{ image_file_url||logo_file_url }}" style="width: 100%" alt="Picture">
-                </div>
-            </div>
-            <div class="col-md-3">
-                <!-- <h3 class="page-header">Preview:</h3> -->
+        <div class="img-container">
+            <img src="{{ image_file_url||logo_file_url }}" style="width: 100%" alt="Picture">
+        </div>
 
 
-                <div class="docs-data">
-                    <div class="input-group">
-                        <input class="form-control" id="dataX" name="x" type="hidden" placeholder="x">
+        <div class="docs-buttons">
+            <!-- <h3 class="page-header">Toolbar:</h3> -->
+            <div class="" ng-if="default_image">
+                <button class="btn btn-primary" data-method="zoom" data-option="0.1" type="button" disabled
+                        title="Zoom In">
+           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;zoom&quot;, 0.1)">
+             <span class="cropericon cropericon-zoom-in"></span>
+           </span>
+                </button>
+                <button class="btn btn-primary" data-method="zoom" data-option="-0.1" type="button" disabled
+                        title="Zoom Out">
+           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;zoom&quot;, -0.1)">
+             <span class="cropericon cropericon-zoom-out"></span>
+           </span>
+                </button>
+                <button class="btn btn-primary" data-method="rotate" data-option="-90" type="button" disabled
+                        title="Rotate Left">
+           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;rotate&quot;, -90)">
+             <span class="cropericon cropericon-rotate-left"></span>
+           </span>
+                </button>
+                <button class="btn btn-primary" data-method="rotate" data-option="90" type="button" disabled
+                        title="Rotate Right">
+           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;rotate&quot;, 90)">
+             <span class="cropericon cropericon-rotate-right"></span>
+           </span>
+                </button>
 
-                    </div>
-                    <div class="input-group">
-                        <input class="form-control" id="dataY" name="y" type="hidden" placeholder="y">
-                    </div>
-                    <div class="input-group">
-                        <input class="form-control" id="dataWidth" type="hidden" name="width" placeholder="width">
-                    </div>
-                    <div class="input-group">
-                        <input class="form-control" id="dataHeight" type="hidden" name="height" placeholder="height">
-                    </div>
-                    <div class="input-group">
-                        <input class="form-control" id="dataRotate" type="hidden" name="rotate" placeholder="rotate">
-                    </div>
-                </div>
-            </div>
+                <button class="btn btn-primary" id="replace-toggle" type="button" value="{{ image_file_url }}"
+                        ng-click="chooseImage()">
+                <span class="docs-tooltip" data-toggle="tooltip" title="Chose image"><span
+                        class="glyphicon glyphicon-folder-open"></span></span>
+                </button>
 
-                <!-- <h3 class="page-header">Data:</h3> -->
-                <div class="docs-data">
-                    <div class="input-group">
-                        <input class="form-control" id="dataX" name="x" type="hidden" placeholder="x">
-
-                    </div>
-                    <div class="input-group">
-                        <input class="form-control" id="dataY" name="y" type="hidden" placeholder="y">
-                    </div>
-                    <div class="input-group">
-                        <input class="form-control" id="dataWidth" type="hidden" name="width" placeholder="width">
-                    </div>
-                    <div class="input-group">
-                        <input class="form-control" id="dataHeight" type="hidden" name="height" placeholder="height">
-                    </div>
-                    <div class="input-group">
-                        <input class="form-control" id="dataRotate" type="hidden" name="rotate" placeholder="rotate">
-                    </div>
-                </div>
             </div>
 
+
+            <div class="" ng-if="!default_image">
+                <button class="btn btn-primary" data-method="zoom" data-option="0.1" type="button" title="Zoom In">
+           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;zoom&quot;, 0.1)">
+             <span class="cropericon cropericon-zoom-in"></span>
+           </span>
+                </button>
+                <button class="btn btn-primary" data-method="zoom" data-option="-0.1" type="button"
+                        title="Zoom Out">
+           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;zoom&quot;, -0.1)">
+             <span class="cropericon cropericon-zoom-out"></span>
+           </span>
+                </button>
+                <button class="btn btn-primary" data-method="rotate" data-option="-90" type="button"
+                        title="Rotate Left">
+           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;rotate&quot;, -90)">
+             <span class="cropericon cropericon-rotate-left"></span>
+           </span>
+                </button>
+                <button class="btn btn-primary" data-method="rotate" data-option="90" type="button"
+                        title="Rotate Right">
+           <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;rotate&quot;, 90)">
+             <span class="cropericon cropericon-rotate-right"></span>
+           </span>
+                </button>
+                <button class="btn btn-primary" id="replace-toggle" type="button" value="{{ image_file_url }}"
+                        ng-click="chooseImage()">
+                <span class="docs-tooltip" data-toggle="tooltip" title="Chose image"><span
+                        class="glyphicon glyphicon-folder-open"></span></span>
+                </button>
+
+            </div>
 
         </div>
-        <div class="row">
-            <div class="col-md-9 docs-buttons">
-                <!-- <h3 class="page-header">Toolbar:</h3> -->
-                <div class="btn-group" ng-if="default_image">
-                    <button class="btn btn-primary" data-method="zoom" data-option="0.1" type="button" disabled
-                            title="Zoom In">
-            <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;zoom&quot;, 0.1)">
-              <span class="cropericon cropericon-zoom-in"></span>
-            </span>
-                    </button>
-                    <button class="btn btn-primary" data-method="zoom" data-option="-0.1" type="button" disabled
-                            title="Zoom Out">
-            <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;zoom&quot;, -0.1)">
-              <span class="cropericon cropericon-zoom-out"></span>
-            </span>
-                    </button>
-                    <button class="btn btn-primary" data-method="rotate" data-option="-90" type="button" disabled
-                            title="Rotate Left">
-            <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;rotate&quot;, -90)">
-              <span class="cropericon cropericon-rotate-left"></span>
-            </span>
-                    </button>
-                    <button class="btn btn-primary" data-method="rotate" data-option="90" type="button" disabled
-                            title="Rotate Right">
-            <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;rotate&quot;, 90)">
-              <span class="cropericon cropericon-rotate-right"></span>
-            </span>
-                    </button>
 
-                    <button class="btn btn-primary" id="replace-toggle" type="button" value="{{ image_file_url }}"
-                            ng-click="chooseImage()">
-                 <span class="docs-tooltip" data-toggle="tooltip" title="Chose image"><span class="glyphicon glyphicon-folder-open"></span></span>
-                    </button>
-
-                </div>
-
-
-                <div class="btn-group" ng-if="!default_image">
-                    <button class="btn btn-primary" data-method="zoom" data-option="0.1" type="button" title="Zoom In">
-            <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;zoom&quot;, 0.1)">
-              <span class="cropericon cropericon-zoom-in"></span>
-            </span>
-                    </button>
-                    <button class="btn btn-primary" data-method="zoom" data-option="-0.1" type="button"
-                            title="Zoom Out">
-            <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;zoom&quot;, -0.1)">
-              <span class="cropericon cropericon-zoom-out"></span>
-            </span>
-                    </button>
-                    <button class="btn btn-primary" data-method="rotate" data-option="-90" type="button"
-                            title="Rotate Left">
-            <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;rotate&quot;, -90)">
-              <span class="cropericon cropericon-rotate-left"></span>
-            </span>
-                    </button>
-                    <button class="btn btn-primary" data-method="rotate" data-option="90" type="button"
-                            title="Rotate Right">
-            <span class="docs-tooltip" data-toggle="tooltip" title="$().cropper(&quot;rotate&quot;, 90)">
-              <span class="cropericon cropericon-rotate-right"></span>
-            </span>
-                    </button>
-                    <button class="btn btn-primary" id="replace-toggle" type="button" value="{{ image_file_url }}"
-                            ng-click="chooseImage()">
-                 <span class="docs-tooltip" data-toggle="tooltip" title="Chose image"><span class="glyphicon glyphicon-folder-open"></span></span>
-                    </button>
-
-                </div>
-                <!-- Show the cropped image in modal -->
-                <div class="modal fade docs-cropped" id="getCroppedCanvasModal" aria-hidden="true"
-                     aria-labelledby="getCroppedCanvasTitle" role="dialog" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button class="close" data-dismiss="modal" type="button"
-                                        aria-hidden="true">&times;</button>
-                                <h4 class="modal-title" id="getCroppedCanvasTitle">Cropped</h4>
-                            </div>
-                            <div class="modal-body"></div>
-                            <!-- <div class="modal-footer">
-                              <button class="btn btn-primary" data-dismiss="modal" type="button">Close</button>
-                            </div> -->
-                        </div>
-                    </div>
-                </div>
-                <!-- /.modal -->
-
-
-            </div>
-            <!-- /.docs-buttons -->
-
-            <div class="col-md-3 docs-toggles">
-
-
-            </div>
-            <!-- Alert -->
-            <div class="docs-alert"><span class="warning message"></span></div>
-            <!-- Scripts -->
-        </div>
     </div>
     {% endraw %}
 </script>

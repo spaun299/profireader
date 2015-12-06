@@ -7,6 +7,8 @@
     "angular-bootstrap": "0.14.2",
     "angular-ui-tinymce": "0.0.10",
     "angular-animate": "~1.3.18",
-    "filemanager": "git@github.com:kakabomba/angular-server-driven-filemanager.git#ids"
+    "cropper": "~0.10.1",
+    "filemanager": "git@github.com:kakabomba/angular-server-driven-filemanager.git#ids",
+    "angular-ui-slider": "git@github.com:angular-ui/ui-slider.git#v0.1.3"
   }
 }

@@ -15,4 +15,5 @@ class EditProfileForm(Form):
     phone = StringField('Phone', validators=[Length(0, TABLE_TYPES['name'].length)])
     location = StringField('Location', validators=[Length(0, TABLE_TYPES['location'].length)])
     about_me = StringField('About me', validators=[Length(0, TABLE_TYPES['text'].length)])
+    language = StringField('Language', validators=[Length(0, TABLE_TYPES['language'].length)])
     submit = SubmitField('Submit')

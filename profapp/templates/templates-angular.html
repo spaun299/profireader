@@ -1,0 +1,17 @@
+<!-- TODO: OZ by OZ: move this templates to separate .js file with cached templates -->
+
+{% include 'pager.html' %}
+<script type="text/ng-template" id="typeaheadTemplate.html">
+    <a class="typeahead-item" href="#">
+        <span ng-show="match.model.id" ng-bind-html="match.label | uibTypeaheadHighlight:query"></span>
+        <em ng-show="!match.model.id" ng-bind-html="match.label"></em>
+
+    </a>
+</script>
+
+<script type="text/ng-template" id="alert.html">
+    <div class="alert" style="background-color:#fa39c3;color:white" role="alert">
+        <div ng-transclude></div>
+    </div>
+</script>
+

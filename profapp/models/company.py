@@ -16,12 +16,13 @@ from flask import abort
 from .rights import Right, RightHumnReadible
 from ..controllers.request_wrapers import check_rights
 from .files import File
-from .pr_base import PRBase, Base
+from .pr_base import PRBase, Base, Search
 from ..controllers import errors
 from ..constants.STATUS import STATUS_NAME
 from ..models.rights import get_my_attributes
 from functools import wraps
 from .files import YoutubePlaylist
+from ..constants.SEARCH import RELEVANCE
 
 
 class Company(Base, PRBase):
@@ -59,6 +60,11 @@ class Company(Base, PRBase):
     #                           foreign_keys='Portal.company_owner_id')
 
     user_owner = relationship('User', back_populates='companies')
+    search_fields = {'name': {'relevance': lambda field='name': RELEVANCE.name},
+                     'short_description': {'relevance': lambda field='short_description': RELEVANCE.short_description},
+                     'about': {'relevance': lambda field='about': RELEVANCE.about},
+                     'country': {'relevance': lambda field='country': RELEVANCE.country},
+                     'phone': {'relevance': lambda field='phone': RELEVANCE.phone}}
 
 # TODO: AA by OZ: we need employees.position (from user_company table) (also search and fix #ERROR employees.position.2#)
 #ERROR employees.position.1#
@@ -99,8 +105,7 @@ class Company(Base, PRBase):
     def suspended_employees(self):
         """ Show all suspended employees from company. Before define method you should have
         query with one company """
-        suspended_employees = [x.to_dict('md_tm, employee.*,'
-                                         'employee.employers.*')
+        suspended_employees = [x.get_client_side_dict(more_fields='md_tm, employee, employee.employers')
                                for x in self.employee_assoc
                                if x.status == STATUS.DELETED()]
         return suspended_employees
@@ -151,9 +156,9 @@ class Company(Base, PRBase):
                 filter(Company.name.ilike("%" + searchtext + "%")
                        ).all()]
 
-    def get_client_side_dict(self, fields='id,name,author_user_id,country,region,address,phone,phone2,email,short_description,logo_file_id,about,own_portal.id|host'):
-        """This method make dictionary from portal object with fields have written above"""
-        return self.to_dict(fields)
+    def get_client_side_dict(self, fields='id,name,author_user_id,country,region,address,phone,phone2,email,short_description,logo_file_id,about,own_portal.id|host',
+                             more_fields=None):
+        return self.to_dict(fields, more_fields)
 
 
 def forbidden_for_current_user(**kwargs):
@@ -345,7 +350,7 @@ class UserCompany(Base, PRBase):
     def search_for_user_to_join(company_id, searchtext):
         """Return all users in current company which have characters
         in their name like searchtext"""
-        return [user.to_dict('profireader_name|id') for user in
+        return [user.get_client_side_dict(fields='profireader_name|id') for user in
                 db(User).filter(~db(UserCompany, user_id=User.id, company_id=company_id).exists()).
                 filter(User.profireader_name.ilike("%" + searchtext + "%")).all()]
 

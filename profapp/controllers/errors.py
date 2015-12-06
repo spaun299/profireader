@@ -67,6 +67,9 @@ class PortalAlreadyExist(Error):
 class AlreadyJoined(Error):
     pass
 
+class BadTypeProvided(Error):
+    pass
+
 class TooManyCredentialsInDb(Error):
     pass
 
@@ -80,6 +83,9 @@ class ValidationException(Error):
         self.result = validation_result
         pass
 
+
+class WrongNumberOfParameters(Error):
+    pass
 
 
 
