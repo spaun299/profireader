@@ -20,6 +20,7 @@ TABLE_TYPES = {
     'rights': String(40),
     'bigint': BIGINT,
     'int': INTEGER,
+    'position': INTEGER,
     'float': Float,
 
     # http://sqlalchemy-utils.readthedocs.org/en/latest/data_types.html#module-sqlalchemy_utils.types.phone_number
