@@ -262,15 +262,14 @@ class ArticleCompany(Base, PRBase):
         sub_query = db(ArticleCompany, company_id=company_id)
         if kwargs['status']:
             sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['status'])
+        sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id)
         if kwargs['publ_status']:
-            sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id).\
-            filter(ArticlePortalDivision.status == kwargs['publ_status'])
+            sub_query = sub_query.filter(ArticlePortalDivision.status == kwargs['publ_status'])
         if search_text:
             sub_query = sub_query.filter(ArticleCompany.title.ilike("%" + search_text + "%"))
         if portal_id:
-            sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id).\
-            join(PortalDivision, PortalDivision.id == ArticlePortalDivision.portal_division_id).\
-            filter(PortalDivision.portal_id == portal_id)
+                sub_query = sub_query.join(PortalDivision, PortalDivision.id == ArticlePortalDivision.portal_division_id).\
+                filter(PortalDivision.portal_id == portal_id)
         if kwargs['sort_date']:
             sub_query = sub_query.order_by(ArticleCompany.md_tm.asc()) if kwargs['sort_date'] == 'asc' else sub_query.order_by(ArticleCompany.md_tm.desc())
         else:

@@ -589,20 +589,6 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             pageSize: 50,
             sort: null
         },
-        //FilteredMat:function(row, rowRenderIndex, col, colRenderIndex, paginationOptions ) {
-        //        console.log(col);
-        //        var scope = this;
-        //        if(!scope.index1)
-        //            scope.index1 = 0;
-        //        if( col.filters[0].term && scope.index1 !== col.filters[0].term){
-        //            scope.status = scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: scope.statuses[col.filters[0].term - 1]['label'];
-        //            scope.paginationOptions.pageNumber = 1;
-        //            scope.sendData('', scope.paginationOptions);
-        //            scope.index1 = col.filters[0].term;
-        //        }else if(!col.filters[0].term){
-        //            scope.refresh()
-        //        }
-        //      },
         setGridExtarnals: function (gridApi, externalFunction, paginationOptions) {
             var scope = this;
             scope.gridApi = gridApi;

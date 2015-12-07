@@ -16,6 +16,7 @@
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
+            $scope.pos1 = '1';$scope.pos2 = '1';$scope.pos3 = '1';
 
             $scope.update = function(){
                 $scope.paginationOptions.pageNumber = 1;
@@ -32,40 +33,23 @@
                 $scope.sendData('', $scope.paginationOptions);
             };
 
-// TODO: SS by OZ: this 3 functions (Filtered*) should be rewriten as one
-            $scope.FilteredMat = function( row, rowRenderIndex, col, colRenderIndex ) {
-                if(!$scope.index1)
-                    $scope.index1 = 0;
-                if( col.filters[0].term && $scope.index1 !== col.filters[0].term){
-                    $scope.status = $scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.statuses[col.filters[0].term - 1]['label'];
+            $scope.Filtered = function( row, rowRenderIndex, col, colRenderIndex) {
+                if (col.filters[0].term && $scope.load_contr){
+                    if($scope.gridOptions1.columnDefs[2].filter['term'] == col.filters[0].term && $scope.pos1 != $scope.gridOptions1.columnDefs[2].filter['term']){
+                        $scope.pos1 = $scope.gridOptions1.columnDefs[2].filter['term'];
+                        $scope.portal_id = $scope.portals[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.portals[col.filters[0].term - 1]['id'];
+                    }
+                    if($scope.gridOptions1.columnDefs[3].filter['term'] == col.filters[0].term && $scope.pos2 != $scope.gridOptions1.columnDefs[3].filter['term']){
+                        $scope.pos2 = $scope.gridOptions1.columnDefs[3].filter['term'];
+                        $scope.publ_status = $scope.publ_statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.publ_statuses[col.filters[0].term - 1]['label'];
+                    }
+                    if($scope.gridOptions1.columnDefs[4].filter['term'] == col.filters[0].term && $scope.pos3 != $scope.gridOptions1.columnDefs[4].filter['term']){
+                        $scope.pos3 = $scope.gridOptions1.columnDefs[4].filter['term'];
+                        $scope.status = $scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.statuses[col.filters[0].term - 1]['label'];
+                    }
                     $scope.paginationOptions.pageNumber = 1;
                     $scope.sendData('', $scope.paginationOptions);
-                    $scope.index1 = col.filters[0].term;
-                }else if(!col.filters[0].term){
-                    $scope.refresh()
-                }
-              };
-            $scope.FilteredPubl = function( row, rowRenderIndex, col, colRenderIndex) {
-                if(!$scope.index2)
-                    $scope.index2 = 0;
-                if( col.filters[0].term && $scope.index2 !== col.filters[0].term){
-                    $scope.publ_status = $scope.publ_statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.publ_statuses[col.filters[0].term - 1]['label'];
-                    $scope.paginationOptions.pageNumber = 1;
-                    $scope.sendData('',$scope.paginationOptions);
-                    $scope.index2 = col.filters[0].term;
-                }else if(!col.filters[0].term){
-                    $scope.refresh()
-                }
-              };
-            $scope.FilteredPort = function( row, rowRenderIndex, col, colRenderIndex) {
-                if(!$scope.index)
-                    $scope.index = 0;
-                if( col.filters[0].term && $scope.index !== col.filters[0].term){
-                    $scope.portal_id = $scope.portals[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.portals[col.filters[0].term - 1]['id'];
-                    $scope.paginationOptions.pageNumber = 1;
-                    $scope.sendData('', $scope.paginationOptions);
-                    $scope.index = col.filters[0].term;
-                }else if(!col.filters[0].term){
+                }else{
                     $scope.refresh()
                 }
               };
@@ -97,7 +81,7 @@
                     }
                     $scope.gridOptions1.columnDefs[2]['filter']['selectOptions'] = $scope.portals;
                     $scope.gridOptions1.columnDefs[3]['filter']['selectOptions'] = $scope.publ_statuses;
-                    $scope.gridOptions1.columnDefs[4]['filter']['selectOptions'] = $scope.statuses ;
+                    $scope.gridOptions1.columnDefs[4]['filter']['selectOptions'] = $scope.statuses;
                 }).finally(function () {
                     $scope.loading = false;
                     $scope.load_contr = true;
@@ -126,20 +110,20 @@
                           filter: {
                               term: '1',
                             type: uiGridConstants.filter.SELECT},
-                          headerCellClass: $scope.FilteredPort
+                          headerCellClass: $scope.Filtered
                       },
                       { name: 'Publication status', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
                           filter: {
                             term: '1',
                             type: uiGridConstants.filter.SELECT},
-                          headerCellClass: $scope.FilteredPubl
+                          headerCellClass: $scope.Filtered
                       },
                       { name: 'Material status', enableSorting: false, editableCellTemplate: '<div><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',editDropdownValueLabel: 'value',
                           enableColumnMenu: false,
                           filter: {
                             term: '1',
                             type: uiGridConstants.filter.SELECT},
-                          headerCellClass: $scope.FilteredMat
+                          headerCellClass: $scope.Filtered
                       }
                     ],
                     onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions)}
@@ -156,57 +140,6 @@
         <div ng-show="!areAllEmpty(datas.grid_data)" class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
         <div ng-show="!loading && areAllEmpty(datas.grid_data)">{{ _('No materials') }}</div>
         <button ng-click="refresh()" ng-show="!loading && areAllEmpty(datas.grid_data)" class="btn btn-warning" >Back</button>
-            <!--<table style="width:100%">-->
-            <!--<tr>-->
-                <!--<th>{{_('Material status')}}</th>-->
-                <!--<th width="250px">{{_('Date')}}</th>-->
-                <!--<th width="250px">{{_('Title')}}</th>-->
-                <!--<th width="250px">{{_('Portals - Bublication status')}}</th>-->
-                <!--<th>{{_('Material status')}}</th>-->
-                <!--<th></th>-->
-            <!--</tr>-->
-            <!--<tr valign="top">-->
-                <!--<td></td>-->
-                <!--<td><input ng-disabled="loading" style="width: 98%" type="text" placeholder="{{_('Search')}}"-->
-                           <!--ng-model="new_search_text"></td>-->
-                <!--<td><select ng-disabled="loading" style="width: 40%; padding: 5px;" ng-model="portal_id"-->
-                            <!--ng-options="port_id as port.name for (port_id, port) in portals">-->
-                <!--</select> - <select ng-disabled="loading" style="width: 40%; padding: 5px;" ng-model="status"-->
-                                    <!--ng-options="lab for (lab, val) in statuses track by val">-->
-                <!--</select></td>-->
-                <!--<td></td>-->
-                <!--<td><input ng-disabled="loading" ng-click="sendData(new_search_text)" type="submit"-->
-                           <!--ng-model="new_search_text"-->
-                           <!--value="{{ loading?_('loading...'):_('search') }}"-->
-                           <!--style="width: 75%;"></td>-->
-
-            <!--</tr>-->
-            <!--<tr ng-repeat="material in materials" valign="top">-->
-
-                <!--<td>{{ material.article.md_tm }}</td>-->
-                <!--<td><a href="{{ url_details({company_id:company_id, article_id:material.article.id}) }}"-->
-                       <!--ng-bind-html="highlightSearchResults(material.article.title, data.search_text)"></a></td>-->
-                <!--<td>-->
-                    <!--<div ng-repeat="material_portal in material.article.portal_article">-->
-                        <!--{{ material_portal.portal.name }} - <span>{{ material_portal.status }}</span>-->
-                    <!--</div>-->
-                    <!--<div ng_if="!material.portals_count">{{ _('not sent') }}</div>-->
-                <!--</td>-->
-                <!--<td>{{ material.article.status }}</td>-->
-            <!--</tr>-->
-
-            <!--<tr ng-show="!loading && !areAllEmpty(materials)">-->
-                <!--<td colspan="5">-->
-                    <!--<div ng-show="!loading" ng-include="'pagination.html'"></div>-->
-                <!--</td>-->
-            <!--</tr>-->
-            <!--<tr ng-show="!loading && areAllEmpty(materials)">-->
-                <!--<td colspan="5">-->
-                    <!--{{ _('No materials') }}-->
-                <!--</td>-->
-            <!--</tr>-->
-        <!--</table>-->
-
     </div>
     </div>
     {% endraw %}
