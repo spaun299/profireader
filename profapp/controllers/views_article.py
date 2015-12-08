@@ -154,7 +154,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             pass
         return {'article': article_dict, 'image': image_dict, 'portal_division': portal_division_dict(articleVersion)}
     else:
-        parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
+        parameters = g.filter_json(json, 'article.title|short|long|keywords|publishing_tm, image.*')
 
         articleVersion.attr(parameters['article'])
         if action == 'validate':

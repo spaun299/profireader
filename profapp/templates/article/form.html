@@ -116,7 +116,7 @@
 
             {% if  article_portal_division_id %}
                 var custom_formats = {{ tinymce_format_groups('birdy')|tojson }};
-                console.log(custom_formats);
+                console.log('custom_formats', custom_formats);
                 $scope.tinymceImageOptions['toolbar2'] = 'foreground | background | font | border | margin | padding';
             {% else %}
                 var custom_formats = {};
@@ -133,6 +133,8 @@
                             }).
                             object(). // convert each [key, val] pair to {key: val} element
                             value(); // get result
+
+            console.log('$scope.tinymceImageOptions["formats"]', $scope.tinymceImageOptions['formats']);
 
             var custom_formats_menu = _.size(custom_formats) ? get_array_for_menu_build(custom_formats) : [];
 
