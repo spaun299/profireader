@@ -139,14 +139,12 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         image_dict = {}
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
         # TODO: VK by OZ: this code should be moved to model
-        print(article_dict.get('image_file_id'))
         try:
             if article_dict.get('image_file_id'):
                 image_file_id, coordinates = ImageCroped. \
                     get_coordinates_and_original_img(article_dict.get('image_file_id'))
                 image_dict.update(coordinates)
                 image_dict['image_file_id'] = image_file_id
-                print(image_dict)
         except Exception as e:
             pass
         return {'article': article_dict, 'image': image_dict, 'portal_division': portal_division_dict}
