@@ -118,7 +118,9 @@ class Search(Base):
                    (type(kwargs.get('order_by')) is int) or type(
                 kwargs.get('order_by') is (list or tuple)), \
                 'Bad value for parameter "order_by".' \
-                'You requested attribute which is not in class %s' % args[0]['class']
+                'You requested attribute which is not in class %s or give bad kwarg type.' \
+                'Can be string, list or tuple %s given' % \
+                (args[0]['class'], type(kwargs.get('order_by')))
             assert type(return_objects) is bool, \
                 'Parameter "return_objects" must be boolean but %s given' % type(return_objects)
         except AssertionError as e:

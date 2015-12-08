@@ -77,7 +77,7 @@ def index(page=1):
                                                              ArticlePortalDivision.status ==
                                                              ARTICLE_STATUS_IN_PORTAL.published),
                                               'return_fields': 'id,title'},
-                                             # {'class': Company, 'filter': Company.name.ilike('%'+ 'aa' + '%'), 'return_fields': 'id,name'},
+                                             {'class': Company, 'filter': Company.name.ilike('%'+ 'aa' + '%'), 'return_fields': 'id,name'},
                                              search_text=search_text, page=page,
                                              order_by=('title', 'name'), pagination=True, desc_asc='asc',
                                              order_by_join=ArticlePortalDivision, items_per_page=1)
