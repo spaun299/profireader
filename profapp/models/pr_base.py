@@ -109,8 +109,8 @@ class Search(Base):
                         order_by = ('name', 'title', ). Because class Company does not have 'title'
                         field, and class ArticlePortalDivision does not have 'name' field.
                       -desc_asc = sort by desc or asc default = asc,
-                      :return id's objects or objects which you want, all pages for pagination
-                       and current page """
+                      :return id's objects or dict with fields which you want, all pages for
+                      pagination and current page """
         page = kwargs.get('page') or 1
         items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
         page -= 1
