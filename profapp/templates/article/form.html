@@ -27,6 +27,22 @@
     {% from 'macros.html' import scripts %}
     {{ scripts(names=['croper']) }}
 
+    <!--
+      IE8 support, see AngularJS Internet Explorer Compatibility http://docs.angularjs.org/guide/ie
+      For Firefox 3.6, you will also need to include jQuery and ECMAScript 5 shim
+    -->
+    <!--[if lt IE 9]>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/es5-shim/2.2.0/es5-shim.js"></script>
+    <script>
+        document.createElement('ui-select');
+        document.createElement('ui-select-match');
+        document.createElement('ui-select-choices');
+    </script>
+    <![endif]-->
+
+
+
     <script>
         module.controller('article_edit', ['$scope', '$modal', '$af', '$ok', function ($scope, $modal, $af, $ok) {
             $scope.$af = $af;
@@ -58,7 +74,7 @@
                     return 'update version of article at portal `%(data.article.portal.name)s` in division `%(data.article.division.name)s`';
                 }
                 return false;
-            }
+            };
 
             $scope.getData = function (model, deff) {
                 console.log(model, deff);
@@ -73,7 +89,7 @@
 
             $scope.amidLoad = function (resp) {
                 resp.article.publishing_tm = new Date(resp.article.publishing_tm);
-                resp.article_position = {min: 0, max: resp.portal_division.positioned_articles.length + 1, current: 0, insert_before: false}
+                resp.article_position = {min: 0, max: resp.portal_division.positioned_articles.length + 1, current: 0, insert_before: false};
                 return resp;
             };
 
@@ -143,33 +159,56 @@
 
         }]);
 
+/**
+ * AngularJS default filter with the following expression:
+ * "tag in tags | filter: {name: $select.search, age: $select.search}"
+ * performs a AND between 'name: $select.search' and 'age: $select.search'.
+ * We want to perform a OR.
+ */
+module.filter('propsFilter', function() {
+    return function(items, props) {
+        var out = [];
+
+        if (angular.isArray(items)) {
+            items.forEach(function(item) {
+                var itemMatches = false;
+
+                var keys = Object.keys(props);
+                for (var i = 0; i < keys.length; i++) {
+                    var prop = keys[i];
+                    var text = props[prop].toLowerCase();
+                    if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                        itemMatches = true;
+                        break;
+                    }
+                }
+
+                if (itemMatches) {
+                    out.push(item);
+                }
+            });
+        } else {
+            // Let the output be the input untouched
+            out = items;
+        }
+
+        return out;
+    };
+});
+
+
 module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, $http, $ok) {
 
     $scope.disabled = undefined;
     $scope.searchEnabled = undefined;
     $scope.selected_portal_to_unpublish = '';
-    $scope.url_get_tags = {{ raw_url_for('company.get_tags')|safe }};
+{#    $scope.url_get_tags = {{ raw_url_for('company.get_tags')|safe }};#}
     $scope.$$translate = {{ translates('SelectTagsCtrl')|safe }};
-    $scope.$watch("data.selected_division", function(newValue, oldValue) {
-        if ($scope.data && (newValue !== oldValue)){
-            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));
-		    res.success(function(data, status, headers, config) {
-                $scope.tagsObject.tags = []; // TODO (AA to AA): it works but...
-                $scope.availableTags = data.data.availableTags;
-		    });
-		    res.error(function(data, status, headers, config) {
-			    alert( "failure message: " + JSON.stringify({data: data}));
-		    });
-        }
-    });
-
-
-
 {#    $scope.$watch("data.selected_division", function(newValue, oldValue) {#}
 {#        if ($scope.data && (newValue !== oldValue)){#}
 {#            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));#}
 {#		    res.success(function(data, status, headers, config) {#}
-{#                $scope.tagsObject.tags = []; // TODO (AA to AA): it works but...#}
+{#                $scope.tagsObject.tags = [];#}
 {#                $scope.availableTags = data.data.availableTags;#}
 {#		    });#}
 {#		    res.error(function(data, status, headers, config) {#}
@@ -177,7 +216,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
 {#		    });#}
 {#        }#}
 {#    });#}
-{##}
+
     $scope.getData = function () {
         $scope.loading = true;
     };
@@ -277,10 +316,11 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                 so tags goes here<br/>
 
                 <div ng-controller="SelectTagsCtrl">
-                    <h3>{{_('Add tags:')}}</h3>
-                    <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;">
+                    <h3>{{_('Article tags:')}}</h3>
+                    <!-- <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;"> -->
+                    <ui-select multiple ng-model="data['article'].tags" theme="select2" ng-disabled="disabled" style="width: 300px;">
                         <ui-select-match placeholder="Select tags...">{{$item}}</ui-select-match>
-                        <ui-select-choices repeat="tag in availableTags | filter:$select.search">
+                        <ui-select-choices repeat="tag in data['portal_division']['availableTags'] | filter:$select.search">
                             {{ tag }}
                         </ui-select-choices>
                     </ui-select>

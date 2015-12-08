@@ -1,5 +1,6 @@
 from flask import render_template, redirect, url_for, request, g, make_response
 from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision
+from profapp.models.portal import PortalDivision
 from .blueprints_declaration import article_bp
 from .request_wrapers import ok
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
@@ -41,7 +42,7 @@ def load_mine(json):
     all, companies = ArticleCompany.get_companies_where_user_send_article(g.user_dict['id'])
     add_param = {'value': '1', 'label': 'All'}
     statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    company_list_for_grid = [];
+    company_list_for_grid = []
     b = 1
     companies.sort(key=lambda k: k['name'])
     for cp in companies:
@@ -123,12 +124,26 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         articleVersion = ArticleCompany.get(mine_version_article_company_id)
     elif article_portal_division_id:  # updating portal version
         articleVersion = ArticlePortalDivision.get(article_portal_division_id)
-        portal_position_filter = and_(ArticlePortalDivision.portal_division_id == articleVersion.portal_division_id,
+        portal_division_id = articleVersion.portal_division_id
+
+
+
+
+        article_tags = articleVersion.tags
+        article_tag_names = list(map(lambda x: getattr(x, 'name', ''), article_tags))
+        available_tags = PortalDivision.get(portal_division_id).portal_division_tags
+        available_tag_names = list(map(lambda x: getattr(x, 'name', ''), available_tags))
+
+
+
+
+        portal_position_filter = and_(ArticlePortalDivision.portal_division_id == portal_division_id,
                                       ArticlePortalDivision.position > 0)
         portal_division_dict = {'positioned_articles':
                                     [pda.get_client_side_dict(fields='id|position|title') for pda in
                                      db(ArticlePortalDivision).filter(portal_position_filter).
-                                         order_by(*articleVersion.position_order()).all()]
+                                         order_by(*articleVersion.position_order()).all()],
+                                'availableTags': available_tag_names
                                 }
 
     else:  # creating personal version
@@ -136,6 +151,10 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
     if action == 'load':
         article_dict = articleVersion.get_client_side_dict(more_fields='long')
+
+        if type(articleVersion) == ArticlePortalDivision:
+            article_dict = dict(list(article_dict.items()) + [('tags', article_tag_names)])
+
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
                       'image_file_id': article_dict['image_file_id']}
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
@@ -148,6 +167,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             pass
         return {'article': article_dict, 'image': image_dict, 'portal_division': portal_division_dict}
     else:
+        print(json)
         parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
 
         articleVersion.attr(parameters['article'])
@@ -156,7 +176,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             return articleVersion.validate(article_company_id is None)
         else:
             image_id = parameters['image'].get('image_file_id')
-            # TODO: VK by OZ: this code dont work if ArticlePortalDivision updated
+            # TODO: VK by OZ: this code dosn't work if ArticlePortalDivision updated
             # if image_id:
             #     articleVersion.image_file_id = crop_image(image_id,
             #
