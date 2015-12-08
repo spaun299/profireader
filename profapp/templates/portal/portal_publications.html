@@ -35,18 +35,17 @@
 
             $scope.Filtered = function( row, rowRenderIndex, col, colRenderIndex) {
                 if (col.filters[0].term){
+                    $scope.paginationOptions.pageNumber = 1;
                     if($scope.gridOptions1.columnDefs[2].filter['term'] == col.filters[0].term && $scope.pos1 != $scope.gridOptions1.columnDefs[2].filter['term']){
                         $scope.pos1 = $scope.gridOptions1.columnDefs[2].filter['term'];
                         $scope.company_id = $scope.companies[col.filters[0].term - 1]['label'] === 'All'? undefined: $scope.companies[col.filters[0].term - 1]['id'];
-                        console.log($scope.pos1);
+                        $scope.sendData('', $scope.paginationOptions);
                     }
                     if($scope.gridOptions1.columnDefs[3].filter['term'] == col.filters[0].term && $scope.pos2 != $scope.gridOptions1.columnDefs[3].filter['term']){
                         $scope.pos2 = $scope.gridOptions1.columnDefs[3].filter['term'];
                         $scope.status = $scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.statuses[col.filters[0].term - 1]['label'];
-                        console.log($scope.pos2)
+                        $scope.sendData('', $scope.paginationOptions);
                     }
-                    $scope.paginationOptions.pageNumber = 1;
-                    $scope.sendData('', $scope.paginationOptions);
                 }else{
                     $scope.refresh()
                 }
@@ -81,8 +80,8 @@
 
             $scope.gridOptions1 = {
                     data: 'datas.grid_data',
-                    paginationPageSizes: [25, 50, 75],
-                    paginationPageSize: 25,
+                    paginationPageSizes: [10, 25, 50, 75],
+                    paginationPageSize: $scope.paginationOptions.pageSize,
                     enableFiltering: true,
                     useExternalPagination: true,
                     useExternalSorting: true,

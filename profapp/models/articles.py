@@ -522,6 +522,59 @@ class Article(Base, PRBase):
             n += 1
         return new_list
 
+    @staticmethod
+    def getListGridDataMaterials(articles):
+        grid_data = []
+        for article in articles:
+            allowed_statuses = []
+            art_stats = ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(article.status)
+            for s in art_stats:
+                allowed_statuses.append({'id': s,'value':s})
+            port = 'not sent' if len(article.portal_article) == 0 else ''
+            grid_data.append({'Date': article.md_tm,
+                                'Title': article.title,
+                                'Portals': port,
+                                'Publication status': '',
+                                'Material status': article.status,
+                                'id': str(article.id),
+                                'level': True,
+                                'allowed_status': allowed_statuses})
+            if article.portal_article:
+                i = 0
+                for portal in article.portal_article:
+                    grid_data.append({'Date': '',
+                                       'Title': '',
+                                       'Portals': portal.portal.name,
+                                       'Publication status': portal.status,
+                                       'Material status': '',
+                                       'id': portal.id,
+                                       'level': False})
+        return grid_data
+    @staticmethod
+    def getListGridDataPublication(articles):
+        publications = []
+        for a in articles:
+            a = a.get_client_side_dict()
+            if a.get('long'):
+                del a['long']
+            publications.append(a)
+        grid_data = []
+        for article in publications:
+            allowed_statuses = []
+            art_stats = ARTICLE_STATUS_IN_PORTAL.can_user_change_status_to(article['status'])
+            for s in art_stats:
+                allowed_statuses.append({'id': s,'value':s})
+            port = article['company']['name'] if article['company']['name'] else 'Not sent to any company yet'
+            grid_data.append({'Date': article['publishing_tm'],
+                                'Title': article['title'],
+                                'Company': port,
+                                'Publication status': article['status'],
+                                'id': str(article['id']),
+                                'level': True,
+                                'allowed_status': allowed_statuses})
+        return grid_data
+
+
         # for article in articles:
         #     article.possible_new_statuses = ARTICLE_STATUS_IN_COMPANY.\
         #         can_user_change_status_to(article.status)

@@ -17,16 +17,11 @@
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
-            $scope.pos1 = '1';
-            $scope.pos2 = '1';
+            $scope.pos1 = '1';$scope.pos2 = '1';
 
             $scope.update = function(){
                 $scope.paginationOptions.pageNumber = 1;
                 $scope.sendData($scope.gridOptions1.columnDefs[0].filter.term,$scope.paginationOptions);
-            };
-
-            $scope.get_colored_title = function (text_to_change) {
-                return text_to_change
             };
 
             $scope.cancel = function () {
@@ -70,58 +65,26 @@
 
             $scope.Filtered = function( row, rowRenderIndex, col, colRenderIndex) {
                 if (col.filters[0].term){
+                    $scope.paginationOptions.pageNumber = 1;
                     if($scope.gridOptions1.columnDefs[2].filter['term'] == col.filters[0].term && $scope.pos1 != $scope.gridOptions1.columnDefs[2].filter['term']){
                         $scope.pos1 = $scope.gridOptions1.columnDefs[2].filter['term'];
                         $scope.chosen_company = $scope.data.companies[col.filters[0].term - 1]['label'] === 'All' ? undefined : $scope.data.companies[col.filters[0].term - 1]['id'];
-                        console.log($scope.pos1);
+                        $scope.sendData('', $scope.paginationOptions);
                     }
                     if($scope.gridOptions1.columnDefs[3].filter['term'] == col.filters[0].term && $scope.pos2 != $scope.gridOptions1.columnDefs[3].filter['term']){
                         $scope.pos2 = $scope.gridOptions1.columnDefs[3].filter['term'];
                         $scope.chosen_status = $scope.data.statuses[col.filters[0].term - 1]['label'] === 'All' ? undefined : $scope.data.statuses[col.filters[0].term - 1]['label'];
-                        console.log($scope.pos2)
+                        $scope.sendData('', $scope.paginationOptions);
                     }
-                    $scope.paginationOptions.pageNumber = 1;
-                    $scope.sendData('', $scope.paginationOptions);
                 }else{
                     $scope.refresh()
                 }
               };
 
-            $scope.FilteredSt = function( row, rowRenderIndex, col, colRenderIndex ) {
-                if(!$scope.loading) {
-                    if (!$scope.index1)
-                        $scope.index1 = 0;
-                    if (col.filters[0].term && $scope.index1 !== col.filters[0].term) {
-                        $scope.chosen_status = $scope.data.statuses[col.filters[0].term - 1]['label'] === 'All' ? undefined : $scope.data.statuses[col.filters[0].term - 1]['label'];
-                        $scope.paginationOptions.pageNumber = 1;
-                        $scope.sendData('', $scope.paginationOptions);
-                        $scope.index1 = col.filters[0].term;
-                    } else if (!col.filters[0].term) {
-                        $scope.refresh()
-                    }
-                }
-              };
-
-            $scope.FilteredCom = function( row, rowRenderIndex, col, colRenderIndex ) {
-                if(!$scope.loading) {
-                    if (!$scope.index)
-                        $scope.index = 0;
-                    if (col.filters[0].term && $scope.index !== col.filters[0].term) {
-                        $scope.chosen_company = $scope.data.companies[col.filters[0].term - 1]['label'] === 'All' ? undefined : $scope.data.companies[col.filters[0].term - 1]['id'];
-                        $scope.paginationOptions.pageNumber = 1;
-                        $scope.sendData('', $scope.paginationOptions);
-                        $scope.index = col.filters[0].term;
-                    } else if (!col.filters[0].term) {
-                        $scope.refresh()
-                    }
-                }
-              };
-
-
             $scope.gridOptions1 = {
                     data: 'data.grid_data',
-                    paginationPageSizes: [25, 50, 75],
-                    paginationPageSize: 25,
+                    paginationPageSizes: [10, 25, 50, 75],
+                    paginationPageSize: $scope.paginationOptions.pageSize,
                     enableFiltering: true,
                     enableSorting: true,
                     useExternalPagination: true,
