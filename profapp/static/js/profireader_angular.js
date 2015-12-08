@@ -513,7 +513,6 @@ module.directive('ngEnter', function () {
                 scope.$apply(function () {
                     scope.$eval(attrs.ngEnter, {'event': event});
                 });
-
                 event.preventDefault();
             }
         });
