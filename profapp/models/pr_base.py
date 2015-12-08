@@ -108,7 +108,7 @@ class Search(Base):
                                       ARTICLE_STATUS_IN_PORTAL.published)},
                         order_by = ('name', 'title', ). Because class Company does not have 'title'
                         field, and class ArticlePortalDivision does not have 'name' field.
-                      -desc_asc = sort by desc or asc default = desc,
+                      -desc_asc = sort by desc or asc default = asc,
                       :return id's objects or objects which you want, all pages for pagination
                        and current page """
         page = kwargs.get('page') or 1
@@ -117,7 +117,7 @@ class Search(Base):
         search_params = []
         order_by_to_str = {1: 'relevance', 2: 'text', 3: 'md_tm'}
         pagination = kwargs.get('pagination') or False
-        desc_asc = kwargs.get('desc_asc') or 'desc'
+        desc_asc = kwargs.get('desc_asc') or 'asc'
         pages = None
         search_text = kwargs.get('search_text') or ''
         return_objects = True if [arg.get('return_fields') for arg in args][0] else False
@@ -172,7 +172,7 @@ class Search(Base):
             joined = db(Search.index, func.min(Search.text).label('text'),
                         func.min(Search.table_name).label('table_name'),
                         index=subquery_search.subquery().c.index).filter(
-                Search.kind.in_(tuple(field_name))).order_by(order).group_by(Search.index)
+                Search.kind.in_(tuple(field_name))).group_by(Search.index)
             return joined
 
         for cls in args:
@@ -192,21 +192,16 @@ class Search(Base):
                              func.min(Search.md_tm).label('md_tm'),
                              func.max(Search.text).label('text')).filter(
             or_(*search_params)).group_by(Search.index)
-        # if kwargs.get('order_by_join'):
-        #     subquery_search = subquery_search.group_by(Search.text, Search.kind)
-        #     for a in subquery_search:
-        #         print(a)
         if type(kwargs.get('order_by')) in (str, list, tuple):
             order = get_order('text', desc_asc, 'text')
             subquery_search = add_joined_search(kwargs['order_by'])
         elif type(kwargs.get('order_by')) == int:
             ord_to_str = order_by_to_str[kwargs['order_by']]
-            subquery_search = subquery_search.order_by(get_order(ord_to_str, desc_asc, ord_to_str))
-                # asc(db(kwargs.get('test').title).filter(
-                # kwargs.get('test').id == Search.index))).order_by(asc(db(kwargs.get('test2').name).filter(
-                # kwargs.get('test2').id == Search.index))).order_by(get_order(ord_to_str, desc_asc, ord_to_str))
+            order = get_order(ord_to_str, desc_asc, ord_to_str)
         else:
-            subquery_search = subquery_search.order_by(get_order('relevance', 'desc', 'relevance'))
+            order = get_order('relevance', 'asc', 'relevance')
+        # order = (asc(db(kwargs.get('test').title).filter(kwargs.get('test').id == Search.index)), asc(db(kwargs.get('test2').name).filter(kwargs.get('test2').id == Search.index)))
+        subquery_search = subquery_search.order_by(order)
 
         if pagination:
             pages = math.ceil(subquery_search.count() / items_per_page)
@@ -241,7 +236,6 @@ class Search(Base):
                 for a in db(cls['class']).filter(cls['class'].id.in_(objects.keys())).all():
                     ordered_articles[a.id] = a.get_client_side_dict(fields=fields)
             objects = ordered_articles
-        print(objects)
         return objects, pages, page + 1
 
 
