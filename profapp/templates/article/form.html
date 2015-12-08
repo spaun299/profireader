@@ -46,7 +46,8 @@
     <script>
         module.controller('article_edit', ['$scope', '$modal', '$af', '$ok', function ($scope, $modal, $af, $ok) {
             $scope.$af = $af;
-            $scope.details_article = {{ raw_url_for('article.details')|safe }};
+            {#            $scope.details_article = {{ raw_url_for('article.details')|safe }};#}
+            {#            $scope.details_publication_portal = {{ raw_url_for('portal.publication_details')|safe }};#}
             {% if article_company_id %}
                 $scope.save_article = '{{ url_for('article.load_form_create', article_company_id = article_company_id)|safe }}';
             {% else %}
@@ -56,9 +57,15 @@
             $scope.data = {};
 
             $scope.$$translate = {{ translates('article_edit')|safe }};
-            $scope.amidSave = function (resp) {
-                window.location.href = $scope.details_article({article_id: resp['article']['id']});
-                add_message('article was created', 'info', 5000);
+            $scope.afterSave = function (resp) {
+                {#                window.location.href = {}#}
+                {#                {% if  article_portal_division_id %}#}
+                {#                    window.location.href = $scope.details_publication_portal({article_id: resp['article']['id'], company_id: resp['article']['company_id']});#}
+                {#                {% else %}#}
+                {#                    window.location.href = $scope.details_article({article_id: resp['article']['id']});#}
+                {#                {% endif %}#}
+                $scope.data.article.position = resp.article.position;
+                add_message('article was saved', 'info', 5000);
 
             };
 
@@ -78,18 +85,40 @@
 
             $scope.getData = function (model, deff) {
                 console.log(model, deff);
-                if (model.article_position.current === 0)
-                    model.article_position.insert_before = none;
-                else if (model.article_position.current === model.portal_division['positioned_articles'].length + 1)
-                    model.article_position.insert_before = true;
-                else
-                    model.article_position.insert_before = model.portal_division.positioned_articles[model.article_position.current - 1].id;
+                model.article_position.insert_after = model.portal_division.positioned_articles[model.article_position.current].id;
                 return deff(model);
+            };
+
+            $scope.setPositioning = function (position_dict, article_id) {
+                if (!position_dict) {
+                    return {min: 0, max: 0, current: 0, all: [], insert_after: null}
+                }
+                if (position_dict.positioned_articles.length && position_dict[0].id != article_id) {
+                    position_dict.positioned_articles.unshift({'id': false, 'title': '', 'position': false});
+                }
+                position_dict.positioned_articles.push({'id': null, 'title': '', 'position': null});
+
+                var current = position_dict.positioned_articles.length - 1;
+
+                $.each(position_dict, function (ind, position) {
+                    if (position.id === article_id) {
+                        current = ind;
+                        return false;
+                    }
+                });
+
+                return {
+                    min: 0, max: position_dict.positioned_articles.length - 1,
+                    current: current, all: position_dict,
+                    insert_after: position_dict[current].id
+                }
+
             };
 
             $scope.amidLoad = function (resp) {
                 resp.article.publishing_tm = new Date(resp.article.publishing_tm);
                 resp.article_position = {min: 0, max: resp.portal_division.positioned_articles.length + 1, current: 0, insert_before: false};
+                resp.article_position = $scope.setPositioning(resp.portal_division, resp.article.id)
                 return resp;
             };
 
@@ -117,7 +146,7 @@
                             object(). // convert each [key, val] pair to {key: val} element
                             value(); // get result
 
-            var custom_formats_menu = get_array_for_menu_build(custom_formats);
+            var custom_formats_menu = _.size(custom_formats) ? get_array_for_menu_build(custom_formats) : [];
 
             $scope.tinymceImageOptions['pr_formats'] = custom_formats_menu;
 
@@ -146,6 +175,27 @@
                 $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')");
             };
 
+            $scope.articlePositionDontChange = function () {
+                if ($scope.data.portal_division.positioned_articles
+                        && $scope.data.portal_division.positioned_articles[$scope.data.article_position.current] &&
+                        $scope.data.portal_division.positioned_articles[$scope.data.article_position.current].id == $scope.data.article.id) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            $scope.ArticlePositionTitle = function () {
+                var obj = $scope.data.article_position.all[$scope.data.article_position.current];
+                if (obj.id === false) return $scope._('Set first in division');
+                if (obj.id === true) return $scope._('Set last in division');
+                if (obj.id === null) return $scope._('Do not use priority. Stay with publishing date');
+                if (obj.id === $scope.data.article.id) {
+                    return $scope._('Dont change priority');
+                }
+                return $scope._('Show this article just after `%(title)s`', obj);
+
+            }
 {#            $scope.saveData =function(data, tags){#}
 {#                data['tags'] = tags;#}
 {#                $ok($scope.url_submit_to_portal,#}
@@ -255,7 +305,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
 
         <h1 class="nice-title">{{ _(getTitle()) }}<span></span></h1>
 
-        <div af af-amid-load="amidLoad" af-amid-save="amidSave" af-before-save="getData"
+        <div af af-amid-load="amidLoad" af-after-save="afterSave" af-before-save="getData"
              af-beforeValidate="getData" af-watch="data.article" ng-model="data">
 
             <div class="update_col1">
@@ -288,13 +338,14 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
 
             <div ng-if="data.article.division" class="update_col1">
                 {{ _('Select publication priority') }}<br/>
+
                 <div style="width: 20em" ui-slider min="{{ data.article_position.min }}"
                      max="{{ data.article_position.max }}" step="1" ng-model="data.article_position.current"></div>
                 <div class="nowrap">
-                <span ng-if="data.article_position.current == 0 ">{{ _('Do not use priority. Stay with publishing date') }}</span>
-                <span ng-if="data.article_position.current == data.article_position.max ">{{ _('Show first in division') }}</span>
-                <span ng-if="data.article_position.current > 0 && data.article_position.current < data.article_position.max">
-                    {{ _('Show this article just before `%(title)s`', {title: data.portal_division.positioned_articles[data.article_position.current - 1].title}) }}</span>
+                    {{ data.article_position.current }}<br/>
+
+                    <div ng-repeat="ap in data.article_position.all">{{ ap }}</div>
+                    <span>{{ ArticlePositionTitle() }}</span>
                 </div>
 
             </div>

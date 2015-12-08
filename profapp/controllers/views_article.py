@@ -97,7 +97,7 @@ def load_mine(json):
             'chosen_status': json.get('chosen_status') or statuses[-1],
             'original_chosen_status': original_chosen_status,
             'statuses': statuses,
-            'total': len(articles_with_time)}
+            'total': len(subquery.all())}
 
 
 @article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
@@ -138,11 +138,11 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
 
         portal_position_filter = and_(ArticlePortalDivision.portal_division_id == portal_division_id,
-                                      ArticlePortalDivision.position > 0)
+                                      ArticlePortalDivision.position != None)
         portal_division_dict = {'positioned_articles':
                                     [pda.get_client_side_dict(fields='id|position|title') for pda in
                                      db(ArticlePortalDivision).filter(portal_position_filter).
-                                         order_by(*articleVersion.position_order()).all()],
+                                         order_by(expression.desc(ArticlePortalDivision.position)).all()],
                                 'availableTags': available_tag_names
                                 }
 
@@ -167,7 +167,6 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             pass
         return {'article': article_dict, 'image': image_dict, 'portal_division': portal_division_dict}
     else:
-        print(json)
         parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
 
         articleVersion.attr(parameters['article'])
@@ -184,9 +183,9 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             #                            json['image'].get('coordinates'))
             a = articleVersion.save()
             if article_portal_division_id:
-                a = a.insert_before(json['article_position']['insert_before'], portal_position_filter)
+                a = a.insert_after(json['article_position']['insert_after'], portal_position_filter)
             a = a.get_client_side_dict(more_fields='long')
-            return {'article': a, 'image': json['image']}
+            return {'article': a, 'image': json['image'], 'portal_division': portal_division_dict}
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
