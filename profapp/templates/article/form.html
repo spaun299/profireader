@@ -2,6 +2,26 @@
 
 {% block title %}{{ _('Create article') }}{% endblock title %}
 
+{% block styles %}
+    {{ super() }}
+    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.css"> -->
+    <!-- ui-select files -->
+    <link rel="stylesheet" href="/static/css/select.css">
+
+        <!-- Select2 theme -->
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
+
+    <!--
+      Selectize theme
+      Less versions are available at https://github.com/brianreavis/selectize.js/tree/master/dist/less
+    -->
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.default.css">
+    <!-- <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.bootstrap2.css"> -->
+    <!-- <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.bootstrap3.css"> -->
+
+    <link rel="stylesheet" href="/static/css/andriy.css">
+{%- endblock styles %}
+
 {% block portal_content %}
     {#TODO: VH by OZ remove below line#}
     {% from 'macros.html' import scripts %}
@@ -110,7 +130,84 @@
                 $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')");
             };
 
+{#            $scope.saveData =function(data, tags){#}
+{#                data['tags'] = tags;#}
+{#                $ok($scope.url_submit_to_portal,#}
+{#                        data,#}
+{#                        function (resp) {#}
+{#                            $scope.data = resp;#}
+{#                            $scope.data_resp_portal = resp.portal;#}
+{#                        }#}
+{#                );#}
+{#            };#}
+
         }]);
+
+module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, $http, $ok) {
+
+    $scope.disabled = undefined;
+    $scope.searchEnabled = undefined;
+    $scope.selected_portal_to_unpublish = '';
+    $scope.url_get_tags = {{ raw_url_for('company.get_tags')|safe }};
+    $scope.$$translate = {{ translates('SelectTagsCtrl')|safe }};
+    $scope.$watch("data.selected_division", function(newValue, oldValue) {
+        if ($scope.data && (newValue !== oldValue)){
+            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));
+		    res.success(function(data, status, headers, config) {
+                $scope.tagsObject.tags = []; // TODO (AA to AA): it works but...
+                $scope.availableTags = data.data.availableTags;
+		    });
+		    res.error(function(data, status, headers, config) {
+			    alert( "failure message: " + JSON.stringify({data: data}));
+		    });
+        }
+    });
+
+
+
+{#    $scope.$watch("data.selected_division", function(newValue, oldValue) {#}
+{#        if ($scope.data && (newValue !== oldValue)){#}
+{#            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));#}
+{#		    res.success(function(data, status, headers, config) {#}
+{#                $scope.tagsObject.tags = []; // TODO (AA to AA): it works but...#}
+{#                $scope.availableTags = data.data.availableTags;#}
+{#		    });#}
+{#		    res.error(function(data, status, headers, config) {#}
+{#			    alert( "failure message: " + JSON.stringify({data: data}));#}
+{#		    });#}
+{#        }#}
+{#    });#}
+{##}
+    $scope.getData = function () {
+        $scope.loading = true;
+    };
+
+    $scope.respData = function () {
+        $scope.loading = false;
+        return true;
+    };
+
+    $scope.enable = function() {
+        $scope.disabled = false;
+    };
+
+    $scope.disable = function() {
+        $scope.disabled = true;
+    };
+
+    $scope.enableSearch = function() {
+        $scope.searchEnabled = true;
+    };
+
+    $scope.disableSearch = function() {
+        $scope.searchEnabled = false;
+    };
+
+    $scope.availableTags = [];
+    $scope.selectedTags = [];
+
+}]);
+
 
     </script>
 
@@ -174,13 +271,23 @@
 
             </div>
 
-            {#TODO: AA by OZ#}
+            <!-- TODO: AA by OZ -->
             <div ng-if="data.article.division" class="update_col1">
                 we have division ({{ data.article.division.name }} - {{ data.article.division.id }})<br/>
                 so tags goes here<br/>
-                TAG TAG TAG!
-            </div>
 
+                <div ng-controller="SelectTagsCtrl">
+                    <h3>{{_('Add tags:')}}</h3>
+                    <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;">
+                        <ui-select-match placeholder="Select tags...">{{$item}}</ui-select-match>
+                        <ui-select-choices repeat="tag in availableTags | filter:$select.search">
+                            {{ tag }}
+                        </ui-select-choices>
+                    </ui-select>
+                    <!-- <p>Selected: {{tagsObject.tags}}</p> -->
+                </div>
+
+            </div>
 
             <div class="update_col1">
                 <input class="create_button"
