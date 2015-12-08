@@ -21,6 +21,7 @@
             $scope.data = {};
 
             $scope.$$translate = {{ translates('article_edit')|safe }};
+
             $scope.afterSave = function (resp) {
                 {#                window.location.href = {}#}
                 {#                {% if  article_portal_division_id %}#}
@@ -28,7 +29,9 @@
                 {#                {% else %}#}
                 {#                    window.location.href = $scope.details_article({article_id: resp['article']['id']});#}
                 {#                {% endif %}#}
-                $scope.data.article.position = resp.article.position;
+                $scope.data.article.publishing_tm = new Date(resp.article.publishing_tm);
+                $scope.data.portal_division = $scope.setPositioning(resp.portal_division, resp.article.id);
+
                 add_message('article was saved', 'info', 5000);
 
             };
@@ -55,34 +58,55 @@
             };
 
             $scope.setPositioning = function (portal_division, article_id) {
+                console.log(portal_division, article_id);
+
                 if (!portal_division) {
-                    return {min: 0, max: 0, current: 0, positioned_articles: [{id: null, title: '', insert_after: null}], insert_after: null}
+                    return {
+                        min: 0,
+                        max: 0,
+                        current: 0,
+                        positioned_articles: [{id: null, title: '', insert_after: null}],
+                        insert_after: null
+                    }
                 }
-                if (portal_division.positioned_articles.length && portal_division.positioned_articles[0].id != article_id) {
-                    portal_division.positioned_articles.unshift({'id': false, 'title': '', 'position': false});
-                }
-                portal_division.positioned_articles.push({'id': null, 'title': '', 'position': null});
 
-                var current = portal_division.positioned_articles.length - 1;
+                portal_division.positioned_articles.unshift({'id': false, 'title': '', 'position': false});
 
-                $.each(portal_division.positioned_articles, function (ind, position) {
-                    if (position.id === article_id) {
-                        delete portal_division.positioned_articles[ind];
-{#                        current = ind - 1;#}
+                var current = null;
+
+
+                var removeindex = false;
+                $.each(portal_division.positioned_articles, function (ind, positioned) {
+                    if (positioned.id === article_id) {
+                        removeindex = ind;
                         return false;
                     }
                 });
-{#                console.log(current);#}
 
-                return $.extend(portal_division, {min: 0, max: portal_division.positioned_articles.length - 1,
-                    current: current, insert_after: portal_division.positioned_articles[current].id});
+                if (removeindex !== false) {
+                    current = removeindex - 1;
+                    portal_division.positioned_articles.splice(removeindex, 1);
+
+                }
+
+                portal_division.positioned_articles.push({'id': null, 'title': '', 'position': null});
+                if (current === null) {
+                    current = portal_division.positioned_articles.length -1;
+                }
+
+                console.log('current = ', current);
+
+                return $.extend(portal_division, {
+                    min: 0, max: portal_division.positioned_articles.length - 1,
+                    current: current, insert_after: portal_division.positioned_articles[current].id
+                });
 
 
             };
 
             $scope.amidLoad = function (resp) {
                 resp.article.publishing_tm = new Date(resp.article.publishing_tm);
-                resp.portal_division = $scope.setPositioning(resp.portal_division, resp.article.id)
+                resp.portal_division = $scope.setPositioning(resp.portal_division, resp.article.id);
                 return resp;
             };
 
@@ -206,9 +230,6 @@
                 <div style="width: 20em" ui-slider min="{{ data.portal_division.min }}"
                      max="{{ data.portal_division.max }}" step="1" ng-model="data.portal_division.current"></div>
                 <div class="nowrap">
-                    {{ data.portal_division.current }}<br/>
-
-                    <div ng-repeat="ap in data.portal_division.positioned_articles">{{ ap }}</div>
                     <span>{{ ArticlePositionTitle() }}</span>
                 </div>
 
