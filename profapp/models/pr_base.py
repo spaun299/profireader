@@ -66,7 +66,7 @@ class Search(Base):
         """ *args: dictionary with following values -
                              class = sqlalchemy table class object,
                 optional:    filter: sqlalchemy filter with your own parameters,
-                optional:    fields: (tuple ot list) with fields name in table Search.kind,
+                optional:    fields: (tuple ot list) with fields name from table Search.kind,
                 optional:    return_fields: String. If return_fields provided,
                              this function return dictionary with fields you want, else return id's.
                              example: "name,country,region"
@@ -115,7 +115,8 @@ class Search(Base):
             assert (type(page), type(items_per_page) is int) and page >= 0, \
                 'Parameter page is not integer, or page < 1 .'
             assert (getattr(args[0]['class'], str(kwargs.get('order_by')), False) is not False) or \
-                   (type(kwargs.get('order_by')) is int), \
+                   (type(kwargs.get('order_by')) is int) or type(
+                kwargs.get('order_by') is (list or tuple)), \
                 'Bad value for parameter "order_by".' \
                 'You requested attribute which is not in class %s' % args[0]['class']
             assert type(return_objects) is bool, \
@@ -132,9 +133,9 @@ class Search(Base):
 
         def get_order(order_name, order_value, field):
             order_name += '+' if order_value == 'desc' else '-'
-            result = {'text+': lambda field_name: desc(func.min(
-                getattr(Search, field_name, Search.text))),
-                      'text-': lambda field_name: asc(func.min(
+            result = {'text+': lambda field_name: desc(
+                      func.max(getattr(Search, field_name, Search.text))),
+                      'text-': lambda field_name: asc(func.max(
                           getattr(Search, field_name, Search.text))),
                       'md_tm+': lambda field_name: desc(func.min(
                           getattr(Search, field_name, Search.md_tm))),
@@ -150,42 +151,50 @@ class Search(Base):
         def add_joined_search(field_name):
             joined = db(Search.index, func.min(Search.text).label('text'),
                         func.min(Search.table_name).label('table_name'),
-                        index=subquery_search.subquery().c.index,
-                        kind=field_name).order_by(order).group_by(Search.index)
+                        index=subquery_search.subquery().c.index).filter(
+                Search.kind.in_(tuple(field_name))).order_by(order).group_by(Search.index)
             return joined
 
         for cls in args:
             filter_params = cls.get('filter')
             fields = cls.get('fields') or \
-                     [key for key in vars(cls['class']).keys() if key[0] != '_']
+                [key for key in vars(cls['class']).keys() if key[0] != '_']
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
             search_params.append(and_(Search.index == db(cls['class'].id).filter(
                 filter_params).subquery().c.id, Search.text.ilike(
                 "%" + search_text + "%"), Search.table_name == cls['class'].__tablename__,
-                                      Search.kind.in_(fields)), )
-        subquery_search = db(Search.index,
+                Search.kind.in_(fields)), )
+        subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
                              func.min(Search.table_name).label('table_name'),
                              func.min(Search.md_tm).label('md_tm'),
-                             func.min(Search.text).label('text')).filter(
+                             func.max(Search.text).label('text')).filter(
             or_(*search_params)).group_by(Search.index)
-        if type(kwargs.get('order_by')) == str:
+        # if kwargs.get('order_by_join'):
+        #     subquery_search = subquery_search.group_by(Search.text, Search.kind)
+        #     for a in subquery_search:
+        #         print(a)
+        if type(kwargs.get('order_by')) in (str, list, tuple):
             order = get_order('text', desc_asc, 'text')
             subquery_search = add_joined_search(kwargs['order_by'])
         elif type(kwargs.get('order_by')) == int:
             ord_to_str = order_by_to_str[kwargs['order_by']]
-            subquery_search = subquery_search.order_by(
-                get_order(ord_to_str, desc_asc, ord_to_str))
+            subquery_search = subquery_search.order_by(get_order(ord_to_str, desc_asc, ord_to_str))
+                # asc(db(kwargs.get('test').title).filter(
+                # kwargs.get('test').id == Search.index))).order_by(asc(db(kwargs.get('test2').name).filter(
+                # kwargs.get('test2').id == Search.index))).order_by(get_order(ord_to_str, desc_asc, ord_to_str))
         else:
             subquery_search = subquery_search.order_by(get_order('relevance', 'desc', 'relevance'))
+
         if pagination:
             pages = math.ceil(subquery_search.count() / items_per_page)
             if items_per_page:
                 subquery_search = subquery_search.limit(items_per_page)
             if page:
-                subquery_search = subquery_search.offset(page * items_per_page) if int(page) in range(
+                subquery_search = subquery_search.offset(page * items_per_page) \
+                    if int(page) in range(
                     0, int(pages)) else subquery_search.offset(pages * items_per_page)
         subquery_search = subquery_search.subquery()
         join_search = []
@@ -195,7 +204,7 @@ class Search(Base):
                 join_params or arg['class'],
                 arg['class'].id == subquery_search.c.index).subquery())
         objects = {}
-        ord_by = 'text' if type(kwargs.get('order_by')) is str \
+        ord_by = 'text' if type(kwargs.get('order_by')) in (str, list, tuple) \
             else order_by_to_str[kwargs['order_by']]
         for search in join_search:
             for cls in db(search).all():
@@ -212,7 +221,7 @@ class Search(Base):
                 for a in db(cls['class']).filter(cls['class'].id.in_(objects.keys())).all():
                     ordered_articles[a.id] = a.get_client_side_dict(fields=fields)
             objects = ordered_articles
-            print(objects)
+        print(objects)
         return objects, pages, page + 1
 
 
