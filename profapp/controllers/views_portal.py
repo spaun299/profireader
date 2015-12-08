@@ -518,50 +518,29 @@ def publications_load(json, company_id):
     if not portal:
         return dict(portal_not_exist=True)
     current_page = json.get('grid_data')['page'] or 1
+
     params = {'search_text': json.get('grid_data')['search_text'], 'portal_id': portal.id}
     params['status'] = json.get('grid_data')['status'] if json.get('grid_data')['status'] else None
     params['company_id'] = json.get('company_id') if json.get('company_id') else None
     params['sort_date'] = json.get('grid_data')['sort_date'] if json.get('grid_data')['sort_date'] else None
+
     subquery = ArticlePortalDivision.subquery_portal_articles(**params)
+
     if json.get('grid_data')['new_status']:
         db(ArticlePortalDivision, id=json.get('article_id')).update({'status': json.get('grid_data')['new_status']})
-
     articles, pages, current_page = pagination(subquery,
-                                               page=current_page)
+                                               page=current_page, items_per_page=json.get('grid_data')['pageSize'])
 
-    publications = []
     add_param = {'value': '1','label': '-- all --'}
 
     comp_grid = Article.list_for_grid_tables(ArticlePortalDivision.get_companies_which_send_article_to_portal(portal.id), add_param, True)
     statuses_grid = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
-    for a in articles:
-        a = a.get_client_side_dict()
-        if a.get('long'):
-            del a['long']
-        publications.append(a)
-    grid_data = []
-    for article in publications:
-        allowed_statuses = []
-        art_stats = ARTICLE_STATUS_IN_PORTAL.can_user_change_status_to(article['status'])
-        for s in art_stats:
-            allowed_statuses.append({'id': s,'value':s})
-        port = article['company']['name'] if article['company']['name'] else 'Not sent to any company yet'
-        grid_data.append({'Date': article['publishing_tm'],
-                            'Title': article['title'],
-                            'Company': port,
-                            'Publication status': article['status'],
-                            'id': str(article['id']),
-                            'level': True,
-                            'allowed_status': allowed_statuses})
+    grid_data = Article.getListGridDataPublication(articles)
 
     return {'grid_data': grid_data,
-            'publications': publications,
             'companies': comp_grid,
-            'pages': {'total': pages,
-                      'current_page': current_page,
-                      'page_buttons': Config.PAGINATION_BUTTONS},
             'statuses': statuses_grid,
-            'total': len(publications)}
+            'total': len(subquery.all())}
 
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])

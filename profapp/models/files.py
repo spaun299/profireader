@@ -373,17 +373,13 @@ class File(Base, PRBase):
     @staticmethod
     def save_files(files, new_id, attr):
         for file in files:
+            attr['parent_id'] = new_id
+            file_content = YoutubeVideo.get(file.id).detach() if file.mime == 'video/*' else FileContent.get(file.id).detach()
+            file.detach().attr(attr)
+            file.save()
             if file.mime == 'video/*':
-                youtube_video = YoutubeVideo.get(file.youtube_id).detach()
-                attr['parent_id'] = new_id
-                file.detach().attr(attr)
-                file.save()
-                file.youtube_video = youtube_video
+                file.youtube_video = file_content
             else:
-                file_content = FileContent.get(file.id).detach()
-                attr['parent_id'] = new_id
-                file.detach().attr(attr)
-                file.save()
                 file.file_content = file_content
         return files
 
@@ -396,24 +392,18 @@ class File(Base, PRBase):
         new_list = []
         old_list = []
         for dir in lists:
+            old_list.append(dir.id)
+            files = [file for file in db(File, parent_id=dir.id) if file.mime != 'directory']
             if dir.parent_id == id_f:
-                old_list.append(dir.id)
                 attr['parent_id'] = new_id
-                files = [file for file in db(File, parent_id=dir.id) if file.mime != 'directory']
-                dir.detach().attr(attr)
-                dir.save()
-                new_list.append(dir)
-                File.save_files(files, dir.id, attr)
             else:
-                old_list.append(dir.id)
-                files = [file for file in db(File, parent_id=dir.id) if file.mime != 'directory']
                 parent = File.get(dir.parent_id)
                 index = File.get_index(parent, old_list)
                 attr['parent_id'] = new_list[index].id
-                dir.detach().attr(attr)
-                dir.save()
-                new_list.append(dir)
-                File.save_files(files, dir.id, attr)
+            dir.detach().attr(attr)
+            dir.save()
+            new_list.append(dir)
+            File.save_files(files, dir.id, attr)
         return old_list, new_list
 
     @staticmethod
@@ -484,7 +474,6 @@ class File(Base, PRBase):
         if self == None or folder == None:
             return False
         id = self.id
-        # youtube_id = self.youtube_id
         root = folder.root_folder_id
         if folder.root_folder_id == None:
             root = folder.id
@@ -497,7 +486,7 @@ class File(Base, PRBase):
         if self.mime == 'directory':
             File.save_all(id, attr, copy_file.id)
         elif self.mime == 'video/*':
-            youtube_video = YoutubeVideo.get(youtube_id).detach()
+            youtube_video = YoutubeVideo.get(id).detach()
             copy_file.youtube_video = youtube_video
         else:
             file_content = FileContent.get(id).detach()
