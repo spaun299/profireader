@@ -1,5 +1,7 @@
 from flask import render_template, redirect, url_for, request, g, make_response
 from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision
+from profapp.models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
+from profapp.models.portal import PortalDivision
 from .blueprints_declaration import article_bp
 from .request_wrapers import ok
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
@@ -123,12 +125,20 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         articleVersion = ArticleCompany.get(mine_version_article_company_id)
     elif article_portal_division_id:  # updating portal version
         articleVersion = ArticlePortalDivision.get(article_portal_division_id)
-        portal_position_filter = and_(ArticlePortalDivision.portal_division_id == articleVersion.portal_division_id,
+        portal_division_id = articleVersion.portal_division_id
+
+        article_tags = articleVersion.tags
+        article_tag_names = list(map(lambda x: getattr(x, 'name', ''), article_tags))
+        available_tags = PortalDivision.get(portal_division_id).portal_division_tags
+        available_tag_names = list(map(lambda x: getattr(x, 'name', ''), available_tags))
+
+        portal_position_filter = and_(ArticlePortalDivision.portal_division_id == portal_division_id,
                                       ArticlePortalDivision.position != None)
         portal_division_dict = {'positioned_articles':
                                     [pda.get_client_side_dict(fields='id|position|title') for pda in
                                      db(ArticlePortalDivision).filter(portal_position_filter).
-                                         order_by(expression.desc(ArticlePortalDivision.position)).all()]
+                                         order_by(expression.desc(ArticlePortalDivision.position)).all()],
+                                'availableTags': available_tag_names
                                 }
 
     else:  # creating personal version
@@ -136,6 +146,10 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
     if action == 'load':
         article_dict = articleVersion.get_client_side_dict(more_fields='long')
+
+        if type(articleVersion) == ArticlePortalDivision:
+            article_dict = dict(list(article_dict.items()) + [('tags', article_tag_names)])
+
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
                       'image_file_id': article_dict['image_file_id']}
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
@@ -156,12 +170,30 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             return articleVersion.validate(article_company_id is None)
         else:
             image_id = parameters['image'].get('image_file_id')
-            # TODO: VK by OZ: this code dont work if ArticlePortalDivision updated
+            # TODO: VK by OZ: this code dosn't work if ArticlePortalDivision updated
             # if image_id:
             #     articleVersion.image_file_id = crop_image(image_id,
             #
             #
             #                            json['image'].get('coordinates'))
+
+            if type(articleVersion) == ArticlePortalDivision:
+                articleVersion.portal_division_tags = []
+                tag_names = json['article']['tags']
+                tags_portal_division_article = []
+                for i in range(len(tag_names)):
+                    tag_portal_division_article = TagPortalDivisionArticle(position=i + 1)
+                    tag_portal_division = \
+                        g.db.query(TagPortalDivision). \
+                            select_from(TagPortalDivision). \
+                            join(Tag). \
+                            filter(TagPortalDivision.portal_division_id == portal_division_id). \
+                            filter(Tag.name == tag_names[i]).one()
+
+                    tag_portal_division_article.tag_portal_division = tag_portal_division
+                    tags_portal_division_article.append(tag_portal_division_article)
+                articleVersion.tag_assoc_select = tags_portal_division_article
+
             a = articleVersion.save()
             if article_portal_division_id:
                 a = a.insert_after(json['portal_division']['insert_after'], portal_position_filter)
@@ -207,4 +239,3 @@ def resubmit_to_company(json, article_company_id):
                         ARTICLE_STATUS_IN_COMPANY.declined)
     a.status = ARTICLE_STATUS_IN_COMPANY.submitted
     return {'article': a.save().get_client_side_dict()}
-
