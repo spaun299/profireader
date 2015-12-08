@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.css">
     <link rel="stylesheet" href="/static/css/profireader_responsive.css">
     <link rel="stylesheet" href="/static/css/profireader.css">
+    <link rel="stylesheet" href="/static/jquery/smoothness/jquery-ui.css">
     <link rel="stylesheet" href="/static/css/oles.css">
     <link rel="stylesheet" href="/static/css/icons.css">
 
@@ -39,12 +40,15 @@
     {#    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>#}
 
 
-    <script src="{{ bootstrap_find_resource('jquery.js', cdn='jquery') }}"></script>
+{#    <script src="{{ bootstrap_find_resource('jquery.js', cdn='jquery') }}"></script>#}
+    <script src="{{ url_for('static', filename = 'jquery/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'jquery/jquery-ui.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular/angular.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-bootstrap/ui-bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-bootstrap/ui-bootstrap-tpls.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'tinymce/tinymce.jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'tinymce.pr/tinymce.jquery.pr.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ui-tinymce/tinymce.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'angular-ui-slider/slider.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ajax-validator/ngAjaxValidator.js') }}"></script>
 
     {#TODO: SS by OZ: remove this two lines when ng-grid is up and running #}

@@ -8,6 +8,7 @@
     "angular-ui-tinymce": "0.0.10",
     "angular-animate": "~1.3.18",
     "cropper": "~0.10.1",
-    "filemanager": "git@github.com:kakabomba/angular-server-driven-filemanager.git#ids"
+    "filemanager": "git@github.com:kakabomba/angular-server-driven-filemanager.git#ids",
+    "angular-ui-slider": "git@github.com:angular-ui/ui-slider.git#v0.1.3"
   }
 }

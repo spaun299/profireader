@@ -98,3 +98,10 @@
     padding-left: 0.2em;
     color: #2ecc40;
 }
+
+
+.nowrap {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

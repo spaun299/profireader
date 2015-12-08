@@ -40,6 +40,8 @@ class ArticlePortalDivision(Base, PRBase):
     keywords = Column(TABLE_TYPES['keywords'], nullable=False)
     md_tm = Column(TABLE_TYPES['timestamp'])
     publishing_tm = Column(TABLE_TYPES['timestamp'])
+    position = Column(TABLE_TYPES['position'])
+
     status = Column(TABLE_TYPES['id_profireader'], default=ARTICLE_STATUS_IN_PORTAL.published)
 
     division = relationship('PortalDivision',
@@ -83,7 +85,7 @@ class ArticlePortalDivision(Base, PRBase):
                           uselist=False)
 
 
-    def __init__(self, article_company_id=None, title=None, short=None, keywords=None,
+    def __init__(self, article_company_id=None, title=None, short=None, keywords=None, position=0,
                  long=None, status=None, portal_division_id=None, image_file_id=None
                  ):
         self.article_company_id = article_company_id
@@ -93,11 +95,12 @@ class ArticlePortalDivision(Base, PRBase):
         self.image_file_id = image_file_id
         self.long = long
         self.status = status
+        self.position = position
         self.portal_division_id = portal_division_id
         # self.portal_id = portal_id
 
 
-    def get_client_side_dict(self, fields='id|image_file_id|title|short|image_file_id|'
+    def get_client_side_dict(self, fields='id|image_file_id|title|short|image_file_id|position|'
                                           'keywords|cr_tm|md_tm|'
                                           'status|publishing_tm, '
                                           'company.id|name, division.id|name, portal.id|name',
@@ -198,7 +201,7 @@ class ArticleCompany(Base, PRBase):
                      'keywords': {'relevance': lambda field='keywords': RELEVANCE.keywords}}
 
     def get_client_side_dict(self,
-                             fields='id|title|short|keywords|cr_tm|md_tm|company_id|article_id|image_file_id|status',
+                             fields='id|title|short|keywords|cr_tm|md_tm|company_id|article_id|image_file_id|status|company_id',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 

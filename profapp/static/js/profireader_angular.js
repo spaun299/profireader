@@ -89,148 +89,49 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
     .directive('prCropper', function () {
         return {
             restrict: 'A',
-            scope: {
-                prCropper: '=',
-                ngModel: '='
-            },
-            link: function (scope, element, attrs) {
+            require: 'ngModel',
+            link: function (scope, element, attrs, model) {
 
-                scope.cropper = null;
-                scope.options = {};
                 var $image = $(element);
-
-                var reset = function () {
-                    console.log('aaa');
-                    if (scope.ngModel && scope.ngModel.ratio) scope.options.aspectRatio = scope.ngModel.ratio;
-                    if (scope.ngModel && scope.ngModel.coordinates) scope.options.data = scope.ngModel.coordinates;
-                    $image.cropper('destroy').cropper(scope.options);
-                    scope.prCropper = function () {
-                        $image.cropper.apply($image, arguments);
-                    }
-                };
-
-                var changeImage = function () {
-                    console.log(scope.ngModel);
-                    if (scope.ngModel) {
-                        $image.attr('src', fileUrl(scope.ngModel.image_file_id));
-                        console.log(scope.ngModel.image_file_id, fileUrl(scope.ngModel.image_file_id));
+                var options = {
+                    crop: function (e) {
+                        if (model.$modelValue && model.$modelValue.image_file_id) {
+                            e['image_file_id'] = model.$modelValue.image_file_id;
                         }
-                };
+                        model.$setViewValue(e);
+                    }
+                }
 
-                $image.on({'load': reset});
+                if (model) {
+                    if (model.$modelValue && model.$modelValue.ratio) options.aspectRatio = model.$modelValue.ratio;
+                    if (model.$modelValue && model.$modelValue.coordinates) options.data = model.$modelValue.coordinates;
+                }
+                $image.cropper(options);
 
-                scope.$watch('ngModel.image_file_id', changeImage);
+                if (attrs['prCropper']) {
+                    scope[attrs['prCropper']] = function () {
+                        $image.cropper.apply($image, arguments);
+                    };
+                }
 
-                scope.$watch('ngModel.ratio', reset);
-                scope.$watch('ngModel.coordinates', reset);
+                scope.$watch(attrs['ngModel'] + '.image_file_id', function () {
+                    if (model && model.$modelValue && model.$modelValue.image_file_id) {
+                        $image.cropper('replace', fileUrl(model.$modelValue.image_file_id));
+                    }
+                });
 
-                reset();
+                scope.$watch(attrs['ngModel'] + '.ratio', function () {
+                    if (model.$modelValue && model.$modelValue.ratio) {
+                        $image.cropper('setAspectRatio', model.$modelValue.ratio);
+                    }
+                });
 
+                scope.$watch(attrs['ngModel'] + '.coordinates', function () {
+                    if (model.$modelValue && model.$modelValue.coordinates) {
+                        $image.cropper('setData', model.$modelValue.coordinates);
+                    }
+                });
 
-                //if (0) {
-                //
-                //    $(document.body).on('click', '[data-method]', function () {
-                //        var data = $(this).data(),
-                //            $target,
-                //            result;
-                //        if (!$image.data('cropper')) {
-                //            return;
-                //        }
-                //
-                //        if (data.method) {
-                //            data = $.extend({}, data); // Clone a new one
-                //
-                //            if (typeof data.target !== 'undefined') {
-                //                $target = $(data.target);
-                //
-                //                if (typeof data.option === 'undefined') {
-                //                    try {
-                //                        data.option = JSON.parse($target.val());
-                //                    } catch (e) {
-                //                        console.log(e.message);
-                //                    }
-                //                }
-                //            }
-                //
-                //            result = $image.cropper(data.method, data.option);
-                //            if (data.method === 'getCroppedCanvas') {
-                //                $('#getCroppedCanvasModal').modal().find('.modal-body').html(result);
-                //            }
-                //
-                //            if ($.isPlainObject(result) && $target) {
-                //                try {
-                //                    $target.val(JSON.stringify(result));
-                //                } catch (e) {
-                //                    console.log(e.message);
-                //                }
-                //            }
-                //
-                //        }
-                //    });
-                //}
-
-                //if (0) {
-                //
-                //
-                //    // Import image
-                //    var $inputImage = $('#inputImage'),
-                //        URL = window.URL || window.webkitURL,
-                //        blobURL;
-                //
-                //    if (URL) {
-                //        $inputImage.change(function () {
-                //            var files = this.files,
-                //                file;
-                //
-                //            if (!$image.data('cropper')) {
-                //                return;
-                //            }
-                //
-                //            if (files && files.length) {
-                //                file = files[0];
-                //
-                //                if (/^image\/\w+$/.test(file.type)) {
-                //                    blobURL = URL.createObjectURL(file);
-                //                    $image.one('built.cropper', function () {
-                //                        URL.revokeObjectURL(blobURL); // Revoke when load complete
-                //                    }).cropper('reset').cropper('replace', blobURL);
-                //                    $inputImage.val('');
-                //                } else {
-                //                    showMessage('Please choose an image file.');
-                //                }
-                //            }
-                //        });
-                //    } else {
-                //        $inputImage.parent().remove();
-                //    }
-                //
-                //
-                //    // Options
-                //    $('.docs-options :checkbox').on('change', function () {
-                //        var $this = $(this),
-                //            cropBoxData,
-                //            canvasData;
-                //
-                //        if (!$image.data('cropper')) {
-                //            return;
-                //        }
-                //
-                //        options[$this.val()] = $this.prop('checked');
-                //
-                //        cropBoxData = $image.cropper('getCropBoxData');
-                //        canvasData = $image.cropper('getCanvasData');
-                //        options.built = function () {
-                //            $image.cropper('setCropBoxData', cropBoxData);
-                //            $image.cropper('setCanvasData', canvasData);
-                //        };
-                //
-                //        $image.cropper('destroy').cropper(options);
-                //    });
-                //
-                //
-                //    // Tooltips
-                //    $('[data-toggle="tooltip"]').tooltip();
-                //}
             }
         };
     })
@@ -561,7 +462,7 @@ function file_choose(selectedfile) {
 
 // 'ui.select' uses "/static/js/select.js" included in index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
-module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView']);
+module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView', 'ui.slider']);
 
 module.config(function ($provide) {
     $provide.decorator('$controller', function ($delegate) {
@@ -633,49 +534,40 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             return $sce.trustAsHtml(full_text);
         },
         _: function (phrase, dict) {
+            if (typeof phrase !== 'string') {
+                return '';
+            }
             var scope = this;
+
             if (!scope.$$translate) {
                 scope.$$translate = {};
             }
 
-            if (!scope.$$translate_accessed) {
-                scope.$$translate_accessed = {};
-            }
             new Date;
             var t = Date.now() / 1000;
+
             //TODO OZ by OZ hasOwnProperty
             var CtrlName = this.controllerName ? this.controllerName : 'None';
             if (scope.$$translate[phrase] === undefined) {
-                scope.$$translate[phrase] = phrase;
-                scope.$$translate[phrase]['lang'] = phrase;
+                scope.$$translate[phrase] = {'lang': phrase, 'time': t};
                 $ok('/tools/save_translate/', {
                     template: CtrlName,
                     phrase: phrase,
                     url: window.location.href
                 }, function (resp) {
-                    //console.log(resp['phrase']);
-                    //if(resp['phrase'] === ''){
-                    //    scope.$$translate[phrase] = phrase
-                    //}else{
-                    //    scope.$$translate[phrase] = resp;
-                    //}
 
                 });
-                scope.$$translate[phrase] = phrase;
             }
-            else if (scope.$$translate_accessed[phrase] === undefined && (t - scope.$$translate[phrase]['time']) > 86400) {
-                scope.$$translate_accessed[phrase] = true;
+
+            if ((t - scope.$$translate[phrase]['time']) > 86400) {
+                scope.$$translate[phrase]['time'] = t;
                 $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
                 });
             }
-            if (scope.$$translate[phrase])
-                phrase = scope.$$translate[phrase]['lang'];
-
-            //alert(scope.$$translate);
-
 
             try {
-                return phrase.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
+                var ret = scope.$$translate[phrase]['lang']
+                return ret.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
                     var indexes = g1.split('.');
                     var d = dict ? dict : scope;
                     for (var i in indexes) {
@@ -692,11 +584,11 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 return phrase
             }
         },
-        paginationOptions :{
-                pageNumber: 1,
-                pageSize: 50,
-                sort: null
-            },
+        paginationOptions: {
+            pageNumber: 1,
+            pageSize: 50,
+            sort: null
+        },
         //FilteredMat:function(row, rowRenderIndex, col, colRenderIndex, paginationOptions ) {
         //        console.log(col);
         //        var scope = this;
@@ -717,23 +609,23 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {
                 if (sortColumns.length === 0) {
                     paginationOptions.sort = null;
-                    externalFunction('',paginationOptions)
+                    externalFunction('', paginationOptions)
                 } else {
                     paginationOptions.sort = sortColumns[0].sort.direction;
-                    externalFunction('',paginationOptions)
+                    externalFunction('', paginationOptions)
                 }
             });
             gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
                 if (newValue !== oldValue) {
                     scope.new_status = newValue;
                     scope.article_id = rowEntity.id;
-                    externalFunction('',paginationOptions);
+                    externalFunction('', paginationOptions);
                 }
             });
             gridApi.pagination.on.paginationChanged(scope, function (newPage, pageSize) {
                 paginationOptions.pageNumber = newPage;
                 paginationOptions.pageSize = pageSize;
-                externalFunction('',paginationOptions)
+                externalFunction('', paginationOptions)
             });
         },
 
@@ -776,13 +668,17 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 }
             });
         },
+        dateOptions: {
+            formatYear: 'yy',
+            startingDay: 1
+        },
         tinymceImageOptions: {
             inline: false,
             menu: [],
             plugins: 'advlist autolink link image charmap print paste table',
             skin: 'lightgray',
             theme: 'modern',
-            'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | pr_formats | bullist numlist outdent indent | link image table",
+            'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table",
             //'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table"[*],
             'valid_elements': "img[*],table[*],tbody[*],td[*],th[*],tr[*],p[*],h1[*],h2[*],h3[*],h4[*],h5[*],h6[*],div[*],ul[*],ol[*],li[*],strong[*],em[*],span[*],blockquote[*],sup[*],sub[*],code[*],pre[*],a[*]",
             //init_instance_callback1: function () {
@@ -1044,120 +940,146 @@ function buildAllowedTagsAndAttributes() {
     return allowed_tags;
 }
 
-var init_cropper = null;
-function a() {
-    'use strict';
-    init_cropper = function (ratio, coordinates) {
-        console.log(coordinates);
-        var $image = $('.img-container > img'),
-            options = {
-                aspectRatio: ratio,
-                crop: function (data) {
-                    console.log(data.x);
-                }
-            };
-        if (coordinates) options.data = coordinates;
-        $image.on({}).cropper(options);
-        $(document.body).on('click', '[data-method]', function () {
-            var data = $(this).data(),
-                $target,
-                result;
-            if (!$image.data('cropper')) {
-                return;
-            }
+function find_and_build_url_for_endpoint(dict, rules) {
+    var found = false;
+    var dict1 = {};
+    $.each(rules, function (ind, rule) {
+        var ret = rule;
+        var prop = null;
+        var dict1 = $.extend({}, dict);
+        for (prop in dict1) {
+            ret = ret.replace('<' + prop + '>', dict[prop]);
+            delete dict1[prop];
+        }
+        if (!ret.match('<[^<]*>')) {
+            found = ret;
+            return false;
+        }
+    });
 
-            if (data.method) {
-                data = $.extend({}, data); // Clone a new one
+    if (found === false) {
+        console.error('Can\'t found flask endpoint for passed dictionary', dict, rules);
+    }
+    else {
+        if (_.size(dict1) > 0) {
+            console.warn("To many parameters passed in dictionary for endpoint rule", dict, rules);
+        }
+        return found;
+    }
+}
 
-                if (typeof data.target !== 'undefined') {
-                    $target = $(data.target);
+var compile_regexps = function (format_properties) {
+    //var rem = format_properties['remove_classes_on_apply'] ?
+    //    RegExp('^' + format_properties['remove_classes_on_apply'] + '$', "i") : false;
+    //console.log(format_properties);
 
-                    if (typeof data.option === 'undefined') {
-                        try {
-                            data.option = JSON.parse($target.val());
-                        } catch (e) {
-                            console.log(e.message);
-                        }
-                    }
-                }
-
-                result = $image.cropper(data.method, data.option);
-                if (data.method === 'getCroppedCanvas') {
-                    $('#getCroppedCanvasModal').modal().find('.modal-body').html(result);
-                }
-
-                if ($.isPlainObject(result) && $target) {
-                    try {
-                        $target.val(JSON.stringify(result));
-                    } catch (e) {
-                        console.log(e.message);
-                    }
-                }
-
-            }
+    var rem = false;
+    if (format_properties['remove_classes_on_apply']) {
+        rem = {};
+        $.each(format_properties['remove_classes_on_apply'], function (del, class_to_rem) {
+            rem[class_to_rem] = RegExp('^' + class_to_rem + '$', "i")
         });
+    }
 
+    var add = false;
+    if (format_properties['add_classes_on_apply']) {
+        add = {};
+        $.each(format_properties['add_classes_on_apply'], function (class_to_add, check_if_not_exust) {
+            add[class_to_add] = RegExp('^' + check_if_not_exust + '$', "i")
+        });
+    }
+    delete format_properties['add_classes_on_apply'];
+    delete format_properties['remove_classes_on_apply'];
+    //console.log({remove: rem, add: add});
+    return {remove: rem, add: add};
+};
 
-        // Import image
-        var $inputImage = $('#inputImage'),
-            URL = window.URL || window.webkitURL,
-            blobURL;
+var add_or_remove_classes = function (element, classes, remove, add) {
 
-        if (URL) {
-            $inputImage.change(function () {
-                var files = this.files,
-                    file;
+    console.log(element, classes, remove, add);
 
-                if (!$image.data('cropper')) {
-                    return;
-                }
-
-                if (files && files.length) {
-                    file = files[0];
-
-                    if (/^image\/\w+$/.test(file.type)) {
-                        blobURL = URL.createObjectURL(file);
-                        $image.one('built.cropper', function () {
-                            URL.revokeObjectURL(blobURL); // Revoke when load complete
-                        }).cropper('reset').cropper('replace', blobURL);
-                        $inputImage.val('');
-                    } else {
-                        showMessage('Please choose an image file.');
-                    }
+    classes.map(function (class_name) {
+        if (add) {
+            $.each(add, function (add_if_not_exist, check_if_exist) {
+                if (check_if_exist && class_name.match(check_if_exist)) {
+                    delete add[add_if_not_exist];
                 }
             });
-        } else {
-            $inputImage.parent().remove();
         }
+    });
 
+    $.each(add, function (add_if_not_exist, check_if_exist) {
+        $(element).addClass(add_if_not_exist);
+    });
 
-        // Options
-        $('.docs-options :checkbox').on('change', function () {
-            var $this = $(this),
-                cropBoxData,
-                canvasData;
-
-            if (!$image.data('cropper')) {
-                return;
-            }
-
-            options[$this.val()] = $this.prop('checked');
-
-            cropBoxData = $image.cropper('getCropBoxData');
-            canvasData = $image.cropper('getCanvasData');
-            options.built = function () {
-                $image.cropper('setCropBoxData', cropBoxData);
-                $image.cropper('setCanvasData', canvasData);
-            };
-
-            $image.cropper('destroy').cropper(options);
+    $.each(remove, function (del, remove_regexp) {
+        classes.map(function (class_name) {
+            if (class_name.match(remove_regexp))
+                $(element).removeClass(class_name);
         });
 
-
-        // Tooltips
-        $('[data-toggle="tooltip"]').tooltip();
-
-    };
-
+    });
 };
-a();
+
+var extract_formats_items_from_group = function (formats_in_group) {
+    var ret = [];
+    $.each(formats_in_group, function (format_name, format) {
+        ret.push(
+            {title: format_name.replace(/.*_(\w+)$/, '$1'), format: format_name});
+    });
+    return ret;
+}
+
+
+var get_complex_menu = function (formats, name, subformats) {
+    var ret = [];
+    $.each(subformats, function (del, group_label) {
+        ret.push({
+            'title': group_label,
+            items: extract_formats_items_from_group(formats[name + '_' + group_label])
+        });
+    });
+    return ret;
+}
+
+var get_array_for_menu_build = function (formats) {
+    var menu = {};
+    menu['foreground'] = [{items: extract_formats_items_from_group(formats['foreground_color'])}];
+    menu['background'] = [{items: extract_formats_items_from_group(formats['background_color'])}];
+    menu['font'] = [{items: extract_formats_items_from_group(formats['font_family'])}];
+    menu['border'] = get_complex_menu(formats, 'border', ['placement', 'type', 'width', 'color']);
+    menu['margin'] = get_complex_menu(formats, 'margin', ['placement', 'size']);
+    menu['padding'] = get_complex_menu(formats, 'padding', ['placement', 'size']);
+
+
+    //menu['background_color'] = {
+    //    'title': 'background',
+    //    'items': extract_formats_items_from_group(formats['background_color'])
+    //};
+    //menu['font_family'] = {'title': 'font', 'items': extract_formats_items_from_group(formats['font_family'])};
+    //
+    //$.each(formats, function (format_group_name, formats_in_group) {
+    //    var ret1 = {'title': format_group_name, 'items': []};
+    //    $.each(formats_in_group, function (format_name, format) {
+    //        ret1['items'].push(
+    //            {title: format_name.replace(/.*_(\w+)$/, '$1'), format: format_name});
+    //    });
+    //    ret.push(ret1);
+    //});
+    return menu;
+};
+
+
+var convert_python_format_to_tinymce_format = function (python_format) {
+
+    if (python_format['remove_classes_on_apply'] || python_format['add_classes_on_apply']) {
+
+        var rem_add = compile_regexps(python_format);
+
+        python_format['onformat'] = function (DOMUtils, element) {
+            var classes = $(element).attr('class');
+            add_or_remove_classes(element, classes ? classes.split(/\s+/) : [], rem_add['remove'], rem_add['add']);
+        }
+    }
+    return python_format;
+};
