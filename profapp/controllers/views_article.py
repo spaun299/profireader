@@ -183,7 +183,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             #                            json['image'].get('coordinates'))
             a = articleVersion.save()
             if article_portal_division_id:
-                a = a.insert_after(json['article_position']['insert_after'], portal_position_filter)
+                a = a.insert_after(json['portal_division']['insert_after'], portal_position_filter)
             a = a.get_client_side_dict(more_fields='long')
             return {'article': a, 'image': json['image'], 'portal_division': portal_division_dict}
 

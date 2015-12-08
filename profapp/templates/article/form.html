@@ -84,42 +84,40 @@
             };
 
             $scope.getData = function (model, deff) {
-                console.log(model, deff);
-                model.article_position.insert_after = model.portal_division.positioned_articles[model.article_position.current].id;
+                console.log(model, deff, model.portal_division.current);
+
+                model.portal_division.insert_after = model.portal_division.positioned_articles[model.portal_division.current].id;
                 return deff(model);
             };
 
-            $scope.setPositioning = function (position_dict, article_id) {
-                if (!position_dict) {
-                    return {min: 0, max: 0, current: 0, all: [], insert_after: null}
+            $scope.setPositioning = function (portal_division, article_id) {
+                if (!portal_division) {
+                    return {min: 0, max: 0, current: 0, positioned_articles: [{id: null, title: '', insert_after: null}], insert_after: null}
                 }
-                if (position_dict.positioned_articles.length && position_dict[0].id != article_id) {
-                    position_dict.positioned_articles.unshift({'id': false, 'title': '', 'position': false});
+                if (portal_division.positioned_articles.length && portal_division.positioned_articles[0].id != article_id) {
+                    portal_division.positioned_articles.unshift({'id': false, 'title': '', 'position': false});
                 }
-                position_dict.positioned_articles.push({'id': null, 'title': '', 'position': null});
+                portal_division.positioned_articles.push({'id': null, 'title': '', 'position': null});
 
-                var current = position_dict.positioned_articles.length - 1;
+                var current = portal_division.positioned_articles.length - 1;
 
-                $.each(position_dict.positioned_articles, function (ind, position) {
+                $.each(portal_division.positioned_articles, function (ind, position) {
                     if (position.id === article_id) {
-                        delete position_dict.positioned_articles[ind];
-                        current = ind - 1;
+                        delete portal_division.positioned_articles[ind];
+{#                        current = ind - 1;#}
                         return false;
                     }
                 });
+{#                console.log(current);#}
 
-                return {
-                    min: 0, max: position_dict.positioned_articles.length - 1,
-                    current: current, all: position_dict,
-                    insert_after: position_dict[current].id
-                }
+                return $.extend(portal_division, {min: 0, max: portal_division.positioned_articles.length - 1,
+                    current: current, insert_after: portal_division.positioned_articles[current].id});
 
             };
 
             $scope.amidLoad = function (resp) {
                 resp.article.publishing_tm = new Date(resp.article.publishing_tm);
-                resp.article_position = {min: 0, max: resp.portal_division.positioned_articles.length + 1, current: 0, insert_before: false};
-                resp.article_position = $scope.setPositioning(resp.portal_division, resp.article.id)
+                resp.portal_division = $scope.setPositioning(resp.portal_division, resp.article.id);
                 return resp;
             };
 
@@ -178,8 +176,8 @@
 
             $scope.articlePositionDontChange = function () {
                 if ($scope.data.portal_division.positioned_articles
-                        && $scope.data.portal_division.positioned_articles[$scope.data.article_position.current] &&
-                        $scope.data.portal_division.positioned_articles[$scope.data.article_position.current].id == $scope.data.article.id) {
+                        && $scope.data.portal_division.positioned_articles[$scope.data.portal_division.current] &&
+                        $scope.data.portal_division.positioned_articles[$scope.data.portal_division.current].id == $scope.data.article.id) {
                     return true;
                 }
 
@@ -187,7 +185,7 @@
             }
 
             $scope.ArticlePositionTitle = function () {
-                var obj = $scope.data.article_position.all[$scope.data.article_position.current];
+                var obj = $scope.data.portal_division.positioned_articles[$scope.data.portal_division.current];
                 if (obj.id === false) return $scope._('Set first in division');
                 if (obj.id === true) return $scope._('Set last in division');
                 if (obj.id === null) return $scope._('Do not use priority. Stay with publishing date');
@@ -340,12 +338,12 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
             <div ng-if="data.article.division" class="update_col1">
                 {{ _('Select publication priority') }}<br/>
 
-                <div style="width: 20em" ui-slider min="{{ data.article_position.min }}"
-                     max="{{ data.article_position.max }}" step="1" ng-model="data.article_position.current"></div>
+                <div style="width: 20em" ui-slider min="{{ data.portal_division.min }}"
+                     max="{{ data.portal_division.max }}" step="1" ng-model="data.portal_division.current"></div>
                 <div class="nowrap">
-                    {{ data.article_position.current }}<br/>
+                    {{ data.portal_division.current }}<br/>
 
-                    <div ng-repeat="ap in data.article_position.all">{{ ap }}</div>
+                    <div ng-repeat="ap in data.portal_division.positioned_articles">{{ ap }}</div>
                     <span>{{ ArticlePositionTitle() }}</span>
                 </div>
 
