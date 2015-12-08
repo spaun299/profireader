@@ -98,9 +98,12 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                         if (model.$modelValue && model.$modelValue.image_file_id) {
                             e['image_file_id'] = model.$modelValue.image_file_id;
                         }
-                        model.$setViewValue(e);
+                        console.log(e);
+                        model.$setViewValue({coordinates: {x: e.x, y: e.y, width: e.width,
+                                                          height: e.height, rotate: e.rotate},
+                                            image_file_id: e.image_file_id});
                     }
-                }
+                };
 
                 if (model) {
                     if (model.$modelValue && model.$modelValue.ratio) options.aspectRatio = model.$modelValue.ratio;
