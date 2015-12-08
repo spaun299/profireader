@@ -100,9 +100,10 @@
 
                 var current = position_dict.positioned_articles.length - 1;
 
-                $.each(position_dict, function (ind, position) {
+                $.each(position_dict.positioned_articles, function (ind, position) {
                     if (position.id === article_id) {
-                        current = ind;
+                        delete position_dict.positioned_articles[ind];
+                        current = ind - 1;
                         return false;
                     }
                 });
