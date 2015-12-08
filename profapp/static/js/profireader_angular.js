@@ -565,7 +565,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             }
 
             try {
-                var ret = scope.$$translate[phrase]['lang']
+                var ret = scope.$$translate[phrase]['lang'];
                 return ret.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
                     var indexes = g1.split('.');
                     var d = dict ? dict : scope;
@@ -588,7 +588,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             pageSize: 50,
             sort: null
         },
-        setGridExtarnals: function (gridApi, externalFunction, paginationOptions) {
+        setGridExtarnals: function (gridApi, externalFunction, paginationOptions, refresh) {
             var scope = this;
             scope.gridApi = gridApi;
             scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {

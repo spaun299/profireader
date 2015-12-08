@@ -228,11 +228,10 @@
                 var file = $scope.uploadFileList[0];
                 $scope.f = file;
                 var url = '/filemanager/send/' + $scope.fileNavigator.getCurrentFolder() + '/';
-                console.log(file.type);
                 file.upload = Upload.upload({
                     url: url,
                     data: $scope.name,
-                    resumeSizeUrl: '/filemanager/resumeopload/',
+                    resumeSizeUrl: '/filemanager/resumeupload/',
                     resumeChunkSize: $scope.chunkSize,
                     ftype: $scope.f.type,
                     upload_file_id: $scope.upload_file_id,

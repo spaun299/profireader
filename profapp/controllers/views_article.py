@@ -41,7 +41,7 @@ def load_mine(json):
     all, companies = ArticleCompany.get_companies_where_user_send_article(g.user_dict['id'])
     add_param = {'value': '1', 'label': 'All'}
     statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    company_list_for_grid = [];
+    company_list_for_grid = []
     b = 1
     companies.sort(key=lambda k: k['name'])
     for cp in companies:
