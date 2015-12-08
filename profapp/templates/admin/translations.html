@@ -22,7 +22,7 @@
             $scope.translations = {};
             $scope.list_select= [];
             $scope.myModal = modal;
-
+            $scope.pos1 = '1';$scope.pos2 = '1';
 
             $scope.update = function(row){
                 $scope.paginationOptions.pageNumber = 1;
@@ -49,28 +49,19 @@
                 reader.readAsText( files[0] );
               };
 
-            $scope.FilteredTemplate = function( row, rowRenderIndex, col, colRenderIndex ) {
-                $scope.paginationOptions.pageNumber = 1;
-                if(!$scope.index1)
-                    $scope.index1 = 0;
-                if( col.filters[0].term && $scope.index1 !== col.filters[0].term){
-                    $scope.template = $scope.list_templates[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_templates[col.filters[0].term - 1]['label'];
+            $scope.Filtered = function( row, rowRenderIndex, col, colRenderIndex) {
+                if (col.filters[0].term){
+                    if($scope.gridOptions1.columnDefs[2].filter['term'] == col.filters[0].term && $scope.pos1 != $scope.gridOptions1.columnDefs[2].filter['term']){
+                        $scope.pos1 = $scope.gridOptions1.columnDefs[2].filter['term'];
+                        $scope.template = $scope.list_templates[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_templates[col.filters[0].term - 1]['label'];
+                    }
+                    if($scope.gridOptions1.columnDefs[3].filter['term'] == col.filters[0].term && $scope.pos2 != $scope.gridOptions1.columnDefs[3].filter['term']){
+                        $scope.pos2 = $scope.gridOptions1.columnDefs[3].filter['term'];
+                        $scope.url = $scope.list_urls[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_urls[col.filters[0].term - 1]['label'];
+                    }
+                    $scope.paginationOptions.pageNumber = 1;
                     $scope.sendData('', $scope.paginationOptions);
-                    $scope.index1 = col.filters[0].term;
-                }else if(!col.filters[0].term){
-                    $scope.refresh()
-                }
-              };
-
-            $scope.FilteredUrls = function( row, rowRenderIndex, col, colRenderIndex ) {
-                $scope.paginationOptions.pageNumber = 1;
-                if(!$scope.index)
-                    $scope.index = 0;
-                if( col.filters[0].term && $scope.index !== col.filters[0].term){
-                    $scope.url = $scope.list_urls[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_urls[col.filters[0].term - 1]['label'];
-                    $scope.sendData('', $scope.paginationOptions);
-                    $scope.index = col.filters[0].term;
-                }else if(!col.filters[0].term){
+                }else{
                     $scope.refresh()
                 }
               };
@@ -222,14 +213,14 @@
                             term: '1',
                             type: uiGridConstants.filter.SELECT,
                             selectOptions: $scope.list_templates },
-                          headerCellClass: $scope.FilteredTemplate
+                          headerCellClass: $scope.Filtered
                       },
                       { field: 'First url used', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,
                           filter: {
                             term: '1',
                             type: uiGridConstants.filter.SELECT,
                             selectOptions: $scope.list_urls },
-                          headerCellClass: $scope.FilteredUrls
+                          headerCellClass: $scope.Filtered
 
                       },
                       { field: 'Phrase', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,
@@ -323,61 +314,14 @@
 
         <div ng-if="!areAllEmpty(translations)">
             <div class="grid" id="grid1" ui-grid-pagination ui-grid-selection ui-grid-edit  ui-grid="gridOptions1" ></div>
-            </div>
-       <a ng-show="load_contr && !areAllEmpty(translations)" class="btn btn-danger" ng-class="{'disabled': ( isSelectedRows === false )}"  style="text-align: center" ng-click="checkdelete(true)" >Delete selected rows</a>
-        <!--<table style="width:100%">-->
-            <!--<tr>-->
-                <!--<th width="8em">Creation time</th>-->
-                <!--<th width="8em">Last accessed</th>-->
-                <!--<th width="8em">Template</th>-->
-                <!--<th width="15em">First url used</th>-->
-                <!--<th width="50%">Phrase</th>-->
-                <!--<th ng-repeat="lang in languages" width="50%">{{ lang }}</th>-->
-                <!--<th></th>-->
-            <!--</tr>-->
-            <!--<tr valign="top">-->
-                <!--<td></td>-->
-                <!--<td></td>-->
-                <!--<td><select ng-disabled="loading" style="width: 8em; padding: 5px;" ng-model="template"-->
-                            <!--ng-options="template.value as template.label for template in templates"></select></td>-->
-                <!--<td><select ng-disabled="loading" style="width: 15em; padding: 5px;" ng-model="url"-->
-                            <!--ng-options="url.value as url.label for url in urls"></select></td>-->
-                <!--<td colspan="{{ languages.length + 1 }}"><input ng-disabled="loading" style="width: 98%" type="text"-->
-                                                                <!--placeholder="Search"-->
-                                                                <!--ng-model="new_search_text"></td>-->
-                <!--<td><input ng-disabled="loading" ng-click="sendData(new_search_text)" type="submit"-->
-                           <!--ng-model="new_search_text"-->
-                           <!--value="{{ loading?'loading...':'search' }}"-->
-                           <!--style="width: 50px"></td>-->
-            <!--</tr>-->
-            <!--<tr ng-repeat="translation in translations" valign="top">-->
-                <!--<td><div style="width: 8em; overflow: hidden">{{ translation.cr_tm }}</div></td>-->
-                <!--<td><div style="width: 8em; overflow: hidden">{{ translation.ac_tm }}</div></td>-->
-                <!--<td><div style="width: 8em; overflow: hidden">{{ translation.template }}</div></td>-->
-                <!--<td><div style="width: 15em; overflow: hidden">{{ translation.url }}</div></td>-->
-                <!--<td>{{ translation.name }}</td>-->
-                <!--<td ng-repeat="lang in languages">-->
-                     <!--<span style="margin: 3px;"-->
-                           <!--onbeforesave="saveTranslation(translation['id'], lang, $data, translation)"-->
-                           <!--editable-text="translation[lang]">{{ translation[lang] }}</span>-->
-                <!--</td>-->
-                <!--<td><button class="btn btn-danger" ng-click="delete(translation.id, translation)">Delete</button><span ng-show="error" style="color: red">{{error}}</span></td>-->
-            <!--</tr>-->
-
-        <!--</table>-->
-        <!--<div ng-show="!loading && !areAllEmpty(translations)">-->
-                <!--<div colspan="5">-->
-                    <!--<div ng-include="'pagination.html'"></div>-->
-                <!--</div>-->
-            <!--</div>-->
+        </div>
+        <a ng-show="load_contr && !areAllEmpty(translations)" class="btn btn-danger" ng-class="{'disabled': ( isSelectedRows === false )}"  style="text-align: center" ng-click="checkdelete(true)" >Delete selected rows</a>
         <div ng-show="!loading && areAllEmpty(translations)" style="float: left; margin-right: 20px; padding-top: 4px">
-                    <h4>No translations</h4>
-                </div>
-            <button ng-click="refresh()" class="btn btn-warning" ng-show="load_contr && areAllEmpty(translations)">Back</button>
-
+            <h4>No translations</h4>
+        </div>
+        <button ng-click="refresh()" class="btn btn-warning" ng-show="load_contr && areAllEmpty(translations)">Back</button>
     </div>
     {% endraw %}
-
 {% endblock portal_content %}
 
 
