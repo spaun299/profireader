@@ -1,5 +1,6 @@
 from flask import render_template, redirect, url_for, request, g, make_response
 from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision
+from profapp.models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
 from profapp.models.portal import PortalDivision
 from .blueprints_declaration import article_bp
 from .request_wrapers import ok
@@ -126,16 +127,10 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         articleVersion = ArticlePortalDivision.get(article_portal_division_id)
         portal_division_id = articleVersion.portal_division_id
 
-
-
-
         article_tags = articleVersion.tags
         article_tag_names = list(map(lambda x: getattr(x, 'name', ''), article_tags))
         available_tags = PortalDivision.get(portal_division_id).portal_division_tags
         available_tag_names = list(map(lambda x: getattr(x, 'name', ''), available_tags))
-
-
-
 
         portal_position_filter = and_(ArticlePortalDivision.portal_division_id == portal_division_id,
                                       ArticlePortalDivision.position != None)
@@ -181,6 +176,24 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             #
             #
             #                            json['image'].get('coordinates'))
+
+            if type(articleVersion) == ArticlePortalDivision:
+                articleVersion.portal_division_tags = []
+                tag_names = json['article']['tags']
+                tags_portal_division_article = []
+                for i in range(len(tag_names)):
+                    tag_portal_division_article = TagPortalDivisionArticle(position=i + 1)
+                    tag_portal_division = \
+                        g.db.query(TagPortalDivision). \
+                            select_from(TagPortalDivision). \
+                            join(Tag). \
+                            filter(TagPortalDivision.portal_division_id == portal_division_id). \
+                            filter(Tag.name == tag_names[i]).one()
+
+                    tag_portal_division_article.tag_portal_division = tag_portal_division
+                    tags_portal_division_article.append(tag_portal_division_article)
+                articleVersion.tag_assoc_select = tags_portal_division_article
+
             a = articleVersion.save()
             if article_portal_division_id:
                 a = a.insert_after(json['portal_division']['insert_after'], portal_position_filter)
