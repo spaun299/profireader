@@ -566,7 +566,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             }
 
             try {
-                var ret = scope.$$translate[phrase]['lang']
+                var ret = scope.$$translate[phrase]['lang'];
                 return ret.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
                     var indexes = g1.split('.');
                     var d = dict ? dict : scope;
@@ -589,21 +589,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             pageSize: 50,
             sort: null
         },
-        //FilteredMat:function(row, rowRenderIndex, col, colRenderIndex, paginationOptions ) {
-        //        console.log(col);
-        //        var scope = this;
-        //        if(!scope.index1)
-        //            scope.index1 = 0;
-        //        if( col.filters[0].term && scope.index1 !== col.filters[0].term){
-        //            scope.status = scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: scope.statuses[col.filters[0].term - 1]['label'];
-        //            scope.paginationOptions.pageNumber = 1;
-        //            scope.sendData('', scope.paginationOptions);
-        //            scope.index1 = col.filters[0].term;
-        //        }else if(!col.filters[0].term){
-        //            scope.refresh()
-        //        }
-        //      },
-        setGridExtarnals: function (gridApi, externalFunction, paginationOptions) {
+        setGridExtarnals: function (gridApi, externalFunction, paginationOptions, refresh) {
             var scope = this;
             scope.gridApi = gridApi;
             scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {

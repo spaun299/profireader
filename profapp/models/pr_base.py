@@ -200,7 +200,6 @@ class Search(Base):
             order = get_order(ord_to_str, desc_asc, ord_to_str)
         else:
             order = get_order('relevance', 'asc', 'relevance')
-        # order = (asc(db(kwargs.get('test').title).filter(kwargs.get('test').id == Search.index)), asc(db(kwargs.get('test2').name).filter(kwargs.get('test2').id == Search.index)))
         subquery_search = subquery_search.order_by(order)
 
         if pagination:
@@ -266,68 +265,31 @@ class PRBase:
     def __init__(self):
         self.query = g.db.query_property()
 
-    def position_order(self, sort_asc=False):
 
-        columns_names = self.__table__.columns._data.keys()
-
-        ret = [expression.asc(self.__class__.position) if sort_asc else expression.desc(self.__class__.position)]
-
-        if 'md_tm' in columns_names:
-            ret.append(
-                expression.asc(self.__class__.md_tm) if sort_asc else expression.desc(self.__class__.md_tm))
-
-        elif 'cr_tm' in columns_names:
-            ret.append(
-                expression.asc(self.__class__.cr_tm) if sort_asc else expression.desc(self.__class__.cr_tm))
-
-        elif 'id' in columns_names:
-            ret.append(
-                expression.asc(self.__class__.id) if sort_asc else expression.desc(self.__class__.id))
-
-        return ret
-        # expression.desc(ArticlePortalDivision.position)
-
-    def also_can_affect_position(self):
-
-        columns_names = self.__table__.columns._data.keys()
-
-        ret = self.__class__.position >= self.position
-
-        if 'md_tm' in columns_names:
-            ret = and_(ret, self.__class__.md_tm >= self.md_tm)
-        elif 'cr_tm' in columns_names:
-            ret = and_(ret, self.__class__.cr_tm >= self.cr_tm)
-        elif 'id' in columns_names:
-            ret = and_(ret, self.__class__.id >= self.id)
-
-        return ret
-
-    # if insert_before_id == True - insert at top
-    # if insert_before_id == False - insert at bottom
-    # if else - insert before given id
-    def insert_before(self, insert_before_id, filter=None):
+    # if insert_after_id == False - insert at top
+    # if insert_after_id == True - insert at bottom
+    # if insert_after_id == Null - set null (element is not positioned)
+    # if else - insert after given id
+    def insert_after(self, insert_after_id, filter=None):
 
         tochange = db(self.__class__)
+
         if filter is not None:
             tochange = tochange.filter(filter)
 
-        if insert_before_id == True:
-            tochange = tochange.order_by(*self.position_order(sort_asc=False)).first()
+        if insert_after_id == False:
+            tochange = tochange.order_by(expression.desc(self.__class__.position)).first()
             self.position = tochange.position + 1 if tochange else 1
-        elif insert_before_id == False:
-            tochange.update({self.c.position: self.c.position + 1})
+        elif insert_after_id == True:
+            tochange.update({self.c.position: self.__class__.position})
             self.position = 1
-        else:
-            insert_before_object = self.get(insert_before_id)
-            tochange = tochange.filter(insert_before_object.also_can_affect_position())
-            utmost = tochange.order_by(*self.position_order(sort_asc=True)).first()
-
-            if utmost:
-                if utmost.position == insert_before_object.position:
-                    tochange.update({'position': self.position + 2})
-                else:
-                    tochange.update({'position': self.position + 1})
-            self.position = insert_before_object.position + 1
+        elif insert_after_id is None:
+            self.position = None
+        elif self.id != insert_after_id:
+            insert_after_object = self.get(insert_after_id)
+            tochange = tochange.filter(self.__class__.position >= insert_after_object.position)
+            tochange.update({'position': self.__class__.position + 1})
+            self.position = insert_after_object.position - 1
 
         return self
 

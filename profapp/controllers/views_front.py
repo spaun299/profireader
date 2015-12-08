@@ -77,12 +77,10 @@ def index(page=1):
                                                              ArticlePortalDivision.status ==
                                                              ARTICLE_STATUS_IN_PORTAL.published),
                                               'return_fields': 'id,title'},
-                                             {'class': Company, 'filter': Company.name.ilike('%'+ 'aa' + '%'), 'return_fields': 'id,name'},
                                              search_text=search_text, page=page,
-                                             order_by=('title', 'name',), pagination=True, desc_asc='desc',
-                                             order_by_join=ArticlePortalDivision, items_per_page=1,
-                                             test=ArticlePortalDivision, test2=Company)
-    ordered_articles = dict()
+                                             order_by=('title', ), pagination=True,
+                                             order_by_join=ArticlePortalDivision)
+    ordered_articles = collections.OrderedDict()
     for a in db(ArticlePortalDivision).filter(
             ArticlePortalDivision.id.in_(articles_id.keys())).all():
         ordered_articles[a.id] = dict(list(a.get_client_side_dict().items()) +

@@ -96,7 +96,7 @@ def load_mine(json):
             'chosen_status': json.get('chosen_status') or statuses[-1],
             'original_chosen_status': original_chosen_status,
             'statuses': statuses,
-            'total': len(articles_with_time)}
+            'total': len(subquery.all())}
 
 
 @article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
@@ -207,3 +207,4 @@ def resubmit_to_company(json, article_company_id):
                         ARTICLE_STATUS_IN_COMPANY.declined)
     a.status = ARTICLE_STATUS_IN_COMPANY.submitted
     return {'article': a.save().get_client_side_dict()}
+
