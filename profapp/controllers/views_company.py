@@ -37,7 +37,10 @@ def search_to_submit_article(json):
 # @check_rights(simple_permissions([]))
 def show():
     return render_template('company/companies.html')
+
+
 from sqlalchemy import and_
+
 
 @company_bp.route('/', methods=['POST'])
 @login_required
@@ -68,6 +71,7 @@ def materials(company_id):
         company_logo=company_logo
     )
 
+
 @company_bp.route('/materials/<string:company_id>/', methods=['POST'])
 @login_required
 @ok
@@ -85,9 +89,9 @@ def materials_load(json, company_id):
 
     if json.get('grid_data')['new_status']:
         ArticleCompany.update_article(
-        company_id=company_id,
-        article_id=json.get('article_id'),
-        **{'status': json.get('grid_data')['new_status']})
+            company_id=company_id,
+            article_id=json.get('article_id'),
+            **{'status': json.get('grid_data')['new_status']})
     subquery = ArticleCompany.subquery_company_articles(search_text=search_text,
                                                         company_id=company_id,
                                                         portal_id=json.get('portal_id'),
@@ -141,12 +145,12 @@ def load_material_details(json, company_id, article_id):
                           for articles in article.portal_article
                           if articles.division.portal.id in portals}
 
-    article = article.get_client_side_dict(fields = 'id, title,short, cr_tm, md_tm, '
-                              'company_id, status, long,'
-                              'editor_user_id, company.name|id,'
-                              'portal_article.id, portal_article.division.name, '
-                              'portal_article.division.portal.name,'
-                              'portal_article.status')
+    article = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+                                                  'company_id, status, long,'
+                                                  'editor_user_id, company.name|id,'
+                                                  'portal_article.id, portal_article.division.name, '
+                                                  'portal_article.division.portal.name,'
+                                                  'portal_article.status')
 
     user_rights = list(g.user.user_rights_in_company(company_id))
 
