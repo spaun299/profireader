@@ -53,32 +53,32 @@
                 return deff(model);
             };
 
-            $scope.amidLoad = function (resp) {
-                resp.article.publishing_tm = new Date(resp.article.publishing_tm);
-
-
-                if (resp.portal_division.positioned_articles.length && resp.portal_division.positioned_articles[0].id != resp.article.id) {
-                    resp.portal_division.positioned_articles.unshift({'id': false, 'title': '', 'position': false});
+            $scope.setPositioning = function (position_dict, article_id) {
+                if (position_dict.length && position_dict[0].id != article_id) {
+                    position_dict.unshift({'id': false, 'title': '', 'position': false});
                 }
+                position_dict.push({'id': null, 'title': '', 'position': null});
 
-                resp.portal_division.positioned_articles.push({'id': null, 'title': '', 'position': null});
+                var current = position_dict.length - 1;
 
-                var current = resp.portal_division.positioned_articles.length - 1;
-
-                $.each(resp.portal_division.positioned_articles, function (ind, position) {
-                    if (position.id === resp.article.id) {
+                $.each(position_dict, function (ind, position) {
+                    if (position.id === article_id) {
                         current = ind;
                         return false;
                     }
                 });
 
-                resp.article_position = {
-                    min: 0,
-                    max: resp.portal_division.positioned_articles.length - 1,
-                    current: current,
-                    all: resp.portal_division.positioned_articles,
-                    insert_after: resp.portal_division.positioned_articles[current].id
+                return {
+                    min: 0, max: position_dict.length - 1,
+                    current: current, all: position_dict,
+                    insert_after: position_dict[current].id
                 }
+
+            };
+
+            $scope.amidLoad = function (resp) {
+                resp.article.publishing_tm = new Date(resp.article.publishing_tm);
+                resp.article_position  = $scope.setPositioning(resp.portal_division.positioned_articles, resp.article.id)
                 return resp;
             };
 

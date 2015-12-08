@@ -166,7 +166,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             if article_portal_division_id:
                 a = a.insert_after(json['article_position']['insert_after'], portal_position_filter)
             a = a.get_client_side_dict(more_fields='long')
-            return {'article': a, 'image': json['image']}
+            return {'article': a, 'image': json['image'], 'portal_division': portal_division_dict}
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
