@@ -7,7 +7,7 @@ from utils.db_utils import db
 from .company import Company
 from .pr_base import PRBase, Base
 import re
-from .tag import TagPortalDivision
+from .tag import TagPortalDivision, Tag
 from sqlalchemy import event
 from ..constants.SEARCH import RELEVANCE
 import itertools
