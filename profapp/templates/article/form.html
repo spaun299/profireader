@@ -54,12 +54,15 @@
             };
 
             $scope.setPositioning = function (position_dict, article_id) {
-                if (position_dict.length && position_dict[0].id != article_id) {
-                    position_dict.unshift({'id': false, 'title': '', 'position': false});
+                if (!position_dict) {
+                    return {min: 0, max: 0, current: 0, all: [], insert_after: null}
                 }
-                position_dict.push({'id': null, 'title': '', 'position': null});
+                if (position_dict.positioned_articles.length && position_dict[0].id != article_id) {
+                    position_dict.positioned_articles.unshift({'id': false, 'title': '', 'position': false});
+                }
+                position_dict.positioned_articles.push({'id': null, 'title': '', 'position': null});
 
-                var current = position_dict.length - 1;
+                var current = position_dict.positioned_articles.length - 1;
 
                 $.each(position_dict, function (ind, position) {
                     if (position.id === article_id) {
@@ -69,7 +72,7 @@
                 });
 
                 return {
-                    min: 0, max: position_dict.length - 1,
+                    min: 0, max: position_dict.positioned_articles.length - 1,
                     current: current, all: position_dict,
                     insert_after: position_dict[current].id
                 }
@@ -78,7 +81,7 @@
 
             $scope.amidLoad = function (resp) {
                 resp.article.publishing_tm = new Date(resp.article.publishing_tm);
-                resp.article_position  = $scope.setPositioning(resp.portal_division.positioned_articles, resp.article.id)
+                resp.article_position = $scope.setPositioning(resp.portal_division, resp.article.id)
                 return resp;
             };
 
@@ -106,7 +109,7 @@
                             object(). // convert each [key, val] pair to {key: val} element
                             value(); // get result
 
-            var custom_formats_menu = get_array_for_menu_build(custom_formats);
+            var custom_formats_menu = _.size(custom_formats) ? get_array_for_menu_build(custom_formats) : [];
 
             $scope.tinymceImageOptions['pr_formats'] = custom_formats_menu;
 
