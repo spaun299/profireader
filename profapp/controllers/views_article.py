@@ -41,7 +41,7 @@ def load_mine(json):
     all, companies = ArticleCompany.get_companies_where_user_send_article(g.user_dict['id'])
     add_param = {'value': '1', 'label': 'All'}
     statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    company_list_for_grid = []
+    company_list_for_grid = [];
     b = 1
     companies.sort(key=lambda k: k['name'])
     for cp in companies:
@@ -124,11 +124,11 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
     elif article_portal_division_id:  # updating portal version
         articleVersion = ArticlePortalDivision.get(article_portal_division_id)
         portal_position_filter = and_(ArticlePortalDivision.portal_division_id == articleVersion.portal_division_id,
-                                      ArticlePortalDivision.position != None)
+                                      ArticlePortalDivision.position > 0)
         portal_division_dict = {'positioned_articles':
                                     [pda.get_client_side_dict(fields='id|position|title') for pda in
                                      db(ArticlePortalDivision).filter(portal_position_filter).
-                                         order_by(expression.desc(ArticlePortalDivision.position)).all()]
+                                         order_by(*articleVersion.position_order()).all()]
                                 }
 
     else:  # creating personal version
@@ -164,7 +164,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             #                            json['image'].get('coordinates'))
             a = articleVersion.save()
             if article_portal_division_id:
-                a = a.insert_after(json['article_position']['insert_after'], portal_position_filter)
+                a = a.insert_before(json['article_position']['insert_before'], portal_position_filter)
             a = a.get_client_side_dict(more_fields='long')
             return {'article': a, 'image': json['image'], 'portal_division': portal_division_dict}
 
@@ -207,3 +207,4 @@ def resubmit_to_company(json, article_company_id):
                         ARTICLE_STATUS_IN_COMPANY.declined)
     a.status = ARTICLE_STATUS_IN_COMPANY.submitted
     return {'article': a.save().get_client_side_dict()}
+

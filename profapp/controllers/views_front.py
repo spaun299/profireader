@@ -70,15 +70,17 @@ def index(page=1):
     search_text, portal, _ = get_params()
     division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                       portal_division_type_id='index').one()
-    order = Search.ORDER_MD_TM if not search_text else Search.ORDER_RELEVANCE
+    order = Search.ORDER_TEXT if not search_text else Search.ORDER_RELEVANCE
     articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
                                               'filter': and_(ArticlePortalDivision.
                                                              portal_division_id == division.id,
                                                              ArticlePortalDivision.status ==
-                                                             ARTICLE_STATUS_IN_PORTAL.published)},
+                                                             ARTICLE_STATUS_IN_PORTAL.published),
+                                              'return_fields': 'id,title'},
                                              search_text=search_text, page=page,
-                                             order_by=order, pagination=True)
-    ordered_articles = dict()
+                                             order_by=('title', ), pagination=True,
+                                             order_by_join=ArticlePortalDivision)
+    ordered_articles = collections.OrderedDict()
     for a in db(ArticlePortalDivision).filter(
             ArticlePortalDivision.id.in_(articles_id.keys())).all():
         ordered_articles[a.id] = dict(list(a.get_client_side_dict().items()) +
