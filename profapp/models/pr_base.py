@@ -64,15 +64,17 @@ class Search(Base):
     @staticmethod
     def search(*args, **kwargs):
         """ *args: dictionary with following values -
-                             class = sqlalchemy table class object,
-                optional:    filter: sqlalchemy filter with your own parameters,
-                optional:    fields: (tuple ot list) with fields name from table Search.kind,
-                optional:    return_fields: String. If return_fields provided,
+                             -class = sqlalchemy table class object,
+                optional:    -filter: sqlalchemy filter with your own parameters,
+                optional:    -fields: (tuple ot list) with fields name from table Search.kind
+                             , if provided and search_text is not None, this function will look
+                             for search text only in this fields.
+                optional:    -return_fields: String. If return_fields provided,
                              this function return dictionary with fields you want, else return id's.
                              example: "name,country,region"
                 if you want to pass one fieldname you almost should make tuple
                 or list. example: ('title', ):
-                optional:    join: subquery wich you want to join without filters.
+                optional:    -join: subquery wich you want to join without filters.
             For example: {'class': Company,
                           'filter': ~db(User, company_id=1).exists(),
                           'join': Article,
@@ -82,16 +84,32 @@ class Search(Base):
                       'join': class,
                       'fields': all_fields}
             ** kwargs optional
-            **kwargs: search_text = string text for search,
-                      pagination = boolean, default False
+            **kwargs: -search_text = string text for search,
+                      -pagination = boolean, default False
                       , if True this func return n numbers elements which produce in pagination
-                      page = integer current page for pagination,
-                      items_per_page = integer items per page for pagination
+                      -page = integer current page for pagination,
+                      -items_per_page = integer items per page for pagination
                       , default Config.ITEMS_PER_PAGE,
-                      order_by = string (with field for which you want sort) or integer: text
-                      , relevance, md_tm default=relevance (USE CONSTANTS IN SEARCH CLASS)
-                      desc_asc = desc or asc default = desc,
-                       :return id's objects or objects which you want, all pages for pagination
+                      -order_by = (string, integer, tuple or list)
+                      ,string :(with field for which you want sort)
+                      ,integer: (text, relevance, md_tm default=relevance)
+                      (USE CONSTANTS IN SEARCH CLASS)
+                      ,tuple or list: multiple fields which you want to use. For example:
+                      if you have multiple args and different fields you want to sort in
+                      , you can use list:
+                      example:
+                      {'class': Company,
+                       'filter': ~db(User, company_id=1).exists(),
+                       'join': Article,
+                       'fields': (tuple) with fields name in table Search.kind},
+                       {'class': ArticlePortalDivision,
+                        'filter' and_(ArticlePortalDivision.portal_division_id == division.id,
+                                      ArticlePortalDivision.status ==
+                                      ARTICLE_STATUS_IN_PORTAL.published)},
+                        order_by = ('name', 'title', ). Because class Company does not have 'title'
+                        field, and class ArticlePortalDivision does not have 'name' field.
+                      -desc_asc = sort by desc or asc default = desc,
+                      :return id's objects or objects which you want, all pages for pagination
                        and current page """
         page = kwargs.get('page') or 1
         items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
