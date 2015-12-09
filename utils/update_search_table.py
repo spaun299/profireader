@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../../profireader')
 from profapp.models.articles import Article, ArticleCompany, ArticleCompanyHistory, \
     ArticlePortalDivision
 from profapp.models.company import Company, UserCompany
