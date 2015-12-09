@@ -110,16 +110,16 @@ class Search(Base):
                                       ARTICLE_STATUS_IN_PORTAL.published)},
                         order_by = ('name', 'title', ). Because class Company does not have 'title'
                         field, and class ArticlePortalDivision does not have 'name' field.
-                      -desc_asc = sort by desc or asc default = asc,
+                      -desc_asc = sort by desc or asc default = desc,
                       :return id's objects or objects which you want, all pages for pagination
                        and current page """
         page = kwargs.get('page') or 1
         items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
         page -= 1
         search_params = []
-        order_by_to_str = {1: 'relevance', 2: 'text', 3: 'md_tm'}
+        order_by_to_str = {1: 'relevance', 2: 'position', 3: 'md_tm'}
         pagination = kwargs.get('pagination') or False
-        desc_asc = kwargs.get('desc_asc') or 'asc'
+        desc_asc = kwargs.get('desc_asc') or 'desc'
         pages = None
         search_text = kwargs.get('search_text') or ''
         return_objects = True if [arg.get('return_fields') for arg in args][0] else False
@@ -153,8 +153,8 @@ class Search(Base):
             print(message)
             raise errors.BadDataProvided({'message': message})
 
-        def get_order(order_name, order_value, field):
-            order_name += '+' if order_value == 'desc' else '-'
+        def get_order(order_name, desc_asc, field):
+            order_name += '+' if desc_asc == 'desc' else '-'
             result = {'text+': lambda field_name: desc(
                 func.max(getattr(Search, field_name, Search.text))),
                       'text-': lambda field_name: asc(func.max(
@@ -167,9 +167,9 @@ class Search(Base):
                           getattr(Search, field_name, Search.relevance))),
                       'relevance-': lambda field_name: asc(func.sum(
                           getattr(Search, field_name, Search.relevance))),
-                      'position+': lambda field_name: desc(func.min(
+                      'position+': lambda field_name: desc(func.max(
                           getattr(Search, field_name, Search.position))),
-                      'position-': lambda field_name: asc(func.min(
+                      'position-': lambda field_name: asc(func.max(
                           getattr(Search, field_name, Search.position)))
                       }[order_name](field)
             return result
@@ -191,12 +191,12 @@ class Search(Base):
             search_params.append(and_(Search.index == db(cls['class'].id).filter(
                 filter_params).subquery().c.id, Search.text.ilike(
                 "%" + search_text + "%"), Search.table_name == cls['class'].__tablename__,
-                                      Search.kind.in_(fields)), )
+                Search.kind.in_(fields)), )
         subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
                              func.min(Search.table_name).label('table_name'),
                              func.min(Search.md_tm).label('md_tm'),
-                             func.min(Search.position).label('position'),
+                             func.max(Search.position).label('position'),
                              func.max(Search.text).label('text')).filter(
             or_(*search_params)).group_by(Search.index)
         if type(kwargs.get('order_by')) in (str, list, tuple):
@@ -205,12 +205,13 @@ class Search(Base):
         elif type(kwargs.get('order_by')) == int:
             ord_to_str = order_by_to_str[kwargs['order_by']]
             order = get_order(ord_to_str, desc_asc, ord_to_str)
-            if ord_to_str == 'position':
-                order = order, get_order('md_tm', desc_asc, 'md_tm')
         else:
-            order = get_order('relevance', 'asc', 'relevance')
-        subquery_search = subquery_search.order_by(order)
-
+            order = get_order('relevance', desc_asc, 'relevance')
+        if 'position' in str(order):
+            subquery_search = subquery_search.order_by(order).order_by(
+                get_order('md_tm', 'asc', 'md_tm'))
+        else:
+            subquery_search = subquery_search.order_by(order)
         if pagination:
             pages = math.ceil(subquery_search.count() / items_per_page)
             if items_per_page:
