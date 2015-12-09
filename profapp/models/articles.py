@@ -165,6 +165,22 @@ class ArticlePortalDivision(Base, PRBase):
             sub_query = sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
         return sub_query
 
+    def manage_article_tags(self, new_tags):
+        # self.portal_division_tags = []
+        tags_portal_division_article = []
+        for i in range(len(new_tags)):
+            tag_portal_division_article = TagPortalDivisionArticle(position=i + 1)
+            tag_portal_division = \
+                g.db.query(TagPortalDivision). \
+                    select_from(TagPortalDivision). \
+                    join(Tag). \
+                    filter(TagPortalDivision.portal_division_id == self.portal_division_id). \
+                    filter(Tag.name == new_tags[i]).one()
+            tag_portal_division_article.tag_portal_division = tag_portal_division
+            tags_portal_division_article.append(tag_portal_division_article)
+        self.tag_assoc_select = tags_portal_division_article
+
+
 
 class ArticleCompany(Base, PRBase):
     __tablename__ = 'article_company'
