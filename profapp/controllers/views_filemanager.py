@@ -50,7 +50,7 @@ def filemanager():
     file_manager_on_action = jsonmodule.loads(
         request.args['file_manager_on_action']) if 'file_manager_on_action' in request.args else {}
     file_manager_default_action = request.args[
-        'file_manager_default_action'] if 'file_manager_default_action' in request.args else ''
+        'file_manager_default_action'] if 'file_manager_default_action' in request.args else 'download'
 
     err = True if len(library) == 0 else False
     return render_template('filemanager.html', library=library, err=err,

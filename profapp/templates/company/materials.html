@@ -113,6 +113,7 @@
                       { name: 'Material status', enableSorting: false, //editableCellTemplate: $scope.editableTemplate,
                           //editDropdownValueLabel: 'value',
                           //cellTemplate: $scope.selectRowTemplate,
+                          enableCellEdit: false,
                           enableColumnMenu: false,
                           filter: {
                             term: '1',
@@ -130,7 +131,7 @@
     <div ng-init="sendData('', paginationOptions)" ng-controller="article_list">
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
         <div ng-if="load_contr">
-        <div ng-show="!areAllEmpty(datas.grid_data)" class="grid" id="grid1" ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
+        <div ng-show="!areAllEmpty(datas.grid_data)" class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
         <div ng-show="!loading && areAllEmpty(datas.grid_data)">{{ _('No materials') }}</div>
         <button ng-click="refresh()" ng-show="!loading && areAllEmpty(datas.grid_data)" class="btn btn-warning" >Back</button>
     </div>
