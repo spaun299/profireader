@@ -141,7 +141,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
 
     if action == 'load':
-        article_dict = articleVersion.get_client_side_dict(more_fields='long')
+        article_dict = articleVersion.get_client_side_dict(more_fields='long|company')
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
                       'image_file_id': article_dict['image_file_id']}
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
@@ -170,8 +170,8 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             #                            json['image'].get('coordinates'))
 
             if article_portal_division_id:
-                articleVersion.insert_after(json['portal_division']['insert_after'], articleVersion.position_unique_filter()).save()
-            return {'article': articleVersion.get_client_side_dict(more_fields='long'), 'image': json['image'],
+                articleVersion.insert_after(json['portal_division']['insert_after'], articleVersion.position_unique_filter())
+            return {'article': articleVersion.save().get_client_side_dict(more_fields='long'), 'image': json['image'],
                     'portal_division': portal_division_dict(articleVersion)}
 
 
