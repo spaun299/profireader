@@ -1,4 +1,3 @@
-# from db_init import g.db, Base
 from ..constants.TABLE_TYPES import TABLE_TYPES
 from sqlalchemy import Table, Column, Integer, Text, ForeignKey, String, Boolean, or_, and_, text, desc, asc, join
 from sqlalchemy.orm import relationship, backref, make_transient, class_mapper, aliased
@@ -109,8 +108,8 @@ class Search(Base):
                         order_by = ('name', 'title', ). Because class Company does not have 'title'
                         field, and class ArticlePortalDivision does not have 'name' field.
                       -desc_asc = sort by desc or asc default = asc,
-                      :return id's objects or dict with fields which you want, all pages for
-                      pagination and current page """
+                      :return id's objects or objects which you want, all pages for pagination
+                       and current page """
         page = kwargs.get('page') or 1
         items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
         page -= 1
@@ -154,7 +153,7 @@ class Search(Base):
         def get_order(order_name, order_value, field):
             order_name += '+' if order_value == 'desc' else '-'
             result = {'text+': lambda field_name: desc(
-                      func.max(getattr(Search, field_name, Search.text))),
+                func.max(getattr(Search, field_name, Search.text))),
                       'text-': lambda field_name: asc(func.max(
                           getattr(Search, field_name, Search.text))),
                       'md_tm+': lambda field_name: desc(func.min(
@@ -178,14 +177,14 @@ class Search(Base):
         for cls in args:
             filter_params = cls.get('filter')
             fields = cls.get('fields') or \
-                [key for key in vars(cls['class']).keys() if key[0] != '_']
+                     [key for key in vars(cls['class']).keys() if key[0] != '_']
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
             search_params.append(and_(Search.index == db(cls['class'].id).filter(
                 filter_params).subquery().c.id, Search.text.ilike(
                 "%" + search_text + "%"), Search.table_name == cls['class'].__tablename__,
-                Search.kind.in_(fields)), )
+                                      Search.kind.in_(fields)), )
         subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
                              func.min(Search.table_name).label('table_name'),
@@ -265,6 +264,8 @@ class PRBase:
     def __init__(self):
         self.query = g.db.query_property()
 
+    def position_unique_filter(self):
+        return self.__class__.position != None
 
     # if insert_after_id == False - insert at top
     # if insert_after_id == True - insert at bottom
@@ -278,18 +279,36 @@ class PRBase:
             tochange = tochange.filter(filter)
 
         if insert_after_id == False:
-            tochange = tochange.order_by(expression.desc(self.__class__.position)).first()
-            self.position = tochange.position + 1 if tochange else 1
+            oldtop = tochange.order_by(expression.desc(self.__class__.position)).first()
+            if oldtop and (oldtop.id != self.id):
+                self.position = None
+                self.save()
+                self.position = oldtop.position + 1
+            elif not oldtop:
+                self.position = None
+                self.save()
+                self.position = 1
         elif insert_after_id == True:
-            tochange.update({self.c.position: self.__class__.position})
-            self.position = 1
+            oldbottom = tochange.order_by(expression.asc(self.__class__.position)).first()
+            if oldbottom and (oldbottom.id != self.id):
+                self.position = None
+                self.save()
+                tochange.update({'position': self.__class__.position + 1})
+                self.position = 1
+            elif not oldbottom:
+                self.position = None
+                self.save()
+                self.position = 1
         elif insert_after_id is None:
             self.position = None
         elif self.id != insert_after_id:
             insert_after_object = self.get(insert_after_id)
-            tochange = tochange.filter(self.__class__.position >= insert_after_object.position)
-            tochange.update({'position': self.__class__.position + 1})
-            self.position = insert_after_object.position - 1
+            if self.position != insert_after_object.position - 1:
+                self.position = None
+                self.save()
+                tochange = tochange.filter(self.__class__.position >= insert_after_object.position)
+                tochange.update({'position': self.__class__.position + 1})
+                self.position = insert_after_object.position - 1
 
         return self
 
@@ -484,18 +503,17 @@ class PRBase:
     def update_search_table(mapper, connection, target):
 
         if hasattr(target, 'search_fields'):
-            options = {'processing': lambda text: MLStripper().strip_tags(text)}
-            for field in target.search_fields:
-                field_options = target.search_fields[field]
-                field_options.update({key: options[key] for key in options
-                                      if key not in field_options.keys()})
-                db(Search, index=target.id, kind=field).update(
-                    {'text': field_options['processing'](str(getattr(target, field)))})
+            if PRBase.delete_from_search(mapper, connection, target):
+                PRBase.add_to_search(mapper, connection, target)
+            else:
+                PRBase.add_to_search(mapper, connection, target)
 
     @staticmethod
     def delete_from_search(mapper, connection, target):
         if hasattr(target, 'search_fields') and db(Search, index=target.id).count():
             db(Search, index=target.id).delete()
+            return True
+        return False
 
     @classmethod
     def __declare_last__(cls):
