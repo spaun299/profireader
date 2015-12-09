@@ -233,7 +233,7 @@ def load_portal_id(app):
     from profapp.models.portal import Portal
 
     def func():
-        g.portal_id = g.db.query(Portal.id).filter_by(host=app.config['SERVER_NAME']).one()[0]
+        g.portal_id = g.db.query(Portal.id).filter_by(host=request.host).one()[0]
         # g.portal_id = db_session_func(app.config['SQLALCHEMY_DATABASE_URI']).\
         #             query(Portal.id).filter_by(host=app.config['SERVER_NAME']).one()[0]
 
@@ -424,12 +424,11 @@ login_manager.anonymous_user = AnonymousUser
 
 
 def create_app(config='config.ProductionDevelopmentConfig',
-               front='n',
-               host='localhost'):
+               front='n'):
     app = Flask(__name__)
 
     app.config.from_object(config)
-    app.config['SERVER_NAME'] = host
+    # app.config['SERVER_NAME'] = host
 
     babel = Babel(app)
 
