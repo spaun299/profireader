@@ -296,17 +296,22 @@
                 return found;
             };
             $scope.isDisable = function (actionname, len, type) {
+                var style;
                 if (actionname === 'paste' && ($scope.copy_file_id != '' || $scope.cut_file_id != '') && type === 'parent') {
-                    return ''
+                    style = ''
                 } else if (($scope.copy_file_id == '' && $scope.cut_file_id == '') && len < 2) {
-                    return 'cursor: default;pointer-events: none;color: gainsboro;'
+                    style = 'cursor: default;pointer-events: none;color: gainsboro;'
                 } else if ((actionname !== 'paste' && ($scope.copy_file_id != '' || $scope.cut_file_id != '')) && len < 2 || type === 'parent') {
-                    return 'cursor: default;pointer-events: none;color: gainsboro;'
+                    style = 'cursor: default;pointer-events: none;color: gainsboro;'
                 } else if (actionname === 'paste' && ($scope.copy_file_id == '' && $scope.cut_file_id == '')) {
-                    return 'cursor: default;pointer-events: none;color: gainsboro;'
+                    style = 'cursor: default;pointer-events: none;color: gainsboro;'
                 } else {
-                    return ''
+                    style = ''
                 }
+                if($scope.file_manager_default_action === actionname){
+                    style += 'font-weight: bold;color:black'
+                }
+                return style
             };
 
             $scope.isModal = function (actionname) {
@@ -316,12 +321,15 @@
             };
 
             $scope.glyph = function (actionname) {
+                console.log(actionname)
                 if (actionname == 'rename') {
                     return 'edit'
                 } else if (actionname == 'cut') {
                     return 'scissors'
                 } else if (actionname == 'properties') {
                     return 'wrench'
+                }else if(actionname == 'choose'){
+                    return 'hand-up'
                 } else {
                     return actionname
                 }

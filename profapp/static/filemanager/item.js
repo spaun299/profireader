@@ -156,7 +156,6 @@
                 }).error(function(data) {
                     self.error = data.result && data.result.error ?
                         data.result.error:
-
                     typeof error === 'function' && error(data);
                 })['finally'](function() {
                     self.inprocess = false;
