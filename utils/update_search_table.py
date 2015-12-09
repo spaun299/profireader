@@ -3,7 +3,10 @@ from profapp.models.articles import Article, ArticleCompany, ArticleCompanyHisto
 from profapp.models.company import Company, UserCompany
 from profapp.models.files import File, FileContent
 from profapp.models.users import User
-from sqlalchemy import create_engine
+from profapp.models.pr_base import MLStripper
+from sqlalchemy import create_engine, event
+from profapp.models.pr_base import Search
+from profapp.constants.SEARCH import RELEVANCE
 import re
 from sqlalchemy.orm import scoped_session, sessionmaker
 from config import ProductionDevelopmentConfig
@@ -13,6 +16,40 @@ engine = create_engine(ProductionDevelopmentConfig.SQLALCHEMY_DATABASE_URI)
 db_session = scoped_session(sessionmaker(autocommit=False,
                                          autoflush=False,
                                          bind=engine))
+
+def add_to_search(target=None):
+    if hasattr(target, 'search_fields'):
+        target_fields = ','.join(target.search_fields.keys())
+        target_dict = target.get_client_side_dict(fields=target_fields + ',id')
+        options = {'relevance': lambda field_name: getattr(RELEVANCE, field_name),
+                   'processing': lambda text: MLStripper().strip_tags(text),
+                   'index': lambda target_id: target_id}
+        for field in target_fields.split(','):
+            field_options = target.search_fields[field]
+            field_options.update({key: options[key] for key in options
+                                 if key not in field_options.keys()})
+            db_session.add(Search(index=field_options['index'](target_dict['id']),
+                                  table_name=target.__tablename__,
+                                  relevance=field_options['relevance'](field), kind=field,
+                                  text=field_options['processing'](str(target_dict[field]))))
+
+def update_search_table(target=None):
+
+    if hasattr(target, 'search_fields'):
+        if delete_from_search(target):
+            add_to_search(target)
+        else:
+            add_to_search(target)
+
+
+def delete_from_search(target):
+    if hasattr(target, 'search_fields') and \
+            db_session.query(Search).filter_by(index=target.id).count():
+        db_session.query(Search).filter_by(index=target.id).delete()
+        return True
+    return False
+
+
 if __name__ == '__main__':
     for cls in classes:
         variables = vars(cls).copy()
@@ -29,8 +66,10 @@ if __name__ == '__main__':
                         for c in db_session.query(cls).all():
                             original_field = getattr(c, stripped_key)
                             modify_field = original_field + ' '
-                            print(modify_field)
+                            print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+                            update_search_table(target=c)
+                            print('ssssssssssssssssssssssssssssssssssss')
+                        break
                 except Exception as e:
-                    pass
-                    # print(e.__repr__())
+                    print(e.__repr__())
     db_session.commit()

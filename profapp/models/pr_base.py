@@ -482,7 +482,7 @@ class PRBase:
     #         raise errors.ValidationException(ret)
 
     @staticmethod
-    def add_to_search(mapper, connection, target):
+    def add_to_search(mapper=None, connection=None, target=None):
 
         if hasattr(target, 'search_fields'):
             target_fields = ','.join(target.search_fields.keys())
@@ -500,7 +500,7 @@ class PRBase:
                                 text=field_options['processing'](str(target_dict[field]))))
 
     @staticmethod
-    def update_search_table(mapper, connection, target):
+    def update_search_table(mapper=None, connection=None, target=None):
 
         if hasattr(target, 'search_fields'):
             if PRBase.delete_from_search(mapper, connection, target):
