@@ -68,9 +68,6 @@ class TagPortalDivision(Base, PRBase):
                                 nullable=False)
 
     UniqueConstraint('tag_id', 'portal_division_id', name='uc_tag_id_portal_division_id')
-    # UniqueConstraint('position', 'portal_division_id', name='uc_position_portal_division_id')
-    # there is an additional constraint implemented in DB via trigger:
-    # tag position have to be unique within portal.
 
     tag = relationship('Tag', back_populates='portal_divisions_assoc')
     portal_division = relationship('PortalDivision', back_populates='tags_assoc')
@@ -113,14 +110,10 @@ class TagPortalDivisionArticle(Base, PRBase):
                       nullable=False)
 
     # article_portal_division = relationship('ArticlePortalDivision', backref=backref('tag_assoc', lazy='dynamic'))
-    article_portal_division_select = relationship('ArticlePortalDivision',
-                                                  back_populates='tag_assoc_select')
-    tag_portal_division = relationship('TagPortalDivision',
-                                       backref=backref('article_assoc', lazy='dynamic'))
+    article_portal_division_select = relationship('ArticlePortalDivision', back_populates='tag_assoc_select')
+    tag_portal_division = relationship('TagPortalDivision', cascade='save-update, merge')
 #     TODO: many to (many to many)...
-    UniqueConstraint('article_portal_division_id',
-                     'tag_portal_division_id',
-                     name='uc_article_tag_id')
+    UniqueConstraint('article_portal_division_id', 'tag_portal_division_id', name='uc_article_tag_id')
 
     def __init__(self, article_portal_division_id=None, tag_portal_division_id=None, position=None):
         super(TagPortalDivisionArticle, self).__init__()
