@@ -605,7 +605,7 @@ def submit_to_portal(json):
 
     article = ArticleCompany.get(json['article']['id'])
     portal_division_id = json['selected_division']
-    article_portal = article.clone_for_portal(portal_division_id, json['tags'])
+    article_portal = article.clone_for_portal(portal_division_id)
     article.save()
     portal = article_portal.get_article_owner_portal(portal_division_id=portal_division_id)
     json['article'] = article_portal.get_client_side_dict(fields=
