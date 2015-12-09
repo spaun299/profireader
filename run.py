@@ -8,8 +8,8 @@ if __name__ == '__main__':
     parser.add_argument("--front", help="frontend", default='n')
     args = parser.parse_args()
 
-    app = create_app(front=args.front)
+    app = create_app()
 
     #app.run(host='127.40.71.198', port=8080)  #app.run(debug=True)
-    app.run(host='0.0.0.0', port=80, debug=True)  #app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)  #app.run(debug=True)
     #app.run()
