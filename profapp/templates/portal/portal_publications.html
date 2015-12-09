@@ -17,7 +17,10 @@
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
-            $scope.pos1 = '1';$scope.pos2 = '1';
+            $scope.pos = {
+                'Company': '1',
+                'Publication status': '1'
+            };
 
             $scope.update = function(){
                 $scope.paginationOptions.pageNumber = 1;
@@ -33,26 +36,19 @@
                 $scope.sendData('', $scope.paginationOptions);
             };
 
-            $scope.Filtered = function( row, rowRenderIndex, col, colRenderIndex) {
-                if (col.filters[0].term){
-                    $scope.paginationOptions.pageNumber = 1;
-                    if($scope.gridOptions1.columnDefs[2].filter['term'] == col.filters[0].term && $scope.pos1 != $scope.gridOptions1.columnDefs[2].filter['term']){
-                        $scope.pos1 = $scope.gridOptions1.columnDefs[2].filter['term'];
-                        $scope.company_id = $scope.companies[col.filters[0].term - 1]['label'] === 'All'? undefined: $scope.companies[col.filters[0].term - 1]['id'];
-                        $scope.sendData('', $scope.paginationOptions);
-                    }
-                    if($scope.gridOptions1.columnDefs[3].filter['term'] == col.filters[0].term && $scope.pos2 != $scope.gridOptions1.columnDefs[3].filter['term']){
-                        $scope.pos2 = $scope.gridOptions1.columnDefs[3].filter['term'];
-                        $scope.status = $scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.statuses[col.filters[0].term - 1]['label'];
-                        $scope.sendData('', $scope.paginationOptions);
-                    }
-                }else{
-                    $scope.refresh()
+            $scope.getFilter = function(col, term){
+                $scope.paginationOptions.pageNumber = 1;
+                if(col === 'Company'){
+                    $scope.company_id = $scope.companies[term - 1]['label'] === 'All'? undefined: $scope.companies[term - 1]['id'];
+                }else if (col === 'Publication status'){
+                    $scope.status = $scope.statuses[term - 1]['label'] === '-- all --'? undefined: $scope.statuses[term - 1]['label'];
                 }
-              };
+                $scope.sendData('', $scope.paginationOptions);
+            };
 
             $scope.sendData = function (new_search_text, paginationOptions) {
                 var data = {};
+                console.log($scope.list_filter);
                 $scope.loading = true;
                 data.article_id = $scope.article_id ? $scope.article_id : null;
                 data.company_id = ($scope.company_id !== ' ') ? $scope.company_id : null;
@@ -96,16 +92,16 @@
                       { name: 'Company', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
                           filter: {
                             term: '1',
-                            type: uiGridConstants.filter.SELECT},
-                          headerCellClass: $scope.Filtered
+                            type: uiGridConstants.filter.SELECT}
 
                       },
-                      { name: 'Publication status', enableSorting: false, cellClass:'blue', editableCellTemplate: '<div class = "ui_dropdown"><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',editDropdownValueLabel: 'value',
+                      { name: 'Publication status', enableSorting: false, cellClass:'blue', editableCellTemplate: $scope.editableTemplate,
+                          editDropdownValueLabel: 'value',
+                          cellTemplate: $scope.selectRowTemplate,
                           enableColumnMenu: false,
                           filter: {
                             term: '1',
-                            type: uiGridConstants.filter.SELECT},
-                          headerCellClass: $scope.Filtered
+                            type: uiGridConstants.filter.SELECT}
                       }
 
                     ],

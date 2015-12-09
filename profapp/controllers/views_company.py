@@ -81,7 +81,6 @@ def materials_load(json, company_id):
         if company.logo_file_id else '/static/images/company_no_logo.png'
     page = json.get('grid_data')['page'] or 1
     search_text = json.get('grid_data')['search_text']
-
     params = {}
     params['status'] = json.get('grid_data')['status'] if json.get('grid_data')['status'] else None
     params['publ_status'] = json.get('grid_data')['publ_status'] if json.get('grid_data')['publ_status'] else None
@@ -97,18 +96,18 @@ def materials_load(json, company_id):
                                                         portal_id=json.get('portal_id'),
                                                         **params)
     articles, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('grid_data')['pageSize'])
-    add_param = {'value': '1','label': '-- all --'}
 
+    add_param = {'value': '1','label': '-- all --'}
     statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
     portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id), add_param, True)
     gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
-
     grid_data = Article.getListGridDataMaterials(articles)
+
     return {'grid_data': grid_data,
             'portals': portals_g,
             'statuses': statuses_g,
             'publ_statuses': gr_publ_st,
-            'total': len(subquery.all())
+            'total': subquery.count()
             }
 
 @company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['GET'])
