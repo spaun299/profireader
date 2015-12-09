@@ -540,7 +540,7 @@ def publications_load(json, company_id):
     return {'grid_data': grid_data,
             'companies': comp_grid,
             'statuses': statuses_grid,
-            'total': len(subquery.all())}
+            'total': subquery.count()}
 
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])

@@ -96,7 +96,7 @@ def load_mine(json):
             'chosen_status': json.get('chosen_status') or statuses[-1],
             'original_chosen_status': original_chosen_status,
             'statuses': statuses,
-            'total': len(subquery.all())}
+            'total': subquery.count()}
 
 
 @article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
@@ -117,7 +117,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
     action = g.req('action', allowed=['load', 'validate', 'save'])
 
     def portal_division_dict(article):
-        if article.portal_division_id is None:
+        if (not hasattr(article, 'portal_division_id')) or (article.portal_division_id is None):
             return {'positioned_articles': []}
         else:
             filter = article.position_unique_filter()
@@ -213,3 +213,4 @@ def resubmit_to_company(json, article_company_id):
                         ARTICLE_STATUS_IN_COMPANY.declined)
     a.status = ARTICLE_STATUS_IN_COMPANY.submitted
     return {'article': a.save().get_client_side_dict()}
+
