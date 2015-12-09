@@ -117,7 +117,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
     action = g.req('action', allowed=['load', 'validate', 'save'])
 
     def portal_division_dict(article):
-        if article.portal_division_id is None:
+        if (not hasattr(article, 'portal_division_id')) or (article.portal_division_id is None):
             return {'positioned_articles': []}
         else:
             filter = article.position_unique_filter()
@@ -142,18 +142,17 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
     if action == 'load':
         article_dict = articleVersion.get_client_side_dict(more_fields='long')
-        image_dict = {}
+        image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
+                      'image_file_id': article_dict['image_file_id']}
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
         # TODO: VK by OZ: this code should be moved to model
-        try:
-            if article_dict.get('image_file_id'):
-                image_file_id, coordinates = ImageCroped. \
-                    get_coordinates_and_original_img(article_dict.get('image_file_id'))
-                image_dict.update(coordinates)
-                image_dict['image_file_id'] = image_file_id
-        except Exception as e:
-            pass
-        return {'article': article_dict, 'image': image_dict, 'portal_division': portal_division_dict}
+        # try:
+        #     if article_dict.get('image_file_id'):
+        #         image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
+        #             get_coordinates_and_original_img(article_dict.get('image_file_id'))
+        # except Exception as e:
+        #     pass
+        return {'article': article_dict, 'image': image_dict, 'portal_division': portal_division_dict(articleVersion)}
     else:
         parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
 
@@ -164,14 +163,16 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         else:
             image_id = parameters['image'].get('image_file_id')
             # TODO: VK by OZ: this code dont work if ArticlePortalDivision updated
-            if image_id:
-                del parameters['image']['image_file_id']
-                articleVersion.image_file_id = crop_image(image_id, parameters['image'])
-            a = articleVersion.save()
+            # if image_id:
+            #     articleVersion.image_file_id = crop_image(image_id,
+            #
+            #
+            #                            json['image'].get('coordinates'))
+
             if article_portal_division_id:
-                a = a.insert_after(json['portal_division']['insert_after'], portal_position_filter)
-            a = a.get_client_side_dict(more_fields='long')
-            return {'article': a, 'image': parameters['image'], 'portal_division': portal_division_dict}
+                articleVersion.insert_after(json['portal_division']['insert_after'], articleVersion.position_unique_filter()).save()
+            return {'article': articleVersion.get_client_side_dict(more_fields='long'), 'image': json['image'],
+                    'portal_division': portal_division_dict(articleVersion)}
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
