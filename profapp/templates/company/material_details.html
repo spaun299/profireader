@@ -32,9 +32,18 @@
                 })
             };
 
-            $scope.saveData =function(data, tags){
 
-                data['tags'] = tags;
+{#            $scope.saveData =function(data, tags){#}
+{#                data['tags'] = tags;#}
+{#                $ok($scope.url_submit_to_portal,#}
+{#                        data,#}
+{#                        function (resp) {#}
+{#                            $scope.data = resp;#}
+{#                            $scope.data_resp_portal = resp.portal;#}
+{#                        }#}
+{#                );#}
+{#            };#}
+            $scope.saveData =function(data){
                 $ok($scope.url_submit_to_portal,
                         data,
                         function (resp) {
@@ -66,8 +75,8 @@
                 default_after_load(resp);
             };
 
-            $scope.tagsObject = {};
-            $scope.tagsObject.tags = [];
+{#            $scope.tagsObject = {};#}
+{#            $scope.tagsObject.tags = [];#}
 
             $scope.porals_divisions = function (portals) {
                 var divisions = {};
@@ -209,7 +218,8 @@
                         <!--<input ng-click="$af.save(data)" type="submit"
                         ng-disabled="!$af.isActionAllowed(data, 'save')"
                         value="Publish"> -->
-                        <input ng-click="saveData(data, tagsObject.tags)" type="submit" ng-disabled="!data.selected_division[0]" value="{{_('Publish')}}">
+                        <!-- <input ng-click="saveData(data, tagsObject.tags)" type="submit" ng-disabled="!data.selected_division[0]" value="{{_('Publish')}}"> -->
+                        <input ng-click="saveData(data)" type="submit" ng-disabled="!data.selected_division[0]" value="{{_('Publish')}}">
                     </span>
 
 

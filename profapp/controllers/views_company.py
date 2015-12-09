@@ -37,7 +37,10 @@ def search_to_submit_article(json):
 # @check_rights(simple_permissions([]))
 def show():
     return render_template('company/companies.html')
+
+
 from sqlalchemy import and_
+
 
 @company_bp.route('/', methods=['POST'])
 @login_required
@@ -68,6 +71,7 @@ def materials(company_id):
         company_logo=company_logo
     )
 
+
 @company_bp.route('/materials/<string:company_id>/', methods=['POST'])
 @login_required
 @ok
@@ -77,7 +81,6 @@ def materials_load(json, company_id):
         if company.logo_file_id else '/static/images/company_no_logo.png'
     page = json.get('grid_data')['page'] or 1
     search_text = json.get('grid_data')['search_text']
-
     params = {}
     params['status'] = json.get('grid_data')['status'] if json.get('grid_data')['status'] else None
     params['publ_status'] = json.get('grid_data')['publ_status'] if json.get('grid_data')['publ_status'] else None
@@ -85,21 +88,21 @@ def materials_load(json, company_id):
 
     if json.get('grid_data')['new_status']:
         ArticleCompany.update_article(
-        company_id=company_id,
-        article_id=json.get('article_id'),
-        **{'status': json.get('grid_data')['new_status']})
+            company_id=company_id,
+            article_id=json.get('article_id'),
+            **{'status': json.get('grid_data')['new_status']})
     subquery = ArticleCompany.subquery_company_articles(search_text=search_text,
                                                         company_id=company_id,
                                                         portal_id=json.get('portal_id'),
                                                         **params)
     articles, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('grid_data')['pageSize'])
-    add_param = {'value': '1','label': '-- all --'}
 
+    add_param = {'value': '1','label': '-- all --'}
     statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
     portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id), add_param, True)
     gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
-
     grid_data = Article.getListGridDataMaterials(articles)
+
     return {'grid_data': grid_data,
             'portals': portals_g,
             'statuses': statuses_g,
@@ -141,12 +144,12 @@ def load_material_details(json, company_id, article_id):
                           for articles in article.portal_article
                           if articles.division.portal.id in portals}
 
-    article = article.get_client_side_dict(fields = 'id, title,short, cr_tm, md_tm, '
-                              'company_id, status, long,'
-                              'editor_user_id, company.name|id,'
-                              'portal_article.id, portal_article.division.name, '
-                              'portal_article.division.portal.name,'
-                              'portal_article.status')
+    article = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+                                                  'company_id, status, long,'
+                                                  'editor_user_id, company.name|id,'
+                                                  'portal_article.id, portal_article.division.name, '
+                                                  'portal_article.division.portal.name,'
+                                                  'portal_article.status')
 
     user_rights = list(g.user.user_rights_in_company(company_id))
 

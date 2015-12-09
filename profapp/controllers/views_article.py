@@ -116,20 +116,26 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                      article_portal_division_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
 
-    portal_division_dict = None
+    def portal_division_dict(article):
+        if article.portal_division_id is None:
+            return {'positioned_articles': []}
+        else:
+            filter = article.position_unique_filter()
+            return {'positioned_articles':
+                        [pda.get_client_side_dict(fields='id|position|title') for pda in
+                         db(ArticlePortalDivision).filter(filter).
+                             order_by(expression.desc(ArticlePortalDivision.position)).all()]
+                    }
+
     if article_company_id:  # companys version. always updating existing
         articleVersion = ArticleCompany.get(article_company_id)
     elif mine_version_article_company_id:  # updating personal version
         articleVersion = ArticleCompany.get(mine_version_article_company_id)
     elif article_portal_division_id:  # updating portal version
         articleVersion = ArticlePortalDivision.get(article_portal_division_id)
-        portal_position_filter = and_(ArticlePortalDivision.portal_division_id == articleVersion.portal_division_id,
-                                      ArticlePortalDivision.position > 0)
-        portal_division_dict = {'positioned_articles':
-                                    [pda.get_client_side_dict(fields='id|position|title') for pda in
-                                     db(ArticlePortalDivision).filter(portal_position_filter).
-                                         order_by(*articleVersion.position_order()).all()]
-                                }
+
+
+
 
     else:  # creating personal version
         articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
@@ -140,13 +146,13 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                       'image_file_id': article_dict['image_file_id']}
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
         # TODO: VK by OZ: this code should be moved to model
-        try:
-            if article_dict.get('image_file_id'):
-                image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
-                    get_coordinates_and_original_img(article_dict.get('image_file_id'))
-        except Exception as e:
-            pass
-        return {'article': article_dict, 'image': image_dict, 'portal_division': portal_division_dict}
+        # try:
+        #     if article_dict.get('image_file_id'):
+        #         image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
+        #             get_coordinates_and_original_img(article_dict.get('image_file_id'))
+        # except Exception as e:
+        #     pass
+        return {'article': article_dict, 'image': image_dict, 'portal_division': portal_division_dict(articleVersion)}
     else:
         parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
 
@@ -162,11 +168,11 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             #
             #
             #                            json['image'].get('coordinates'))
-            a = articleVersion.save()
+
             if article_portal_division_id:
-                a = a.insert_before(json['article_position']['insert_before'], portal_position_filter)
-            a = a.get_client_side_dict(more_fields='long')
-            return {'article': a, 'image': json['image']}
+                articleVersion.insert_after(json['portal_division']['insert_after'], articleVersion.position_unique_filter()).save()
+            return {'article': articleVersion.get_client_side_dict(more_fields='long'), 'image': json['image'],
+                    'portal_division': portal_division_dict(articleVersion)}
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])

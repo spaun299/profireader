@@ -36037,15 +36037,15 @@
                 menu: formatMenu
             });
 
-            console.log(formatMenu);
-
             if (editor.settings['pr_formats']) {
                 $.each(editor.settings['pr_formats'], function (button_name, menu) {
-                    console.log(menu);
-                    var custom_menu = createFormatMenu(menu);
-                    console.log(custom_menu)
+
                     if (menu.length === 1) {
-                        custom_menu = custom_menu['items'][0]['menu']
+                        var custom_menu = createFormatMenu(menu[0]['items']);
+                        custom_menu = custom_menu;
+                    }
+                    else {
+                        var custom_menu = createFormatMenu(menu);
                     }
 
                     editor.addButton(button_name, {

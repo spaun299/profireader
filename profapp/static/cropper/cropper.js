@@ -236,7 +236,6 @@
         bustCacheUrl = addTimestamp(url); // Bust cache (#148)
       }
     }
-
     // IE8 compatibility: Don't use "$().attr()" to set "src"
     this.$clone = $clone = $('<img' + (crossOrigin || '') + ' src="' + (bustCacheUrl || url) + '">');
 

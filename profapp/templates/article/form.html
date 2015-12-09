@@ -2,15 +2,52 @@
 
 {% block title %}{{ _('Create article') }}{% endblock title %}
 
+{% block styles %}
+    {{ super() }}
+    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.css"> -->
+    <!-- ui-select files -->
+    <link rel="stylesheet" href="/static/css/select.css">
+
+        <!-- Select2 theme -->
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
+
+    <!--
+      Selectize theme
+      Less versions are available at https://github.com/brianreavis/selectize.js/tree/master/dist/less
+    -->
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.default.css">
+    <!-- <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.bootstrap2.css"> -->
+    <!-- <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.bootstrap3.css"> -->
+
+    <link rel="stylesheet" href="/static/css/andriy.css">
+{%- endblock styles %}
+
 {% block portal_content %}
     {#TODO: VH by OZ remove below line#}
     {% from 'macros.html' import scripts %}
     {{ scripts(names=['croper']) }}
 
+    <!--
+      IE8 support, see AngularJS Internet Explorer Compatibility http://docs.angularjs.org/guide/ie
+      For Firefox 3.6, you will also need to include jQuery and ECMAScript 5 shim
+    -->
+    <!--[if lt IE 9]>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/es5-shim/2.2.0/es5-shim.js"></script>
+    <script>
+        document.createElement('ui-select');
+        document.createElement('ui-select-match');
+        document.createElement('ui-select-choices');
+    </script>
+    <![endif]-->
+
+
+
     <script>
         module.controller('article_edit', ['$scope', '$modal', '$af', '$ok', function ($scope, $modal, $af, $ok) {
             $scope.$af = $af;
-            $scope.details_article = {{ raw_url_for('article.details')|safe }};
+            {#            $scope.details_article = {{ raw_url_for('article.details')|safe }};#}
+            {#            $scope.details_publication_portal = {{ raw_url_for('portal.publication_details')|safe }};#}
             {% if article_company_id %}
                 $scope.save_article = '{{ url_for('article.load_form_create', article_company_id = article_company_id)|safe }}';
             {% else %}
@@ -20,9 +57,18 @@
             $scope.data = {};
 
             $scope.$$translate = {{ translates('article_edit')|safe }};
-            $scope.amidSave = function (resp) {
-                window.location.href = $scope.details_article({article_id: resp['article']['id']});
-                add_message('article was created', 'info', 5000);
+
+            $scope.afterSave = function (resp) {
+                {#                window.location.href = {}#}
+                {#                {% if  article_portal_division_id %}#}
+                {#                    window.location.href = $scope.details_publication_portal({article_id: resp['article']['id'], company_id: resp['article']['company_id']});#}
+                {#                {% else %}#}
+                {#                    window.location.href = $scope.details_article({article_id: resp['article']['id']});#}
+                {#                {% endif %}#}
+                $scope.data.article.publishing_tm = new Date(resp.article.publishing_tm);
+                $scope.data.portal_division = $scope.setPositioning(resp.portal_division, resp.article.id);
+
+                add_message('article was saved', 'info', 5000);
 
             };
 
@@ -38,22 +84,64 @@
                     return 'update version of article at portal `%(data.article.portal.name)s` in division `%(data.article.division.name)s`';
                 }
                 return false;
-            }
+            };
 
             $scope.getData = function (model, deff) {
-                console.log(model, deff);
-                if (model.article_position.current === 0)
-                    model.article_position.insert_before = none;
-                else if (model.article_position.current === model.portal_division['positioned_articles'].length + 1)
-                    model.article_position.insert_before = true;
-                else
-                    model.article_position.insert_before = model.portal_division.positioned_articles[model.article_position.current - 1].id;
+                console.log(model, deff, model.portal_division.current);
+
+                model.portal_division.insert_after = model.portal_division.positioned_articles[model.portal_division.current].id;
                 return deff(model);
+            };
+
+            $scope.setPositioning = function (portal_division, article_id) {
+                console.log(portal_division, article_id);
+
+                if (!portal_division) {
+                    return {
+                        min: 0,
+                        max: 0,
+                        current: 0,
+                        positioned_articles: [{id: null, title: '', insert_after: null}],
+                        insert_after: null
+                    }
+                }
+
+                portal_division.positioned_articles.unshift({'id': false, 'title': '', 'position': false});
+
+                var current = null;
+
+
+                var removeindex = false;
+                $.each(portal_division.positioned_articles, function (ind, positioned) {
+                    if (positioned.id === article_id) {
+                        removeindex = ind;
+                        return false;
+                    }
+                });
+
+                if (removeindex !== false) {
+                    current = removeindex - 1;
+                    portal_division.positioned_articles.splice(removeindex, 1);
+
+                }
+
+                portal_division.positioned_articles.push({'id': null, 'title': '', 'position': null});
+                if (current === null) {
+                    current = portal_division.positioned_articles.length -1;
+                }
+
+                console.log('current = ', current);
+
+                return $.extend(portal_division, {
+                    min: 0, max: portal_division.positioned_articles.length - 1,
+                    current: current, insert_after: portal_division.positioned_articles[current].id
+                });
+
             };
 
             $scope.amidLoad = function (resp) {
                 resp.article.publishing_tm = new Date(resp.article.publishing_tm);
-                resp.article_position = {min: 0, max: resp.portal_division.positioned_articles.length + 1, current: 0, insert_before: false}
+                resp.portal_division = $scope.setPositioning(resp.portal_division, resp.article.id);
                 return resp;
             };
 
@@ -63,7 +151,7 @@
 
             {% if  article_portal_division_id %}
                 var custom_formats = {{ tinymce_format_groups('birdy')|tojson }};
-                console.log(custom_formats);
+                console.log('custom_formats', custom_formats);
                 $scope.tinymceImageOptions['toolbar2'] = 'foreground | background | font | border | margin | padding';
             {% else %}
                 var custom_formats = {};
@@ -81,7 +169,9 @@
                             object(). // convert each [key, val] pair to {key: val} element
                             value(); // get result
 
-            var custom_formats_menu = get_array_for_menu_build(custom_formats);
+            console.log('$scope.tinymceImageOptions["formats"]', $scope.tinymceImageOptions['formats']);
+
+            var custom_formats_menu = _.size(custom_formats) ? get_array_for_menu_build(custom_formats) : [];
 
             $scope.tinymceImageOptions['pr_formats'] = custom_formats_menu;
 
@@ -110,7 +200,128 @@
                 $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')");
             };
 
+            $scope.articlePositionDontChange = function () {
+                if ($scope.data.portal_division.positioned_articles
+                        && $scope.data.portal_division.positioned_articles[$scope.data.portal_division.current] &&
+                        $scope.data.portal_division.positioned_articles[$scope.data.portal_division.current].id == $scope.data.article.id) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            $scope.ArticlePositionTitle = function () {
+                var obj = $scope.data.portal_division.positioned_articles[$scope.data.portal_division.current];
+                if (obj.id === false) return $scope._('Set first in division');
+                if (obj.id === true) return $scope._('Set last in division');
+                if (obj.id === null) return $scope._('Do not use priority. Stay with publishing date');
+                if (obj.id === $scope.data.article.id) {
+                    return $scope._('Dont change priority');
+                }
+                return $scope._('Show this article just after `%(title)s`', obj);
+
+            }
+{#            $scope.saveData =function(data, tags){#}
+{#                data['tags'] = tags;#}
+{#                $ok($scope.url_submit_to_portal,#}
+{#                        data,#}
+{#                        function (resp) {#}
+{#                            $scope.data = resp;#}
+{#                            $scope.data_resp_portal = resp.portal;#}
+{#                        }#}
+{#                );#}
+{#            };#}
+
         }]);
+
+/**
+ * AngularJS default filter with the following expression:
+ * "tag in tags | filter: {name: $select.search, age: $select.search}"
+ * performs a AND between 'name: $select.search' and 'age: $select.search'.
+ * We want to perform a OR.
+ */
+module.filter('propsFilter', function() {
+    return function(items, props) {
+        var out = [];
+
+        if (angular.isArray(items)) {
+            items.forEach(function(item) {
+                var itemMatches = false;
+
+                var keys = Object.keys(props);
+                for (var i = 0; i < keys.length; i++) {
+                    var prop = keys[i];
+                    var text = props[prop].toLowerCase();
+                    if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                        itemMatches = true;
+                        break;
+                    }
+                }
+
+                if (itemMatches) {
+                    out.push(item);
+                }
+            });
+        } else {
+            // Let the output be the input untouched
+            out = items;
+        }
+
+        return out;
+    };
+});
+
+
+module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, $http, $ok) {
+
+    $scope.disabled = undefined;
+    $scope.searchEnabled = undefined;
+    $scope.selected_portal_to_unpublish = '';
+{#    $scope.url_get_tags = {{ raw_url_for('company.get_tags')|safe }};#}
+    $scope.$$translate = {{ translates('SelectTagsCtrl')|safe }};
+{#    $scope.$watch("data.selected_division", function(newValue, oldValue) {#}
+{#        if ($scope.data && (newValue !== oldValue)){#}
+{#            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));#}
+{#		    res.success(function(data, status, headers, config) {#}
+{#                $scope.tagsObject.tags = [];#}
+{#                $scope.availableTags = data.data.availableTags;#}
+{#		    });#}
+{#		    res.error(function(data, status, headers, config) {#}
+{#			    alert( "failure message: " + JSON.stringify({data: data}));#}
+{#		    });#}
+{#        }#}
+{#    });#}
+
+    $scope.getData = function () {
+        $scope.loading = true;
+    };
+
+    $scope.respData = function () {
+        $scope.loading = false;
+        return true;
+    };
+
+    $scope.enable = function() {
+        $scope.disabled = false;
+    };
+
+    $scope.disable = function() {
+        $scope.disabled = true;
+    };
+
+    $scope.enableSearch = function() {
+        $scope.searchEnabled = true;
+    };
+
+    $scope.disableSearch = function() {
+        $scope.searchEnabled = false;
+    };
+
+    $scope.availableTags = [];
+    $scope.selectedTags = [];
+
+}]);
+
 
     </script>
 
@@ -119,7 +330,7 @@
 
         <h1 class="nice-title">{{ _(getTitle()) }}<span></span></h1>
 
-        <div af af-amid-load="amidLoad" af-amid-save="amidSave" af-before-save="getData"
+        <div af af-amid-load="amidLoad" af-after-save="afterSave" af-before-save="getData"
              af-beforeValidate="getData" af-watch="data.article" ng-model="data">
 
             <div class="update_col1">
@@ -152,13 +363,11 @@
 
             <div ng-if="data.article.division" class="update_col1">
                 {{ _('Select publication priority') }}<br/>
-                <div style="width: 20em" ui-slider min="{{ data.article_position.min }}"
-                     max="{{ data.article_position.max }}" step="1" ng-model="data.article_position.current"></div>
+
+                <div style="width: 20em" ui-slider min="{{ data.portal_division.min }}"
+                     max="{{ data.portal_division.max }}" step="1" ng-model="data.portal_division.current"></div>
                 <div class="nowrap">
-                <span ng-if="data.article_position.current == 0 ">{{ _('Do not use priority. Stay with publishing date') }}</span>
-                <span ng-if="data.article_position.current == data.article_position.max ">{{ _('Show first in division') }}</span>
-                <span ng-if="data.article_position.current > 0 && data.article_position.current < data.article_position.max">
-                    {{ _('Show this article just before `%(title)s`', {title: data.portal_division.positioned_articles[data.article_position.current - 1].title}) }}</span>
+                    <span>{{ ArticlePositionTitle() }}</span>
                 </div>
 
             </div>
@@ -178,9 +387,20 @@
             <div ng-if="data.article.division" class="update_col1">
                 we have division ({{ data.article.division.name }} - {{ data.article.division.id }})<br/>
                 so tags goes here<br/>
-                TAG TAG TAG!
-            </div>
 
+                <div ng-if="0" ng-controller="SelectTagsCtrl">
+                    <h3>{{_('Article tags:')}}</h3>
+                    <!-- <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;"> -->
+                    <ui-select multiple ng-model="data['article'].tags" theme="select2" ng-disabled="disabled" style="width: 300px;">
+                        <ui-select-match placeholder="Select tags...">{{$item}}</ui-select-match>
+                        <ui-select-choices repeat="tag in data['portal_division']['availableTags'] | filter:$select.search">
+                            {{ tag }}
+                        </ui-select-choices>
+                    </ui-select>
+                    <!-- <p>Selected: {{tagsObject.tags}}</p> -->
+                </div>
+
+            </div>
 
             <div class="update_col1">
                 <input class="create_button"
