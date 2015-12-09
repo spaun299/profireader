@@ -52,9 +52,7 @@ class TranslateTemplate(Base, PRBase):
             phrase = phrase[2:]
             template = '__GLOBAL'
 
-
         exist = db(TranslateTemplate, template=template, name=phrase).first()
-
 
         lang = TranslateTemplate.languages[0]
         if g.user_dict['lang'] in TranslateTemplate.languages:
@@ -63,13 +61,17 @@ class TranslateTemplate(Base, PRBase):
         if exist:
             if current_app.config['DEBUG']:
                 # TODO: OZ by OZ change ac without changing md (md changed by trigger)
-                # exist.ac_tm = None
-                exist.save()
-        else:
+                i = datetime.datetime.now()
+                if exist.ac_tm:
+                    if i.timestamp()-exist.ac_tm.timestamp() > 86400:
+                        print(i.timestamp()-exist.ac_tm.timestamp())
+                        exist.updates({'ac_tm': i})
+                else:
+                    exist.updates({'ac_tm': i})
 
+        else:
             exist = TranslateTemplate(template=template, name=phrase,
                                       url=url, **{l: phrase for l in TranslateTemplate.languages}).save()
-
         return getattr(exist, lang)
 
     @staticmethod
