@@ -423,17 +423,8 @@ class AnonymousUser(AnonymousUserMixin):
 login_manager.anonymous_user = AnonymousUser
 
 
-def create_app(config='config.ProductionDevelopmentConfig'):
+def create_app(config='config.ProductionDevelopmentConfig', front='y'):
     app = Flask(__name__)
-
-    hostname = request.hostname
-
-    if hostname == 'file001.profireader.com':
-        front = 'f'
-    if hostname == 'profireader.com':
-        front = 'n'
-    else:
-        front = 'y'
 
     app.config.from_object(config)
     # app.config['SERVER_NAME'] = host
