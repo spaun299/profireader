@@ -72,10 +72,11 @@ def index(page=1):
                                                       portal_division_type_id='index').one()
     order = Search.ORDER_TEXT if not search_text else Search.ORDER_RELEVANCE
     articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
-                                              'filter': and_(ArticlePortalDivision.
-                                                             portal_division_id == division.id,
-                                                             ArticlePortalDivision.status ==
-                                                             ARTICLE_STATUS_IN_PORTAL.published),
+                                              'filter':
+                                                  and_(ArticlePortalDivision.portal_division_id.in_(
+                                                      db(PortalDivision.id, portal_id=portal.id)),
+                                                      ArticlePortalDivision.status ==
+                                                      ARTICLE_STATUS_IN_PORTAL.published),
                                               'return_fields': 'id,title'},
                                              search_text=search_text, page=page,
                                              order_by=('title', ), pagination=True,
