@@ -48,6 +48,8 @@
             $scope.$af = $af;
             {#            $scope.details_article = {{ raw_url_for('article.details')|safe }};#}
             {#            $scope.details_publication_portal = {{ raw_url_for('portal.publication_details')|safe }};#}
+            $scope.update_created_article = {{ raw_url_for('article.article_show_form')|safe }};
+
             {% if article_company_id %}
                 $scope.save_article = '{{ url_for('article.load_form_create', article_company_id = article_company_id)|safe }}';
             {% else %}
@@ -58,17 +60,20 @@
 
             $scope.$$translate = {{ translates('article_edit')|safe }};
 
-            $scope.afterSave = function (resp) {
+            $scope.amidSave = function (resp) {
                 {#                window.location.href = {}#}
                 {#                {% if  article_portal_division_id %}#}
                 {#                    window.location.href = $scope.details_publication_portal({article_id: resp['article']['id'], company_id: resp['article']['company_id']});#}
                 {#                {% else %}#}
                 {#                    window.location.href = $scope.details_article({article_id: resp['article']['id']});#}
                 {#                {% endif %}#}
-                $scope.data.article.publishing_tm = new Date(resp.article.publishing_tm);
-                $scope.data.portal_division = $scope.setPositioning(resp.portal_division, resp.article.id);
+                if (!$scope.data.article.id && resp.article.id ) {
+                    window.location.href = $scope.update_created_article({article_company_id: resp.article.id});
+                    }
+{#                $scope.data.article.publishing_tm = new Date(resp.article.publishing_tm);#}
+{#                $scope.data.portal_division = $scope.setPositioning(resp.portal_division, resp.article.id);#}
 
-                add_message('article was saved', 'info', 5000);
+                add_message('article was saved', 'info', 3000);
 
             };
 
@@ -79,7 +84,7 @@
             $scope.getTitle = function () {
                 if ($scope.data && $scope.data.article) {
                     if (!$scope.data.article.id)  return 'Create new article';
-                    if (!$scope.data.article.company) return 'update your version of article';
+                    if (!$scope.data.article.company_id) return 'update your version of article';
                     if (!$scope.data.article.division) return 'update version of article for company `%(data.article.company.name)s`';
                     return 'update version of article at portal `%(data.article.portal.name)s` in division `%(data.article.division.name)s`';
                 }
@@ -187,6 +192,7 @@
 
 
             $scope.articleImageSelected = function (item) {
+                console.log($scope.data.image, item.id)
                 $scope.data.image.image_file_id = item.id;
                 closeFileManager();
             };
@@ -330,7 +336,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
 
         <h1 class="nice-title">{{ _(getTitle()) }}<span></span></h1>
 
-        <div af af-amid-load="amidLoad" af-after-save="afterSave" af-before-save="getData"
+        <div af af-amid-load="amidLoad" af-amid-save="amidSave" af-before-save="getData"
              af-beforeValidate="getData" af-watch="data.article" ng-model="data">
 
             <div class="update_col1">

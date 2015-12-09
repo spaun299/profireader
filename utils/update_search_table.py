@@ -30,10 +30,13 @@ def add_to_search(target=None):
             field_options = target.search_fields[field]
             field_options.update({key: options[key] for key in options
                                  if key not in field_options.keys()})
+            pos = getattr(target, 'position', 0)
+            position = pos if pos else 0
             db_session.add(Search(index=field_options['index'](target_dict['id']),
                                   table_name=target.__tablename__,
                                   relevance=field_options['relevance'](field), kind=field,
-                                  text=field_options['processing'](str(target_dict[field]))))
+                                  text=field_options['processing'](str(target_dict[field])),
+                                  position=position))
 
 def update_search_table(target=None):
 
