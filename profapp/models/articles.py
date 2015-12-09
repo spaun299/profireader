@@ -168,7 +168,7 @@ class ArticlePortalDivision(Base, PRBase):
     def manage_article_tags(self, new_tags):
         self.tag_assoc_select = []
         g.db.add(self)
-        g.db.commit()   # TODO (AA to AA): this solution solves the problem but we MUST find another to avoid commit on this stage!
+        g.db.commit()   # TODO (AA to AA): this solution solves the problem but we MUST find another one to avoid commit on this stage!
         tags_portal_division_article = []
         for i in range(len(new_tags)):
             tag_portal_division_article = TagPortalDivisionArticle(position=i + 1)
