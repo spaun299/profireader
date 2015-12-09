@@ -34,7 +34,7 @@
     {% else %}
         {{ '{{' }}_('portal'){{ '}}' }}:
         <a href="http://{{ company.own_portal.host }}">http://{{ company.own_portal.host }}</a>
-{#        <a href="{{ url_for('portal.profile', portal_id=company.own_portal.id) }}">[portal profile]</a>#}
+        <a href="{{ url_for('portal.profile', portal_id=company.own_portal.id) }}">[portal profile]</a>
     {% endif %}
 
 

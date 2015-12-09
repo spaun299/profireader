@@ -15,27 +15,27 @@
 /* font colors */
 
 .profireader_article_foreground_color_red {
-    text-color: #f00;
+    color: #f00;
 }
 
 .profireader_article_foreground_color_green {
-    text-color: #0f0;
+    color: #0f0;
 }
 
 .profireader_article_foreground_color_blue {
-    text-color: #00f;
+    color: #00f;
 }
 
 .profireader_article_foreground_color_gray {
-    text-color: #ccc;
+    color: #ccc;
 }
 
 .profireader_article_foreground_color_black {
-    text-color: #000;
+    color: #000;
 }
 
 .profireader_article_foreground_color_white {
-    text-color: #fff;
+    color: #fff;
 }
 
 /* bg-colors */

@@ -165,6 +165,10 @@ class ArticlePortalDivision(Base, PRBase):
             sub_query = sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
         return sub_query
 
+    def position_unique_filter(self):
+        return and_(ArticlePortalDivision.portal_division_id == self.portal_division_id,
+                          ArticlePortalDivision.position != None)
+
 
 class ArticleCompany(Base, PRBase):
     __tablename__ = 'article_company'

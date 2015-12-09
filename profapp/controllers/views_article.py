@@ -116,20 +116,26 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                      article_portal_division_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
 
-    portal_division_dict = None
+    def portal_division_dict(article):
+        if article.portal_division_id is None:
+            return {'positioned_articles': []}
+        else:
+            filter = article.position_unique_filter()
+            return {'positioned_articles':
+                        [pda.get_client_side_dict(fields='id|position|title') for pda in
+                         db(ArticlePortalDivision).filter(filter).
+                             order_by(expression.desc(ArticlePortalDivision.position)).all()]
+                    }
+
     if article_company_id:  # companys version. always updating existing
         articleVersion = ArticleCompany.get(article_company_id)
     elif mine_version_article_company_id:  # updating personal version
         articleVersion = ArticleCompany.get(mine_version_article_company_id)
     elif article_portal_division_id:  # updating portal version
         articleVersion = ArticlePortalDivision.get(article_portal_division_id)
-        portal_position_filter = and_(ArticlePortalDivision.portal_division_id == articleVersion.portal_division_id,
-                                      ArticlePortalDivision.position != None)
-        portal_division_dict = {'positioned_articles':
-                                    [pda.get_client_side_dict(fields='id|position|title') for pda in
-                                     db(ArticlePortalDivision).filter(portal_position_filter).
-                                         order_by(expression.desc(ArticlePortalDivision.position)).all()]
-                                }
+
+
+
 
     else:  # creating personal version
         articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
@@ -206,3 +212,4 @@ def resubmit_to_company(json, article_company_id):
                         ARTICLE_STATUS_IN_COMPANY.declined)
     a.status = ARTICLE_STATUS_IN_COMPANY.submitted
     return {'article': a.save().get_client_side_dict()}
+
