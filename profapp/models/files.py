@@ -222,6 +222,10 @@ class File(Base, PRBase):
             return 'dir'
         elif self.mime == 'video/*':
             return 'file_video'
+        elif re.search('^image/.*', self.mime):
+            return 'img'
+        elif self.mime == 'application/pdf':
+            return 'pdf'
         else:
             return 'file'
 

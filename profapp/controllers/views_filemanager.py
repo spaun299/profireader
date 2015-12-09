@@ -52,7 +52,6 @@ def filemanager():
     file_manager_default_action = request.args[
         'file_manager_default_action'] if 'file_manager_default_action' in request.args else ''
 
-    # library = {}
     err = True if len(library) == 0 else False
     return render_template('filemanager.html', library=library, err=err,
                            file_manager_called_for=file_manager_called_for,

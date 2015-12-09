@@ -104,7 +104,7 @@ def materials_load(json, company_id):
             'portals': portals_g,
             'statuses': statuses_g,
             'publ_statuses': gr_publ_st,
-            'total': len(subquery.all())
+            'total': subquery.count()
             }
 
 @company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['GET'])
