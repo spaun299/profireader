@@ -66,9 +66,7 @@ if __name__ == '__main__':
                         for c in db_session.query(cls).all():
                             original_field = getattr(c, stripped_key)
                             modify_field = original_field + ' '
-                            print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
                             update_search_table(target=c)
-                            print('ssssssssssssssssssssssssssssssssssss')
                         break
                 except Exception as e:
                     print(e.__repr__())
