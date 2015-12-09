@@ -296,7 +296,7 @@ class ArticleCompany(Base, PRBase):
     #     #     ret.append(self.image_file_id)
     #     return ret
 
-    def clone_for_portal(self, portal_division_id, tag_names):
+    def clone_for_portal(self, portal_division_id, tag_names = []):
         filesintext = {found[1]: True for found in
                        re.findall('(http://file001.profireader.com/([^/]*)/)', self.long)}
         if self.image_file_id:
