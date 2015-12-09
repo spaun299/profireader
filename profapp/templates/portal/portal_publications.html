@@ -95,9 +95,9 @@
                             type: uiGridConstants.filter.SELECT}
 
                       },
-                      { name: 'Publication status', enableSorting: false, cellClass:'blue', editableCellTemplate: $scope.editableTemplate,
-                          editDropdownValueLabel: 'value',
-                          cellTemplate: $scope.selectRowTemplate,
+                      { name: 'Publication status', enableSorting: false, cellClass:'blue', //editableCellTemplate: $scope.editableTemplate,
+                          //editDropdownValueLabel: 'value',
+                          //cellTemplate: $scope.selectRowTemplate,
                           enableColumnMenu: false,
                           filter: {
                             term: '1',
@@ -118,7 +118,7 @@
     <div ng-init="sendData('', $scope.paginationOptions)" ng-controller="article_list">
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
         <div ng-if="load_contr">
-            <div ng-show="!areAllEmpty(datas.grid_data)" class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1" ></div>
+            <div ng-show="!areAllEmpty(datas.grid_data)" class="grid" id="grid1" ui-grid-pagination ui-grid="gridOptions1" ></div>
             <div ng-show="!loading && areAllEmpty(datas.grid_data)">{{_('No publications')}}</div>
             <button ng-click="refresh()" ng-show="!loading && areAllEmpty(datas.grid_data)" class="btn btn-warning" >Back</button>
     </div>

@@ -60,11 +60,13 @@ class TranslateTemplate(Base, PRBase):
 
         if exist:
             if current_app.config['DEBUG']:
+
                 # TODO: OZ by OZ change ac without changing md (md changed by trigger)
+                # ac updated without changing md
+
                 i = datetime.datetime.now()
                 if exist.ac_tm:
                     if i.timestamp()-exist.ac_tm.timestamp() > 86400:
-                        print(i.timestamp()-exist.ac_tm.timestamp())
                         exist.updates({'ac_tm': i})
                 else:
                     exist.updates({'ac_tm': i})
