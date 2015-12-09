@@ -1,4 +1,3 @@
-# from db_init import g.db, Base
 from ..constants.TABLE_TYPES import TABLE_TYPES
 from sqlalchemy import Table, Column, Integer, Text, ForeignKey, String, Boolean, or_, and_, text, desc, asc, join
 from sqlalchemy.orm import relationship, backref, make_transient, class_mapper, aliased
@@ -483,7 +482,7 @@ class PRBase:
     #         raise errors.ValidationException(ret)
 
     @staticmethod
-    def add_to_search(mapper, connection, target):
+    def add_to_search(mapper=None, connection=None, target=None):
 
         if hasattr(target, 'search_fields'):
             target_fields = ','.join(target.search_fields.keys())
@@ -501,21 +500,20 @@ class PRBase:
                                 text=field_options['processing'](str(target_dict[field]))))
 
     @staticmethod
-    def update_search_table(mapper, connection, target):
+    def update_search_table(mapper=None, connection=None, target=None):
 
         if hasattr(target, 'search_fields'):
-            options = {'processing': lambda text: MLStripper().strip_tags(text)}
-            for field in target.search_fields:
-                field_options = target.search_fields[field]
-                field_options.update({key: options[key] for key in options
-                                      if key not in field_options.keys()})
-                db(Search, index=target.id, kind=field).update(
-                    {'text': field_options['processing'](str(getattr(target, field)))})
+            if PRBase.delete_from_search(mapper, connection, target):
+                PRBase.add_to_search(mapper, connection, target)
+            else:
+                PRBase.add_to_search(mapper, connection, target)
 
     @staticmethod
     def delete_from_search(mapper, connection, target):
         if hasattr(target, 'search_fields') and db(Search, index=target.id).count():
             db(Search, index=target.id).delete()
+            return True
+        return False
 
     @classmethod
     def __declare_last__(cls):
