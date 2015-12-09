@@ -47,17 +47,20 @@ class Search(Base):
     relevance = Column(TABLE_TYPES['int'], nullable=False)
     kind = Column(TABLE_TYPES['short_text'])
     md_tm = Column(TABLE_TYPES['timestamp'])
+    position = Column(TABLE_TYPES['position'])
 
-    def __init__(self, index=None, table_name=None, text=None, relevance=None, kind=None):
+    def __init__(self, index=None, table_name=None, text=None, relevance=None, kind=None,
+                 position=None):
         # super(Search, self).__init__()
         self.index = index
         self.table_name = table_name
         self.text = text
         self.relevance = relevance
         self.kind = kind
+        self.position = position
 
     ORDER_RELEVANCE = 1
-    ORDER_TEXT = 2
+    ORDER_POSITION = 2
     ORDER_MD_TM = 3
 
     @staticmethod
@@ -91,7 +94,7 @@ class Search(Base):
                       , default Config.ITEMS_PER_PAGE,
                       -order_by = (string, integer, tuple or list)
                       ,string :(with field for which you want sort)
-                      ,integer: (text, relevance, md_tm default=relevance)
+                      ,integer: (position, relevance, md_tm default=relevance)
                       (USE CONSTANTS IN SEARCH CLASS)
                       ,tuple or list: multiple fields which you want to use. For example:
                       if you have multiple args and different fields you want to sort in
@@ -163,7 +166,11 @@ class Search(Base):
                       'relevance+': lambda field_name: desc(func.sum(
                           getattr(Search, field_name, Search.relevance))),
                       'relevance-': lambda field_name: asc(func.sum(
-                          getattr(Search, field_name, Search.relevance)))
+                          getattr(Search, field_name, Search.relevance))),
+                      'position+': lambda field_name: desc(func.min(
+                          getattr(Search, field_name, Search.position))),
+                      'position-': lambda field_name: asc(func.min(
+                          getattr(Search, field_name, Search.position)))
                       }[order_name](field)
             return result
 
@@ -189,6 +196,7 @@ class Search(Base):
                              func.sum(Search.relevance).label('relevance'),
                              func.min(Search.table_name).label('table_name'),
                              func.min(Search.md_tm).label('md_tm'),
+                             func.min(Search.position).label('position'),
                              func.max(Search.text).label('text')).filter(
             or_(*search_params)).group_by(Search.index)
         if type(kwargs.get('order_by')) in (str, list, tuple):
@@ -197,6 +205,8 @@ class Search(Base):
         elif type(kwargs.get('order_by')) == int:
             ord_to_str = order_by_to_str[kwargs['order_by']]
             order = get_order(ord_to_str, desc_asc, ord_to_str)
+            if ord_to_str == 'position':
+                order = order, get_order('md_tm', desc_asc, 'md_tm')
         else:
             order = get_order('relevance', 'asc', 'relevance')
         subquery_search = subquery_search.order_by(order)
@@ -494,10 +504,13 @@ class PRBase:
                 field_options = target.search_fields[field]
                 field_options.update({key: options[key] for key in options
                                       if key not in field_options.keys()})
+                pos = getattr(target, 'position', 0)
+                position = pos if pos else 0
                 g.db.add(Search(index=field_options['index'](target_dict['id']),
                                 table_name=target.__tablename__,
                                 relevance=field_options['relevance'](field), kind=field,
-                                text=field_options['processing'](str(target_dict[field]))))
+                                text=field_options['processing'](str(target_dict[field])),
+                                position=position))
 
     @staticmethod
     def update_search_table(mapper=None, connection=None, target=None):
