@@ -24,7 +24,6 @@
 
             $scope.update = function(){
                 $scope.paginationOptions.pageNumber = 1;
-                console.log($scope.gridOptions1.columnDefs[0].filter.search_text);
                 $scope.sendData($scope.gridOptions1.columnDefs[0].filter.search_text, $scope.paginationOptions);
             };
 
