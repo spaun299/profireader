@@ -540,7 +540,7 @@ def publications_load(json, company_id):
     return {'grid_data': grid_data,
             'companies': comp_grid,
             'statuses': statuses_grid,
-            'total': len(subquery.all())}
+            'total': subquery.count()}
 
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
@@ -605,7 +605,7 @@ def submit_to_portal(json):
 
     article = ArticleCompany.get(json['article']['id'])
     portal_division_id = json['selected_division']
-    article_portal = article.clone_for_portal(portal_division_id, json['tags'])
+    article_portal = article.clone_for_portal(portal_division_id)
     article.save()
     portal = article_portal.get_article_owner_portal(portal_division_id=portal_division_id)
     json['article'] = article_portal.get_client_side_dict(fields=

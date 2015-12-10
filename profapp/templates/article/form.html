@@ -48,6 +48,8 @@
             $scope.$af = $af;
             {#            $scope.details_article = {{ raw_url_for('article.details')|safe }};#}
             {#            $scope.details_publication_portal = {{ raw_url_for('portal.publication_details')|safe }};#}
+            $scope.update_created_article = {{ raw_url_for('article.article_show_form')|safe }};
+
             {% if article_company_id %}
                 $scope.save_article = '{{ url_for('article.load_form_create', article_company_id = article_company_id)|safe }}';
             {% else %}
@@ -57,15 +59,21 @@
             $scope.data = {};
 
             $scope.$$translate = {{ translates('article_edit')|safe }};
-            $scope.afterSave = function (resp) {
+
+            $scope.amidSave = function (resp) {
                 {#                window.location.href = {}#}
                 {#                {% if  article_portal_division_id %}#}
                 {#                    window.location.href = $scope.details_publication_portal({article_id: resp['article']['id'], company_id: resp['article']['company_id']});#}
                 {#                {% else %}#}
                 {#                    window.location.href = $scope.details_article({article_id: resp['article']['id']});#}
                 {#                {% endif %}#}
-                $scope.data.article.position = resp.article.position;
-                add_message('article was saved', 'info', 5000);
+                if (!$scope.data.article.id && resp.article.id ) {
+                    window.location.href = $scope.update_created_article({article_company_id: resp.article.id});
+                    }
+{#                $scope.data.article.publishing_tm = new Date(resp.article.publishing_tm);#}
+{#                $scope.data.portal_division = $scope.setPositioning(resp.portal_division, resp.article.id);#}
+
+                add_message('article was saved', 'info', 3000);
 
             };
 
@@ -76,7 +84,7 @@
             $scope.getTitle = function () {
                 if ($scope.data && $scope.data.article) {
                     if (!$scope.data.article.id)  return 'Create new article';
-                    if (!$scope.data.article.company) return 'update your version of article';
+                    if (!$scope.data.article.company_id) return 'update your version of article';
                     if (!$scope.data.article.division) return 'update version of article for company `%(data.article.company.name)s`';
                     return 'update version of article at portal `%(data.article.portal.name)s` in division `%(data.article.division.name)s`';
                 }
@@ -91,27 +99,48 @@
             };
 
             $scope.setPositioning = function (portal_division, article_id) {
+                console.log(portal_division, article_id);
+
                 if (!portal_division) {
-                    return {min: 0, max: 0, current: 0, positioned_articles: [{id: null, title: '', insert_after: null}], insert_after: null}
+                    return {
+                        min: 0,
+                        max: 0,
+                        current: 0,
+                        positioned_articles: [{id: null, title: '', insert_after: null}],
+                        insert_after: null
+                    }
                 }
-                if (portal_division.positioned_articles.length && portal_division.positioned_articles[0].id != article_id) {
-                    portal_division.positioned_articles.unshift({'id': false, 'title': '', 'position': false});
-                }
-                portal_division.positioned_articles.push({'id': null, 'title': '', 'position': null});
 
-                var current = portal_division.positioned_articles.length - 1;
+                portal_division.positioned_articles.unshift({'id': false, 'title': '', 'position': false});
 
-                $.each(portal_division.positioned_articles, function (ind, position) {
-                    if (position.id === article_id) {
-                        delete portal_division.positioned_articles[ind];
-{#                        current = ind - 1;#}
+                var current = null;
+
+
+                var removeindex = false;
+                $.each(portal_division.positioned_articles, function (ind, positioned) {
+                    if (positioned.id === article_id) {
+                        removeindex = ind;
                         return false;
                     }
                 });
-{#                console.log(current);#}
 
-                return $.extend(portal_division, {min: 0, max: portal_division.positioned_articles.length - 1,
-                    current: current, insert_after: portal_division.positioned_articles[current].id});
+                if (removeindex !== false) {
+                    current = removeindex - 1;
+                    portal_division.positioned_articles.splice(removeindex, 1);
+
+                }
+
+                portal_division.positioned_articles.push({'id': null, 'title': '', 'position': null});
+                if (current === null) {
+                    current = portal_division.positioned_articles.length -1;
+                }
+
+                console.log('current = ', current);
+
+                return $.extend(portal_division, {
+                    min: 0, max: portal_division.positioned_articles.length - 1,
+                    current: current, insert_after: portal_division.positioned_articles[current].id
+                });
 
             };
 
@@ -127,7 +156,7 @@
 
             {% if  article_portal_division_id %}
                 var custom_formats = {{ tinymce_format_groups('birdy')|tojson }};
-                console.log(custom_formats);
+                console.log('custom_formats', custom_formats);
                 $scope.tinymceImageOptions['toolbar2'] = 'foreground | background | font | border | margin | padding';
             {% else %}
                 var custom_formats = {};
@@ -145,6 +174,8 @@
                             object(). // convert each [key, val] pair to {key: val} element
                             value(); // get result
 
+            console.log('$scope.tinymceImageOptions["formats"]', $scope.tinymceImageOptions['formats']);
+
             var custom_formats_menu = _.size(custom_formats) ? get_array_for_menu_build(custom_formats) : [];
 
             $scope.tinymceImageOptions['pr_formats'] = custom_formats_menu;
@@ -161,6 +192,7 @@
 
 
             $scope.articleImageSelected = function (item) {
+                console.log($scope.data.image, item.id)
                 $scope.data.image.image_file_id = item.id;
                 closeFileManager();
             };
@@ -171,7 +203,7 @@
             };
 
             $scope.chooseImage = function () {
-                $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')");
+                $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')", 'choose');
             };
 
             $scope.articlePositionDontChange = function () {
@@ -304,7 +336,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
 
         <h1 class="nice-title">{{ _(getTitle()) }}<span></span></h1>
 
-        <div af af-amid-load="amidLoad" af-after-save="afterSave" af-before-save="getData"
+        <div af af-amid-load="amidLoad" af-amid-save="amidSave" af-before-save="getData"
              af-beforeValidate="getData" af-watch="data.article" ng-model="data">
 
             <div class="update_col1">
@@ -341,9 +373,6 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                 <div style="width: 20em" ui-slider min="{{ data.portal_division.min }}"
                      max="{{ data.portal_division.max }}" step="1" ng-model="data.portal_division.current"></div>
                 <div class="nowrap">
-                    {{ data.portal_division.current }}<br/>
-
-                    <div ng-repeat="ap in data.portal_division.positioned_articles">{{ ap }}</div>
                     <span>{{ ArticlePositionTitle() }}</span>
                 </div>
 
@@ -364,7 +393,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
             <div ng-if="data.article.division" class="update_col1">
                 we have division ({{ data.article.division.name }} - {{ data.article.division.id }})<br/>
                 so tags goes here<br/>
-
+                {{ data['portal_division']['availableTags'] }}<br/>
                 <div ng-controller="SelectTagsCtrl">
                     <h3>{{_('Article tags:')}}</h3>
                     <!-- <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;"> -->

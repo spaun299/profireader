@@ -16,7 +16,11 @@
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
-            $scope.pos1 = '1';$scope.pos2 = '1';$scope.pos3 = '1';
+            $scope.pos = {
+                'Portals': '1',
+                'Publication status': '1',
+                'Material status': '1'
+            };
 
             $scope.update = function(){
                 $scope.paginationOptions.pageNumber = 1;
@@ -33,28 +37,17 @@
                 $scope.sendData('', $scope.paginationOptions);
             };
 
-            $scope.Filtered = function( row, rowRenderIndex, col, colRenderIndex) {
-                if (col.filters[0].term && $scope.load_contr){
-                    $scope.paginationOptions.pageNumber = 1;
-                    if($scope.gridOptions1.columnDefs[2].filter['term'] == col.filters[0].term && $scope.pos1 != $scope.gridOptions1.columnDefs[2].filter['term']){
-                        $scope.pos1 = $scope.gridOptions1.columnDefs[2].filter['term'];
-                        $scope.portal_id = $scope.portals[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.portals[col.filters[0].term - 1]['id'];
-                        $scope.sendData('', $scope.paginationOptions);
-                    }
-                    if($scope.gridOptions1.columnDefs[3].filter['term'] == col.filters[0].term && $scope.pos2 != $scope.gridOptions1.columnDefs[3].filter['term']){
-                        $scope.pos2 = $scope.gridOptions1.columnDefs[3].filter['term'];
-                        $scope.publ_status = $scope.publ_statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.publ_statuses[col.filters[0].term - 1]['label'];
-                        $scope.sendData('', $scope.paginationOptions);
-                    }
-                    if($scope.gridOptions1.columnDefs[4].filter['term'] == col.filters[0].term && $scope.pos3 != $scope.gridOptions1.columnDefs[4].filter['term']){
-                        $scope.pos3 = $scope.gridOptions1.columnDefs[4].filter['term'];
-                        $scope.status = $scope.statuses[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.statuses[col.filters[0].term - 1]['label'];
-                        $scope.sendData('', $scope.paginationOptions);
-                    }
-                }else{
-                    $scope.refresh()
+            $scope.getFilter = function(col, term){
+                $scope.paginationOptions.pageNumber = 1;
+                if(col === 'Portals'){
+                    $scope.portal_id = $scope.portals[term - 1]['label'] === '-- all --'? undefined: $scope.portals[term - 1]['id'];
+                }else if (col === 'Publication status'){
+                    $scope.publ_status = $scope.publ_statuses[term - 1]['label'] === '-- all --'? undefined: $scope.publ_statuses[term - 1]['label'];
+                }else if (col === 'Material status'){
+                    $scope.status = $scope.statuses[term - 1]['label'] === '-- all --'? undefined: $scope.statuses[term - 1]['label'];
                 }
-              };
+                $scope.sendData('', $scope.paginationOptions);
+            };
 
             $scope.sendData = function (new_search_text, c) {
                 $scope.loading = true;
@@ -70,7 +63,6 @@
                     'pageSize': $scope.paginationOptions.pageSize,
                     'sort_date':$scope.paginationOptions.sort
                 };
-                // TODO: SS by OZ: all data what wee need is presented in resp.data? if yes, y we cant fetch data from there, why we need grid_data?
                 $ok($scope.url_search_article({company_id: $scope.company_id}), data, function (resp) {
                     $scope.datas = resp;
                     $scope.gridOptions1.totalItems = resp.total;
@@ -108,24 +100,24 @@
                           groupingShowGroupingMenu: false
                       },
                       { name: 'Portals', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
-                          cellTemplate: '<a href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{ row.entity.Portals }}</a>',
+                          cellTemplate: '<div class="link"><a href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{ row.entity.Portals }}</a></div>',
                           filter: {
                               term: '1',
-                            type: uiGridConstants.filter.SELECT},
-                          headerCellClass: $scope.Filtered
+                            type: uiGridConstants.filter.SELECT}
                       },
                       { name: 'Publication status', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
                           filter: {
                             term: '1',
-                            type: uiGridConstants.filter.SELECT},
-                          headerCellClass: $scope.Filtered
+                            type: uiGridConstants.filter.SELECT}
                       },
-                      { name: 'Material status', enableSorting: false, editableCellTemplate: '<div><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',editDropdownValueLabel: 'value',
+                      { name: 'Material status', enableSorting: false, //editableCellTemplate: $scope.editableTemplate,
+                          //editDropdownValueLabel: 'value',
+                          //cellTemplate: $scope.selectRowTemplate,
+                          enableCellEdit: false,
                           enableColumnMenu: false,
                           filter: {
                             term: '1',
-                            type: uiGridConstants.filter.SELECT},
-                          headerCellClass: $scope.Filtered
+                            type: uiGridConstants.filter.SELECT}
                       }
                     ],
                     onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions, $scope.refresh())}

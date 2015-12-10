@@ -15,11 +15,8 @@
             {% raw %}
 
             $scope.error = '';
-            $scope.new_search_text = '';
             $scope.list_templates = [];
             $scope.list_urls = [];
-            $scope.dictionary = {};
-            $scope.translations = {};
             $scope.list_select= [];
             $scope.myModal = modal;
             $scope.pos1 = '1';$scope.pos2 = '1';
@@ -135,12 +132,9 @@
                 data.sort_creation_time = $scope.sort_creation_time ? $scope.sort_creation_time : null;
                 data.sort_last_accessed_time = $scope.sort_last_accessed_time ? $scope.sort_last_accessed_time : null;
                 $ok($scope.url_search_translations({}), data, function (resp) {
-
                     $scope.translations = resp.translations;
                     $scope.gridOptions1.totalItems = resp.total;
-                    $scope.languages = resp.languages;
                     $scope.list = [];
-
                     for(var i=0;i< $scope.translations.length;i++){
                         $scope.list.push({
                             'Creation time' : $scope.translations[i].cr_tm,
@@ -153,26 +147,24 @@
                         })
                     }
                     $scope.gridOptions1.data = $scope.list;
-
                     $scope.templates = resp.templates;
                     $scope.templates.unshift({label: '-- all --', value: undefined});
-
                     $scope.urls = resp.urls;
                     $scope.urls.unshift({label: '-- all --', value: undefined});
-
                     $scope.create_list($scope.list_templates, $scope.templates);
                     $scope.create_list($scope.list_urls, $scope.urls);
-
                 }).finally(function () {
                     $scope.loading = false;
                     $scope.load_contr = true
                 });
             };
+
              $scope.closeSort = function (){
                  $scope.sort_creation_time = null;
                  $scope.sort_last_accessed_time = null;
                  $scope.sendData('',$scope.paginationOptions);
              };
+
              $scope.sortChanged = function ( grid, sortColumns) {
                  if(sortColumns.length>1){
                      if(sortColumns[0].sort){

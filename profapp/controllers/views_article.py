@@ -98,7 +98,7 @@ def load_mine(json):
             'chosen_status': json.get('chosen_status') or statuses[-1],
             'original_chosen_status': original_chosen_status,
             'statuses': statuses,
-            'total': len(subquery.all())}
+            'total': subquery.count()}
 
 
 @article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
@@ -118,7 +118,20 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                      article_portal_division_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
 
-    portal_division_dict = None
+    def portal_division_dict(article, tags=None):
+        if (not hasattr(article, 'portal_division_id')) or (article.portal_division_id is None):
+            return {'positioned_articles': []}
+        else:
+            filter = article.position_unique_filter()
+            return {'positioned_articles':
+                        [pda.get_client_side_dict(fields='id|position|title') for pda in
+                         db(ArticlePortalDivision).filter(filter).
+                             order_by(expression.desc(ArticlePortalDivision.position)).all()],
+                    'availableTags': tags
+                    }
+
+    available_tag_names = None
+
     if article_company_id:  # companys version. always updating existing
         articleVersion = ArticleCompany.get(article_company_id)
     elif mine_version_article_company_id:  # updating personal version
@@ -131,35 +144,28 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         available_tags = PortalDivision.get(portal_division_id).portal_division_tags
         available_tag_names = list(map(lambda x: getattr(x, 'name', ''), available_tags))
 
-        portal_position_filter = and_(ArticlePortalDivision.portal_division_id == portal_division_id,
-                                      ArticlePortalDivision.position != None)
-        portal_division_dict = {'positioned_articles':
-                                    [pda.get_client_side_dict(fields='id|position|title') for pda in
-                                     db(ArticlePortalDivision).filter(portal_position_filter).
-                                         order_by(expression.desc(ArticlePortalDivision.position)).all()],
-                                'availableTags': available_tag_names
-                                }
-
     else:  # creating personal version
         articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
 
     if action == 'load':
-        article_dict = articleVersion.get_client_side_dict(more_fields='long')
+        article_dict = articleVersion.get_client_side_dict(more_fields='long|company')
 
-        if type(articleVersion) == ArticlePortalDivision:
+        if article_portal_division_id:
             article_dict = dict(list(article_dict.items()) + [('tags', article_tag_names)])
 
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
                       'image_file_id': article_dict['image_file_id']}
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
         # TODO: VK by OZ: this code should be moved to model
-        try:
-            if article_dict.get('image_file_id'):
-                image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
-                    get_coordinates_and_original_img(article_dict.get('image_file_id'))
-        except Exception as e:
-            pass
-        return {'article': article_dict, 'image': image_dict, 'portal_division': portal_division_dict}
+        # try:
+        #     if article_dict.get('image_file_id'):
+        #         image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
+        #             get_coordinates_and_original_img(article_dict.get('image_file_id'))
+        # except Exception as e:
+        #     pass
+        return {'article': article_dict,
+                'image': image_dict,
+                'portal_division': portal_division_dict(articleVersion, available_tag_names)}
     else:
         parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
 
@@ -182,9 +188,9 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
             a = articleVersion.save()
             if article_portal_division_id:
-                a = a.insert_after(json['portal_division']['insert_after'], portal_position_filter)
-            a = a.get_client_side_dict(more_fields='long')
-            return {'article': a, 'image': json['image'], 'portal_division': portal_division_dict}
+                articleVersion.insert_after(json['portal_division']['insert_after'], articleVersion.position_unique_filter())
+            return {'article': articleVersion.save().get_client_side_dict(more_fields='long'), 'image': json['image'],
+                    'portal_division': portal_division_dict(articleVersion)}
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])

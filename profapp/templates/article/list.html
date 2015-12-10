@@ -17,7 +17,10 @@
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
-            $scope.pos1 = '1';$scope.pos2 = '1';
+            $scope.pos = {
+                'Campanies': '1',
+                'Status': '1'
+            };
 
             $scope.update = function(){
                 $scope.paginationOptions.pageNumber = 1;
@@ -63,23 +66,15 @@
                 });
             };
 
-            $scope.Filtered = function( row, rowRenderIndex, col, colRenderIndex) {
-                if (col.filters[0].term){
-                    $scope.paginationOptions.pageNumber = 1;
-                    if($scope.gridOptions1.columnDefs[2].filter['term'] == col.filters[0].term && $scope.pos1 != $scope.gridOptions1.columnDefs[2].filter['term']){
-                        $scope.pos1 = $scope.gridOptions1.columnDefs[2].filter['term'];
-                        $scope.chosen_company = $scope.data.companies[col.filters[0].term - 1]['label'] === 'All' ? undefined : $scope.data.companies[col.filters[0].term - 1]['id'];
-                        $scope.sendData('', $scope.paginationOptions);
-                    }
-                    if($scope.gridOptions1.columnDefs[3].filter['term'] == col.filters[0].term && $scope.pos2 != $scope.gridOptions1.columnDefs[3].filter['term']){
-                        $scope.pos2 = $scope.gridOptions1.columnDefs[3].filter['term'];
-                        $scope.chosen_status = $scope.data.statuses[col.filters[0].term - 1]['label'] === 'All' ? undefined : $scope.data.statuses[col.filters[0].term - 1]['label'];
-                        $scope.sendData('', $scope.paginationOptions);
-                    }
-                }else{
-                    $scope.refresh()
+            $scope.getFilter = function(col, term){
+                $scope.paginationOptions.pageNumber = 1;
+                if(col === 'Campanies'){
+                    $scope.chosen_company = $scope.data.companies[term - 1]['label'] === 'All' ? undefined : $scope.data.companies[term - 1]['id'];
+                }else if (col === 'Status'){
+                    $scope.chosen_status = $scope.data.statuses[term - 1]['label'] === 'All' ? undefined : $scope.data.statuses[term - 1]['label'];
                 }
-              };
+                $scope.sendData('', $scope.paginationOptions);
+            };
 
             $scope.gridOptions1 = {
                     data: 'data.grid_data',
@@ -93,7 +88,7 @@
                     treeRowHeaderAlwaysVisible: false,
                     columnDefs: [
                       { name: 'Title', enableSorting:false,enableCellEdit: false,groupingShowAggregationMenu: false, enableColumnMenu: false,
-                          width: '35%', cellTemplate: '<div ng-class="link" style="cursor:pointer;padding-left: 10px"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.Title"></a></div>',
+                          width: '35%', cellTemplate: '<div class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.Title"></a></div>',
                           filter: {
                             type: uiGridConstants.filter.INPUT}
                       },
@@ -104,15 +99,13 @@
                           filter: {
                             pos: '1',
                             term: '1',
-                            type: uiGridConstants.filter.SELECT},
-                          headerCellClass: $scope.Filtered
+                            type: uiGridConstants.filter.SELECT}
                       },
                       { name: 'Status', enableSorting: false,enableCellEdit: false,groupingShowAggregationMenu: false,enableColumnMenu: false,
                           filter: {
                             pos: '2',
                             term: '1',
-                            type: uiGridConstants.filter.SELECT},
-                          headerCellClass: $scope.Filtered
+                            type: uiGridConstants.filter.SELECT}
                       }
                     ],
                     onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions)}

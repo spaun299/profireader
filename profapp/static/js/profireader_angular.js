@@ -589,6 +589,8 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             pageSize: 50,
             sort: null
         },
+        editableTemplate: '<div class = "ui_dropdown"><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',
+        selectRowTemplate : '<div class="ui-grid-cell-contents">{{ COL_FIELD }}<i class="glyphicon glyphicon-collapse-down" style="float:right"></i></div>',
         setGridExtarnals: function (gridApi, externalFunction, paginationOptions, refresh) {
             var scope = this;
             scope.gridApi = gridApi;
@@ -612,6 +614,22 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 paginationOptions.pageNumber = newPage;
                 paginationOptions.pageSize = pageSize;
                 externalFunction('', paginationOptions)
+            });
+            gridApi.core.on.filterChanged(scope, function () {
+               var grid = this.grid;
+               for (var i = 0; i < grid.columns.length; i++) {
+                  term = grid.columns[i].filter.term;
+                  field = grid.columns[i].field;
+                  if(term !== undefined){
+                     if(term !== scope.pos[field] && term){
+                        scope.pos[field] = term;
+                        scope.getFilter(field, term)
+                     }
+                     if(term === null){
+                         scope.refresh()
+                     }
+                  }
+               }
             });
         },
 
@@ -666,7 +684,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             theme: 'modern',
             'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table",
             //'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table"[*],
-            'valid_elements': "img[*],table[*],tbody[*],td[*],th[*],tr[*],p[*],h1[*],h2[*],h3[*],h4[*],h5[*],h6[*],div[*],ul[*],ol[*],li[*],strong[*],em[*],span[*],blockquote[*],sup[*],sub[*],code[*],pre[*],a[*]",
+            'valid_elements': "img[*],table[*],tbody[*],td[*],th[*],tr[*],p[*],h1[*],h2[*],h3[*],h4[*],h5[*],h6[*],div[*],ul[*],ol[*],li[*],strong/b[*],em/i[*],span[*],blockquote[*],sup[*],sub[*],code[*],pre[*],a[*]",
             //init_instance_callback1: function () {
             //    console.log('init_instance_callback', arguments);
             //},

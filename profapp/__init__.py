@@ -281,9 +281,7 @@ def translates(template):
 @jinja2.contextfunction
 def translate_phrase(context, phrase, dictionary=None):
     template = context.name
-
     translated = TranslateTemplate.getTranslate(template, phrase)
-
     r = re.compile("%\\(([^)]*)\\)s")
 
     def getFromContext(context, indexes, default):
