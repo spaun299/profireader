@@ -110,9 +110,10 @@
                             term: '1',
                             type: uiGridConstants.filter.SELECT}
                       },
-                      { name: 'Material status', enableSorting: false, editableCellTemplate: $scope.editableTemplate,
-                          editDropdownValueLabel: 'value',
-                          cellTemplate: $scope.selectRowTemplate,
+                      { name: 'Material status', enableSorting: false, //editableCellTemplate: $scope.editableTemplate,
+                          //editDropdownValueLabel: 'value',
+                          //cellTemplate: $scope.selectRowTemplate,
+                          enableCellEdit: false,
                           enableColumnMenu: false,
                           filter: {
                             term: '1',

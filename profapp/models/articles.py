@@ -45,12 +45,10 @@ class ArticlePortalDivision(Base, PRBase):
     status = Column(TABLE_TYPES['id_profireader'], default=ARTICLE_STATUS_IN_PORTAL.published)
 
     division = relationship('PortalDivision',
-                            backref=backref('article_portal_division',
-                                            cascade="save-update, merge, delete"),
+                            backref=backref('article_portal_division', cascade="save-update, merge, delete"),
                             cascade="save-update, merge, delete")
     company = relationship(Company, secondary='article_company',
-                           primaryjoin="ArticlePortalDivision.article_company_id"
-                                       " == ArticleCompany.id",
+                           primaryjoin="ArticlePortalDivision.article_company_id == ArticleCompany.id",
                            secondaryjoin="ArticleCompany.company_id == Company.id",
                            viewonly=True, uselist=False)
 
@@ -66,7 +64,9 @@ class ArticlePortalDivision(Base, PRBase):
                      'keywords': {'relevance': lambda field='keywords': RELEVANCE.keywords}}
     tag_assoc_select = relationship('TagPortalDivisionArticle',
                                     back_populates='article_portal_division_select',
-                                    cascade="save-update, merge, delete")
+                                    cascade="save-update, merge, delete, delete-orphan",
+                                    passive_deletes=True
+                                    )
 
     @property
     def tags(self):
@@ -85,7 +85,7 @@ class ArticlePortalDivision(Base, PRBase):
                           uselist=False)
 
 
-    def __init__(self, article_company_id=None, title=None, short=None, keywords=None, position=0,
+    def __init__(self, article_company_id=None, title=None, short=None, keywords=None, position=None,
                  long=None, status=None, portal_division_id=None, image_file_id=None
                  ):
         self.article_company_id = article_company_id
@@ -165,6 +165,23 @@ class ArticlePortalDivision(Base, PRBase):
             sub_query = sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
         return sub_query
 
+    def manage_article_tags(self, new_tags):
+        self.tag_assoc_select = []
+        g.db.add(self)
+        g.db.commit()   # TODO (AA to AA): this solution solves the problem but we MUST find another one to avoid commit on this stage!
+        tags_portal_division_article = []
+        for i in range(len(new_tags)):
+            tag_portal_division_article = TagPortalDivisionArticle(position=i + 1)
+            tag_portal_division = \
+                g.db.query(TagPortalDivision). \
+                    select_from(TagPortalDivision). \
+                    join(Tag). \
+                    filter(TagPortalDivision.portal_division_id == self.portal_division_id). \
+                    filter(Tag.name == new_tags[i]).one()
+            tag_portal_division_article.tag_portal_division = tag_portal_division
+            tags_portal_division_article.append(tag_portal_division_article)
+        self.tag_assoc_select = tags_portal_division_article
+
     def position_unique_filter(self):
         return and_(ArticlePortalDivision.portal_division_id == self.portal_division_id,
                           ArticlePortalDivision.position != None)
@@ -205,7 +222,7 @@ class ArticleCompany(Base, PRBase):
                      'keywords': {'relevance': lambda field='keywords': RELEVANCE.keywords}}
 
     def get_client_side_dict(self,
-                             fields='id|title|short|keywords|cr_tm|md_tm|company_id|article_id|image_file_id|status|company_id',
+                             fields='id|title|short|keywords|cr_tm|md_tm|article_id|image_file_id|status|company_id',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
@@ -263,17 +280,20 @@ class ArticleCompany(Base, PRBase):
 
     @staticmethod
     def subquery_company_articles(search_text=None, company_id=None, portal_id=None, **kwargs):
+        print(kwargs)
         sub_query = db(ArticleCompany, company_id=company_id)
         if kwargs['status']:
             sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['status'])
-        sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id)
-        if kwargs['publ_status']:
-            sub_query = sub_query.filter(ArticlePortalDivision.status == kwargs['publ_status'])
-        if search_text:
-            sub_query = sub_query.filter(ArticleCompany.title.ilike("%" + search_text + "%"))
-        if portal_id:
+
+        if kwargs['publ_status'] or portal_id:
+            sub_query = sub_query.join(ArticlePortalDivision, ArticlePortalDivision.article_company_id == ArticleCompany.id)
+            if kwargs['publ_status']:
+                sub_query = sub_query.filter(ArticlePortalDivision.status == kwargs['publ_status'])
+            if portal_id:
                 sub_query = sub_query.join(PortalDivision, PortalDivision.id == ArticlePortalDivision.portal_division_id).\
                 filter(PortalDivision.portal_id == portal_id)
+        if search_text:
+            sub_query = sub_query.filter(ArticleCompany.title.ilike("%" + search_text + "%"))
         if kwargs['sort_date']:
             sub_query = sub_query.order_by(ArticleCompany.md_tm.asc()) if kwargs['sort_date'] == 'asc' else sub_query.order_by(ArticleCompany.md_tm.desc())
         else:
@@ -293,7 +313,7 @@ class ArticleCompany(Base, PRBase):
     #     #     ret.append(self.image_file_id)
     #     return ret
 
-    def clone_for_portal(self, portal_division_id, tag_names):
+    def clone_for_portal(self, portal_division_id, tag_names = []):
         filesintext = {found[1]: True for found in
                        re.findall('(http://file001.profireader.com/([^/]*)/)', self.long)}
         if self.image_file_id:

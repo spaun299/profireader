@@ -152,7 +152,7 @@ def details(article_portal_division_id):
     article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
                                                        'publishing_tm, keywords, status, long, image_file_id,'
                                                        'division.name, division.portal.id,'
-                                                       'company.name')
+                                                       'company.name|id')
     article_dict['tags'] = article.tags
 
     division = g.db().query(PortalDivision).filter_by(id=article.portal_division_id).one()

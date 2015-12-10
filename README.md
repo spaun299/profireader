@@ -3,16 +3,16 @@ Installation instruction:
 
 In order to install psycopg2 in virtual environment you should install
 libpq-dev python-dev packages first:
-$ sudo apt-get install libpq-dev python-dev
+# sudo apt-get install libpq-dev python-dev
 
 also you have to install 'python3-venv' package in order to work with Python 3
-$ sudo apt-get install python3-venv python3-pip
+# sudo apt-get install python3-venv python3-pip
 
 create new postgresql user 'pfuser':
 $ sudo -u postgres createuser -D -A -P pfuser
 (here system asks a password for just created user. Password can be found in
 secret_data.py file as DB_PASSWORD constant)
-#ALTER USER pfuser WITH PASSWORD '<newpassword>'
+# ALTER USER pfuser WITH PASSWORD '<newpassword>'
 
 you need to add ip of db host (db.prof) to file /etc/hosts
 If db is located on postgres.m server then its ip can be found with
@@ -26,23 +26,27 @@ we also have to add lines
 to /etc/hosts
 
 pfuser have to create new db named 'profireader'
-$ sudo -u postgres createdb -O pfuser profireader
+# sudo -u postgres createdb -O pfuser profireader
 
-virtual environment (on Python 3) with all necessary packages
-have to be created:
-$ pyvenv env && source env/bin/activate && pip3 install -r requirements.txt
+to recover db from dump:
+# su postgres
+# psql profireader < dump.sql
+# exit
+
+virtual environment (on Python 3) with all necessary packages have to be created:
+# pyvenv env && source env/bin/activate && pip3 install -r requirements.txt
 
 (if you want to create a virtual environment on Python 2 run the following:
-$ virtualenv env2 && . env2/bin/activate && pip install -r requirements.txt )
+# virtualenv env2 && . env2/bin/activate && pip install -r requirements.txt )
 
 to work with our DB you should install VPN. see instructions:
 http://jira.ntaxa.com/browse/NTAXA-6
 
 also you need to install file manager from bower package
-$sudo apt-get install nodejs
-$sudo apt-get install npm
-$ln -s /usr/bin/nodejs /usr/bin/node
-$npm install -g bower
+# sudo apt-get install nodejs
+# sudo apt-get install npm
+# ln -s /usr/bin/nodejs /usr/bin/node
+# npm install -g bower
 
 install solr:
 sudo apt-get -y install openjdk-7-jdk

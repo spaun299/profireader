@@ -12,6 +12,7 @@ from profapp.constants.SEARCH import RELEVANCE
 import re
 from sqlalchemy.orm import scoped_session, sessionmaker
 from config import ProductionDevelopmentConfig
+import datetime
 classes = [ArticlePortalDivision, Article, ArticleCompany, ArticleCompanyHistory,
            Company, UserCompany, FileContent, File, User]
 engine = create_engine(ProductionDevelopmentConfig.SQLALCHEMY_DATABASE_URI)
@@ -56,6 +57,7 @@ def delete_from_search(target):
 
 
 if __name__ == '__main__':
+    time = datetime.datetime.now()
     for cls in classes:
         variables = vars(cls).copy()
         variables = variables.keys()
@@ -72,7 +74,11 @@ if __name__ == '__main__':
                             original_field = getattr(c, stripped_key)
                             modify_field = original_field + ' '
                             update_search_table(target=c)
+                            print('executing...')
                         break
                 except Exception as e:
-                    print(e.__repr__())
+                    pass
+    execute_time = datetime.datetime.now()-time
+    print('Updated successfully')
+    print('Execution time: ', execute_time)
     db_session.commit()
