@@ -79,8 +79,7 @@ def index(page=1):
                                                       ARTICLE_STATUS_IN_PORTAL.published),
                                               'return_fields': 'id,title'},
                                              search_text=search_text, page=page,
-                                             order_by=order, pagination=True,
-                                             order_by_join=ArticlePortalDivision)
+                                             order_by=order, pagination=True)
     ordered_articles = collections.OrderedDict()
     for a in db(ArticlePortalDivision).filter(
             ArticlePortalDivision.id.in_(articles_id.keys())).all():
