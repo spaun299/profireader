@@ -27,7 +27,6 @@ def load_mine(json):
     chosen_company_id = json.get('chosen_company') if json.get('chosen_company') else 0
     search_text = json.get('search_text') if json.get('search_text') else None
     params = {'search_text': search_text, 'user_id': g.user_dict['id']}
-    original_chosen_status = None
     article_status = json.get('chosen_status') if json.get('chosen_status') else None
     if chosen_company_id:
         params['company_id'] = chosen_company_id

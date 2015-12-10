@@ -88,13 +88,6 @@ def createdir(json, parent_id=None):
                           root_folder_id=request.json['params']['root_id'],
                           parent_id=request.json['params']['folder_id'])
 
-
-@filemanager_bp.route('/test/', methods=['GET', 'POST'])
-def test():
-    name = TranslateTemplate.getTranslate('companies_list', 'Company name is `%(name)s` - YOUR OWN COMPANY')
-    return render_template('tmp-test.html', file=name)
-
-
 @filemanager_bp.route('/properties/', methods=['POST'])
 @ok
 def set_properties(json):
@@ -130,20 +123,6 @@ def cut(json):
 def remove(file_id):
     return File.remove(file_id)
 
-
-# @filemanager_bp.route('/upload/<string:parent_id>/', methods=['POST'])
-# def upload(parent_id):
-#     sleep(0.1)
-#     parent = File.get(parent_id)
-#     root_id = parent.root_folder_id
-#     if root_id == None:
-#         root_id = parent.id
-#     data = request.form
-#     uploaded_file = request.files['file']
-#     name = File.get_unique_name(uploaded_file.filename, uploaded_file.content_type, parent.id)
-#     uploaded = File.upload(name, data, parent.id, root_id, content=uploaded_file.stream.read(-1))
-#     return uploaded#jsonify({'result': {'size': 0}})
-
 @filemanager_bp.route('/uploader/', methods=['GET', 'POST'])
 @filemanager_bp.route('/uploader/<string:company_id>', methods=['GET', 'POST'])
 def uploader(company_id=None):
@@ -161,8 +140,6 @@ def uploader(company_id=None):
 
 @filemanager_bp.route('/send/<string:parent_id>/', methods=['POST'])
 def send(parent_id):
-    """ YOU SHOULD SEND PROPERTY NAME, DESCRIPTION, ROOT_FOLDER AND FOLDER.
-    NOW THIS VALUES GET FROM DB. HARDCODE!!! """
     file = request.files['file']
     parent = File.get(parent_id)
     root = parent.root_folder_id
