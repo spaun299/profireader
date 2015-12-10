@@ -24,7 +24,8 @@
 
             $scope.update = function(){
                 $scope.paginationOptions.pageNumber = 1;
-                $scope.sendData($scope.gridOptions1.columnDefs[0].filter.term, $scope.paginationOptions);
+                console.log($scope.gridOptions1.columnDefs[0].filter.search_text);
+                $scope.sendData($scope.gridOptions1.columnDefs[0].filter.search_text, $scope.paginationOptions);
             };
 
             $scope.refresh = function(){
@@ -57,7 +58,7 @@
                     'new_status': $scope.new_status ? $scope.new_status : null,
                     'page': $scope.paginationOptions.pageNumber,
                     'pageSize': $scope.paginationOptions.pageSize,
-                    'search_text': (new_search_text !== false) ? new_search_text : $scope.data['search_text'],
+                    'search_text': new_search_text ? new_search_text : '',
                     'sort_date':$scope.paginationOptions.sort
                 };
                 $ok($scope.url_search_article({company_id: $scope.own_company_id}), data, function (resp) {
@@ -70,7 +71,7 @@
                     $scope.gridOptions1.columnDefs[3]['filter']['selectOptions'] = $scope.statuses ;
                 }).finally(function () {
                     $scope.loading = false;
-                    $scope.load_contr = true
+                    $scope.load_contr = true;
                 });
             };
 
