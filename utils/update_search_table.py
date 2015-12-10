@@ -58,6 +58,15 @@ def delete_from_search(target):
 
 if __name__ == '__main__':
     time = datetime.datetime.now()
+    elem_count = 0
+    quantity = 0
+    percent_to_str = ''
+    percents = []
+    for cls in classes:
+        if hasattr(cls, 'search_fields'):
+            elem_count += db_session.query(cls).count()
+            quantity = elem_count
+
     for cls in classes:
         variables = vars(cls).copy()
         variables = variables.keys()
@@ -71,10 +80,15 @@ if __name__ == '__main__':
                     chars_int = int(re.findall(r'\b\d+\b', type_of_field)[0])
                     if chars_int > 36:
                         for c in db_session.query(cls).all():
+                            persent = int(100 * int(elem_count)/int(quantity))
+                            elem_count -= 1
                             original_field = getattr(c, stripped_key)
                             modify_field = original_field + ' '
                             update_search_table(target=c)
-                            print('executing...')
+                            if persent >= 0 and persent not in percents:
+                                percents.append(persent)
+                                percent_to_str += '='
+                                print(percent_to_str+'>', str(persent-100).replace('-', '')+'%')
                         break
                 except Exception as e:
                     pass
