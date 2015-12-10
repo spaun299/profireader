@@ -393,8 +393,8 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
             <div ng-if="data.article.division" class="update_col1">
                 we have division ({{ data.article.division.name }} - {{ data.article.division.id }})<br/>
                 so tags goes here<br/>
-
-                <div ng-if="0" ng-controller="SelectTagsCtrl">
+                {{ data['portal_division']['availableTags'] }}<br/>
+                <div ng-controller="SelectTagsCtrl">
                     <h3>{{_('Article tags:')}}</h3>
                     <!-- <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;"> -->
                     <ui-select multiple ng-model="data['article'].tags" theme="select2" ng-disabled="disabled" style="width: 300px;">

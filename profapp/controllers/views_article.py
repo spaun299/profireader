@@ -1,5 +1,7 @@
 from flask import render_template, redirect, url_for, request, g, make_response
 from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision
+from profapp.models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
+from profapp.models.portal import PortalDivision
 from .blueprints_declaration import article_bp
 from .request_wrapers import ok
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
@@ -116,7 +118,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                      article_portal_division_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
 
-    def portal_division_dict(article):
+    def portal_division_dict(article, tags=None):
         if (not hasattr(article, 'portal_division_id')) or (article.portal_division_id is None):
             return {'positioned_articles': []}
         else:
@@ -124,8 +126,11 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             return {'positioned_articles':
                         [pda.get_client_side_dict(fields='id|position|title') for pda in
                          db(ArticlePortalDivision).filter(filter).
-                             order_by(expression.desc(ArticlePortalDivision.position)).all()]
+                             order_by(expression.desc(ArticlePortalDivision.position)).all()],
+                    'availableTags': tags
                     }
+
+    available_tag_names = None
 
     if article_company_id:  # companys version. always updating existing
         articleVersion = ArticleCompany.get(article_company_id)
@@ -133,15 +138,21 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         articleVersion = ArticleCompany.get(mine_version_article_company_id)
     elif article_portal_division_id:  # updating portal version
         articleVersion = ArticlePortalDivision.get(article_portal_division_id)
+        portal_division_id = articleVersion.portal_division_id
 
-
-
+        article_tag_names = articleVersion.tags
+        available_tags = PortalDivision.get(portal_division_id).portal_division_tags
+        available_tag_names = list(map(lambda x: getattr(x, 'name', ''), available_tags))
 
     else:  # creating personal version
         articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
 
     if action == 'load':
         article_dict = articleVersion.get_client_side_dict(more_fields='long|company')
+
+        if article_portal_division_id:
+            article_dict = dict(list(article_dict.items()) + [('tags', article_tag_names)])
+
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
                       'image_file_id': article_dict['image_file_id']}
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
@@ -152,7 +163,9 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         #             get_coordinates_and_original_img(article_dict.get('image_file_id'))
         # except Exception as e:
         #     pass
-        return {'article': article_dict, 'image': image_dict, 'portal_division': portal_division_dict(articleVersion)}
+        return {'article': article_dict,
+                'image': image_dict,
+                'portal_division': portal_division_dict(articleVersion, available_tag_names)}
     else:
         parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
 
@@ -162,13 +175,18 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             return articleVersion.validate(article_company_id is None)
         else:
             image_id = parameters['image'].get('image_file_id')
-            # TODO: VK by OZ: this code dont work if ArticlePortalDivision updated
+            # TODO: VK by OZ: this code dosn't work if ArticlePortalDivision updated
             # if image_id:
             #     articleVersion.image_file_id = crop_image(image_id,
             #
             #
             #                            json['image'].get('coordinates'))
 
+            if type(articleVersion) == ArticlePortalDivision:
+                tag_names = json['article']['tags']
+                articleVersion.manage_article_tags(tag_names)
+
+            a = articleVersion.save()
             if article_portal_division_id:
                 articleVersion.insert_after(json['portal_division']['insert_after'], articleVersion.position_unique_filter())
             return {'article': articleVersion.save().get_client_side_dict(more_fields='long'), 'image': json['image'],
@@ -213,4 +231,3 @@ def resubmit_to_company(json, article_company_id):
                         ARTICLE_STATUS_IN_COMPANY.declined)
     a.status = ARTICLE_STATUS_IN_COMPANY.submitted
     return {'article': a.save().get_client_side_dict()}
-
