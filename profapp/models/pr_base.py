@@ -73,7 +73,10 @@ class Search(Base):
                              for search text only in this fields.
                 optional:    -return_fields: String. If return_fields provided,
                              this function return dictionary with fields you want, else return id's.
-                             example: "name,country,region"
+                             example: "name,country,region". Also you can pass to this argument
+                             string 'default_dict' which also return sorted dictionaries with
+                             default fields provided in 'get_client_side_to_dict' func
+                             for this class.
                 if you want to pass one fieldname you almost should make tuple
                 or list. example: ('title', ):
                 optional:    -join: subquery wich you want to join without filters.
@@ -184,7 +187,7 @@ class Search(Base):
         for cls in args:
             filter_params = cls.get('filter')
             fields = cls.get('fields') or \
-                     [key for key in vars(cls['class']).keys() if key[0] != '_']
+                [key for key in vars(cls['class']).keys() if key[0] != '_']
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
@@ -227,24 +230,31 @@ class Search(Base):
             join_search.append(db(subquery_search).join(
                 join_params or arg['class'],
                 arg['class'].id == subquery_search.c.index).subquery())
-        objects = {}
+        objects = collections.OrderedDict()
+        to_order = {}
         ord_by = 'text' if type(kwargs.get('order_by')) in (str, list, tuple) \
             else order_by_to_str[kwargs['order_by']]
         for search in join_search:
             for cls in db(search).all():
-                objects[getattr(cls, ord_by)] = {'id': cls.index,
-                                                 'table_name': cls.table_name}
+                objects[cls.index] = {'id': cls.index, 'table_name': cls.table_name,
+                                      'order': getattr(cls, ord_by)}
+                to_order[cls.index] = getattr(cls, ord_by)
         objects = {obj['id']: obj for obj in
                    collections.OrderedDict(sorted(objects.items())).values()}
+        ordered = sorted(to_order.items(), reverse=False if desc_asc == 'asc' else True)
+        objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
         if return_objects:
-            ordered_articles = collections.OrderedDict()
+            items = dict()
             for cls in args:
                 fields = cls.get('return_fields') or 'id'
                 assert type(fields) is str, \
                     'Arg parameter return_fields must be string but %s given' % fields
                 for a in db(cls['class']).filter(cls['class'].id.in_(objects.keys())).all():
-                    ordered_articles[a.id] = a.get_client_side_dict(fields=fields)
-            objects = ordered_articles
+                    if fields != 'default_dict':
+                        items[a.id] = a.get_client_side_dict(fields=fields)
+                    else:
+                        items[a.id] = a.get_client_side_dict()
+            objects = collections.OrderedDict((id, items[id]) for id, val in ordered)
         return objects, pages, page + 1
 
 
