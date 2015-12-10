@@ -73,7 +73,10 @@ class Search(Base):
                              for search text only in this fields.
                 optional:    -return_fields: String. If return_fields provided,
                              this function return dictionary with fields you want, else return id's.
-                             example: "name,country,region"
+                             example: "name,country,region". Also you can pass to this argument
+                             string 'default_dict' which also return sorted dictionaries with
+                             default fields provided in 'get_client_side_to_dict' func
+                             for this class.
                 if you want to pass one fieldname you almost should make tuple
                 or list. example: ('title', ):
                 optional:    -join: subquery wich you want to join without filters.
@@ -241,14 +244,17 @@ class Search(Base):
         ordered = sorted(to_order.items(), reverse=False if desc_asc == 'asc' else True)
         objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
         if return_objects:
-            ordered_articles = collections.OrderedDict()
+            items = dict()
             for cls in args:
                 fields = cls.get('return_fields') or 'id'
                 assert type(fields) is str, \
                     'Arg parameter return_fields must be string but %s given' % fields
                 for a in db(cls['class']).filter(cls['class'].id.in_(objects.keys())).all():
-                    ordered_articles[a.id] = a.get_client_side_dict(fields=fields)
-            objects = collections.OrderedDict((id, ordered_articles[id]) for id, val in ordered)
+                    if fields != 'default_dict':
+                        items[a.id] = a.get_client_side_dict(fields=fields)
+                    else:
+                        items[a.id] = a.get_client_side_dict()
+            objects = collections.OrderedDict((id, items[id]) for id, val in ordered)
         return objects, pages, page + 1
 
 
