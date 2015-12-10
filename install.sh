@@ -297,7 +297,6 @@ function menu_db_download_minimal {
 function menu_db_load_minimal {
     runsql_dump 'Enter sql structure filename' database.structure db_save_minimal
     }
-
 function menu_db_save_minimal {
     profidb=$(get_profidb)
     conf_comm "
