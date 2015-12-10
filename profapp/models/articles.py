@@ -45,12 +45,10 @@ class ArticlePortalDivision(Base, PRBase):
     status = Column(TABLE_TYPES['id_profireader'], default=ARTICLE_STATUS_IN_PORTAL.published)
 
     division = relationship('PortalDivision',
-                            backref=backref('article_portal_division',
-                                            cascade="save-update, merge, delete"),
+                            backref=backref('article_portal_division', cascade="save-update, merge, delete"),
                             cascade="save-update, merge, delete")
     company = relationship(Company, secondary='article_company',
-                           primaryjoin="ArticlePortalDivision.article_company_id"
-                                       " == ArticleCompany.id",
+                           primaryjoin="ArticlePortalDivision.article_company_id == ArticleCompany.id",
                            secondaryjoin="ArticleCompany.company_id == Company.id",
                            viewonly=True, uselist=False)
 
@@ -66,7 +64,9 @@ class ArticlePortalDivision(Base, PRBase):
                      'keywords': {'relevance': lambda field='keywords': RELEVANCE.keywords}}
     tag_assoc_select = relationship('TagPortalDivisionArticle',
                                     back_populates='article_portal_division_select',
-                                    cascade="save-update, merge, delete")
+                                    cascade="save-update, merge, delete, delete-orphan",
+                                    passive_deletes=True
+                                    )
 
     @property
     def tags(self):
@@ -164,6 +164,23 @@ class ArticlePortalDivision(Base, PRBase):
         else:
             sub_query = sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
         return sub_query
+
+    def manage_article_tags(self, new_tags):
+        self.tag_assoc_select = []
+        g.db.add(self)
+        g.db.commit()   # TODO (AA to AA): this solution solves the problem but we MUST find another one to avoid commit on this stage!
+        tags_portal_division_article = []
+        for i in range(len(new_tags)):
+            tag_portal_division_article = TagPortalDivisionArticle(position=i + 1)
+            tag_portal_division = \
+                g.db.query(TagPortalDivision). \
+                    select_from(TagPortalDivision). \
+                    join(Tag). \
+                    filter(TagPortalDivision.portal_division_id == self.portal_division_id). \
+                    filter(Tag.name == new_tags[i]).one()
+            tag_portal_division_article.tag_portal_division = tag_portal_division
+            tags_portal_division_article.append(tag_portal_division_article)
+        self.tag_assoc_select = tags_portal_division_article
 
     def position_unique_filter(self):
         return and_(ArticlePortalDivision.portal_division_id == self.portal_division_id,
