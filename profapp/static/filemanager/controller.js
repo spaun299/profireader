@@ -27,6 +27,8 @@
             $scope.name = '';
             $scope.upload_file_id = '';
 
+            $scope.last_visit = document.referrer;
+
             $scope.setTemplate = function (name) {
                 $scope.viewTemplate = $cookies.viewTemplate = name;
             };
