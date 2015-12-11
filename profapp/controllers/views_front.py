@@ -1,5 +1,5 @@
 from .blueprints_declaration import front_bp
-from flask import render_template, request, url_for, redirect, g, current_app
+from flask import render_template, request, url_for, redirect, g, current_app, session
 from ..models.articles import Article, ArticlePortalDivision, ArticleCompany
 from ..models.portal import MemberCompanyPortal, PortalDivision, Portal, Company, \
     PortalDivisionSettingsCompanySubportal
@@ -70,7 +70,8 @@ def index(page=1):
     search_text, portal, _ = get_params()
     division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                       portal_division_type_id='index').one()
-    order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
+    order = Search.ORDER_MD_TM if not search_text else Search.ORDER_RELEVANCE
+    page = page if session.get('original_search_text') == search_text else 1
     articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
                                               'filter':
                                                   and_(ArticlePortalDivision.portal_division_id.in_(
@@ -85,6 +86,7 @@ def index(page=1):
             ArticlePortalDivision.id.in_(articles_id.keys())).all():
         ordered_articles[a.id] = dict(list(a.get_client_side_dict().items()) +
                                       list({'tags': a.tags}.items()))
+    session['original_search_text'] = search_text
     return render_template('front/bird/index.html',
                            articles=ordered_articles,
                            portal=portal_and_settings(portal),
@@ -103,7 +105,7 @@ def division(division_name, page=1):
     if division.portal_division_type_id == 'catalog' and search_text:
         return redirect(url_for('front.index', search_text=search_text))
     if division.portal_division_type_id == 'news' or division.portal_division_type_id == 'events':
-        order = Search.ORDER_MD_TM if not search_text else Search.ORDER_RELEVANCE
+        order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
         articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
                                                   'filter': and_(ArticlePortalDivision.
                                                   portal_division_id == division.id,
@@ -181,7 +183,7 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
 
     subportal_division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                                 name=division_name).one()
-    order = Search.ORDER_MD_TM if not search_text else Search.ORDER_RELEVANCE
+    order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
     articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
                                               'filter': and_(ArticlePortalDivision.
                                                              portal_division_id ==

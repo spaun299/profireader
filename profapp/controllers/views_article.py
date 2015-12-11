@@ -101,16 +101,17 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         if article_portal_division_id:
             article_dict = dict(list(article_dict.items()) + [('tags', article_tag_names)])
 
-        image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
-                      'image_file_id': article_dict['image_file_id']}
+        image_dict = {}
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
         # TODO: VK by OZ: this code should be moved to model
-        # try:
-        #     if article_dict.get('image_file_id'):
-        #         image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
-        #             get_coordinates_and_original_img(article_dict.get('image_file_id'))
-        # except Exception as e:
-        #     pass
+        try:
+            if article_dict.get('image_file_id'):
+                image_file_id, coordinates = ImageCroped. \
+                    get_coordinates_and_original_img(article_dict.get('image_file_id'))
+                image_dict.update(coordinates)
+                image_dict['image_file_id'] = image_file_id
+        except Exception as e:
+            pass
         return {'article': article_dict,
                 'image': image_dict,
                 'portal_division': portal_division_dict(articleVersion, available_tag_names)}
@@ -123,12 +124,10 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             return articleVersion.validate(article_company_id is None)
         else:
             image_id = parameters['image'].get('image_file_id')
-            # TODO: VK by OZ: this code dosn't work if ArticlePortalDivision updated
-            # if image_id:
-            #     articleVersion.image_file_id = crop_image(image_id,
-            #
-            #
-            #                            json['image'].get('coordinates'))
+            # TODO: VK by OZ: this code dont work if ArticlePortalDivision updated
+            if image_id:
+                del parameters['image']['image_file_id']
+                articleVersion.image_file_id = crop_image(image_id, parameters['image'])
 
             if type(articleVersion) == ArticlePortalDivision:
                 tag_names = json['article']['tags']
