@@ -168,6 +168,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             }
         };
     }])
+
     .directive('prImage', ['$timeout', function ($timeout) {
         return {
             restrict: 'A',
