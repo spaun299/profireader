@@ -238,14 +238,15 @@ class ArticleCompany(Base, PRBase):
 
     @staticmethod
     def get_companies_where_user_send_article(user_id):
-        all = {'name': 'All', 'id': 0}
-        companies = []
-        companies.append(all)
-
+        # all = {'name': 'All', 'id': 0}
+        # companies = []
+        # companies.append(all)
+        companies = {}
         for article in db(Article, author_user_id=user_id).all():
             for comp in article.submitted_versions:
-                companies.append(comp.company.get_client_side_dict(fields='id, name'))
-        return all, [dict(comp) for comp in set([tuple(c.items()) for c in companies])]
+                companies[comp.company.id] = comp.company.name
+                # companies.append(comp.company.get_client_side_dict(fields='id, name'))
+        return companies #all, [dict(comp) for comp in set([tuple(c.items()) for c in companies])]
 
     @staticmethod
     def get_companies_for_article(article_id):
@@ -598,7 +599,34 @@ class Article(Base, PRBase):
                                 'allowed_status': allowed_statuses})
         return grid_data
 
-
+    @staticmethod
+    def getListGridDataArticles(articles):
+        articles_drid_data = []
+        for (article, time) in articles:
+            companies_for_article = ArticleCompany.get_companies_for_article(article.id)
+            article_dict = article.get_client_side_dict()
+            capm = '' if len(companies_for_article) > 0 else 'Not sent to any company yet'
+            st = '' if len(article_dict['submitted_versions']) > 0 else 'Not sent'
+            article_dict['md_tm'] = time
+            articles_drid_data.append({'Date': article_dict['md_tm'],
+                                       'Title': article_dict['mine_version']['title'],
+                                       'Campanies': capm,
+                                       'Status': st,
+                                       'id': str(article_dict['id']),
+                                       'level': True})
+            if companies_for_article:
+                i = 0
+                for child in companies_for_article:
+                    st = article_dict['submitted_versions'][i]['status'] if len(
+                        article_dict['submitted_versions']) > 0 else 'Not sent'
+                    articles_drid_data.append({'Date': '',
+                                               'Title': '',
+                                               'Campanies': child['name'],
+                                               'Status': st,
+                                               'id': '',
+                                               'level': False})
+                    i += 1
+        return articles_drid_data
         # for article in articles:
         #     article.possible_new_statuses = ARTICLE_STATUS_IN_COMPANY.\
         #         can_user_change_status_to(article.status)

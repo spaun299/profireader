@@ -29,7 +29,6 @@ def load_mine(json):
     chosen_company_id = json.get('chosen_company') if json.get('chosen_company') else 0
     search_text = json.get('search_text') if json.get('search_text') else None
     params = {'search_text': search_text, 'user_id': g.user_dict['id']}
-    original_chosen_status = None
     article_status = json.get('chosen_status') if json.get('chosen_status') else None
     if chosen_company_id:
         params['company_id'] = chosen_company_id
@@ -39,64 +38,13 @@ def load_mine(json):
     subquery = ArticleCompany.subquery_user_articles(sort=date_sort, **params)
     articles, pages, current_page = pagination(subquery,
                                                page=current_page, items_per_page=json.get('pageSize'))
-
-    all, companies = ArticleCompany.get_companies_where_user_send_article(g.user_dict['id'])
     add_param = {'value': '1', 'label': 'All'}
     statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    company_list_for_grid = []
-    b = 1
-    companies.sort(key=lambda k: k['name'])
-    for cp in companies:
-        company_list_for_grid.append({
-            'value': str(b),
-            'label': cp['name'],
-            'id': cp['id']
-        })
-        b += 1
-    articles_with_time = []
-    for (article, time) in articles.all():
-        article_dict = article.get_client_side_dict()
-        article_dict['md_tm'] = time
-        articles_with_time.append({'article': article_dict,
-                                   'company_count': len(article_dict['submitted_versions']) + 1})
-    articles_drid_data = []
-
-    for (article, time) in articles.all():
-        companies_for_article = ArticleCompany.get_companies_for_article(article.id)
-        article_dict = article.get_client_side_dict()
-        capm = '' if len(companies_for_article) > 0 else 'Not sent to any company yet'
-        st = '' if len(article_dict['submitted_versions']) > 0 else 'Not sent'
-        article_dict['md_tm'] = time
-        articles_drid_data.append({'Date': article_dict['md_tm'],
-                                   'Title': article_dict['mine_version']['title'],
-                                   'Campanies': capm,
-                                   'Status': st,
-                                   'id': str(article_dict['id']),
-                                   'level': True})
-        if companies_for_article:
-            i = 0
-            for child in companies_for_article:
-                st = article_dict['submitted_versions'][i]['status'] if len(
-                    article_dict['submitted_versions']) > 0 else 'Not sent'
-                articles_drid_data.append({'Date': '',
-                                           'Title': '',
-                                           'Campanies': child['name'],
-                                           'Status': st,
-                                           'id': '',
-                                           'level': False})
-                i += 1
+    company_list_for_grid = Article.list_for_grid_tables(ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
+    articles_drid_data = Article.getListGridDataArticles(articles.all())
 
     return {'grid_data': articles_drid_data,
-            'articles': articles_with_time,
             'companies': company_list_for_grid,
-            'search_text': json.get('search_text') or '',
-            'original_search_text': json.get('search_text') or '',
-            'chosen_company': json.get('chosen_company') or all,
-            'pages': {'total': pages,
-                      'current_page': current_page,
-                      'page_buttons': Config.PAGINATION_BUTTONS},
-            'chosen_status': json.get('chosen_status') or statuses[-1],
-            'original_chosen_status': original_chosen_status,
             'statuses': statuses,
             'total': subquery.count()}
 

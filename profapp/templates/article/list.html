@@ -24,7 +24,7 @@
 
             $scope.update = function(){
                 $scope.paginationOptions.pageNumber = 1;
-                $scope.sendData($scope.gridOptions1.columnDefs[0].filter.term,$scope.paginationOptions);
+                $scope.sendData($scope.gridOptions1.columnDefs[0].filter.search_text,$scope.paginationOptions);
             };
 
             $scope.cancel = function () {
@@ -97,13 +97,11 @@
                       },
                       { name: 'Campanies', enableSorting: false,enableCellEdit: false,groupingShowAggregationMenu: false,enableColumnMenu: false,
                           filter: {
-                            pos: '1',
                             term: '1',
                             type: uiGridConstants.filter.SELECT}
                       },
                       { name: 'Status', enableSorting: false,enableCellEdit: false,groupingShowAggregationMenu: false,enableColumnMenu: false,
                           filter: {
-                            pos: '2',
                             term: '1',
                             type: uiGridConstants.filter.SELECT}
                       }
@@ -120,9 +118,9 @@
         <a class="h1-btn icon icon-add" href="{{ url_create_article }}" title="{{ _('CREATE NEW ARTICLE') }}"><img src="../../static/front/img/ico/articles.png" /></a>
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
         <div ng-if="load_contr">
-            <div ng-show="!areAllEmpty(data.articles)" class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
-            <div ng-show="!loading && areAllEmpty(data.articles)">{{_('No publications')}}</div>
-            <button ng-click="refresh()" ng-show="!loading && areAllEmpty(data.articles)" class="btn btn-warning" >Back</button>
+            <div ng-show="!areAllEmpty(data.grid_data)" class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
+            <div ng-show="!loading && areAllEmpty(data.grid_data)">{{_('No publications')}}</div>
+            <button ng-click="refresh()" ng-show="!loading && areAllEmpty(data.grid_data)" class="btn btn-warning" >Back</button>
         </div>
     </div>
     {% endraw %}
