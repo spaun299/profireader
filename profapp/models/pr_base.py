@@ -512,12 +512,12 @@ class PRBase:
             options = {'relevance': lambda field_name: getattr(RELEVANCE, field_name),
                        'processing': lambda text: MLStripper().strip_tags(text),
                        'index': lambda target_id: target_id}
-            time = datetime.datetime.now()
             default_time = datetime.datetime.now()
-            if hasattr(target, 'md_tm'):
-                time = getattr(target, 'md_tm', default_time)
-            elif hasattr(target, 'publishing_tm'):
+            time = default_time
+            if hasattr(target, 'publishing_tm'):
                 time = (target, 'publishing_tm', default_time)
+            elif hasattr(target, 'md_tm'):
+                time = getattr(target, 'md_tm', default_time)
             elif hasattr(target, 'cr_tm'):
                 time = getattr(target, 'cr_tm', default_time)
             for field in target_fields.split(','):

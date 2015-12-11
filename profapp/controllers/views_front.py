@@ -87,7 +87,6 @@ def index(page=1):
         ordered_articles[a.id] = dict(list(a.get_client_side_dict().items()) +
                                       list({'tags': a.tags}.items()))
     session['original_search_text'] = search_text
-    print(division.get_client_side_dict())
     return render_template('front/bird/index.html',
                            articles=ordered_articles,
                            portal=portal_and_settings(portal),
@@ -106,7 +105,7 @@ def division(division_name, page=1):
     if division.portal_division_type_id == 'catalog' and search_text:
         return redirect(url_for('front.index', search_text=search_text))
     if division.portal_division_type_id == 'news' or division.portal_division_type_id == 'events':
-        order = Search.ORDER_MD_TM if not search_text else Search.ORDER_RELEVANCE
+        order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
         articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
                                                   'filter': and_(ArticlePortalDivision.
                                                   portal_division_id == division.id,
@@ -184,7 +183,7 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
 
     subportal_division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                                 name=division_name).one()
-    order = Search.ORDER_MD_TM if not search_text else Search.ORDER_RELEVANCE
+    order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
     articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
                                               'filter': and_(ArticlePortalDivision.
                                                              portal_division_id ==
