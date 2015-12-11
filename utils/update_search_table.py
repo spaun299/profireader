@@ -27,6 +27,14 @@ def add_to_search(target=None):
         options = {'relevance': lambda field_name: getattr(RELEVANCE, field_name),
                    'processing': lambda text: MLStripper().strip_tags(text),
                    'index': lambda target_id: target_id}
+        md_time = datetime.datetime.now()
+        default_time = datetime.datetime.now()
+        if hasattr(target, 'md_tm'):
+            md_time = getattr(target, 'md_tm', default_time)
+        elif hasattr(target, 'publishing_tm'):
+            md_time = (target, 'publishing_tm', default_time)
+        elif hasattr(target, 'cr_tm'):
+            md_time = getattr(target, 'cr_tm', default_time)
         for field in target_fields.split(','):
             field_options = target.search_fields[field]
             field_options.update({key: options[key] for key in options
@@ -37,7 +45,7 @@ def add_to_search(target=None):
                                   table_name=target.__tablename__,
                                   relevance=field_options['relevance'](field), kind=field,
                                   text=field_options['processing'](str(target_dict[field])),
-                                  position=position))
+                                  position=position, md_tm=md_time))
 
 def update_search_table(target=None):
 
