@@ -515,7 +515,7 @@ class PRBase:
             default_time = datetime.datetime.now()
             time = default_time
             if hasattr(target, 'publishing_tm'):
-                time = (target, 'publishing_tm', default_time)
+                time = getattr(target, 'publishing_tm', default_time)
             elif hasattr(target, 'md_tm'):
                 time = getattr(target, 'md_tm', default_time)
             elif hasattr(target, 'cr_tm'):
