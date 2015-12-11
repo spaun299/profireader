@@ -86,11 +86,11 @@ def materials_load(json, company_id):
     params['publ_status'] = json.get('grid_data')['publ_status'] if json.get('grid_data')['publ_status'] else None
     params['sort_date'] = json.get('grid_data')['sort_date'] if json.get('grid_data')['sort_date'] else None
 
-    if json.get('grid_data')['new_status']:
-        ArticleCompany.update_article(
-            company_id=company_id,
-            article_id=json.get('article_id'),
-            **{'status': json.get('grid_data')['new_status']})
+    # if json.get('grid_data')['new_status']:
+    #     ArticleCompany.update_article(
+    #         company_id=company_id,
+    #         article_id=json.get('article_id'),
+    #         **{'status': json.get('grid_data')['new_status']})
     subquery = ArticleCompany.subquery_company_articles(search_text=search_text,
                                                         company_id=company_id,
                                                         portal_id=json.get('portal_id'),
