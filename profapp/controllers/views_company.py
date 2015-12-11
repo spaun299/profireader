@@ -20,6 +20,7 @@ from profapp.models.rights import RIGHTS
 from ..models.files import File, ImageCroped
 from flask import session
 from .pagination import pagination
+from .views_file import crop_image
 from config import Config
 from ..models.pr_base import Search
 
@@ -302,26 +303,28 @@ def load(json, company_id=None):
     company = Company() if company_id is None else Company.get(company_id)
     if action == 'load':
         company_dict = company.get_client_side_dict()
-        print(company_dict)
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
                       'image_file_id': company_dict.get('logo_file_id')}
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
         # TODO: VK by OZ: this code should be moved to model
         try:
             if company_dict.get('logo_file_id'):
+                print(company_dict.get('logo_file_id'))
                 image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
                     get_coordinates_and_original_img(company_dict.get('logo_file_id'))
         except Exception as e:
             pass
         image = {'image': image_dict}
         company_dict.update(image)
-        print(company_dict)
         return company_dict
     else:
         company.attr(g.filter_json(json, 'about', 'address', 'country', 'email', 'name', 'phone',
                                    'phone2', 'region', 'short_description'))
-        if json.get('logo_file_id'):
-            company.logo_file_id = json['logo_file_id']
+        img = json['image']
+        img_id = img.get('image_file_id')
+        if img_id:
+            del img['image_file_id']
+            company.logo_file_id = crop_image(img_id, img)
 
         if action == 'save':
             if company_id is None:
