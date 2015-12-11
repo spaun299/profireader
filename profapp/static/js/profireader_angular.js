@@ -616,6 +616,12 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             pageSize: 50,
             sort: null
         },
+        filterForSelect: function(uiGridConstants){
+            return{
+              term: '1',
+              type: uiGridConstants.filter.SELECT
+            };
+        },
         editableTemplate: '<div class = "ui_dropdown"><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',
         selectRowTemplate: '<div class="ui-grid-cell-contents">{{ COL_FIELD }}<i class="glyphicon glyphicon-collapse-down" style="float:right"></i></div>',
         setGridExtarnals: function (gridApi, externalFunction, paginationOptions, refresh) {
