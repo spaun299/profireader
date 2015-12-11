@@ -326,6 +326,8 @@ def load(json, company_id=None):
         if img_id and img_id != FOLDER_AND_FILE.no_logo():
             del img['image_file_id']
             company.logo_file_id = crop_image(img_id, img)
+        elif not img_id:
+            company.logo_file_id = None
 
         if action == 'save':
             if company_id is None:

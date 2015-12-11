@@ -131,6 +131,8 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             if image_id and image_id != FOLDER_AND_FILE.no_article_image():
                 del parameters['image']['image_file_id']
                 articleVersion.image_file_id = crop_image(image_id, parameters['image'])
+            elif not image_id:
+                articleVersion.image_file_id = None
 
             if type(articleVersion) == ArticlePortalDivision:
                 tag_names = json['article']['tags']
