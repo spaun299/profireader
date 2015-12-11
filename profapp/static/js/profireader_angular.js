@@ -584,6 +584,12 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 return phrase
             }
         },
+        filterForSelect: function(uiGridConstants){
+            return{
+              term: '1',
+              type: uiGridConstants.filter.SELECT
+            };
+        },
         paginationOptions: {
             pageNumber: 1,
             pageSize: 50,

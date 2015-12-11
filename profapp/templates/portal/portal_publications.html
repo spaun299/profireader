@@ -85,24 +85,18 @@
                     columnDefs: [
                       { name: 'Title', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
                           width: '35%', cellTemplate: '<div class="link" ng-class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.own_company_id,article_id:row.entity.id})}}" ng-bind="row.entity.Title"></a></div>',
-                          filter: {
-                            type: uiGridConstants.filter.INPUT}
+                          filter: {type: uiGridConstants.filter.INPUT}
                       },
                       { name: 'Date',enableCellEdit: false, enableFiltering: false },
                       { name: 'Company', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
-                          filter: {
-                            term: '1',
-                            type: uiGridConstants.filter.SELECT}
-
+                          filter: $scope.filterForSelect(uiGridConstants)
                       },
-                      { name: 'Publication status', enableSorting: false, cellClass:'blue', //editableCellTemplate: $scope.editableTemplate,
+                      { name: 'Publication status', enableSorting: false, //editableCellTemplate: $scope.editableTemplate,
                           //editDropdownValueLabel: 'value',
                           //cellTemplate: $scope.selectRowTemplate,
                           enableCellEdit: false,
                           enableColumnMenu: false,
-                          filter: {
-                            term: '1',
-                            type: uiGridConstants.filter.SELECT}
+                          filter: $scope.filterForSelect(uiGridConstants)
                       }
 
                     ],
