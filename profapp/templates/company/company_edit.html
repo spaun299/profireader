@@ -68,11 +68,11 @@
 
             <h1 class="nice-title">{{ data.id ? _('Edit company profile') : _('New company Account') }}<span></span>
             </h1>
-
           <div class="update_col1" style="width: 400px;">
                 {{ _('Select picture') }}
-                <div ng-include="'cropper.html'"></div>
+              <ng-include src="'cropper.html'"></ng-include>
             </div>
+
 
             <div style="width: 500px; margin-left: 450px; height: 250px">
                 <div class="item"><span class="input_label">{{_('Company name')}}</span><input ng-model="data.name">

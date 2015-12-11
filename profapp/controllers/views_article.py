@@ -11,6 +11,7 @@ from .views_file import crop_image, update_croped_image
 from ..models.files import ImageCroped
 from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
+from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
 from sqlalchemy.sql import expression
 from sqlalchemy import and_
 
@@ -109,6 +110,8 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             if article_dict.get('image_file_id'):
                 image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
                     get_coordinates_and_original_img(article_dict.get('image_file_id'))
+            else:
+                image_dict['image_file_id'] = FOLDER_AND_FILE.no_article_image()
         except Exception as e:
             pass
 
@@ -125,7 +128,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         else:
             image_id = parameters['image'].get('image_file_id')
             # TODO: VK by OZ: this code dont work if ArticlePortalDivision updated
-            if image_id:
+            if image_id and image_id != FOLDER_AND_FILE.no_article_image():
                 del parameters['image']['image_file_id']
                 articleVersion.image_file_id = crop_image(image_id, parameters['image'])
 

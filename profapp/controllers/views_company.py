@@ -12,6 +12,7 @@ from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STAT
 from ..models.portal import MemberCompanyPortal, Portal
 from ..models.articles import ArticleCompany, ArticlePortalDivision
 from utils.db_utils import db
+from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
 from collections import OrderedDict
 from ..models.tag import TagPortalDivisionArticle
 # from ..models.rights import list_of_RightAtomic_attributes
@@ -305,13 +306,13 @@ def load(json, company_id=None):
         company_dict = company.get_client_side_dict()
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
                       'image_file_id': company_dict.get('logo_file_id')}
-        # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
-        # TODO: VK by OZ: this code should be moved to model
         try:
             if company_dict.get('logo_file_id'):
                 print(company_dict.get('logo_file_id'))
                 image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
                     get_coordinates_and_original_img(company_dict.get('logo_file_id'))
+            else:
+                image_dict['image_file_id'] = FOLDER_AND_FILE.no_logo()
         except Exception as e:
             pass
         image = {'image': image_dict}
@@ -322,7 +323,7 @@ def load(json, company_id=None):
                                    'phone2', 'region', 'short_description'))
         img = json['image']
         img_id = img.get('image_file_id')
-        if img_id:
+        if img_id and img_id != FOLDER_AND_FILE.no_logo():
             del img['image_file_id']
             company.logo_file_id = crop_image(img_id, img)
 
