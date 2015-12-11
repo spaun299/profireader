@@ -19,7 +19,7 @@ class Config(object):
     # 0.0.0.0    profireader.a
     # to /etc/hosts
 
-    SERVER_NAME = 'profireader.com'
+    # SERVER_NAME = 'profireader.com'
     SITE_TITLE = 'Profireader'
 
     # Statement for enabling the development environment
@@ -117,7 +117,7 @@ class ProductionDevelopmentConfig(Config):
     password = os.getenv('PRODUCTION_SERVER_DB_PASSWORD', Config.password)
     db_name = os.getenv('PRODUCTION_SERVER_DB_NAME', Config.database)
 
-    SERVER_NAME = os.getenv('PRODUCTION_SERVER_NAME', Config.SERVER_NAME)
+    # SERVER_NAME = os.getenv('PRODUCTION_SERVER_NAME', Config.SERVER_NAME)
 
     # Define production database
     SQLALCHEMY_DATABASE_URI = \
@@ -145,7 +145,7 @@ class ProductionDevelopmentConfig(Config):
 
 
 class FrontConfig(Config):
-    SERVER_NAME = 'companyportal.d.ntaxa.com'
+    # SERVER_NAME = 'companyportal.d.ntaxa.com'
     host = os.getenv('PRODUCTION_SERVER_DB_HOST', 'companyportal.d.ntaxa.com')
     username = os.getenv('PRODUCTION_SERVER_DB_USERNAME', Config.username)
     password = os.getenv('PRODUCTION_SERVER_DB_PASSWORD', Config.password)
