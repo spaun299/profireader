@@ -103,7 +103,9 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             article_dict = dict(list(article_dict.items()) + [('tags', article_tag_names)])
 
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
-                      'image_file_id': article_dict['image_file_id']}
+                      'image_file_id': article_dict['image_file_id'],
+                      'no_image_file_id': FOLDER_AND_FILE.no_article_image()
+                      }
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
         # TODO: VK by OZ: this code should be moved to model
         try:
@@ -111,7 +113,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                 image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
                     get_coordinates_and_original_img(article_dict.get('image_file_id'))
             else:
-                image_dict['image_file_id'] = FOLDER_AND_FILE.no_article_image()
+                image_dict['image_file_id'] = None
         except Exception as e:
             pass
 
@@ -128,10 +130,10 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
         else:
             image_id = parameters['image'].get('image_file_id')
             # TODO: VK by OZ: this code dont work if ArticlePortalDivision updated
-            if image_id and image_id != FOLDER_AND_FILE.no_article_image():
+            if image_id:
                 del parameters['image']['image_file_id']
-                articleVersion.image_file_id = crop_image(image_id, parameters['image'])
-            elif not image_id:
+                articleVersion.image_file_id = crop_image(image_id, parameters['image']['coordinates'])
+            else:
                 articleVersion.image_file_id = None
 
             if type(articleVersion) == ArticlePortalDivision:
