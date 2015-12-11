@@ -97,49 +97,65 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 var options = {
                     crop: function (e) {
                         if (model.$modelValue) {
-                            e['image_file_id'] = model.$modelValue.image_file_id;
+                            //e['image_file_id'] = model.$modelValue.image_file_id;
                         }
-                        model.$setViewValue(e);
+                        model.$modelValue.coordinates = e;
                     }
-                }
+                };
+
+                var restartCropper = function (src) {
+                    $image.cropper('destroy');
+                    if (src) {
+                        $image.attr('src', src);
+                        $image.cropper(options);
+                        }
+                };
 
                 if (model) {
                     if (model.$modelValue && model.$modelValue.ratio) options.aspectRatio = model.$modelValue.ratio;
                     if (model.$modelValue && model.$modelValue.coordinates) options.data = model.$modelValue.coordinates;
                 }
-                $image.cropper(options);
 
-                if (attrs['prCropper']) {
-                    scope[attrs['prCropper']] = function () {
-                        $image.cropper.apply($image, arguments);
-                    };
-                }
+                restartCropper();
 
+
+                //if (attrs['prCropper']) {
+                //    scope[attrs['prCropper']] = function () {
+                //        $image.cropper.apply($image, arguments);
+                //    };
+                //}
+                //
                 scope.$watch(attrs['ngModel'] + '.image_file_id', function () {
                     if (model && model.$modelValue) {
-                        var file_url = fileUrl(model.$modelValue.image_file_id);
-                        if (file_url) {
-                            $image.cropper('replace', file_url);
-                        }
-                        else {
-                            console.log('no image');
-                        }
-                    }
-                });
+                        //var file_url = fileUrl(model.$modelValue.image_file_id);
+                        //$image.attr('src', );
+                        //$image.cropper('replace', file_url);
+                        restartCropper(fileUrl(model.$modelValue.image_file_id));
 
-                scope.$watch(attrs['ngModel'] + '.ratio', function () {
-                    if (model.$modelValue && model.$modelValue.ratio) {
-                        $image.cropper('setAspectRatio', model.$modelValue.ratio);
+                        //
+                        //if (file_url) {
+                        //
+                        //}
+                        //else {
+                        //    console.log('no image');
+                        //}
                     }
                 });
-
-                scope.$watch(attrs['ngModel'] + '.coordinates', function () {
-                    console.log('coordinates', model.$modelValue);
-                    if (model.$modelValue) console.log(model.$modelValue.coordinates);
-                    if (model.$modelValue && model.$modelValue.coordinates) {
-                        $image.cropper('setData', model.$modelValue.coordinates);
-                    }
-                });
+                //
+                //scope.$watch(attrs['ngModel'] + '.ratio', function () {
+                //    if (model.$modelValue && model.$modelValue.ratio) {
+                //        $image.cropper('setAspectRatio', model.$modelValue.ratio);
+                //    }
+                //});
+                //
+                //scope.$watch(attrs['ngModel'] + '.coordinates', function () {
+                //    if (model.$modelValue) console.log(model.$modelValue.coordinates);
+                //    if (model.$modelValue && model.$modelValue.coordinates) {
+                //        options.data = model.$modelValue.coordinates;
+                //        restartCropper();
+                //        //$image.cropper('setData', model.$modelValue.coordinates);
+                //    }
+                //});
 
             }
         };
@@ -588,12 +604,6 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             } catch (a) {
                 return phrase
             }
-        },
-        filterForSelect: function(uiGridConstants){
-            return{
-              term: '1',
-              type: uiGridConstants.filter.SELECT
-            };
         },
         paginationOptions: {
             pageNumber: 1,
