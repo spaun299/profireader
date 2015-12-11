@@ -17,7 +17,7 @@ from ..models.tag import TagPortalDivisionArticle
 # from ..models.rights import list_of_RightAtomic_attributes
 # from ..models.rights import list_of_RightAtomic_attributes
 from profapp.models.rights import RIGHTS
-from ..models.files import File
+from ..models.files import File, ImageCroped
 from flask import session
 from .pagination import pagination
 from config import Config
@@ -301,11 +301,26 @@ def load(json, company_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
     company = Company() if company_id is None else Company.get(company_id)
     if action == 'load':
-        return company.get_client_side_dict()
+        company_dict = company.get_client_side_dict()
+        print(company_dict)
+        image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
+                      'image_file_id': company_dict.get('logo_file_id')}
+        # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
+        # TODO: VK by OZ: this code should be moved to model
+        try:
+            if company_dict.get('logo_file_id'):
+                image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
+                    get_coordinates_and_original_img(company_dict.get('logo_file_id'))
+        except Exception as e:
+            pass
+        image = {'image': image_dict}
+        company_dict.update(image)
+        print(company_dict)
+        return company_dict
     else:
         company.attr(g.filter_json(json, 'about', 'address', 'country', 'email', 'name', 'phone',
                                    'phone2', 'region', 'short_description'))
-        if json['logo_file_id']:
+        if json.get('logo_file_id'):
             company.logo_file_id = json['logo_file_id']
 
         if action == 'save':
