@@ -24,11 +24,11 @@
             $scope.update = function(row){
                 $scope.paginationOptions.pageNumber = 1;
                 if(row.field === 'Phrase'){
-                    $scope.search_in_phrase = $scope.gridOptions1.columnDefs[4].filter.term;
+                    $scope.search_in_phrase = $scope.gridOptions1.columnDefs[4].filter.search_text;
                 }else if(row.field === 'uk'){
-                    $scope.search_in_uk = $scope.gridOptions1.columnDefs[5].filter.term;
+                    $scope.search_in_uk = $scope.gridOptions1.columnDefs[5].filter.search_text;
                 }else if(row.field === 'en'){
-                    $scope.search_in_en = $scope.gridOptions1.columnDefs[6].filter.term;
+                    $scope.search_in_en = $scope.gridOptions1.columnDefs[6].filter.search_text;
                 }
                 $scope.sendData('', $scope.paginationOptions);
             };

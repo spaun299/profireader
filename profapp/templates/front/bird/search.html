@@ -1,7 +1,7 @@
                     <h4>Search</h4>
 
                     <div class="input-group">
-                        <form action="{{ url_for('front.division', division_name=article['division']['name'], page=1, search_text='%') }}">
+                        <form action="{{ url_for('front.division', division_name=article['division']['name'], page=1, search_text='') }}">
                             <input type="text" name="search_text" class="form-control">
                             <span class="input-group-btn">
                                 <button class="btn btn-default" type="submit">

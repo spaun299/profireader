@@ -12,14 +12,16 @@ from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STAT
 from ..models.portal import MemberCompanyPortal, Portal
 from ..models.articles import ArticleCompany, ArticlePortalDivision
 from utils.db_utils import db
+from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
 from collections import OrderedDict
 from ..models.tag import TagPortalDivisionArticle
 # from ..models.rights import list_of_RightAtomic_attributes
 # from ..models.rights import list_of_RightAtomic_attributes
 from profapp.models.rights import RIGHTS
-from ..models.files import File
+from ..models.files import File, ImageCroped
 from flask import session
 from .pagination import pagination
+from .views_file import crop_image
 from config import Config
 from ..models.pr_base import Search
 
@@ -86,11 +88,11 @@ def materials_load(json, company_id):
     params['publ_status'] = json.get('grid_data')['publ_status'] if json.get('grid_data')['publ_status'] else None
     params['sort_date'] = json.get('grid_data')['sort_date'] if json.get('grid_data')['sort_date'] else None
 
-    if json.get('grid_data')['new_status']:
-        ArticleCompany.update_article(
-            company_id=company_id,
-            article_id=json.get('article_id'),
-            **{'status': json.get('grid_data')['new_status']})
+    # if json.get('grid_data')['new_status']:
+    #     ArticleCompany.update_article(
+    #         company_id=company_id,
+    #         article_id=json.get('article_id'),
+    #         **{'status': json.get('grid_data')['new_status']})
     subquery = ArticleCompany.subquery_company_articles(search_text=search_text,
                                                         company_id=company_id,
                                                         portal_id=json.get('portal_id'),
@@ -301,12 +303,31 @@ def load(json, company_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
     company = Company() if company_id is None else Company.get(company_id)
     if action == 'load':
-        return company.get_client_side_dict()
+        company_dict = company.get_client_side_dict()
+        image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
+                      'image_file_id': company_dict.get('logo_file_id')}
+        try:
+            if company_dict.get('logo_file_id'):
+                print(company_dict.get('logo_file_id'))
+                image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
+                    get_coordinates_and_original_img(company_dict.get('logo_file_id'))
+            else:
+                image_dict['image_file_id'] = FOLDER_AND_FILE.no_logo()
+        except Exception as e:
+            pass
+        image = {'image': image_dict}
+        company_dict.update(image)
+        return company_dict
     else:
         company.attr(g.filter_json(json, 'about', 'address', 'country', 'email', 'name', 'phone',
                                    'phone2', 'region', 'short_description'))
-        if json['logo_file_id']:
-            company.logo_file_id = json['logo_file_id']
+        img = json['image']
+        img_id = img.get('image_file_id')
+        if img_id and img_id != FOLDER_AND_FILE.no_logo():
+            del img['image_file_id']
+            company.logo_file_id = crop_image(img_id, img)
+        elif not img_id:
+            company.logo_file_id = None
 
         if action == 'save':
             if company_id is None:

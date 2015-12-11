@@ -10,6 +10,8 @@
 
 
 {% block portal_content %}
+        {% from 'macros.html' import scripts %}
+    {{ scripts(names=['croper']) }}
     <script>
         module.controller('company_create', ['$scope', '$modal', '$ok', '$af', function ($scope, $modal, $ok, $af) {
 
@@ -43,40 +45,17 @@
             {#                      ng-onsubmit="getData"#}
             {#                      ng-action="save_company_url"#}
 
-            $scope.articleImageSelected = function (item) {
-                console.log(item);
-                $scope.data.logo_file_id = item.id;
-                $scope.setImageUrl($scope.data.logo_file_id);
+            $scope.ImageSelected = function (item) {
+                $scope.data.image.image_file_id = item.id;
                 closeFileManager();
             }
 
             $scope.setImageUrl = function (logo_file_id) {
                 $scope.logo_file_url = fileUrl(logo_file_id);
             }
-
             $scope.chooseImage = function () {
-                $scope.filemanagerModal = $modal.open({
-                    templateUrl: 'filemanager.html',
-                    controller: 'filemanagerCtrl',
-                    size: 'filemanager-halfscreen',
-                    resolve: {
-                        file_manager_called_for: function () {
-                            return 'file_browse_image'
-                        },
-                        file_manager_on_action: function () {
-                            return {
-                                choose: "parent.angularControllerFunction('company_create', 'articleImageSelected')"
-                            }
-                        },
-                        file_manager_default_action: function () {
-                            return 'choose'
-                        }
-                    }
-                });
-
-
-            };
-
+                $scope.chooseImageinFileManager("parent.angularControllerFunction('company_create', 'ImageSelected')", 'choose');
+            }
         }])
     </script>
     {% raw %}
@@ -89,14 +68,11 @@
 
             <h1 class="nice-title">{{ data.id ? _('Edit company profile') : _('New company Account') }}<span></span>
             </h1>
-
-            <div style="width: 400px;">
-                <div ng-click="chooseImage()"
-                     style="float: left; width: 300px; height: 240px; border: 1px solid #aaa;
-                        background-size: cover; background-image:url({{ logo_file_url }});">
-                    {{ _('Select logo') }}
-                </div>
+          <div class="update_col1" style="width: 400px;">
+                {{ _('Select picture') }}
+              <ng-include src="'cropper.html'"></ng-include>
             </div>
+
 
             <div style="width: 500px; margin-left: 450px; height: 250px">
                 <div class="item"><span class="input_label">{{_('Company name')}}</span><input ng-model="data.name">
