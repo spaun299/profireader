@@ -12,6 +12,7 @@ from profapp.constants.SEARCH import RELEVANCE
 import re
 from sqlalchemy.orm import scoped_session, sessionmaker
 from config import ProductionDevelopmentConfig
+import datetime
 classes = [ArticlePortalDivision, Article, ArticleCompany, ArticleCompanyHistory,
            Company, UserCompany, FileContent, File, User]
 engine = create_engine(ProductionDevelopmentConfig.SQLALCHEMY_DATABASE_URI)
@@ -26,6 +27,14 @@ def add_to_search(target=None):
         options = {'relevance': lambda field_name: getattr(RELEVANCE, field_name),
                    'processing': lambda text: MLStripper().strip_tags(text),
                    'index': lambda target_id: target_id}
+        md_time = datetime.datetime.now()
+        default_time = datetime.datetime.now()
+        if hasattr(target, 'md_tm'):
+            md_time = getattr(target, 'md_tm', default_time)
+        elif hasattr(target, 'publishing_tm'):
+            md_time = (target, 'publishing_tm', default_time)
+        elif hasattr(target, 'cr_tm'):
+            md_time = getattr(target, 'cr_tm', default_time)
         for field in target_fields.split(','):
             field_options = target.search_fields[field]
             field_options.update({key: options[key] for key in options
@@ -36,7 +45,7 @@ def add_to_search(target=None):
                                   table_name=target.__tablename__,
                                   relevance=field_options['relevance'](field), kind=field,
                                   text=field_options['processing'](str(target_dict[field])),
-                                  position=position))
+                                  position=position, md_tm=md_time))
 
 def update_search_table(target=None):
 
@@ -56,6 +65,16 @@ def delete_from_search(target):
 
 
 if __name__ == '__main__':
+    time = datetime.datetime.now()
+    elem_count = 0
+    quantity = 0
+    percent_to_str = ''
+    percents = []
+    for cls in classes:
+        if hasattr(cls, 'search_fields'):
+            elem_count += db_session.query(cls).count()
+            quantity = elem_count
+
     for cls in classes:
         variables = vars(cls).copy()
         variables = variables.keys()
@@ -69,10 +88,19 @@ if __name__ == '__main__':
                     chars_int = int(re.findall(r'\b\d+\b', type_of_field)[0])
                     if chars_int > 36:
                         for c in db_session.query(cls).all():
+                            persent = int(100 * int(elem_count)/int(quantity))
+                            elem_count -= 1
                             original_field = getattr(c, stripped_key)
                             modify_field = original_field + ' '
                             update_search_table(target=c)
+                            if persent >= 0 and persent not in percents:
+                                percents.append(persent)
+                                percent_to_str += '='
+                                print(percent_to_str+'>', str(persent-100).replace('-', '')+'%')
                         break
                 except Exception as e:
-                    print(e.__repr__())
+                    pass
+    execute_time = datetime.datetime.now()-time
+    print('Updated successfully')
+    print('Execution time: ', execute_time)
     db_session.commit()
