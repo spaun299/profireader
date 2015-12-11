@@ -96,7 +96,8 @@
                     useExternalFiltering: true,
                     columnDefs: [
                       { name: 'Title', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
-                          width: '35%', cellTemplate: '<div ng-class="link" class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.Title"></a></div>',
+                          width: '35%',
+                          cellTemplate: '<div ng-class="link" class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.Title"></a></div>',
                           filter: {type: uiGridConstants.filter.INPUT}
                       },
                       { name: 'Date',enableCellEdit: false,enableFiltering: false, groupingShowAggregationMenu: false,

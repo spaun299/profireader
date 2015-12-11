@@ -27,12 +27,7 @@
                 $scope.sendData($scope.gridOptions1.columnDefs[0].filter.search_text,$scope.paginationOptions);
             };
 
-            $scope.cancel = function () {
-                window.location.href = $scope.url_back();
-                return false;
-            };
-
-             $scope.refresh = function(){
+            $scope.refresh = function(){
                 $scope.gridOptions1.columnDefs[0].filter.term = '';
                 $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
                 $scope.gridOptions1.columnDefs[3]['filter']['term'] = '1';
@@ -89,21 +84,16 @@
                     columnDefs: [
                       { name: 'Title', enableSorting:false,enableCellEdit: false,groupingShowAggregationMenu: false, enableColumnMenu: false,
                           width: '35%', cellTemplate: '<div class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.Title"></a></div>',
-                          filter: {
-                            type: uiGridConstants.filter.INPUT}
+                          filter: {type: uiGridConstants.filter.INPUT}
                       },
                       { name: 'Date', enableSorting: true,enableCellEdit: false, enableFiltering: false,groupingShowAggregationMenu: false, enableColumnMenus: true,
                           groupingShowGroupingMenu: false
                       },
                       { name: 'Campanies', enableSorting: false,enableCellEdit: false,groupingShowAggregationMenu: false,enableColumnMenu: false,
-                          filter: {
-                            term: '1',
-                            type: uiGridConstants.filter.SELECT}
+                          filter: $scope.filterForSelect(uiGridConstants)
                       },
                       { name: 'Status', enableSorting: false,enableCellEdit: false,groupingShowAggregationMenu: false,enableColumnMenu: false,
-                          filter: {
-                            term: '1',
-                            type: uiGridConstants.filter.SELECT}
+                          filter: $scope.filterForSelect(uiGridConstants)
                       }
                     ],
                     onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions)}
