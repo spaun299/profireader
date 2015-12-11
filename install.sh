@@ -189,7 +189,8 @@ service haproxy restart" sudo apache2_config
     }
 
 function menu_apache2_config {
-    conf_comm "cp  ./profi-wsgi-apache2.conf /etc/apache2/sites-enabled/
+    conf_comm "cp ./profi-wsgi-apache2.conf /etc/apache2/sites-enabled/
+mkdir /var/log/profi
 service apache2 restart" sudo secret_data
     }
 
@@ -233,7 +234,7 @@ function menu_venv {
 	echo "error: $destdir exists"
     else
 	conf_comm "pyvenv $destdir
-cp ./activate_this.py $destdir" nosudo modules
+cp ./activate_this.py $destdir/bin" nosudo modules
     fi
     }
 
