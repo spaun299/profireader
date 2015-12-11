@@ -2,6 +2,8 @@
 
 rand=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
 
+PWD=$(pwd)
+
 sudo apt-get install dialog
 
 function e {
@@ -189,7 +191,7 @@ service haproxy restart" sudo apache2_config
     }
 
 function menu_apache2_config {
-    conf_comm "cp ./profi-wsgi-apache2.conf /etc/apache2/sites-enabled/
+    conf_comm "cat profi-wsgi-apache2.conf | sed -e 's#----directory----#$PWD#g' > /etc/apache2/sites-enabled/profi-wsgi-apache2.conf
 mkdir /var/log/profi
 service apache2 restart" sudo secret_data
     }
@@ -296,7 +298,7 @@ function menu_db_rename {
 function menu_db_create {
     profidb=$(get_profidb)
     psqldb=$(rr 'Enter postgresql database name' $profidb)
-    
+
     profiuser=`cat secret_data.py | grep 'DB_USER' | sed -e 's/^\s*DB_USER\s*=\s*['"'"'"]\([^'"'"'"]*\).*$/\1/g' `
     runsql "CREATE DATABASE $psqldb WITH ENCODING 'UTF8' LC_COLLATE='C.UTF-8' LC_CTYPE='C.UTF-8'  OWNER = $profiuser TEMPLATE=template0" db_download_minimal
     }
@@ -342,6 +344,7 @@ next='_'
 #a="/bin/ls;
 #/bin/ls"
 
+
 #eval $a
 
 #exit
@@ -356,7 +359,7 @@ dialog --title "profireader" --nocancel --default-item $next --menu "Choose an o
 "hosts" "create virtual domain zone in /etc/hosts" \
 "haproxy_compile" "compile and install haproxy" \
 "haproxy_config" "copy haproxy config to /etc/haproxy" \
-"apache2_config" "copy apache config to /etc/apache2" \
+"apache2_config" "copy apache config to /etc/apache2 and allow currend dir" \
 "secret_data" "download secret data" \
 "secret_client" "download secret client data" \
 "python_3" "install python 3" \
