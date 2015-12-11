@@ -337,8 +337,8 @@
 
     {% raw %}
     <div ng-init="init()" ng-controller="article_edit">
-{{ data.image }}
         <h1 class="nice-title">{{ _(getTitle()) }}<span></span></h1>
+
 
         <div af af-amid-load="amidLoad" af-amid-save="amidSave" af-before-save="getData"
              af-beforeValidate="getData" af-watch="data.article" ng-model="data">
@@ -418,11 +418,10 @@
 
             <div class="update_col1">
                 <button class="create_button" ng-disabled="!$af.isActionAllowed(data, 'save')"
-                        ng-click="$af.save(data)">
-                    &nbsp;<span style="color: green" class="glyphicon glyphicon-save-file"></span>&nbsp;{{
+                        ng-click="$af.save(data)">&nbsp;<span style="color: green"
+                                                              class="glyphicon glyphicon-save-file"></span>&nbsp;{{
                     data.article.id ? _('save') : _('create') }}
                 </button>
-                &nbsp;
             </div>
         </div>
     </div>

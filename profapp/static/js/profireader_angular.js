@@ -105,32 +105,37 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
 
                 var restartCropper = function (src) {
                     $image.cropper('destroy');
-                    if (src) {
-                        $image.attr('src', src);
+                    if (model.$modelValue.image_file_id) {
+                        $image.attr('src', fileUrl(model.$modelValue.image_file_id));
                         $image.cropper(options);
-                        }
+                    }
+                    else {
+                        $image.attr('src', fileUrl(model.$modelValue.no_image_file_id));
+                    }
                 };
 
-                if (model) {
-                    if (model.$modelValue && model.$modelValue.ratio) options.aspectRatio = model.$modelValue.ratio;
-                    if (model.$modelValue && model.$modelValue.coordinates) options.data = model.$modelValue.coordinates;
+
+                //restartCropper();
+
+
+                if (attrs['prCropper']) {
+                    scope[attrs['prCropper']] = function () {
+                        $image.cropper.apply($image, arguments);
+                    };
                 }
-
-                restartCropper();
-
-
-                //if (attrs['prCropper']) {
-                //    scope[attrs['prCropper']] = function () {
-                //        $image.cropper.apply($image, arguments);
-                //    };
-                //}
                 //
                 scope.$watch(attrs['ngModel'] + '.image_file_id', function () {
                     if (model && model.$modelValue) {
                         //var file_url = fileUrl(model.$modelValue.image_file_id);
                         //$image.attr('src', );
                         //$image.cropper('replace', file_url);
-                        restartCropper(fileUrl(model.$modelValue.image_file_id));
+
+                        if (model) {
+                            if (model.$modelValue && model.$modelValue.ratio) options.aspectRatio = model.$modelValue.ratio;
+                            if (model.$modelValue && model.$modelValue.coordinates) options.data = model.$modelValue.coordinates;
+                        }
+
+                        restartCropper();
 
                         //
                         //if (file_url) {
