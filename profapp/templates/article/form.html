@@ -8,7 +8,7 @@
     <!-- ui-select files -->
     <link rel="stylesheet" href="/static/css/select.css">
 
-        <!-- Select2 theme -->
+    <!-- Select2 theme -->
     <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
 
     <!--
@@ -67,11 +67,11 @@
                 {#                {% else %}#}
                 {#                    window.location.href = $scope.details_article({article_id: resp['article']['id']});#}
                 {#                {% endif %}#}
-                if (!$scope.data.article.id && resp.article.id ) {
+                if (!$scope.data.article.id && resp.article.id) {
                     window.location.href = $scope.update_created_article({article_company_id: resp.article.id});
-                    }
-{#                $scope.data.article.publishing_tm = new Date(resp.article.publishing_tm);#}
-{#                $scope.data.portal_division = $scope.setPositioning(resp.portal_division, resp.article.id);#}
+                }
+                {#                $scope.data.article.publishing_tm = new Date(resp.article.publishing_tm);#}
+                {#                $scope.data.portal_division = $scope.setPositioning(resp.portal_division, resp.article.id);#}
 
                 add_message('article was saved', 'info', 3000);
 
@@ -132,7 +132,7 @@
 
                 portal_division.positioned_articles.push({'id': null, 'title': '', 'position': null});
                 if (current === null) {
-                    current = portal_division.positioned_articles.length -1;
+                    current = portal_division.positioned_articles.length - 1;
                 }
 
                 console.log('current = ', current);
@@ -202,8 +202,13 @@
                 return data;
             };
 
-            $scope.chooseImage = function () {
-                $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')", 'choose');
+            $scope.chooseImage = function (setImage) {
+                if (setImage) {
+                    $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')", 'choose');
+                }
+                else {
+                    $scope.data.image.image_file_id = null;
+                }
             };
 
             $scope.articlePositionDontChange = function () {
@@ -227,113 +232,113 @@
                 return $scope._('Show this article just after `%(title)s`', obj);
 
             }
-{#            $scope.saveData =function(data, tags){#}
-{#                data['tags'] = tags;#}
-{#                $ok($scope.url_submit_to_portal,#}
-{#                        data,#}
-{#                        function (resp) {#}
-{#                            $scope.data = resp;#}
-{#                            $scope.data_resp_portal = resp.portal;#}
-{#                        }#}
-{#                );#}
-{#            };#}
+            {#            $scope.saveData =function(data, tags){#}
+            {#                data['tags'] = tags;#}
+            {#                $ok($scope.url_submit_to_portal,#}
+            {#                        data,#}
+            {#                        function (resp) {#}
+            {#                            $scope.data = resp;#}
+            {#                            $scope.data_resp_portal = resp.portal;#}
+            {#                        }#}
+            {#                );#}
+            {#            };#}
 
         }]);
 
-/**
- * AngularJS default filter with the following expression:
- * "tag in tags | filter: {name: $select.search, age: $select.search}"
- * performs a AND between 'name: $select.search' and 'age: $select.search'.
- * We want to perform a OR.
- */
-module.filter('propsFilter', function() {
-    return function(items, props) {
-        var out = [];
+        /**
+         * AngularJS default filter with the following expression:
+         * "tag in tags | filter: {name: $select.search, age: $select.search}"
+         * performs a AND between 'name: $select.search' and 'age: $select.search'.
+         * We want to perform a OR.
+         */
+        module.filter('propsFilter', function () {
+            return function (items, props) {
+                var out = [];
 
-        if (angular.isArray(items)) {
-            items.forEach(function(item) {
-                var itemMatches = false;
+                if (angular.isArray(items)) {
+                    items.forEach(function (item) {
+                        var itemMatches = false;
 
-                var keys = Object.keys(props);
-                for (var i = 0; i < keys.length; i++) {
-                    var prop = keys[i];
-                    var text = props[prop].toLowerCase();
-                    if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
-                        itemMatches = true;
-                        break;
-                    }
+                        var keys = Object.keys(props);
+                        for (var i = 0; i < keys.length; i++) {
+                            var prop = keys[i];
+                            var text = props[prop].toLowerCase();
+                            if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                                itemMatches = true;
+                                break;
+                            }
+                        }
+
+                        if (itemMatches) {
+                            out.push(item);
+                        }
+                    });
+                } else {
+                    // Let the output be the input untouched
+                    out = items;
                 }
 
-                if (itemMatches) {
-                    out.push(item);
-                }
-            });
-        } else {
-            // Let the output be the input untouched
-            out = items;
-        }
-
-        return out;
-    };
-});
+                return out;
+            };
+        });
 
 
-module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, $http, $ok) {
+        module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function ($scope, $http, $ok) {
 
-    $scope.disabled = undefined;
-    $scope.searchEnabled = undefined;
-    $scope.selected_portal_to_unpublish = '';
-{#    $scope.url_get_tags = {{ raw_url_for('company.get_tags')|safe }};#}
-    $scope.$$translate = {{ translates('SelectTagsCtrl')|safe }};
-{#    $scope.$watch("data.selected_division", function(newValue, oldValue) {#}
-{#        if ($scope.data && (newValue !== oldValue)){#}
-{#            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));#}
-{#		    res.success(function(data, status, headers, config) {#}
-{#                $scope.tagsObject.tags = [];#}
-{#                $scope.availableTags = data.data.availableTags;#}
-{#		    });#}
-{#		    res.error(function(data, status, headers, config) {#}
-{#			    alert( "failure message: " + JSON.stringify({data: data}));#}
-{#		    });#}
-{#        }#}
-{#    });#}
+            $scope.disabled = undefined;
+            $scope.searchEnabled = undefined;
+            $scope.selected_portal_to_unpublish = '';
+            {#    $scope.url_get_tags = {{ raw_url_for('company.get_tags')|safe }};#}
+            $scope.$$translate = {{ translates('SelectTagsCtrl')|safe }};
+            {#    $scope.$watch("data.selected_division", function(newValue, oldValue) {#}
+            {#        if ($scope.data && (newValue !== oldValue)){#}
+            {#            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));#}
+            {#		    res.success(function(data, status, headers, config) {#}
+            {#                $scope.tagsObject.tags = [];#}
+            {#                $scope.availableTags = data.data.availableTags;#}
+            {#		    });#}
+            {#		    res.error(function(data, status, headers, config) {#}
+            {#			    alert( "failure message: " + JSON.stringify({data: data}));#}
+            {#		    });#}
+            {#        }#}
+            {#    });#}
 
-    $scope.getData = function () {
-        $scope.loading = true;
-    };
+            $scope.getData = function () {
+                $scope.loading = true;
+            };
 
-    $scope.respData = function () {
-        $scope.loading = false;
-        return true;
-    };
+            $scope.respData = function () {
+                $scope.loading = false;
+                return true;
+            };
 
-    $scope.enable = function() {
-        $scope.disabled = false;
-    };
+            $scope.enable = function () {
+                $scope.disabled = false;
+            };
 
-    $scope.disable = function() {
-        $scope.disabled = true;
-    };
+            $scope.disable = function () {
+                $scope.disabled = true;
+            };
 
-    $scope.enableSearch = function() {
-        $scope.searchEnabled = true;
-    };
+            $scope.enableSearch = function () {
+                $scope.searchEnabled = true;
+            };
 
-    $scope.disableSearch = function() {
-        $scope.searchEnabled = false;
-    };
+            $scope.disableSearch = function () {
+                $scope.searchEnabled = false;
+            };
 
-    $scope.availableTags = [];
-    $scope.selectedTags = [];
+            $scope.availableTags = [];
+            $scope.selectedTags = [];
 
-}]);
+        }]);
 
 
     </script>
 
     {% raw %}
     <div ng-init="init()" ng-controller="article_edit">
-
+{{ data.image }}
         <h1 class="nice-title">{{ _(getTitle()) }}<span></span></h1>
 
         <div af af-amid-load="amidLoad" af-amid-save="amidSave" af-before-save="getData"
@@ -349,6 +354,7 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                 {{ _('KeyWords') }} <span af-validation-answer="data_validation:keywords"></span>
                 <input style="width: 100%" ng-model="data.article.keywords"/>
             </div>
+
 
             <div class="update_col1">
                 {{ _('Select picture') }}
@@ -394,12 +400,15 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
                 we have division ({{ data.article.division.name }} - {{ data.article.division.id }})<br/>
                 so tags goes here<br/>
                 {{ data['portal_division']['availableTags'] }}<br/>
+
                 <div ng-controller="SelectTagsCtrl">
                     <h3>{{_('Article tags:')}}</h3>
                     <!-- <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;"> -->
-                    <ui-select multiple ng-model="data['article'].tags" theme="select2" ng-disabled="disabled" style="width: 300px;">
+                    <ui-select multiple ng-model="data['article'].tags" theme="select2" ng-disabled="disabled"
+                               style="width: 300px;">
                         <ui-select-match placeholder="Select tags...">{{$item}}</ui-select-match>
-                        <ui-select-choices repeat="tag in data['portal_division']['availableTags'] | filter:$select.search">
+                        <ui-select-choices
+                                repeat="tag in data['portal_division']['availableTags'] | filter:$select.search">
                             {{ tag }}
                         </ui-select-choices>
                     </ui-select>
@@ -409,11 +418,12 @@ module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function($scope, 
             </div>
 
             <div class="update_col1">
-                <input class="create_button"
-                       ng-disabled="!$af.isActionAllowed(data, 'save')"
-                       ng-click="$af.save(data)"
-                       type="submit"
-                       value="{{ data.article.id ? _('save') : _('create') }}"/>
+                <button class="create_button" ng-disabled="!$af.isActionAllowed(data, 'save')"
+                        ng-click="$af.save(data)">
+                    &nbsp;<span style="color: green" class="glyphicon glyphicon-save-file"></span>&nbsp;{{
+                    data.article.id ? _('save') : _('create') }}
+                </button>
+                &nbsp;
             </div>
         </div>
     </div>

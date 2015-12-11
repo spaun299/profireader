@@ -93,9 +93,10 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             link: function (scope, element, attrs, model) {
 
                 var $image = $(element);
+
                 var options = {
                     crop: function (e) {
-                        if (model.$modelValue && model.$modelValue.image_file_id) {
+                        if (model.$modelValue) {
                             e['image_file_id'] = model.$modelValue.image_file_id;
                         }
                         model.$setViewValue(e);
@@ -115,8 +116,14 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 }
 
                 scope.$watch(attrs['ngModel'] + '.image_file_id', function () {
-                    if (model && model.$modelValue && model.$modelValue.image_file_id) {
-                        $image.cropper('replace', fileUrl(model.$modelValue.image_file_id));
+                    if (model && model.$modelValue) {
+                        var file_url = fileUrl(model.$modelValue.image_file_id);
+                        if (file_url) {
+                            $image.cropper('replace', file_url);
+                        }
+                        else {
+                            console.log('no image');
+                        }
                     }
                 });
 
@@ -127,6 +134,8 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 });
 
                 scope.$watch(attrs['ngModel'] + '.coordinates', function () {
+                    console.log('coordinates', model.$modelValue);
+                    if (model.$modelValue) console.log(model.$modelValue.coordinates);
                     if (model.$modelValue && model.$modelValue.coordinates) {
                         $image.cropper('setData', model.$modelValue.coordinates);
                     }
@@ -181,11 +190,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 var no_image = attrs['prNoImage'] ? attrs['prNoImage'] : false;
 
                 if (!no_image) {
-                    if (image_reference === 'logo_file_id')
-                        no_image = '/static/images/company_no_logo.png';
-                    else {
-                        no_image = '/static/images/no_image.png';
-                    }
+                    no_image = noImageForImageName(image_reference);
                 }
 
                 element.attr('src', '/static/images/0.gif');
@@ -590,7 +595,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             sort: null
         },
         editableTemplate: '<div class = "ui_dropdown"><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',
-        selectRowTemplate : '<div class="ui-grid-cell-contents">{{ COL_FIELD }}<i class="glyphicon glyphicon-collapse-down" style="float:right"></i></div>',
+        selectRowTemplate: '<div class="ui-grid-cell-contents">{{ COL_FIELD }}<i class="glyphicon glyphicon-collapse-down" style="float:right"></i></div>',
         setGridExtarnals: function (gridApi, externalFunction, paginationOptions, refresh) {
             var scope = this;
             scope.gridApi = gridApi;
@@ -616,20 +621,20 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 externalFunction('', paginationOptions)
             });
             gridApi.core.on.filterChanged(scope, function () {
-               var grid = this.grid;
-               for (var i = 0; i < grid.columns.length; i++) {
-                  term = grid.columns[i].filter.term;
-                  field = grid.columns[i].field;
-                  if(term !== undefined){
-                     if(term !== scope.pos[field] && term){
-                        scope.pos[field] = term;
-                        scope.getFilter(field, term)
-                     }
-                     if(term === null){
-                         scope.refresh()
-                     }
-                  }
-               }
+                var grid = this.grid;
+                for (var i = 0; i < grid.columns.length; i++) {
+                    term = grid.columns[i].filter.term;
+                    field = grid.columns[i].field;
+                    if (term !== undefined) {
+                        if (term !== scope.pos[field] && term) {
+                            scope.pos[field] = term;
+                            scope.getFilter(field, term)
+                        }
+                        if (term === null) {
+                            scope.refresh()
+                        }
+                    }
+                }
             });
         },
 
@@ -1087,3 +1092,15 @@ var convert_python_format_to_tinymce_format = function (python_format) {
     }
     return python_format;
 };
+
+
+var noImageForImageName = function (image_name) {
+    if (image_name === 'logo_file_id') {
+        return '/static/images/company_no_logo.png';
+    }
+    else {
+        return '/static/images/no_image.png';
+    }
+}
+
+
