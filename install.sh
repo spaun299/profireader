@@ -1,5 +1,7 @@
 #!/bin/bash
 
+rand=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
+
 sudo apt-get install dialog
 
 function e {
@@ -66,14 +68,14 @@ function down {
     if [[ "$3" != '' ]]; then
 	echo "  mv $filetoget $filetobak"
     fi
-    command="wget --user='$ntaxauser' --password='$ntaxapass' -O /tmp/tmpfile http://x.m.ntaxa.com/profireader/$filetoget
+    command="wget --user='$ntaxauser' --password='$ntaxapass' -O /tmp/"$rand"tmpfile http://x.m.ntaxa.com/profireader/$filetoget
 if [[ \"\$?\" == \"0\" ]]; then"
     if [[ "$3" != '' ]]; then
 	command="$command
     mv $filetoput $filetobak"
     fi
     command="$command
-    mv /tmp/tmpfile $filetoput
+    mv /tmp/"$rand"tmpfile $filetoput
 else
     echo 'wget failed!'
 fi"
@@ -95,11 +97,11 @@ rd=`tput setaf 1`
     echo "${rst}"
     if conf; then
 	e
-	echo "$1" > /tmp/menu_command_run_confirmed.sh
+	echo "$1" > /tmp/"$rand"menu_command_run_confirmed.sh
 	if [[ "$2" == "sudo" ]]; then
-	    sudo bash /tmp/menu_command_run_confirmed.sh
+	    sudo bash /tmp/"$rand"menu_command_run_confirmed.sh
 	else
-	    bash /tmp/menu_command_run_confirmed.sh
+	    bash /tmp/"$rand"menu_command_run_confirmed.sh
 	fi
 #        eval `echo "$1" | sed -e 's/"/\"/g' -e 's/^/sudo bash -c "/g' -e 's/$/";/g'`
 	if [[ "$4" == "" ]]; then
@@ -156,7 +158,7 @@ apt-get install postgresql-9.4" sudo deb
 
 function menu_deb {
     conf_comm "apt-get update
-apt-get install libpq-dev python-dev libapache2-mod-wsgi libjpeg-dev" sudo hosts
+apt-get install libpq-dev python-dev libapache2-mod-wsgi-py3 libjpeg-dev" sudo hosts
     }
 
 function menu_hosts {
@@ -168,19 +170,27 @@ echo '127.0.0.1 db.profi web.profi mail.profi' >> /etc/hosts
 echo '127.0.0.1 db.profi_test' >> /etc/hosts
 echo '127.0.0.1 profireader.com oles.profireader.com rodynnifirmy.profireader.com derevoobrobka.profireader.com viktor.profireader.com aa.profireader.com md.profireader.com oleh.profireader.com file001.profireader.com fsm.profireader.com mytestprof.profireader.com' >> /etc/hosts
 echo '127.0.0.1 test.profireader.com test1.profireader.com test2.profireader.com test3.profireader.com test4.profireader.com test5.profireader.com test6.profireader.com test7.profireader.com test8.profireader.com test9.profireader.com' >> /etc/hosts
-cat /etc/hosts" sudo haproxy
+cat /etc/hosts" sudo haproxy_compile
     }
 
-function menu_haproxy {
+function menu_haproxy_compile {
     conf_comm "apt-get purge haproxy
 sed -i '/haproxy-1.5/d' /etc/apt/sources.list
 echo '' >> /etc/apt/sources.list
 echo 'deb http://ppa.launchpad.net/vbernat/haproxy-1.5/ubuntu trusty main' >> /etc/apt/sources.list
 echo 'deb-src http://ppa.launchpad.net/vbernat/haproxy-1.5/ubuntu trusty main' >> /etc/apt/sources.list
 apt-get update
-apt-get install haproxy
-cp ./haproxy.cfg /etc/haproxy/
-service haproxy restart" sudo secret_data
+apt-get install haproxy" sudo haproxy_config
+    }
+
+function menu_haproxy_config {
+    conf_comm "cp ./haproxy.cfg /etc/haproxy/
+service haproxy restart" sudo apache2_config
+    }
+
+function menu_apache2_config {
+    conf_comm "cp  ./profi-wsgi-apache2.conf /etc/apache2/sites-enabled/
+service apache2 restart" sudo secret_data
     }
 
 function menu_secret_data {
@@ -222,7 +232,8 @@ function menu_venv {
     if [[ -e $destdir ]]; then
 	echo "error: $destdir exists"
     else
-	conf_comm "pyvenv $destdir" nosudo modules
+	conf_comm "pyvenv $destdir
+cp ./activate_this.py $destdir" nosudo modules
     fi
     }
 
@@ -342,7 +353,9 @@ dialog --title "profireader" --nocancel --default-item $next --menu "Choose an o
 "postgres_9_4" "install postgres 9.4" \
 "deb" "install deb packages" \
 "hosts" "create virtual domain zone in /etc/hosts" \
-"haproxy" "install haproxy" \
+"haproxy_compile" "compile and install haproxy" \
+"haproxy_config" "copy haproxy config to /etc/haproxy" \
+"apache2_config" "copy apache config to /etc/apache2" \
 "secret_data" "download secret data" \
 "secret_client" "download secret client data" \
 "python_3" "install python 3" \
@@ -361,10 +374,10 @@ dialog --title "profireader" --nocancel --default-item $next --menu "Choose an o
 "compare_local_makarony" "compare local database and dev version" \
 "compare_local_artek" "compare local database and production version" \
 "compare_makarony_artek" "compare dev database and production version" \
-"exit" "Exit" 2> /tmp/selected_menu_
+"exit" "Exit" 2> /tmp/"$rand"selected_menu_
 reset
 datev="date +%y_%m_%d___%H_%M_%S"
 gitv='git rev-parse --short HEAD'
-menu_`cat /tmp/selected_menu_`
+menu_`cat /tmp/"$rand"selected_menu_`
 
 done
