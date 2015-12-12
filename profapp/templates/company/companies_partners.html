@@ -15,6 +15,7 @@
 
     <script>
         module.controller('portal_list', ['$scope', '$ok', function ($scope, $ok) {
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_partners')
 
             $scope.url_company_profile = {{ raw_url_for('company.profile')|safe }};
 

@@ -1,5 +1,5 @@
 <script>
-    module.controller('UserLoginController', ['$scope', '$modal','$ok', function ($scope, $modal, $ok) {
+    module.controller('UserLoginController', ['$scope', '$modal','$ok', '$timeout', function ($scope, $modal, $ok, $timeout) {
         $scope.user = {{ g.user_dict|tojson|safe }};
         login_signup = '{{ login_signup }}';  // login_signup = 'login' or 'signup' or None
         $scope.login_signup = (login_signup === 'signup') ? 'signup':'login';
@@ -7,6 +7,23 @@
         $scope.open_filemanager = function () {
             window.location.href = '/filemanager/';
         };
+        $scope.selected_company_menu = 'aaa';
+        $scope.set_selected_company_menu = function (menu_item) {
+            $timeout(function () {
+                $scope.selected_company_menu = menu_item;
+            },0);
+        }
+    }]);
+
+    module.controller('CompanyMenuController', ['$scope', '$timeout', function ($scope, $timeout) {
+        $scope.user = {{ g.user_dict|tojson|safe }};
+        $scope.$$translate = {{ translates('CompanyMenuController')|safe }};
+        $scope.selected_company_menu = 'aaa';
+        $scope.set_selected_company_menu = function (menu_item) {
+            $timeout(function () {
+                $scope.selected_company_menu = menu_item;
+            },0);
+        }
     }]);
 </script>
 
