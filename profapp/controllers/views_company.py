@@ -475,8 +475,6 @@ def readers(company_id):
         join(Company).\
         filter(Company.id==company_id).all()
 
-    print(company_readers)
-
     reader_fields = ('id', 'email', 'nickname', 'first_name', 'last_name')
     company_readers_list_dict = list(map(lambda x: dict(zip(reader_fields, x)), company_readers))
 
