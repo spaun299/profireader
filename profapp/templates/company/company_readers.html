@@ -1,6 +1,30 @@
 {% extends "index_lazy_layout.html" %}
 {% block title %}Profireader Portal - Readers{% endblock title %}
 
+{% block styles %}
+    {{ super() }}
+    <style>
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th {
+    background-color: #af9f86;
+{#    color: white;#}
+    color: #8d4747;
+}
+
+tr:nth-child(even) {background-color: #f2f2f2}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+</style>
+{% endblock styles %}
+
 {% block portal_base %}
     {% include 'partials/portal_base_Profireader_auth_user.html' %}
 {% endblock portal_base %}
@@ -8,9 +32,22 @@
     {% block company_base %}
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
-    {% raw %}
-READERS HERE
-    {% endraw %}
+        <table style="width:100%">
+            <tr>
+                <th>e-mail</th>
+                <th>Profireader name</th>
+                <th>first name</th>
+                <th>last name</th>
+            </tr>
+            {% for reader in companyReaders %}
+            <tr>
+              <td>{{ reader['email'] }}</td>
+              <td><a href="{{ url_for('user.profile', user_id=reader['id']) }}">{{ reader['nickname'] }}</a></td>
+              <td>{{ reader['first_name'] }}</td>
+              <td>{{ reader['last_name'] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
 {% endblock portal_content %}
 
 {% block footer %}

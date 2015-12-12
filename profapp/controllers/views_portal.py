@@ -163,7 +163,8 @@ def profile(portal_id):
     return render_template('portal/portal_profile.html',
                            company_id=company.id,
                            company_logo=company_logo,
-                           company={'name': company.name})
+                           company=company.get_client_side_dict(fields='name')
+                           )
 
 
 # TODO: VK by OZ: remove company_* kwargs
@@ -179,6 +180,7 @@ def profile_load(json, portal_id):
     tags = set(tag_portal_division.tag for tag_portal_division in portal_bound_tags)
     tags_dict = {tag.id: tag.name for tag in tags}
     return {'portal': portal.get_client_side_dict('id, '
+                                                  'name, '
                                                   'divisions, '
                                                   'own_company, '
                                                   'portal_bound_tags_select.*, '

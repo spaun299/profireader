@@ -10,7 +10,7 @@ from flask.ext.login import login_required
 from ..models.articles import Article
 from ..models.portal import PortalDivision
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
-from ..models.portal import MemberCompanyPortal, UserPortalReader
+from ..models.portal import Portal, MemberCompanyPortal, UserPortalReader
 from ..models.articles import ArticleCompany, ArticlePortalDivision
 from utils.db_utils import db
 from collections import OrderedDict
@@ -464,13 +464,20 @@ def readers(company_id):
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
 
-    company_readers = g.db.query(User.profireader_email,
+    company_readers = g.db.query(User.id,
+                                 User.profireader_email,
                                  User.profireader_name,
                                  User.profireader_first_name,
                                  User.profireader_last_name
-                                 ).join(UserPortalReader).all()
+                                 ).\
+        join(UserPortalReader).\
+        join(Portal).\
+        join(Company).\
+        filter(Company.id==company_id).all()
 
-    reader_fields = ('email', 'nickname', 'first_name', 'last_name')
+    print(company_readers)
+
+    reader_fields = ('id', 'email', 'nickname', 'first_name', 'last_name')
     company_readers_list_dict = list(map(lambda x: dict(zip(reader_fields, x)), company_readers))
 
     return render_template('company/company_readers.html',
