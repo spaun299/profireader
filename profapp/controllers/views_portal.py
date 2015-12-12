@@ -154,17 +154,16 @@ def apply_company(json):
 
 @portal_bp.route('/profile/<string:portal_id>/', methods=['GET'])
 @login_required
-# @check_rights(simple_permissions([]))
+# @check_rights(simple_permissions([])portal_id)
 def profile(portal_id):
-    portal = db(Portal, id=portal_id).one()
+    portal = Portal.get(portal_id)
     company = portal.own_company
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template('portal/portal_profile.html',
                            company_id=company.id,
                            company_logo=company_logo,
-                           company=company.get_client_side_dict()
-                           )
+                           company={'name': company.name})
 
 
 # TODO: VK by OZ: remove company_* kwargs
@@ -175,7 +174,7 @@ def profile(portal_id):
 # @check_rights(simple_permissions([]))
 @ok
 def profile_load(json, portal_id):
-    portal = db(Portal, id=portal_id).one()
+    portal = Portal.get(portal_id)
     portal_bound_tags = portal.portal_bound_tags_select
     tags = set(tag_portal_division.tag for tag_portal_division in portal_bound_tags)
     tags_dict = {tag.id: tag.name for tag in tags}

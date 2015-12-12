@@ -3,13 +3,14 @@ from ..models.company import simple_permissions
 from flask.ext.login import login_required, current_user
 from flask import render_template, request, url_for, g, redirect
 from ..models.company import Company, UserCompany, Right, RightHumnReadible
+from ..models.users import User
 from .request_wrapers import ok, check_rights
 from ..constants.STATUS import STATUS
 from flask.ext.login import login_required
 from ..models.articles import Article
 from ..models.portal import PortalDivision
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
-from ..models.portal import MemberCompanyPortal, Portal
+from ..models.portal import MemberCompanyPortal, UserPortalReader
 from ..models.articles import ArticleCompany, ArticlePortalDivision
 from utils.db_utils import db
 from collections import OrderedDict
@@ -109,6 +110,7 @@ def materials_load(json, company_id):
             'publ_statuses': gr_publ_st,
             'total': subquery.count()
             }
+
 
 @company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['GET'])
 @login_required
@@ -390,8 +392,7 @@ def join_to_company(json, company_id):
                                company_id=json['company_id'],
                                status=STATUS.NONACTIVE())
     company_role.subscribe_to_company().save()
-    return {'companies': [employer.get_client_side_dict()
-                          for employer in current_user.employers]}
+    return {'companies': [employer.get_client_side_dict() for employer in current_user.employers]}
 
 
 @company_bp.route('/add_subscriber/', methods=['POST'])
@@ -403,8 +404,7 @@ def confirm_subscriber():
     company_role.apply_request(company_id=data['company_id'],
                                user_id=data['user_id'],
                                bool=data['req'])
-    return redirect(url_for('company.profile',
-                            company_id=data['company_id']))
+    return redirect(url_for('company.profile', company_id=data['company_id']))
 
 
 @company_bp.route('/suspend_employee/', methods=['POST'])
@@ -425,8 +425,7 @@ def fire_employee():
     UserCompany.change_status_employee(company_id=data.get('company_id'),
                                        user_id=data.get('user_id'),
                                        status=STATUS.DELETED())
-    return redirect(url_for('company.employees',
-                            company_id=data.get('company_id')))
+    return redirect(url_for('company.employees', company_id=data.get('company_id')))
 
 
 @company_bp.route('/unsuspend/<string:user_id>,<string:company_id>')
@@ -454,3 +453,28 @@ def load_suspended_employees(json, company_id):
     suspend_employees = Company.query_company(company_id)
     suspend_employees = suspend_employees.suspended_employees()
     return suspend_employees
+
+
+@company_bp.route('/readers/<string:company_id>/', methods=['GET'])
+@login_required
+# @check_rights(simple_permissions([]))
+def readers(company_id):
+    company = Company.get(company_id)
+    company_dict = company.get_client_side_dict('name')
+    company_logo = company.logo_file_relationship.url() \
+        if company.logo_file_id else '/static/images/company_no_logo.png'
+
+    company_readers = g.db.query(User.profireader_email,
+                                 User.profireader_name,
+                                 User.profireader_first_name,
+                                 User.profireader_last_name
+                                 ).join(UserPortalReader).all()
+
+    reader_fields = ('email', 'nickname', 'first_name', 'last_name')
+    company_readers_list_dict = list(map(lambda x: dict(zip(reader_fields, x)), company_readers))
+
+    return render_template('company/company_readers.html',
+                           company=company_dict,
+                           company_id=company_id,
+                           company_logo=company_logo,
+                           companyReaders=company_readers_list_dict)

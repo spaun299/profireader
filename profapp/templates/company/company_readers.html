@@ -1,0 +1,18 @@
+{% extends "index_lazy_layout.html" %}
+{% block title %}Profireader Portal - Readers{% endblock title %}
+
+{% block portal_base %}
+    {% include 'partials/portal_base_Profireader_auth_user.html' %}
+{% endblock portal_base %}
+{% block portal_content %}
+    {% block company_base %}
+        {% include 'company/company_base_angular.html' %}
+    {% endblock company_base %}
+    {% raw %}
+READERS HERE
+    {% endraw %}
+{% endblock portal_content %}
+
+{% block footer %}
+    {% include 'partials/portal_footer_Profireader.html' %}
+{% endblock footer %}

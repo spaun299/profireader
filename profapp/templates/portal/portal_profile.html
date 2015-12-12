@@ -8,7 +8,7 @@
     {% include 'partials/portal_base_Profireader_auth_user.html' %}
 {% endblock portal_base %}
 
-{% block content %}
+{% block portal_content %}
     {% block company_base %}
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}<br/>
@@ -157,7 +157,7 @@
 
 </div>
 {% endraw %}
-{% endblock content %}
+{% endblock portal_content %}
 
 {% block footer %}
     {% include 'partials/portal_footer_Profireader.html' %}
