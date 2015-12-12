@@ -15,6 +15,7 @@
 
     <script>
         module.controller('PortalProfileController', ['$scope', '$ok', 'objectTransformation', function ($scope, $ok, objectTransformation) {
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('home');
             $scope.url_portal_profile_edit = {{ raw_url_for('portal.profile_edit')|safe }};
             $scope.url_company_profile = {{ raw_url_for('company.profile')|safe }};
 {#            $scope.url_confirm_create = {{ raw_url_for('portal.confirm_create')|safe }};#}
