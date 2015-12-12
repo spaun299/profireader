@@ -25,8 +25,9 @@
             $scope.cut_file_id = '';
             $scope.timer = false;
             $scope.name = '';
-            $scope.chunkSize = '256KB';
             $scope.upload_file_id = '';
+
+            $scope.last_visit = document.referrer;
 
             $scope.setTemplate = function (name) {
                 $scope.viewTemplate = $cookies.viewTemplate = name;
@@ -232,7 +233,7 @@
                     url: url,
                     data: $scope.name,
                     resumeSizeUrl: '/filemanager/resumeupload/',
-                    resumeChunkSize: $scope.chunkSize,
+                    resumeChunkSize: $scope.config['chunkSize'],
                     ftype: $scope.f.type,
                     upload_file_id: $scope.upload_file_id,
                     headers: {
@@ -254,37 +255,6 @@
 
             };
 
-            //$scope.uploadFiles = function() {
-            //    var file = $scope.uploadFileList[0];
-            //    $scope.f = file;
-            //    console.log(file);
-            //    file.upload = Upload.upload({
-            //        url: $scope.config.uploadUrl,
-            //        data : $scope.name,
-            //        resumeSizeUrl: '/filemanager/resumeopload/',
-            //        resumeChunkSize: $scope.chunkSize,
-            //        root_id: $scope.fileNavigator.root_id,
-            //        parent_id: $scope.fileNavigator.getCurrentFolder(),
-            //        headers: {
-            //            'optional-header': 'header-value'
-            //        },
-            //        fields: {username: $scope.username},
-            //        file: file});
-            //                file.upload.progress(function (evt) {
-            //                file.progress = Math.min(100, parseInt(100.0 *
-            //                                                       evt.loaded / evt.total));
-            //            });
-            //    //$scope.fileUploader.upload($scope.uploadFileList, $scope.fileNavigator.currentPath,
-            //    //    $scope.fileNavigator.root_id, $scope.fileNavigator.getCurrentFolder()).success(function () {
-            //    //        $scope.fileNavigator.refresh();
-            //    //        $('#uploadfile').modal('hide');
-            //    //    }).error(function (data) {
-            //    //        var errorMsg = data.result && data.result.error || $translate.instant('error_uploading_files');
-            //    //        $scope.temp.error = errorMsg;
-            //    //    });
-            //};
-
-
             $scope.getQueryParam = function (param) {
                 var found;
                 window.location.search.substr(1).split("&").forEach(function (item) {
@@ -295,6 +265,7 @@
                 });
                 return found;
             };
+
             $scope.isDisable = function (actionname, len, type) {
                 var style;
                 if (actionname === 'paste' && ($scope.copy_file_id != '' || $scope.cut_file_id != '') && type === 'parent') {
@@ -308,7 +279,7 @@
                 } else {
                     style = ''
                 }
-                if($scope.file_manager_default_action === actionname){
+                if($scope.file_manager_default_action === actionname && (type !== 'parent' && type !== 'dir')){
                     style += 'font-weight: bold;color:black'
                 }
                 return style
@@ -321,7 +292,6 @@
             };
 
             $scope.glyph = function (actionname) {
-                console.log(actionname)
                 if (actionname == 'rename') {
                     return 'edit'
                 } else if (actionname == 'cut') {

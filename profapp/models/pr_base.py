@@ -19,6 +19,7 @@ import collections
 from sqlalchemy.sql import expression, functions, update
 from utils.validators import validators
 from sqlalchemy import and_
+import datetime
 
 Base = declarative_base()
 
@@ -50,14 +51,14 @@ class Search(Base):
     position = Column(TABLE_TYPES['position'])
 
     def __init__(self, index=None, table_name=None, text=None, relevance=None, kind=None,
-                 position=None):
-        # super(Search, self).__init__()
+                 position=None, md_tm=datetime.datetime.now()):
         self.index = index
         self.table_name = table_name
         self.text = text
         self.relevance = relevance
         self.kind = kind
         self.position = position
+        self.md_tm = md_tm
 
     ORDER_RELEVANCE = 1
     ORDER_POSITION = 2
@@ -511,6 +512,14 @@ class PRBase:
             options = {'relevance': lambda field_name: getattr(RELEVANCE, field_name),
                        'processing': lambda text: MLStripper().strip_tags(text),
                        'index': lambda target_id: target_id}
+            default_time = datetime.datetime.now()
+            time = default_time
+            if hasattr(target, 'publishing_tm'):
+                time = getattr(target, 'publishing_tm', default_time)
+            elif hasattr(target, 'md_tm'):
+                time = getattr(target, 'md_tm', default_time)
+            elif hasattr(target, 'cr_tm'):
+                time = getattr(target, 'cr_tm', default_time)
             for field in target_fields.split(','):
                 field_options = target.search_fields[field]
                 field_options.update({key: options[key] for key in options
@@ -521,7 +530,7 @@ class PRBase:
                                 table_name=target.__tablename__,
                                 relevance=field_options['relevance'](field), kind=field,
                                 text=field_options['processing'](str(target_dict[field])),
-                                position=position))
+                                position=position, md_tm=time))
 
     @staticmethod
     def update_search_table(mapper=None, connection=None, target=None):

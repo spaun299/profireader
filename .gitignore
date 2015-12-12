@@ -94,3 +94,5 @@ tmp*
 **/bower_components
 # **/bower_components_dev
 # **/tinymce.pr
+
+wget-log.*

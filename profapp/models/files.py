@@ -41,7 +41,6 @@ class File(Base, PRBase):
     cr_tm = Column(TABLE_TYPES['timestamp'], nullable=False)
     md_tm = Column(TABLE_TYPES['timestamp'], nullable=False)
     ac_tm = Column(TABLE_TYPES['timestamp'], nullable=False)
-    # youtube_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('youtube_video.id'))
 
     UniqueConstraint('name', 'parent_id', name='unique_name_in_folder')
 
@@ -118,6 +117,8 @@ class File(Base, PRBase):
                 return False
         return True
 
+    # GETTERS
+
     @staticmethod
     def ancestors(folder_id=None, path=False):
         ret = []
@@ -167,8 +168,6 @@ class File(Base, PRBase):
                     }
                                         for file in s)
         return ret
-
-    # GETTERS
 
     @staticmethod
     def list(parent_id=None, file_manager_called_for='', name=None):

@@ -37,7 +37,7 @@
     }
 
 .create_button {
-    float: left;
+    float: right;
 }
 
 @media (min-width: 767px) {
