@@ -494,6 +494,7 @@ def readers(company_id):
         join(UserPortalReader).\
         join(Portal).\
         join(Company).\
+        order_by(User.profireader_name).\
         filter(Company.id==company_id).all()
 
     reader_fields = ('id', 'email', 'nickname', 'first_name', 'last_name')

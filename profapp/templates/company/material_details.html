@@ -10,6 +10,7 @@
 <script>
 
     module.controller('materials_articles', ['$scope','$ok', function ($scope, $ok) {
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
             $scope.url_search_for_user = {{ raw_url_for('company.search_for_user')|safe }};
             $scope.selectedUser_name = '';
             $scope.selectedUser = null;

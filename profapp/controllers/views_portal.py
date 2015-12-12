@@ -547,7 +547,7 @@ def publications_load(json, company_id):
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
 @login_required
 def publication_details(article_id, company_id):
-    return render_template('company/publication_details.html',
+    return render_template('company/publication_details.html', company_id=company_id,
                            company=db(Company, id=company_id).one())
 
 

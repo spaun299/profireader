@@ -11,6 +11,7 @@
 
     <script>
         module.controller('portal_list', ['$scope', '$ok', function ($scope, $ok) {
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('portals_partners')
             $scope.url_portal_profile = {{ raw_url_for('portal.profile')|safe }};
             $scope.url_search_for_portal = function () { return( '/portal/search_for_portal_to_join/' ); };
 {#            {{ raw_url_for('portal.search_for_portal_to_join')|safe }};#}

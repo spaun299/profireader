@@ -8,7 +8,7 @@
     {% endblock company_base %}
     <script>
         module.controller('portal_create', ['$scope', '$modal', '$ok', '$af', function ($scope, $modal, $ok, $af) {
-
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('home');
             $scope.$af = $af;
 
             $scope.url_after_save = {{ raw_url_for('company.profile')|safe }};

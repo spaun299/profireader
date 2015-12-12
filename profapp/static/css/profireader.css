@@ -1773,7 +1773,17 @@ form {
 }
 
 .topbar-menu-links a:hover {
+    background: #FF7777;
+    color: #fff;
+}
+
+.topbar-menu-links a.selected {
     background: #CD2027;
+    color: #fff;
+}
+
+.topbar-menu-links a.selected:hover {
+    background: #FF7777;
     color: #fff;
 }
 
