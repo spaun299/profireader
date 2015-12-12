@@ -13,6 +13,7 @@
     {% endblock company_base %}
     <script>
         module.controller('fired', ['$scope', function ($scope) {
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_employees')
             $scope.url_after_seve = {{ raw_url_for('company.profile')|safe }};
             $scope.$$translate = {{ translates('fired')|safe }};
             $scope.getData = function () {
