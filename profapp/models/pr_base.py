@@ -380,8 +380,7 @@ class PRBase:
     def to_dict_object_property(self, object_name):
         object_property = getattr(self, object_name)
         if isinstance(object_property, datetime.datetime):
-            # return object_property.timestamp()
-            return object_property
+            return object_property.replace(object_property.year, object_property.month, object_property.day, object_property.hour, object_property.minute, object_property.second, 0)
         elif isinstance(object_property, dict):
             return object_property
         else:

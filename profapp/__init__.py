@@ -27,6 +27,7 @@ from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
 from .models.tools import HtmlHelper
 import json
+from jinja2 import Markup
 import time
 
 
@@ -252,12 +253,17 @@ def flask_endpoint_to_angular(endpoint, **kwargs):
     return url
 
 
-def fileUrl(id, down = False, if_no_file = None):
+def fileUrl(id, down=False, if_no_file=None):
     if not id:
         return if_no_file if if_no_file else ''
 
     server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', id)
     return 'http://file' + server + '.profireader.com/' + id + '/' + ('?d' if down else '')
+
+
+def prImage(id, if_no_image=None):
+    file = fileUrl(id, False, if_no_image if if_no_image else "/static/images/no_image.png")
+    return Markup(' src="/static/images/0.gif" style="background-position: center; background-size: contain; background-repeat: no-repeat; background-image: url(\'%s\')" ' % (file,))
 
 
 def translates(template):
@@ -470,6 +476,7 @@ def create_app(config='config.ProductionDevelopmentConfig', front='y'):
     app.jinja_env.globals.update(pre=pre)
     app.jinja_env.globals.update(translates=translates)
     app.jinja_env.globals.update(fileUrl=fileUrl)
+    app.jinja_env.globals.update(prImage=prImage)
     app.jinja_env.globals.update(config_variables=config_variables)
     app.jinja_env.globals.update(_=translate_phrase)
     app.jinja_env.globals.update(tinymce_format_groups=HtmlHelper.tinymce_format_groups)
