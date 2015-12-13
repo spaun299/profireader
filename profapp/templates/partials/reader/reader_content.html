@@ -6,19 +6,12 @@
             </div>
             <h2 class="item-title">
                 <a href="http://{{ articles[article_id]['portal']['host']|safe }}/details/{{ article_id }}">{{ articles[article_id]['title']|safe }}</a>
-{#                <span class="tag_in_article">#}
-{#                    {% for tag in articles[article_id]['tags'] %}#}
-{#                        <a href="#">{{ tag }}</a>#}
-{#                    {% endfor %}#}
-{#                </span>#}
+                <span class="tag_in_article">
+                    {% for tag in articles[article_id]['tags'] %}
+                        <a href="#">{{ tag }}</a>
+                    {% endfor %}
+                </span>
             </h2>
-
-{# TODO (AA to AA): the div below should be deleted and commented, block above should be uncommented when class="tag_in_article" is developed #}
-            <div class="tag-list">
-                {% for tag in articles[article_id]['tags'] %}
-                    <a href="#">{{ tag }}</a>
-                {% endfor %}
-            </div>
 
             <div class="item-short-content">
                 <p>{{ articles[article_id]['short']|safe }}</p>

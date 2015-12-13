@@ -618,6 +618,30 @@ footer .promo {
 
 }
 
+.tag_in_article {
+    display: block;
+    width: 100%;
+    padding: 7px 7px 7px 18px;
+    border-top: 1px #ccc solid;
+    background: transparent url("../img/article/icons/tag.png") no-repeat left center;
+}
+
+.tag_in_article a {
+    padding: 2px 7px;
+    color: #000000;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    text-decoration: underline;
+}
+
+.tag_in_article a:hover {
+    background: #3273B2;
+    /*color: #97d800;*/
+    color: #fff;
+    text-decoration: none;
+}
+
 .item-subtitle {
     margin-bottom: 20px;
     color: #7d7d7d;
