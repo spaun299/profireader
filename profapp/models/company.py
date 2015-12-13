@@ -84,7 +84,7 @@ class Company(Base, PRBase):
                                           foreign_keys='Company.logo_file_id')
 
     @property
-    def readers(self):
+    def readers_query(self):
         return g.db.query(User.id,
                           User.profireader_email,
                           User.profireader_name,
@@ -95,7 +95,7 @@ class Company(Base, PRBase):
             join(Portal).\
             join(self.__class__).\
             order_by(User.profireader_name).\
-            filter(self.__class__.id==self.id).all()
+            filter(self.__class__.id==self.id)
 
     # get all users in company : company.employees
     # get all users companies : user.employers

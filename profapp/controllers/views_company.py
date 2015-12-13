@@ -99,7 +99,7 @@ def materials_load(json, company_id):
                                                         **params)
     articles, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('grid_data')['pageSize'])
 
-    add_param = {'value': '1','label': '-- all --'}
+    add_param = {'value': '1', 'label': '-- all --'}
     statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
     portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id), add_param, True)
     gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
@@ -476,18 +476,14 @@ def load_suspended_employees(json, company_id):
 
 
 @company_bp.route('/readers/<string:company_id>/', methods=['GET'])
+@company_bp.route('/readers/<string:company_id>/<int:page>/', methods=['GET'])
 @login_required
 # @check_rights(simple_permissions([]))
-def readers(company_id):
+def readers(company_id, page=1):
     company = Company.get(company_id)
     company_dict = company.get_client_side_dict('name')
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
-
-    company_readers = company.readers
-
-    reader_fields = ('id', 'email', 'nickname', 'first_name', 'last_name')
-    company_readers_list_dict = list(map(lambda x: dict(zip(reader_fields, x)), company_readers))
 
     # sub_query = g.db.query(ArticlePortalDivision).\
     #     filter_by(status=ARTICLE_STATUS_IN_PORTAL.published).\
@@ -499,10 +495,16 @@ def readers(company_id):
     #     filter(text(' "publishing_tm" < clock_timestamp() '))
 
     # # search_text, portal, sub_query = get_params()
-    # articles, pages, page = pagination(query=sub_query, page=page)
+    company_readers, pages, page = pagination(query=company.readers_query, page=page)
+
+    reader_fields = ('id', 'email', 'nickname', 'first_name', 'last_name')
+    company_readers_list_dict = list(map(lambda x: dict(zip(reader_fields, x)), company_readers))
 
     return render_template('company/company_readers.html',
                            company=company_dict,
                            company_id=company_id,
                            company_logo=company_logo,
-                           companyReaders=company_readers_list_dict)
+                           companyReaders=company_readers_list_dict,
+                           pages=pages,
+                           current_page=page,
+                           )
