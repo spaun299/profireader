@@ -17,7 +17,6 @@ from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
 from collections import OrderedDict
 from ..models.tag import TagPortalDivisionArticle
 # from ..models.rights import list_of_RightAtomic_attributes
-# from ..models.rights import list_of_RightAtomic_attributes
 from profapp.models.rights import RIGHTS
 from ..models.files import File, ImageCroped
 from flask import session
@@ -485,20 +484,22 @@ def readers(company_id):
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
 
-    company_readers = g.db.query(User.id,
-                                 User.profireader_email,
-                                 User.profireader_name,
-                                 User.profireader_first_name,
-                                 User.profireader_last_name
-                                 ).\
-        join(UserPortalReader).\
-        join(Portal).\
-        join(Company).\
-        order_by(User.profireader_name).\
-        filter(Company.id==company_id).all()
+    company_readers = company.readers
 
     reader_fields = ('id', 'email', 'nickname', 'first_name', 'last_name')
     company_readers_list_dict = list(map(lambda x: dict(zip(reader_fields, x)), company_readers))
+
+    # sub_query = g.db.query(ArticlePortalDivision).\
+    #     filter_by(status=ARTICLE_STATUS_IN_PORTAL.published).\
+    #     join(PortalDivision).\
+    #     join(Portal).\
+    #     join(UserPortalReader).\
+    #     filter(UserPortalReader.user_id==g.user_dict['id']).\
+    #     order_by(ArticlePortalDivision.publishing_tm.desc()).\
+    #     filter(text(' "publishing_tm" < clock_timestamp() '))
+
+    # # search_text, portal, sub_query = get_params()
+    # articles, pages, page = pagination(query=sub_query, page=page)
 
     return render_template('company/company_readers.html',
                            company=company_dict,

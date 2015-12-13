@@ -10,7 +10,6 @@ from config import Config
 from ..constants.STATUS import STATUS
 from ..constants.USER_ROLES import COMPANY_OWNER_RIGHTS
 from utils.db_utils import db
-from .users import User
 from sqlalchemy import CheckConstraint
 from flask import abort
 from .rights import Right, RightHumnReadible
@@ -19,10 +18,13 @@ from .files import File
 from .pr_base import PRBase, Base, Search
 from ..controllers import errors
 from ..constants.STATUS import STATUS_NAME
-from ..models.rights import get_my_attributes
+from .rights import get_my_attributes
 from functools import wraps
 from .files import YoutubePlaylist
 from ..constants.SEARCH import RELEVANCE
+from .users import User
+from ..models.portal import Portal
+from ..models.portal import UserPortalReader
 
 
 class Company(Base, PRBase):
@@ -80,6 +82,20 @@ class Company(Base, PRBase):
                                           uselist=False,
                                           backref='logo_owner_company',
                                           foreign_keys='Company.logo_file_id')
+
+    @property
+    def readers(self):
+        return g.db.query(User.id,
+                          User.profireader_email,
+                          User.profireader_name,
+                          User.profireader_first_name,
+                          User.profireader_last_name
+                          ).\
+            join(UserPortalReader).\
+            join(Portal).\
+            join(self.__class__).\
+            order_by(User.profireader_name).\
+            filter(self.__class__.id==self.id).all()
 
     # get all users in company : company.employees
     # get all users companies : user.employers

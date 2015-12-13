@@ -432,8 +432,13 @@ def profile_edit_load(json, portal_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def portals_partners(company_id):
-    return render_template('company/portals_partners.html', company_id=company_id,
-                           company=Company.get(company_id).get_client_side_dict())
+    company = Company.get(company_id)
+    company_logo = company.logo_file_relationship.url() \
+        if company.logo_file_id else '/static/images/company_no_logo.png'
+    return render_template('company/portals_partners.html',
+                           company_id=company_id,
+                           company_logo=company_logo,
+                           company=company.get_client_side_dict())
 
 
 # TODO: VK by OZ: remove company_* kwargs

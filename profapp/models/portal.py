@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, remote
 from ..controllers import errors
 from flask import g
 from utils.db_utils import db
-from .company import Company
+# from .company import Company
 from .pr_base import PRBase, Base
 import re
 from .tag import TagPortalDivision, Tag
@@ -14,6 +14,7 @@ import itertools
 from sqlalchemy import orm
 import itertools
 from .files import File
+from profapp.controllers.errors import BadDataProvided
 
 
 class Portal(Base, PRBase):
@@ -249,7 +250,7 @@ class MemberCompanyPortal(Base, PRBase):
                           # , back_populates='member_companies'
                           )
 
-    company = relationship(Company
+    company = relationship('Company'
                            # ,back_populates = 'portal_members'
                            #                        ,backref = 'portal'
                            #                         ,backref='member_companies'
@@ -260,15 +261,19 @@ class MemberCompanyPortal(Base, PRBase):
                         )
 
     def __init__(self, company_id=None, portal=None, company=None, plan=None):
-        self.company_id = company_id
+        if company_id and company:
+            raise BadDataProvided
+        if company_id:
+            self.company_id = company_id
+        else:
+            self.company = company
         self.portal = portal
-        self.company = company
         self.plan = plan
 
     @staticmethod
     def apply_company_to_portal(company_id, portal_id):
         """Add company to MemberCompanyPortal table. Company will be partner of this portal"""
-        g.db.add(MemberCompanyPortal(company=db(Company, id=company_id).one(),
+        g.db.add(MemberCompanyPortal(company_id=company_id,
                                      portal=db(Portal, id=portal_id).one(),
                                      plan=db(MemberCompanyPortalPlan).first()))
         g.db.flush()
