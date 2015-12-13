@@ -161,7 +161,7 @@ def details(article_portal_division_id):
 
     related_articles = g.db().query(ArticlePortalDivision).filter(
         division.portal.id == article.division.portal_id).order_by(
-        ArticlePortalDivision.cr_tm.desc()).limit(10).all()
+        ArticlePortalDivision.cr_tm.desc()).limit(5).all()
 
     return render_template('front/bird/article_details.html',
                            portal=portal_and_settings(portal),
