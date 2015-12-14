@@ -21,8 +21,8 @@
     <div ng-cloak ng-show="user.id">
         <a  class="navbar-brand" href="{{ url_for('company.profile', company_id = company_id) }}"><img
                 style="background-position: center; witdh: 150px; height: 30px; background-repeat: no-repeat;
-                        background-size: contain; background-image: url({{ '{{' }} fileUrl(company.logo_file_id, false, '/static/images/company_no_logo.png') {{ '}}' }})"
-                src="/static/images/0.gif"/></a> |
+                        background-size: contain;"
+                src="{{ company_logo }}"/></a> |
         <a ng-class="{'selected': selected_company_menu == 'home'}" href="{{ url_for('company.profile', company_id = company_id) }}">{{ company.name }}</a> |
         <a ng-class="{'selected': selected_company_menu == 'materials'}" href="{{ url_for('company.materials', company_id = company_id) }}">{{ '{{' }}_('Materials'){{ '}}' }}</a> |
         <a ng-class="{'selected': selected_company_menu == 'publications'}" href="{{ url_for('portal.publications', company_id = company_id) }}">{{ '{{' }}_('Publications'){{ '}}' }}</a>
@@ -34,5 +34,7 @@
         |
         {{ '{{' }}_('Comments'){{ '}}' }} |
         <a ng-class="{'selected': selected_company_menu == 'companies_employees'}" href="{{ url_for('company.employees', company_id = company_id) }}">{{ '{{' }}_('Employees'){{ '}}' }}</a>
+        |
+        <a ng-class="{'selected': selected_company_menu == 'companies_readers'}" href="{{ url_for('company.readers', company_id = company_id) }}">{{ '{{' }}_('Readers'){{ '}}' }}</a>
     </div>
 </div>

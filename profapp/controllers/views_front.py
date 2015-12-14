@@ -1,8 +1,9 @@
 from .blueprints_declaration import front_bp
 from flask import render_template, request, url_for, redirect, g, current_app, session
 from ..models.articles import Article, ArticlePortalDivision, ArticleCompany
-from ..models.portal import MemberCompanyPortal, PortalDivision, Portal, Company, \
+from ..models.portal import MemberCompanyPortal, PortalDivision, Portal, \
     PortalDivisionSettingsCompanySubportal
+from ..models.company import Company
 from utils.db_utils import db
 from ..models.users import User
 from ..models.company import UserCompany
