@@ -10,7 +10,7 @@
 
 
 {% block portal_content %}
-        {% from 'macros.html' import scripts %}
+    {% from 'macros.html' import scripts %}
     {{ scripts(names=['croper']) }}
     <script>
         module.controller('company_create', ['$scope', '$modal', '$ok', '$af', function ($scope, $modal, $ok, $af) {
@@ -66,11 +66,11 @@
              af-after-load="afterLoad"
              ng-model="data">
 
-            <h1 class="nice-title">{{ data.id ? _('Edit company profile') : _('New company Account') }}<span></span>
-            </h1>
-          <div class="update_col1" style="width: 400px;">
+            <h1 class="nice-title">{{ data.id ? _('Edit company profile') : _('New company Account') }}<span></span></h1>
+
+            <div class="update_col1" style="width: 400px;">
                 {{ _('Select picture') }}
-              <ng-include src="'cropper.html'"></ng-include>
+                <div ng-model="data.image" pr-cropper="cropper"></div>
             </div>
 
 

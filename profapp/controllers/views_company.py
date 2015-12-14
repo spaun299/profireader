@@ -101,7 +101,8 @@ def materials_load(json, company_id):
 
     add_param = {'value': '1', 'label': '-- all --'}
     statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id), add_param, True)
+    portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id),
+                                             add_param, True)
     gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
     grid_data = Article.getListGridDataMaterials(articles)
 
@@ -306,14 +307,15 @@ def load(json, company_id=None):
     if action == 'load':
         company_dict = company.get_client_side_dict()
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
-                      'image_file_id': company_dict.get('logo_file_id')}
+                      'image_file_id': company_dict.get('logo_file_id'),
+                      'no_image_url': g.fileUrl(FOLDER_AND_FILE.no_logo())
+                      }
         try:
             if company_dict.get('logo_file_id'):
-                print(company_dict.get('logo_file_id'))
                 image_dict['image_file_id'], image_dict['coordinates'] = ImageCroped. \
                     get_coordinates_and_original_img(company_dict.get('logo_file_id'))
             else:
-                image_dict['image_file_id'] = FOLDER_AND_FILE.no_logo()
+                image_dict['image_file_id'] = None
         except Exception as e:
             pass
         image = {'image': image_dict}
@@ -322,22 +324,22 @@ def load(json, company_id=None):
     else:
         company.attr(g.filter_json(json, 'about', 'address', 'country', 'email', 'name', 'phone',
                                    'phone2', 'region', 'short_description'))
-        img = json['image']
-        img_id = img.get('image_file_id')
-        if img_id and img_id != FOLDER_AND_FILE.no_logo():
-            del img['image_file_id']
-            company.logo_file_id = crop_image(img_id, img)
-        elif not img_id:
-            company.logo_file_id = None
 
-        if action == 'save':
-            if company_id is None:
-                company.setup_new_company()
-            return company.save().get_client_side_dict()
-        else:
+        if action == 'validate':
             if company_id is not None:
                 company.detach()
             return company.validate(company_id is None)
+        else:
+            img = json['image']
+            img_id = img.get('image_file_id')
+            if img_id:
+                company.logo_file_id = crop_image(img_id, img['coordinates'])
+            elif not img_id:
+                company.logo_file_id = None
+
+            if company_id is None:
+                company.setup_new_company()
+            return company.save().get_client_side_dict()
 
 
 # @company_bp.route('/confirm_create/', methods=['POST'])

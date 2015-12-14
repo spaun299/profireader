@@ -143,6 +143,7 @@ def load_database(db_config):
         g.req = req
         g.filter_json = filter_json
         g.get_url_adapter = get_url_adapter
+        g.fileUrl = fileUrl
 
     return load_db
 
