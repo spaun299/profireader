@@ -86,13 +86,36 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             );
         }
     }])
-    .directive('prCropper', function () {
+    .directive('prCropper', ['$compile', '$templateCache', '$controller', function ($compile, $templateCache, $controller) {
         return {
             restrict: 'A',
             require: 'ngModel',
             link: function (scope, element, attrs, model) {
 
-                var $image = $(element);
+                element.html($templateCache.get('cropper.html'));
+
+                $compile(element.contents())(scope);
+
+                scope.ImageSelected = function (item) {
+                    model.$modelValue.coordinates = {rotate: 0};
+                    model.$modelValue.image_file_id = item.id;
+                    closeFileManager();
+                };
+
+                var callback_name = 'prcropper_image_selected_callback_' + scope.controllerName + '_' + randomHash();
+
+                window[callback_name] = scope.ImageSelected;
+
+                scope.chooseImage = function (setImage) {
+                    if (setImage) {
+                        scope.chooseImageinFileManager("parent." + callback_name, 'choose');
+                    }
+                    else {
+                        model.$modelValue.image_file_id = null;
+                    }
+                }
+
+                var $image = $('img', element);
 
                 var options = {
                     crop: function (e) {
@@ -110,13 +133,9 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                         $image.cropper(options);
                     }
                     else {
-                        $image.attr('src', fileUrl(model.$modelValue.no_image_file_id));
+                        $image.attr('src', model.$modelValue.no_image_url);
                     }
                 };
-
-
-                //restartCropper();
-
 
                 if (attrs['prCropper']) {
                     scope[attrs['prCropper']] = function () {
@@ -164,7 +183,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
 
             }
         };
-    })
+    }])
     .directive('dateTimestampFormat', function () {
         return {
             require: 'ngModel',

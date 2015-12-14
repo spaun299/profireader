@@ -99,6 +99,7 @@ if __name__ == '__main__':
                                 print(percent_to_str+'>', str(persent-100).replace('-', '')+'%')
                         break
                 except Exception as e:
+#                    print(e.__repr__())
                     pass
     execute_time = datetime.datetime.now()-time
     print('Updated successfully')
