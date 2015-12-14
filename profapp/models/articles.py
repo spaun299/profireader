@@ -47,6 +47,7 @@ class ArticlePortalDivision(Base, PRBase):
     division = relationship('PortalDivision',
                             backref=backref('article_portal_division', cascade="save-update, merge, delete"),
                             cascade="save-update, merge, delete")
+
     company = relationship(Company, secondary='article_company',
                            primaryjoin="ArticlePortalDivision.article_company_id == ArticleCompany.id",
                            secondaryjoin="ArticleCompany.company_id == Company.id",

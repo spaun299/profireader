@@ -18,7 +18,6 @@ from sqlalchemy import and_
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 
 
-
 def get_division_for_subportal(portal_id, member_company_id):
     q = g.db().query(PortalDivisionSettingsCompanySubportal). \
         join(MemberCompanyPortal,
@@ -169,15 +168,18 @@ def details(article_portal_division_id):
     division = g.db().query(PortalDivision).filter_by(id=article.portal_division_id).one()
 
     related_articles = g.db().query(ArticlePortalDivision).filter(
-        division.portal.id == article.division.portal_id).order_by(
-        ArticlePortalDivision.cr_tm.desc()).limit(5).all()
+        and_(ArticlePortalDivision.id != article.id,
+             ArticlePortalDivision.portal_division_id.in_(
+                 db(PortalDivision.id).filter(PortalDivision.portal_id == article.division.portal_id))
+             )).order_by(ArticlePortalDivision.cr_tm.desc()).limit(5).all()
 
     return render_template('front/bird/article_details.html',
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
-                           articles_related={a.id: a.get_client_side_dict(fields='id, title, cr_tm, company.name|id')
-                                             for a
-                                             in related_articles},
+                           articles_related={
+                               a.id: a.get_client_side_dict(fields='id, title, publishing_tm, company.name|id')
+                               for a
+                               in related_articles},
                            article=article_dict
                            )
 
