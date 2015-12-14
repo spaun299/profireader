@@ -93,44 +93,74 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             link: function (scope, element, attrs, model) {
 
                 var $image = $(element);
+
                 var options = {
                     crop: function (e) {
-                        if (model.$modelValue && model.$modelValue.image_file_id) {
-                            e['image_file_id'] = model.$modelValue.image_file_id;
+                        if (model.$modelValue) {
+                            //e['image_file_id'] = model.$modelValue.image_file_id;
                         }
-                        model.$setViewValue(e);
+                        model.$modelValue.coordinates = e;
                     }
-                }
+                };
 
-                if (model) {
-                    if (model.$modelValue && model.$modelValue.ratio) options.aspectRatio = model.$modelValue.ratio;
-                    if (model.$modelValue && model.$modelValue.coordinates) options.data = model.$modelValue.coordinates;
-                }
-                $image.cropper(options);
+                var restartCropper = function (src) {
+                    $image.cropper('destroy');
+                    if (model.$modelValue.image_file_id) {
+                        $image.attr('src', fileUrl(model.$modelValue.image_file_id));
+                        $image.cropper(options);
+                    }
+                    else {
+                        $image.attr('src', fileUrl(model.$modelValue.no_image_file_id));
+                    }
+                };
+
+
+                //restartCropper();
+
 
                 if (attrs['prCropper']) {
                     scope[attrs['prCropper']] = function () {
                         $image.cropper.apply($image, arguments);
                     };
                 }
-
+                //
                 scope.$watch(attrs['ngModel'] + '.image_file_id', function () {
-                    if (model && model.$modelValue && model.$modelValue.image_file_id) {
-                        $image.cropper('replace', fileUrl(model.$modelValue.image_file_id));
-                    }
-                });
+                    if (model && model.$modelValue) {
+                        //var file_url = fileUrl(model.$modelValue.image_file_id);
+                        //$image.attr('src', );
+                        //$image.cropper('replace', file_url);
 
-                scope.$watch(attrs['ngModel'] + '.ratio', function () {
-                    if (model.$modelValue && model.$modelValue.ratio) {
-                        $image.cropper('setAspectRatio', model.$modelValue.ratio);
-                    }
-                });
+                        if (model) {
+                            if (model.$modelValue && model.$modelValue.ratio) options.aspectRatio = model.$modelValue.ratio;
+                            if (model.$modelValue && model.$modelValue.coordinates) options.data = model.$modelValue.coordinates;
+                        }
 
-                scope.$watch(attrs['ngModel'] + '.coordinates', function () {
-                    if (model.$modelValue && model.$modelValue.coordinates) {
-                        $image.cropper('setData', model.$modelValue.coordinates);
+                        restartCropper();
+
+                        //
+                        //if (file_url) {
+                        //
+                        //}
+                        //else {
+                        //    console.log('no image');
+                        //}
                     }
                 });
+                //
+                //scope.$watch(attrs['ngModel'] + '.ratio', function () {
+                //    if (model.$modelValue && model.$modelValue.ratio) {
+                //        $image.cropper('setAspectRatio', model.$modelValue.ratio);
+                //    }
+                //});
+                //
+                //scope.$watch(attrs['ngModel'] + '.coordinates', function () {
+                //    if (model.$modelValue) console.log(model.$modelValue.coordinates);
+                //    if (model.$modelValue && model.$modelValue.coordinates) {
+                //        options.data = model.$modelValue.coordinates;
+                //        restartCropper();
+                //        //$image.cropper('setData', model.$modelValue.coordinates);
+                //    }
+                //});
 
             }
         };
@@ -168,6 +198,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             }
         };
     }])
+
     .directive('prImage', ['$timeout', function ($timeout) {
         return {
             restrict: 'A',
@@ -181,11 +212,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 var no_image = attrs['prNoImage'] ? attrs['prNoImage'] : false;
 
                 if (!no_image) {
-                    if (image_reference === 'logo_file_id')
-                        no_image = '/static/images/company_no_logo.png';
-                    else {
-                        no_image = '/static/images/no_image.png';
-                    }
+                    no_image = noImageForImageName(image_reference);
                 }
 
                 element.attr('src', '/static/images/0.gif');
@@ -589,8 +616,14 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             pageSize: 50,
             sort: null
         },
+        filterForSelect: function (uiGridConstants) {
+            return {
+                term: '1',
+                type: uiGridConstants.filter.SELECT
+            };
+        },
         editableTemplate: '<div class = "ui_dropdown"><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',
-        selectRowTemplate : '<div class="ui-grid-cell-contents">{{ COL_FIELD }}<i class="glyphicon glyphicon-collapse-down" style="float:right"></i></div>',
+        selectRowTemplate: '<div class="ui-grid-cell-contents">{{ COL_FIELD }}<i class="glyphicon glyphicon-collapse-down" style="float:right"></i></div>',
         setGridExtarnals: function (gridApi, externalFunction, paginationOptions, refresh) {
             var scope = this;
             scope.gridApi = gridApi;
@@ -616,20 +649,20 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                 externalFunction('', paginationOptions)
             });
             gridApi.core.on.filterChanged(scope, function () {
-               var grid = this.grid;
-               for (var i = 0; i < grid.columns.length; i++) {
-                  term = grid.columns[i].filter.term;
-                  field = grid.columns[i].field;
-                  if(term !== undefined){
-                     if(term !== scope.pos[field] && term){
-                        scope.pos[field] = term;
-                        scope.getFilter(field, term)
-                     }
-                     if(term === null){
-                         scope.refresh()
-                     }
-                  }
-               }
+                var grid = this.grid;
+                for (var i = 0; i < grid.columns.length; i++) {
+                    term = grid.columns[i].filter.term;
+                    field = grid.columns[i].field;
+                    if (term !== undefined) {
+                        if (term !== scope.pos[field] && term) {
+                            scope.pos[field] = term;
+                            scope.getFilter(field, term)
+                        }
+                        if (term === null) {
+                            scope.refresh()
+                        }
+                    }
+                }
             });
         },
 
@@ -803,16 +836,16 @@ function highlight($el) {
 }
 
 function angularControllerFunction(controller_attr, function_name) {
-    var el = $('[ng-controller=' + controller_attr + ']');
-    if (!el && !el.length) return function () {
+    var nothing = function () {
     };
+    var el = $('[ng-controller=' + controller_attr + ']');
+    if (!el && !el.length) return nothing;
+    if (!angular.element(el[0])) return nothing;
+    if (!angular.element(el[0]).scope()) return nothing;
+    if (!angular.element(el[0]).scope()) return nothing;
     var func = angular.element(el[0]).scope()[function_name];
     var controller = angular.element(el[0]).controller();
-    if (func && controller) {
-        return func
-    }
-    else return function () {
-    };
+    return (func && controller) ? func : nothing;
 }
 
 function fileUrl(id, down, if_no_file) {
@@ -1087,3 +1120,15 @@ var convert_python_format_to_tinymce_format = function (python_format) {
     }
     return python_format;
 };
+
+
+var noImageForImageName = function (image_name) {
+    if (image_name === 'logo_file_id') {
+        return '/static/images/company_no_logo.png';
+    }
+    else {
+        return '/static/images/no_image.png';
+    }
+}
+
+

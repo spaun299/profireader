@@ -7,7 +7,7 @@
 
     <script>
         module.controller('article_list', ['$scope', '$ok', '$sce', 'uiGridConstants','uiGridGroupingConstants','$timeout', function ($scope, $ok, $sce, uiGridConstants, uiGridGroupingConstants,$timeout) {
-
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
             $scope.url_details = {{ raw_url_for('company.material_details')|safe }};
             $scope.url_search_article = {{ raw_url_for('company.materials_load')|safe }};
             $scope.url_edit_article_portal = {{ raw_url_for('article.article_show_form')|safe }};
@@ -82,6 +82,10 @@
                 });
             };
 
+            $scope.lclass = function(portal){
+                return portal === 'not sent' ? "display:inline-block;pointer-events: none;cursor: text;color:#404b55;font-weight: bold;" : '';
+            };
+
             $scope.gridOptions1 = {
                     data: 'datas.grid_data',
                     paginationPageSizes: [10, 25, 50, 75],
@@ -92,32 +96,26 @@
                     useExternalFiltering: true,
                     columnDefs: [
                       { name: 'Title', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
-                          width: '35%', cellTemplate: '<div ng-class="link" class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.Title"></a></div>',
-                          filter: {
-                            type: uiGridConstants.filter.INPUT}
+                          width: '35%',
+                          cellTemplate: '<div ng-class="link" class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.Title"></a></div>',
+                          filter: {type: uiGridConstants.filter.INPUT}
                       },
                       { name: 'Date',enableCellEdit: false,enableFiltering: false, groupingShowAggregationMenu: false,
                           groupingShowGroupingMenu: false
                       },
                       { name: 'Portals', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
-                          cellTemplate: '<div class="link"><a href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{ row.entity.Portals }}</a></div>',
-                          filter: {
-                              term: '1',
-                            type: uiGridConstants.filter.SELECT}
+                          cellTemplate: '<div class="link"><a style="{{grid.appScope.lclass(row.entity.Portals)}}" href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{row.entity.Portals}}</a></div>',
+                          filter: $scope.filterForSelect(uiGridConstants)
                       },
                       { name: 'Publication status', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
-                          filter: {
-                            term: '1',
-                            type: uiGridConstants.filter.SELECT}
+                          filter: $scope.filterForSelect(uiGridConstants)
                       },
                       { name: 'Material status', enableSorting: false, //editableCellTemplate: $scope.editableTemplate,
                           //editDropdownValueLabel: 'value',
                           //cellTemplate: $scope.selectRowTemplate,
                           enableCellEdit: false,
                           enableColumnMenu: false,
-                          filter: {
-                            term: '1',
-                            type: uiGridConstants.filter.SELECT}
+                          filter: $scope.filterForSelect(uiGridConstants)
                       }
                     ],
                     onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions, $scope.refresh())}

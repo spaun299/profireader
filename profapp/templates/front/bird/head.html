@@ -4,7 +4,7 @@
 <meta name="description" content="">
 <meta name="author" content="">
 
-<title>Company</title>
+<title>{% block title %}{{ portal.name }}{% if current_division and current_division.name %} - {{ current_division.name }}{% endif %}{% endblock %}</title>
 
 <!-- Bootstrap Core CSS -->
 <link href="/static/front/css/bootstrap.css" rel="stylesheet">

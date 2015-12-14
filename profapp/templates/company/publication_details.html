@@ -5,7 +5,7 @@
 {% block portal_content %}
     <script>
         module.controller('article_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
-
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('publications')
             $scope.url_details = {{ raw_url_for('company.material_details')|safe }};
             $scope.url_change_status = {{ raw_url_for('portal.update_article_portal')|safe }};
             $scope.get_colored_title = function (text_to_change) {
@@ -77,7 +77,7 @@
         }]);
 
     </script>
-    {% include 'company/company_base.html' %}
+    {% include 'company/company_base_angular.html' %}
     {% raw %}
     <div ng-init="loadPublicationDetails()" ng-controller="article_list">
 

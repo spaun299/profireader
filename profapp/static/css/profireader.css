@@ -1418,9 +1418,9 @@ aside.comments .comment .body {
 /* Form styles */
 .form-control:focus {
     border-color: #74c893;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px @form-focus-border;
-    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px @form-focus-border;
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px @form-focus-border;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px; @form-focus-border;
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px; @form-focus-border;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px; @form-focus-border;
 }
 
 .form-control::-webkit-input-placeholder {
@@ -1773,7 +1773,17 @@ form {
 }
 
 .topbar-menu-links a:hover {
+    background: #FF7777;
+    color: #fff;
+}
+
+.topbar-menu-links a.selected {
     background: #CD2027;
+    color: #fff;
+}
+
+.topbar-menu-links a.selected:hover {
+    background: #FF7777;
     color: #fff;
 }
 

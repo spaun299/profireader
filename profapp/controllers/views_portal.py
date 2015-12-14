@@ -154,16 +154,16 @@ def apply_company(json):
 
 @portal_bp.route('/profile/<string:portal_id>/', methods=['GET'])
 @login_required
-# @check_rights(simple_permissions([]))
+# @check_rights(simple_permissions([])portal_id)
 def profile(portal_id):
-    portal = db(Portal, id=portal_id).one()
+    portal = Portal.get(portal_id)
     company = portal.own_company
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template('portal/portal_profile.html',
                            company_id=company.id,
                            company_logo=company_logo,
-                           company=company.get_client_side_dict()
+                           company=company.get_client_side_dict(fields='name')
                            )
 
 
@@ -175,11 +175,12 @@ def profile(portal_id):
 # @check_rights(simple_permissions([]))
 @ok
 def profile_load(json, portal_id):
-    portal = db(Portal, id=portal_id).one()
+    portal = Portal.get(portal_id)
     portal_bound_tags = portal.portal_bound_tags_select
     tags = set(tag_portal_division.tag for tag_portal_division in portal_bound_tags)
     tags_dict = {tag.id: tag.name for tag in tags}
     return {'portal': portal.get_client_side_dict('id, '
+                                                  'name, '
                                                   'divisions, '
                                                   'own_company, '
                                                   'portal_bound_tags_select.*, '
@@ -431,8 +432,13 @@ def profile_edit_load(json, portal_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def portals_partners(company_id):
-    return render_template('company/portals_partners.html', company_id=company_id,
-                           company=Company.get(company_id).get_client_side_dict())
+    company = Company.get(company_id)
+    company_logo = company.logo_file_relationship.url() \
+        if company.logo_file_id else '/static/images/company_no_logo.png'
+    return render_template('company/portals_partners.html',
+                           company_id=company_id,
+                           company_logo=company_logo,
+                           company=company.get_client_side_dict())
 
 
 # TODO: VK by OZ: remove company_* kwargs
@@ -546,7 +552,7 @@ def publications_load(json, company_id):
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
 @login_required
 def publication_details(article_id, company_id):
-    return render_template('company/publication_details.html',
+    return render_template('company/publication_details.html', company_id=company_id,
                            company=db(Company, id=company_id).one())
 
 

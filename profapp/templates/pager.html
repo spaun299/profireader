@@ -9,8 +9,7 @@
 
 
 <script type="text/ng-template" id="cropper.html">
-
-    {% raw %}{{ a }}
+    {% raw %}
     <div class="img-container">
         <img ng-model="data.image" pr-cropper="cropper" style="width: 100%" alt="Picture">
     </div>
@@ -36,10 +35,15 @@
              <span class="rotate" data-toggle="tooltip"><span
                         class="icon-transform-rotate-clockwise"></span></span>
         </button>
-        <button class="btn btn-primary" id="replace-toggle" type="button" value="{{ image_file_url }}"
-                ng-click="chooseImage()">
+        <button class="btn btn-primary" type="button" value="{{ image_file_url }}"
+                ng-click="chooseImage(true)">
                 <span class="docs-tooltip" data-toggle="tooltip" title="Chose image"><span
                         class="glyphicon glyphicon-folder-open"></span></span>
+        </button>
+        <button class="btn btn-primary" type="button"
+                ng-click="chooseImage(false)">
+                <span class="docs-tooltip" data-toggle="tooltip" title="Chose image"><span
+                        class="glyphicon glyphicon-remove-circle"></span></span>
         </button>
 
     </div>

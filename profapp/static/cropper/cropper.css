@@ -23,7 +23,7 @@
 .img-container {
   min-height: 250px;
   max-height: 250px;
-  margin-bottom: 20px;
+  margin-bottom: 4px;
 }
 
 @media (min-width: 320px) {
