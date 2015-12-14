@@ -1,33 +1,26 @@
-{# TODO (AA to AA): this function have to be runned when event 'onload' happend. However, this event never happend. Why? How to fix it? #}
-<script>
-function display(id, tags_list){
-    if (tags_list) {
-      document.getElementById(id).style.display= 'block';
-    }
-}
-</script>
-
-{% for article_id in articles %}
+{% for article_id, article in articles.items() %}
     <div class="block-item list-elements">
         <div class="item-type article">
-            <a href="http://{{ articles[article_id]['portal']['host']|safe }}/{{ articles[article_id]['division']['name'] }}/1/?search_text=">{{ articles[article_id]['division']['name']|safe }}</a>
+            <a href="http://{{ article['portal']['host']|safe }}/{{ article['division']['name'] }}/1/?search_text=">{{ article['division']['name']|safe }}</a>
         </div>
         <h2 class="item-title">
-            <a href="http://{{ articles[article_id]['portal']['host']|safe }}/details/{{ article_id }}">{{ articles[article_id]['title']|safe }}</a>
-            <span id="{{ article_id }}" class="tag-in-article" onload="display('{{ article_id }}', {{ articles[article_id]['tags'] }})">
-                {% for tag in articles[article_id]['tags'] %}
-                    <a href="#">{{ tag }}</a>
-                {% endfor %}
-            </span>
+            <a href="http://{{ article['portal']['host']|safe }}/details/{{ article_id }}">{{ article['title']|safe }}</a>
+            {% if article['tags'] %}
+                <span class="tag-in-article">
+                    {% for tag in article['tags'] %}
+                        <a href="#">{{ tag }}</a>
+                    {% endfor %}
+                </span>
+            {% endif %}
         </h2>
         <div class="item-short-content">
-            <p>{{ articles[article_id]['short']|safe }}</p>
+            <p>{{ article['short']|safe }}</p>
         </div>
         <div class="item-additional-info">
-            <a href="http://{{ articles[article_id]['portal']['host']|safe }}/_c/{{ articles[article_id]['company']['id']|safe }}/{{ articles[article_id]['company']['name']|safe }}" class="item-company">{{ articles[article_id]['company']['name']|safe }}</a>
-            <div class="item-publication-date">{{ articles[article_id]['publishing_tm']|safe }}</div>
+            <a href="http://{{ article['portal']['host']|safe }}/_c/{{ article['company']['id']|safe }}/{{ article['company']['name']|safe }}" class="item-company">{{ article['company']['name']|safe }}</a>
+            <div class="item-publication-date">{{ article['publishing_tm']|safe }}</div>
         </div>
         <div class="bottom-hide"></div>
-        <img src="/static/images/0.gif" class="block-item-img" style="background-image: url({{ fileUrl(articles[article_id]['image_file_id']) }})"/>
+        <img src="/static/images/0.gif" class="block-item-img" style="background-image: url({{ fileUrl(article['image_file_id']) }})"/>
     </div>
 {% endfor %}
