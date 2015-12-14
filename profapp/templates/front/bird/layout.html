@@ -63,7 +63,7 @@
             {% if articles_related %}
                 <div class="right-list-container">
                     {% for article_related_id, related_article  in articles_related.items() %}
-                        <div class="list-elements right-sidebar">
+                        <div class="list-elements right-sidebar oh">
                             <a href="{{ url_for('front.details', article_portal_division_id=related_article['id']) }}">{{ related_article['title']|safe }}</a>
 
                             <div class="item-additional-info">
