@@ -1,5 +1,5 @@
 {% extends "index_layout.html" %}
-{% block title %}Profireader{% endblock title %}
+{% block title %}Profireader - Portal Profile{% endblock title %}
 {% block head %}
     {{ super() }}
 {% endblock head %}
@@ -8,7 +8,7 @@
     {% include 'partials/portal_base_Profireader_auth_user.html' %}
 {% endblock portal_base %}
 
-{% block content %}
+{% block portal_content %}
     {% block company_base %}
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}<br/>
@@ -127,7 +127,7 @@
     <!-- ???{{ PortDivCheckbox }}<br/><br/> -->
     <!-- ***{{ data.PortalDivisionTags4 }}<br/><br/> -->
 
-    <h3>{{_('Portal %(name)s profile', {'name' : data.portal.name })}}</h3>
+    <h3>{{_('Portal "%(name)s" profile', {'name' : data.portal.name })}}</h3>
     <br/>
     <h4>{{_('Portal tags')}}:</h4>
     <table style="width:100%">
@@ -158,7 +158,7 @@
 
 </div>
 {% endraw %}
-{% endblock content %}
+{% endblock portal_content %}
 
 {% block footer %}
     {% include 'partials/portal_footer_Profireader.html' %}

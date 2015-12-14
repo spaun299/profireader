@@ -14,7 +14,7 @@
     {% endblock company_base %}
 <script>
     module.controller('CompanyProfile', ['$scope', '$modal','$ok', function ($scope, $modal, $ok) {
-        angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('home')
+        angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('home');
         $scope.user = {{ g.user_dict|tojson|safe }};
         $scope.$$translate = {{ translates('CompanyProfile')|safe }};
     }]);
