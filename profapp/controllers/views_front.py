@@ -18,6 +18,7 @@ from sqlalchemy import and_
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 
 
+
 def get_division_for_subportal(portal_id, member_company_id):
     q = g.db().query(PortalDivisionSettingsCompanySubportal). \
         join(MemberCompanyPortal,
@@ -87,6 +88,7 @@ def index(page=1):
         ordered_articles[a.id] = dict(list(a.get_client_side_dict().items()) +
                                       list({'tags': a.tags}.items()))
     session['original_search_text'] = search_text
+
     return render_template('front/bird/index.html',
                            articles=ordered_articles,
                            portal=portal_and_settings(portal),
@@ -108,20 +110,27 @@ def division(division_name, page=1):
         order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
         articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
                                                   'filter': and_(ArticlePortalDivision.
-                                                  portal_division_id == division.id,
-                                                  ArticlePortalDivision.status ==
-                                                  ARTICLE_STATUS_IN_PORTAL.published)},
+                                                                 portal_division_id == division.id,
+                                                                 ArticlePortalDivision.status ==
+                                                                 ARTICLE_STATUS_IN_PORTAL.published)},
                                                  search_text=search_text, page=page,
                                                  order_by=order, pagination=True)
         ordered_articles = dict()
         for a in db(ArticlePortalDivision).filter(
-            ArticlePortalDivision.id.in_(articles_id.keys())).all():
+                ArticlePortalDivision.id.in_(articles_id.keys())).all():
             ordered_articles[a.id] = a.get_client_side_dict()
+
+        current_division = division.get_client_side_dict()
+
+        def url_page_division(page=1, search_text=''):
+            return url_for('front.division', division_name=current_division['name'], page=page, search_text=search_text)
+
         return render_template('front/bird/division.html',
                                articles=ordered_articles,
-                               current_division=division.get_client_side_dict(),
+                               current_division=current_division,
                                portal=portal_and_settings(portal),
                                pages=pages,
+                               url_page=url_page_division,
                                current_page=page,
                                page_buttons=Config.PAGINATION_BUTTONS,
                                search_text=search_text)
@@ -161,12 +170,13 @@ def details(article_portal_division_id):
 
     related_articles = g.db().query(ArticlePortalDivision).filter(
         division.portal.id == article.division.portal_id).order_by(
-        ArticlePortalDivision.cr_tm.desc()).limit(10).all()
+        ArticlePortalDivision.cr_tm.desc()).limit(5).all()
 
     return render_template('front/bird/article_details.html',
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
-                           articles_related={a.id: a.get_client_side_dict(fields='id, title, cr_tm, company.name|id') for a
+                           articles_related={a.id: a.get_client_side_dict(fields='id, title, cr_tm, company.name|id')
+                                             for a
                                              in related_articles},
                            article=article_dict
                            )
@@ -210,7 +220,7 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
     ordered_articles = dict()
 
     for a in db(ArticlePortalDivision).filter(ArticlePortalDivision.id.in_
-                                              (articles_id.keys())).all():
+                                                  (articles_id.keys())).all():
         ordered_articles[a.id] = a.get_client_side_dict()
     return render_template('front/bird/subportal_division.html',
                            articles=ordered_articles,

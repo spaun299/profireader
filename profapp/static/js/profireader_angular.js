@@ -616,10 +616,10 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             pageSize: 50,
             sort: null
         },
-        filterForSelect: function(uiGridConstants){
-            return{
-              term: '1',
-              type: uiGridConstants.filter.SELECT
+        filterForSelect: function (uiGridConstants) {
+            return {
+                term: '1',
+                type: uiGridConstants.filter.SELECT
             };
         },
         editableTemplate: '<div class = "ui_dropdown"><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',
@@ -836,16 +836,16 @@ function highlight($el) {
 }
 
 function angularControllerFunction(controller_attr, function_name) {
-    var el = $('[ng-controller=' + controller_attr + ']');
-    if (!el && !el.length) return function () {
+    var nothing = function () {
     };
+    var el = $('[ng-controller=' + controller_attr + ']');
+    if (!el && !el.length) return nothing;
+    if (!angular.element(el[0])) return nothing;
+    if (!angular.element(el[0]).scope()) return nothing;
+    if (!angular.element(el[0]).scope()) return nothing;
     var func = angular.element(el[0]).scope()[function_name];
     var controller = angular.element(el[0]).controller();
-    if (func && controller) {
-        return func
-    }
-    else return function () {
-    };
+    return (func && controller) ? func : nothing;
 }
 
 function fileUrl(id, down, if_no_file) {
