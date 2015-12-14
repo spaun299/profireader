@@ -1,3 +1,12 @@
+{# TODO (AA to AA): this function have to be runned when event 'onload' happend. However, this event never happend. Why? How to fix it? #}
+<script>
+function display(id, tags_list){
+    if (tags_list) {
+      document.getElementById(id).style.display= 'block';
+    }
+}
+</script>
+
 {% for article_id in articles %}
     <div class="block-item list-elements">
         <div class="item-type article">
@@ -5,7 +14,7 @@
         </div>
         <h2 class="item-title">
             <a href="http://{{ articles[article_id]['portal']['host']|safe }}/details/{{ article_id }}">{{ articles[article_id]['title']|safe }}</a>
-            <span class="tag-in-article">
+            <span id="{{ article_id }}" class="tag-in-article" onload="display('{{ article_id }}', {{ articles[article_id]['tags'] }})">
                 {% for tag in articles[article_id]['tags'] %}
                     <a href="#">{{ tag }}</a>
                 {% endfor %}
