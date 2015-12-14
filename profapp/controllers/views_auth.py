@@ -57,12 +57,12 @@ def login_signup_general(*soc_network_names):
 
                     if ind:  # ToDo (AA): introduce field signup_via instead.
                         # Todo (AA): If signed_up not via profireader then...
-                        user.profireader_avatar_url = user.avatar(size=AVATAR_SIZE)
-                        user.profireader_small_avatar_url = user.avatar(size=AVATAR_SMALL_SIZE)
                         if soc_network_names[0] == 'profireader':
                             db_fields_profireader = DB_FIELDS['profireader']
                             for elem in SOC_NET_FIELDS_SHORT:
                                 setattr(user, db_fields_profireader[elem], getattr(result_user, elem))
+                        user.profireader_avatar_url = user.avatar(size=AVATAR_SIZE)
+                        user.profireader_small_avatar_url = user.avatar(size=AVATAR_SMALL_SIZE)
 
                     g.db.add(user)
                     user.confirmed = True
