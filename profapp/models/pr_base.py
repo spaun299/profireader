@@ -484,6 +484,11 @@ class PRBase:
 
         return ret
 
+    def search_filter_default(self, division_id):
+        """ :param division_id: 'string with id from table portal_division'
+            :return: dict with prepared filter parameters for search method """
+        pass
+
     @staticmethod
     def validate_before_update(mapper, connection, target):
         ret = target.validate(False)
