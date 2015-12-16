@@ -93,7 +93,7 @@ class WrongNumberOfParameters(Error):
     pass
 
 
-class WrongObligatoryParametersPassedToFunction(Error):
+class WrongMandatoryParametersPassedToFunction(Error):
     pass
 
 

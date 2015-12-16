@@ -1,5 +1,5 @@
 from flask import request, url_for, current_app
-from ..controllers.errors import WrongNumberOfParameters, WrongObligatoryParametersPassedToFunction
+from ..controllers.errors import WrongNumberOfParameters, WrongMandatoryParametersPassedToFunction
 from functools import reduce
 from operator import or_
 import inspect
@@ -43,7 +43,7 @@ def url_page(endpoint=None, **kwargs):
     obligatory_args = args[0:len_obligatory_args]
 
     if not set(obligatory_args).issubset(set(kwargs.keys())):
-        raise WrongObligatoryParametersPassedToFunction
+        raise WrongMandatoryParametersPassedToFunction
 
     kwargs_new.update(kwargs)
 
