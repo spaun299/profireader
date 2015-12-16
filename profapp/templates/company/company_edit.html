@@ -45,17 +45,19 @@
             {#                      ng-onsubmit="getData"#}
             {#                      ng-action="save_company_url"#}
 
-            $scope.ImageSelected = function (item) {
-                $scope.data.image.image_file_id = item.id;
-                closeFileManager();
-            }
+{#            $scope.ImageSelected = function (item) {#}
+{#                $scope.data.image.image_file_id = item.id;#}
+{#                closeFileManager();#}
+{#            }#}
 
             $scope.setImageUrl = function (logo_file_id) {
                 $scope.logo_file_url = fileUrl(logo_file_id);
-            }
-            $scope.chooseImage = function () {
-                $scope.chooseImageinFileManager("parent.angularControllerFunction('company_create', 'ImageSelected')", 'choose');
-            }
+            };
+
+{#            $scope.chooseImage = function () {#}
+{#                $scope.chooseImageinFileManager("parent.angularControllerFunction('company_create', 'ImageSelected')", 'choose');#}
+{#            }#}
+
         }])
     </script>
     {% raw %}
