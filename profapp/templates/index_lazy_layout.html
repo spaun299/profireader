@@ -5,13 +5,20 @@
 
     <div class="container main-site-block">
         <div class="over-block">
-
             {% include 'flashed-messages.html' %}
 
             {% block portal_content %}
                 Portal Content
             {% endblock portal_content %}
             <br/>
+            <!-- Blog Entries Column -->
+            <div class="col-md-9">
+                {% if pages is defined %}
+                    {% if pages %}
+                        {% include 'partials/pager.html' %}
+                    {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
 {% endblock content %}

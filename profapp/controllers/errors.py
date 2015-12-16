@@ -56,6 +56,7 @@ class StatusNonActivate(Error):
 class SubscribeToOwn(Error):
     pass
 
+
 class PortalAlreadyExist(Error):
 
             # except errors.PortalAlreadyExist as e:
@@ -67,14 +68,18 @@ class PortalAlreadyExist(Error):
 class AlreadyJoined(Error):
     pass
 
+
 class BadTypeProvided(Error):
     pass
+
 
 class TooManyCredentialsInDb(Error):
     pass
 
+
 class VideoAlreadyExistInPlaylist(Error):
     pass
+
 
 class ValidationException(Error):
     """ Inappropriate argument value (of correct type). """
@@ -87,6 +92,9 @@ class ValidationException(Error):
 class WrongNumberOfParameters(Error):
     pass
 
+
+class WrongObligatoryParametersPassedToFunction(Error):
+    pass
 
 
 @csrf.error_handler

@@ -487,16 +487,6 @@ def readers(company_id, page=1):
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
 
-    # sub_query = g.db.query(ArticlePortalDivision).\
-    #     filter_by(status=ARTICLE_STATUS_IN_PORTAL.published).\
-    #     join(PortalDivision).\
-    #     join(Portal).\
-    #     join(UserPortalReader).\
-    #     filter(UserPortalReader.user_id==g.user_dict['id']).\
-    #     order_by(ArticlePortalDivision.publishing_tm.desc()).\
-    #     filter(text(' "publishing_tm" < clock_timestamp() '))
-
-    # # search_text, portal, sub_query = get_params()
     company_readers, pages, page = pagination(query=company.readers_query, page=page)
 
     reader_fields = ('id', 'email', 'nickname', 'first_name', 'last_name')
@@ -509,4 +499,6 @@ def readers(company_id, page=1):
                            companyReaders=company_readers_list_dict,
                            pages=pages,
                            current_page=page,
+                           page_buttons=Config.PAGINATION_BUTTONS,
+                           search_text=None,
                            )
