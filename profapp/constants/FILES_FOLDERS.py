@@ -6,8 +6,8 @@ class FOLDER_AND_FILE:
 
     @staticmethod
     def no_logo():
-        return '565f6b0f-63b5-4001-af92-293908f6e5c4'
+        return '00000000-0000-4001-a316-49fd35fdf741'
 
     @staticmethod
     def no_article_image():
-        return '566af45c-bad9-4001-860b-2a5f6b729886'
+        return '00000000-0000-4001-a316-49fd35fdf742'

@@ -6,7 +6,7 @@ import sys
 # `pip install -r requirements.txt`
 
 
-activate_this = '/var/www/.venv/bin/activate_this.py'
+activate_this = '.venv/bin/activate_this.py'
 # execfile(activate_this, dict(__file__=activate_this))
 exec(open(activate_this).read())
 
