@@ -28,12 +28,17 @@ def redirect_url(*args):
 
 
 def url_page(endpoint=None, **kwargs):
-    from run_profi import app_profi
     ep = endpoint if endpoint else request.endpoint
     kwargs_new = request.view_args
 
-    with app_profi.app_context():
-        func = current_app.view_functions[ep]
+    try:
+        from run_profi import app_profi
+        with app_profi.app_context():
+            func = current_app.view_functions[ep]
+    except:
+        from run_front import app_front
+        with app_front.app_context():
+            func = current_app.view_functions[ep]
 
     argspec = inspect.getargspec(func)
     args = argspec.args
