@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="/static/jquery/smoothness/jquery-ui.css">
     <link rel="stylesheet" href="/static/css/oles.css">
     <link rel="stylesheet" href="/static/css/icons.css">
+    <link rel="stylesheet" href="/static/css/andriy-pagination.css">
 
 {%- endblock styles %}
 
@@ -126,7 +127,15 @@
             {% include 'partials/Profireader_content' %}
         {% endblock portal_content %}
         <br/>
+        {% if pages is defined %}
+            {% if pages > 1 %}
+                <div class="col-md-9">
+                    {% include 'partials/pager.html' %}
+                </div>
+            {% endif %}
+        {% endif %}
     </div>
+
 
 {% endblock content %}
 
