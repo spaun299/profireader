@@ -177,7 +177,7 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
     subportal_division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                                 name=division_name).one()
     order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
-    articles_id, pages, page = Search.search(ArticlePortalDivision().search_filter_default(
+    articles, pages, page = Search.search(ArticlePortalDivision().search_filter_default(
         subportal_division.id, company_id=member_company_id), search_text=search_text, page=page,
         order_by=order, pagination=True)
 
@@ -190,13 +190,8 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
     # filter(Company.id == member_company_id)
 
     # articles, pages, page = pagination(query=sub_query, page=page)
-    ordered_articles = dict()
-
-    for a in db(ArticlePortalDivision).filter(ArticlePortalDivision.id.in_
-                                                  (articles_id.keys())).all():
-        ordered_articles[a.id] = a.get_client_side_dict()
     return render_template('front/bird/subportal_division.html',
-                           articles=ordered_articles,
+                           articles=articles,
                            subportal=True,
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
