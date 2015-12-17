@@ -39,6 +39,7 @@ def get_division_for_subportal(portal_id, member_company_id):
 
 def get_params(**argv):
     search_text = request.args.get('search_text') if request.args.get('search_text') else ''
+    print(search_text)
     app = current_app._get_current_object()
     portal = g.db().query(Portal).filter_by(host=request.host).one()
 
@@ -190,6 +191,11 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
     # filter(Company.id == member_company_id)
 
     # articles, pages, page = pagination(query=sub_query, page=page)
+
+    def url_page_division(page=1, search_text=''):
+        return url_for('front.subportal_division', division_name=division_name,
+                       member_company_id=member_company_id, member_company_name=member_company_name,
+                       page=page, search_text=search_text)
     return render_template('front/bird/subportal_division.html',
                            articles=articles,
                            subportal=True,
@@ -197,10 +203,12 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
                            current_division=division.get_client_side_dict(),
                            current_subportal_division=subportal_division.get_client_side_dict(),
                            member_company=member_company.get_client_side_dict(),
-                           pages=False,
+                           pages=pages,
+                           page=page,
                            current_page=page,
                            page_buttons=Config.PAGINATION_BUTTONS,
-                           search_text=search_text)
+                           search_text=search_text,
+                           url_page=url_page_division)
 
 
 @front_bp.route('_c/<string:member_company_id>/<string:member_company_name>/')
