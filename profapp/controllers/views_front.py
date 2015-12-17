@@ -74,7 +74,6 @@ def index(page=1):
     division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                       portal_division_type_id='index').one()
     order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
-    print(order)
     page = page if session.get('original_search_text') == search_text else 1
     articles, pages, page = Search.search(ArticlePortalDivision().search_filter_default(division.id),
                                           search_text=search_text, page=page,
