@@ -83,33 +83,37 @@ class ArticlePortalDivision(Base, PRBase):
                                      PortalDivision.id, portal_id=division.portal_id).filter(
                           PortalDivision.portal_division_type_id != 'events'
                       )), ArticlePortalDivision.status == ARTICLE_STATUS_IN_PORTAL.published),
-                      'return_fields': 'default_dict'}
+                      'return_fields': 'default_dict', 'tags': True}
         elif division_type == 'news':
             if not company_id:
                 filter = {'class': ArticlePortalDivision,
                           'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
                                          ArticlePortalDivision.status ==
-                                         ARTICLE_STATUS_IN_PORTAL.published)}
+                                         ARTICLE_STATUS_IN_PORTAL.published),
+                          'return_fields': 'default_dict', 'tags': True}
             else:
                 filter = {'class': ArticlePortalDivision,
                           'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
                                          ArticlePortalDivision.status ==
                                          ARTICLE_STATUS_IN_PORTAL.published,
                                          db(ArticleCompany, company_id=company_id,
-                                            id=ArticlePortalDivision.article_company_id).exists())}
+                                            id=ArticlePortalDivision.article_company_id).exists()),
+                          'return_fields': 'default_dict', 'tags': True}
         elif division_type == 'events':
             if not company_id:
                 filter = {'class': ArticlePortalDivision,
                           'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
                                          ArticlePortalDivision.status ==
-                                         ARTICLE_STATUS_IN_PORTAL.published)}
+                                         ARTICLE_STATUS_IN_PORTAL.published),
+                          'return_fields': 'default_dict', 'tags': True}
             else:
                 filter = {'class': ArticlePortalDivision,
                           'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
                                          ArticlePortalDivision.status ==
                                          ARTICLE_STATUS_IN_PORTAL.published,
                                          db(ArticleCompany, company_id=company_id,
-                                            id=ArticlePortalDivision.article_company_id).exists())}
+                                            id=ArticlePortalDivision.article_company_id).exists()),
+                          'return_fields': 'default_dict', 'tags': True}
         return filter
 
     @property
