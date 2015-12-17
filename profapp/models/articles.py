@@ -4,7 +4,7 @@ from sqlalchemy.sql import expression
 from ..constants.TABLE_TYPES import TABLE_TYPES
 # from db_init import db_session
 from ..models.company import Company
-from ..models.portal import PortalDivision, Portal
+from ..models.portal import PortalDivision, Portal, PortalDivisionType
 from ..models.users import User
 from ..models.files import File, FileContent
 from ..models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
@@ -68,6 +68,53 @@ class ArticlePortalDivision(Base, PRBase):
                                     cascade="save-update, merge, delete, delete-orphan",
                                     passive_deletes=True
                                     )
+
+    def search_filter_default(self, division_id, company_id=None):
+        """ :param division_id: string with id from table portal_division,
+                   optional company_id: string with id from table company. If provided
+                   , this function will check if ArticleCompany has relation with our class.
+            :return: dict with prepared filter parameters for search method """
+        division = db(PortalDivision, id=division_id).one()
+        division_type = division.portal_division_type.id
+        filter = None
+        if division_type == 'index':
+            filter = {'class': ArticlePortalDivision,
+                      'filter': and_(ArticlePortalDivision.portal_division_id.in_(db(
+                                     PortalDivision.id, portal_id=division.portal_id).filter(
+                          PortalDivision.portal_division_type_id != 'events'
+                      )), ArticlePortalDivision.status == ARTICLE_STATUS_IN_PORTAL.published),
+                      'return_fields': 'default_dict', 'tags': True}
+        elif division_type == 'news':
+            if not company_id:
+                filter = {'class': ArticlePortalDivision,
+                          'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
+                                         ArticlePortalDivision.status ==
+                                         ARTICLE_STATUS_IN_PORTAL.published),
+                          'return_fields': 'default_dict', 'tags': True}
+            else:
+                filter = {'class': ArticlePortalDivision,
+                          'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
+                                         ArticlePortalDivision.status ==
+                                         ARTICLE_STATUS_IN_PORTAL.published,
+                                         db(ArticleCompany, company_id=company_id,
+                                            id=ArticlePortalDivision.article_company_id).exists()),
+                          'return_fields': 'default_dict', 'tags': True}
+        elif division_type == 'events':
+            if not company_id:
+                filter = {'class': ArticlePortalDivision,
+                          'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
+                                         ArticlePortalDivision.status ==
+                                         ARTICLE_STATUS_IN_PORTAL.published),
+                          'return_fields': 'default_dict', 'tags': True}
+            else:
+                filter = {'class': ArticlePortalDivision,
+                          'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
+                                         ArticlePortalDivision.status ==
+                                         ARTICLE_STATUS_IN_PORTAL.published,
+                                         db(ArticleCompany, company_id=company_id,
+                                            id=ArticlePortalDivision.article_company_id).exists()),
+                          'return_fields': 'default_dict', 'tags': True}
+        return filter
 
     @property
     def tags(self):

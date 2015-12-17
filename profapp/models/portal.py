@@ -361,6 +361,12 @@ class PortalDivision(Base, PRBase):
     #         # target.settings = db(PortalDivisionSettingsCompanySubportal).filter_by(
     #         #     portal_division_id=self.id).one()
 
+    def search_filter(self):
+        return and_(ArticlePortalDivision.portal_division_id.in_(
+                                                      db(PortalDivision.id, portal_id=portal.id)),
+                                                      ArticlePortalDivision.status ==
+                                                      ARTICLE_STATUS_IN_PORTAL.published)
+
     @orm.reconstructor
     def init_on_load(self):
         if self.portal_division_type_id == 'company_subportal':
