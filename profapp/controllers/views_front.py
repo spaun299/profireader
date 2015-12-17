@@ -17,6 +17,8 @@ from flask import send_from_directory
 import collections
 from sqlalchemy import and_
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
+from .request_wrapers import ok
+from ..utils.email import send_email
 
 
 def get_division_for_subportal(portal_id, member_company_id):
@@ -59,10 +61,10 @@ def portal_and_settings(portal):
     return ret
 
 
-@front_bp.route('favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(current_app.root_path, 'static'),
-                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+# @front_bp.route('favicon.ico')
+# def favicon():
+#     return send_from_directory(os.path.join(current_app.root_path, 'static'),
+#                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 @front_bp.route('/', methods=['GET'])
@@ -197,6 +199,7 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
         return url_for('front.subportal_division', division_name=division_name,
                        member_company_id=member_company_id, member_company_name=member_company_name,
                        page=page, search_text=search_text)
+
     return render_template('front/bird/subportal_division.html',
                            articles=articles,
                            subportal=True,
@@ -293,3 +296,13 @@ def subportal_contacts(member_company_id, member_company_name):
                            # page_buttons=Config.PAGINATION_BUTTONS,
                            # search_text=search_text
                            )
+
+
+@front_bp.route('_c/<string:member_company_id>/send_message/', methods=['POST'])
+@ok
+def send_message(json, member_company_id):
+    send_to = User.get(json['user_id'])
+    send_email(send_to.profireader_email, 'New message',
+               'messanger/email_send_message', user_to=send_to, user_from=g.user_dict,
+               in_company=Company.get(member_company_id), message=json['message'])
+    return {}
