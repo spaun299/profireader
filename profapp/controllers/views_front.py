@@ -99,13 +99,9 @@ def division(division_name, page=1):
         return redirect(url_for('front.index', search_text=search_text))
     if division.portal_division_type_id == 'news' or division.portal_division_type_id == 'events':
         order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
-        articles_id, pages, page = Search.search(
+        articles, pages, page = Search.search(
             ArticlePortalDivision().search_filter_default(division.id),
             search_text=search_text, page=page, order_by=order, pagination=True)
-        ordered_articles = dict()
-        for a in db(ArticlePortalDivision).filter(
-                ArticlePortalDivision.id.in_(articles_id.keys())).all():
-            ordered_articles[a.id] = a.get_client_side_dict()
 
         current_division = division.get_client_side_dict()
 
@@ -113,7 +109,7 @@ def division(division_name, page=1):
             return url_for('front.division', division_name=current_division['name'], page=page, search_text=search_text)
 
         return render_template('front/bird/division.html',
-                               articles=ordered_articles,
+                               articles=articles,
                                current_division=current_division,
                                portal=portal_and_settings(portal),
                                pages=pages,
