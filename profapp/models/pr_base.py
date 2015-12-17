@@ -213,11 +213,11 @@ class Search(Base):
             order = get_order(ord_to_str, desc_asc, ord_to_str)
         else:
             order = get_order('relevance', desc_asc, 'relevance')
-        if 'position' in str(order):
-            subquery_search = subquery_search.order_by(order).order_by(
-                get_order('md_tm', 'asc', 'md_tm'))
-        else:
+        if 'md_tm' in str(order):
             subquery_search = subquery_search.order_by(order)
+        else:
+            subquery_search = subquery_search.order_by(order).order_by(
+                get_order('md_tm', desc_asc, 'md_tm'))
         if pagination:
             pages = math.ceil(subquery_search.count() / items_per_page)
             if items_per_page:
@@ -244,7 +244,7 @@ class Search(Base):
                 to_order[cls.index] = getattr(cls, ord_by)
         objects = {obj['id']: obj for obj in
                    collections.OrderedDict(sorted(objects.items())).values()}
-        ordered = sorted(to_order.items(), reverse=True if desc_asc == 'asc' else False)
+        ordered = sorted(to_order.items(), reverse=False if desc_asc == 'asc' else True)
         objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
         if return_objects:
             items = dict()
