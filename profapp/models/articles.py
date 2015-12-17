@@ -82,7 +82,7 @@ class ArticlePortalDivision(Base, PRBase):
                                      PortalDivision.id, portal_id=division.portal_id).filter(
                           PortalDivision.portal_division_type_id != 'events'
                       )), ArticlePortalDivision.status == ARTICLE_STATUS_IN_PORTAL.published),
-                      'return_fields': 'default_dict'}
+                      'return_fields': 'default_dict', 'tags': True}
         elif division_type == 'news':
             if not company_id:
                 filter = {'class': ArticlePortalDivision,

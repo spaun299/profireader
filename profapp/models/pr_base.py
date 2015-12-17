@@ -258,12 +258,12 @@ class Search(Base):
                         items[a.id] = a.get_client_side_dict(fields=fields)
                     elif fields != 'default_dict' and tags:
                         items[a.id] = a.get_client_side_dict(fields=fields)
-                        items[a.id].update(a.tags)
+                        items[a.id].update(dict(tags=a.tags))
                     elif fields == 'default_dict' and not tags:
                         items[a.id] = a.get_client_side_dict()
                     else:
                         items[a.id] = a.get_client_side_dict()
-                        items[a.id].update(a.tags)
+                        items[a.id].update(dict(tags=a.tags))
             objects = collections.OrderedDict((id, items[id]) for id, val in ordered)
         return objects, pages, page + 1
 
