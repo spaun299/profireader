@@ -45,17 +45,19 @@
             {#                      ng-onsubmit="getData"#}
             {#                      ng-action="save_company_url"#}
 
-            $scope.ImageSelected = function (item) {
-                $scope.data.image.image_file_id = item.id;
-                closeFileManager();
-            }
+{#            $scope.ImageSelected = function (item) {#}
+{#                $scope.data.image.image_file_id = item.id;#}
+{#                closeFileManager();#}
+{#            }#}
 
             $scope.setImageUrl = function (logo_file_id) {
                 $scope.logo_file_url = fileUrl(logo_file_id);
-            }
-            $scope.chooseImage = function () {
-                $scope.chooseImageinFileManager("parent.angularControllerFunction('company_create', 'ImageSelected')", 'choose');
-            }
+            };
+
+{#            $scope.chooseImage = function () {#}
+{#                $scope.chooseImageinFileManager("parent.angularControllerFunction('company_create', 'ImageSelected')", 'choose');#}
+{#            }#}
+
         }])
     </script>
     {% raw %}
@@ -90,6 +92,9 @@
                 </div>
                 <div class="item"><span class="input_label">{{_('Email')}}</span><input type="text"
                                                                                         ng-model="data.email"></div>
+                <div class="item"><span class="input_label">{{_('Lattitude and longitude')}}</span><input type="text" style="width: 6em"
+                                                                                        ng-model="data.lat">, <input style="width: 6em" type="text"
+                                                                                        ng-model="data.lon"></div>
             </div>
 
             <div style="width: 1000px; margin-left: 0px;">

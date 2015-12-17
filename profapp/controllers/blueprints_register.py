@@ -15,7 +15,7 @@ from flask import Blueprint
 
 from .blueprints_declaration import *
 from . import views_index, views_user, views_filemanager, views_article, views_image_editor, \
-    views_company, views_portal, errors, views_front, views_file, views_admin, views_tools
+    views_company, views_portal, errors, views_file, views_admin, views_tools
 
 
 def register(app):
@@ -40,6 +40,7 @@ def register(app):
 
 
 def register_front(app):
+    from . import views_front
     app.register_blueprint(front_bp, url_prefix='/')
     # app.register_blueprint(reader_bp, url_prefix='/')
 

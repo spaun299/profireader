@@ -2,22 +2,23 @@
 *[disabled] {
     color: #ccc;
 }
+
 /*#navigation_selected_division {*/
-    /*color: red;*/
+/*color: red;*/
 /*}*/
 
 /*.tag-in-article {*/
-    /*border: dashed #00264d 1px;*/
-    /*padding: 1px 3px;*/
-    /*background-color: yellow;*/
-    /*display: none;*/
+/*border: dashed #00264d 1px;*/
+/*padding: 1px 3px;*/
+/*background-color: yellow;*/
+/*display: none;*/
 /*}*/
 
 .item:hover {
     /*background: rgba(255, 200, 200, 0.3);*/
 }
 
-.item>span.input_label {
+.item > span.input_label {
     text-align: right;
     margin-right: 0.5em;
     display: inline-block;
@@ -25,14 +26,13 @@
     color: #777;
 }
 
-.item>span.error {
+.item > span.error {
     color: #f00;
 }
 
-.item>span.warning {
+.item > span.warning {
     color: #F7C223;
 }
-
 
 .item select, .item button {
     margin: 3px;
@@ -69,7 +69,6 @@
     color: #ccc;
 }
 
-
 /* class for tiny mce in profireader (editing article) */
 .profi-tiny-mce-birdy {
     width: 697.5px;
@@ -99,7 +98,6 @@
     color: #2ecc40;
 }
 
-
 .nowrap {
     white-space: nowrap;
     overflow: hidden;
@@ -110,3 +108,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.notitledialog .ui-dialog-titlebar {
+    display: none
+}
+
+.notitledialog .ui-dialog-content {
+    overflow: hidden;
+}
+

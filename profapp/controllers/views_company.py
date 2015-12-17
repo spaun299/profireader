@@ -323,7 +323,7 @@ def load(json, company_id=None):
         return company_dict
     else:
         company.attr(g.filter_json(json, 'about', 'address', 'country', 'email', 'name', 'phone',
-                                   'phone2', 'region', 'short_description'))
+                                   'phone2', 'region', 'short_description', 'lon', 'lat'))
 
         if action == 'validate':
             if company_id is not None:

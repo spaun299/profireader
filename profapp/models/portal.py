@@ -28,6 +28,7 @@ class Portal(Base, PRBase):
     portal_layout_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal_layout.id'))
 
     logo_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'))
+    favicon_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'))
 
     layout = relationship('PortalLayout')
 
@@ -128,9 +129,12 @@ class Portal(Base, PRBase):
                  # portal_plan_id=None,
                  logo_file_id=None,
                  company_owner=None,
+                 favicon_file_id = None,
                  host=None, divisions=[], portal_layout_id=None):
         self.name = name
         self.logo_file_id = logo_file_id
+        self.favicon_file_id = favicon_file_id
+
         # self.company_owner_id = company_owner_id
         # self.articles = articles
         self.host = host
@@ -223,7 +227,7 @@ class Portal(Base, PRBase):
                     check_division.max, check_division.id)
         return ret
 
-    def get_client_side_dict(self, fields='id|name, divisions.*, layout.*, logo_file_id, company_owner_id',
+    def get_client_side_dict(self, fields='id|name, divisions.*, layout.*, logo_file_id, favicon_file_id, company_owner_id',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 

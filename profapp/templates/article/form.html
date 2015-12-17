@@ -375,22 +375,7 @@
             </div>
 
             <!-- TODO: AA by OZ -->
-            <div ng-if="data.article.division" class="update_col1">
-                <div ng-controller="SelectTagsCtrl">
-                    <h3>{{_('Article tags:')}}</h3>
-                    <!-- <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;"> -->
-                    <ui-select multiple ng-model="data['article'].tags" theme="select2" ng-disabled="disabled"
-                               style="width: 300px;">
-                        <ui-select-match placeholder="Select tags...">{{$item}}</ui-select-match>
-                        <ui-select-choices
-                                repeat="tag in data['portal_division']['availableTags'] | filter:$select.search">
-                            {{ tag }}
-                        </ui-select-choices>
-                    </ui-select>
-                    <!-- <p>Selected: {{tagsObject.tags}}</p> -->
-                </div>
-
-            </div>
+            <div ng-if="data.article.division" class="update_col1" pr-tags="data['portal_division']['availableTags']" ng-model="data.article.tags">
 
             <div class="update_col1">
                 <button class="create_button" ng-disabled="!$af.isActionAllowed(data, 'save')"
