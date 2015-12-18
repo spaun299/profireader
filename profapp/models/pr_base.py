@@ -20,6 +20,7 @@ from sqlalchemy.sql import expression, functions, update
 from utils.validators import validators
 from sqlalchemy import and_
 import datetime
+import operator
 
 Base = declarative_base()
 
@@ -240,11 +241,12 @@ class Search(Base):
         for search in join_search:
             for cls in db(search).all():
                 objects[cls.index] = {'id': cls.index, 'table_name': cls.table_name,
-                                      'order': getattr(cls, ord_by)}
-                to_order[cls.index] = getattr(cls, ord_by)
+                                      'order': getattr(cls, ord_by), 'md_tm': cls.md_tm}
+                to_order[cls.index] = (getattr(cls, ord_by), getattr(cls, 'md_tm'))
         objects = {obj['id']: obj for obj in
                    collections.OrderedDict(sorted(objects.items())).values()}
-        ordered = sorted(to_order.items(), reverse=False if desc_asc == 'asc' else True)
+        ordered = sorted(tuple(to_order.items()), reverse=False if desc_asc == 'asc' else True,
+                         key=operator.itemgetter(1))
         objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
         if return_objects:
             items = dict()
@@ -266,7 +268,6 @@ class Search(Base):
                         items[a.id].update(dict(tags=a.tags))
             objects = collections.OrderedDict((id, items[id]) for id, val in ordered)
         return objects, pages, page + 1
-
 
 class MLStripper(HTMLParser):
     def __init__(self):
