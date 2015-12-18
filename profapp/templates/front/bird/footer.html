@@ -3,14 +3,21 @@
         <div class="row">
             <div class="col-lg-4 footer-menu">
                 <ul class="">
-                    {% for division in portal.divisions %}
-                        <li>
-                            <a href="/{{ division.name }}/">{{ division.name }}</a>
-                        </li>
-                    {% endfor %}
                     <li>
-                        <a href="/?about">{{ _('About us') }}</a>
+                        <a href="/">{{ _('Portal home') }}</a>
                     </li>
+                    {% for division in portal.divisions %}
+                        {% if division.portal_division_type_id != 'index' %}
+                            <li>
+                                <a {% if division.id == current_division.id %}id="navigation_selected_division"{% endif %}
+                                   href="
+
+
+                                           {% if division.portal_division_type_id != 'company_subportal' %}{{ url_for('front.division', division_name=division.name, page=1, search_text='') }}{% else %}{{ url_for('front.subportal', member_company_id = division['member_company']['id'] ,
+                                        member_company_name = division['member_company']['name']) }}{% endif %}">{{ division.name }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
                 </ul>
             </div>
             <div class="promo">Портал створено в рамках проекту «Купуймо разом!»що фінансується програмою</div>

@@ -23,6 +23,11 @@ class Portal(Base, PRBase):
                 primary_key=True)
     name = Column(TABLE_TYPES['name'])
     host = Column(TABLE_TYPES['short_name'])
+    url_facebook = Column(TABLE_TYPES['url'])
+    url_google = Column(TABLE_TYPES['url'])
+    url_tweeter = Column(TABLE_TYPES['url'])
+    url_linkedin = Column(TABLE_TYPES['url'])
+
     company_owner_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'), unique=True)
     # portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))
     portal_layout_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal_layout.id'))
@@ -227,7 +232,7 @@ class Portal(Base, PRBase):
                     check_division.max, check_division.id)
         return ret
 
-    def get_client_side_dict(self, fields='id|name, divisions.*, layout.*, logo_file_id, favicon_file_id, company_owner_id',
+    def get_client_side_dict(self, fields='id|name, divisions.*, layout.*, logo_file_id, favicon_file_id, company_owner_id, url_facebook',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
