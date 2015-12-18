@@ -1,5 +1,4 @@
 <ul class="pager">
-{% if articles %}
     <li class="previous">
         {% if current_page != 1 %}
         <a href="{{ url_page(page=current_page - 1, search_text=search_text) }}"></a>
@@ -40,5 +39,4 @@
         {% else %}
         {% endif %}
     </li>
-{% endif %}
 </ul>

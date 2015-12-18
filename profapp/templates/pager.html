@@ -11,7 +11,7 @@
 <script type="text/ng-template" id="cropper.html">
     {% raw %}
     <div class="img-container">
-        <img ng-model="data.image" pr-cropper="cropper" style="width: 100%" alt="Picture">
+        <img style="width: 100%" alt="Picture">
     </div>
     <div class="">
         <button ng-disabled="!data.image.image_file_id" ng-click="cropper('zoom', 0.1)" class="btn btn-primary"

@@ -63,7 +63,7 @@
                                             <input type="checkbox" id="right" name="right" value="{{ right }}">{{ RightHumnReadible[right] }}<br>
                                         {% endif %}
                                         {% endfor %}
-                                    {% if g.user_dict['id']!=user_id and company_user_rights[user_id]['status']!='suspended' %}
+                                    {% if company_user_rights[user_id]['status']!='suspended' %}
                                         <input type="submit" id="apply" value="{{ '{{' }}_('Apply changes'){{ '}}' }}">
                                     {% endif %}
                                 {% else %}

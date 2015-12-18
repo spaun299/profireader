@@ -47,6 +47,8 @@ class Company(Base, PRBase):
     email = Column(TABLE_TYPES['email'], nullable=False, default='')
     short_description = Column(TABLE_TYPES['text'], nullable=False, default='')
     about = Column(TABLE_TYPES['text'], nullable=False, default='')
+    lat = Column(TABLE_TYPES['float'], nullable=False, default=49.8418907)
+    lon = Column(TABLE_TYPES['float'], nullable=False, default=24.0316261)
 
     portal_members = relationship('MemberCompanyPortal',
                           # secondary='member_company_portal',
@@ -172,7 +174,7 @@ class Company(Base, PRBase):
                 filter(Company.name.ilike("%" + searchtext + "%")
                        ).all()]
 
-    def get_client_side_dict(self, fields='id,name,author_user_id,country,region,address,phone,phone2,email,short_description,logo_file_id,about,own_portal.id|host',
+    def get_client_side_dict(self, fields='id,name,author_user_id,country,region,address,phone,phone2,email,short_description,logo_file_id,about,lat,lon,own_portal.id|host',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
@@ -326,7 +328,7 @@ class UserCompany(Base, PRBase):
 
     @staticmethod
     # @check_rights(simple_permissions([Right['manage_rights_company']]))
-    @check_rights(forbidden_for_current_user)
+    # @check_rights(forbidden_for_current_user)
     def update_rights(user_id, company_id, new_rights, position = None):
         """This method defines for update user-rights in company. Apply list of rights"""
         new_rights_binary = Right.transform_rights_into_integer(new_rights)

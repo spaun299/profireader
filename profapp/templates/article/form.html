@@ -185,34 +185,9 @@
 
             $scope.tinymceImageOptions['pr_formats'] = custom_formats_menu;
 
-
-            {#            $scope.tinymceImageOptions['pr_formats'] = {#}
-            {#                'background': custom_formats_menu['background_color'],#}
-            {#                    'foreground': custom_formats_menu['foreground_color'],#}
-            {#                    'font': custom_formats_menu['font_family'],#}
-            {#                'border': custom_formats_menu['font_family'],#}
-            {#            }#}
-
-            console.log($scope.tinymceImageOptions['pr_formats']);
-
-
-            $scope.articleImageSelected = function (item) {
-                $scope.data.image.image_file_id = item.id;
-                closeFileManager();
-            };
-
             $scope.cleanUpHtml = function (data) {
                 data.long = cleanup_html(data.long);
                 return data;
-            };
-
-            $scope.chooseImage = function (setImage) {
-                if (setImage) {
-                    $scope.chooseImageinFileManager("parent.angularControllerFunction('article_edit', 'articleImageSelected')", 'choose');
-                }
-                else {
-                    $scope.data.image.image_file_id = null;
-                }
             };
 
             $scope.articlePositionDontChange = function () {
@@ -362,7 +337,7 @@
 
             <div class="update_col1">
                 {{ _('Select picture') }}
-                <div ng-include="'cropper.html'"></div>
+                <div ng-model="data.image" pr-cropper="cropper"></div>
             </div>
 
 
@@ -400,22 +375,7 @@
             </div>
 
             <!-- TODO: AA by OZ -->
-            <div ng-if="data.article.division" class="update_col1">
-                <div ng-controller="SelectTagsCtrl">
-                    <h3>{{_('Article tags:')}}</h3>
-                    <!-- <ui-select multiple ng-model="tagsObject.tags" theme="select2" ng-disabled="disabled" style="width: 300px;"> -->
-                    <ui-select multiple ng-model="data['article'].tags" theme="select2" ng-disabled="disabled"
-                               style="width: 300px;">
-                        <ui-select-match placeholder="Select tags...">{{$item}}</ui-select-match>
-                        <ui-select-choices
-                                repeat="tag in data['portal_division']['availableTags'] | filter:$select.search">
-                            {{ tag }}
-                        </ui-select-choices>
-                    </ui-select>
-                    <!-- <p>Selected: {{tagsObject.tags}}</p> -->
-                </div>
-
-            </div>
+            <div ng-if="data.article.division" class="update_col1" pr-tags="data['portal_division']['availableTags']" ng-model="data.article.tags">
 
             <div class="update_col1">
                 <button class="create_button" ng-disabled="!$af.isActionAllowed(data, 'save')"

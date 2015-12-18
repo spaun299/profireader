@@ -1,34 +1,33 @@
-from flask import Flask, session, g, request, redirect, current_app
-from authomatic.providers import oauth2
-from authomatic import Authomatic
-from profapp.controllers.blueprints_register import register as register_blueprints
-from profapp.controllers.blueprints_register import register_front as register_blueprints_front
-from profapp.controllers.blueprints_register import register_file as register_blueprints_file
+import hashlib
+import re
+import json
 
+from flask import Flask, g, request, current_app
+from authomatic import Authomatic
+from profapp.utils.redirect_url import url_page
 from flask import url_for
-from profapp.controllers.errors import csrf
 from flask.ext.bootstrap import Bootstrap
 from flask.ext.moment import Moment
 from flask.ext.login import LoginManager, \
-    login_user, logout_user, current_user, \
-    login_required
+    current_user
 from flask.ext.mail import Mail
-import hashlib
 from flask.ext.login import AnonymousUserMixin
+from flask import globals
+from flask.ext.babel import Babel
+import jinja2
+from jinja2 import Markup
+
+from profapp.controllers.blueprints_register import register as register_blueprints
+from profapp.controllers.blueprints_register import register_front as register_blueprints_front
+from profapp.controllers.blueprints_register import register_file as register_blueprints_file
+from profapp.controllers.errors import csrf
 from .constants.SOCIAL_NETWORKS import INFO_ITEMS_NONE, SOC_NET_FIELDS
 from .constants.USER_REGISTERED import REGISTERED_WITH
-from flask import globals
-import re
-from flask.ext.babel import Babel, gettext
-import jinja2
 from .models.users import User
 from .models.config import Config
 from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
 from .models.tools import HtmlHelper
-import json
-from jinja2 import Markup
-import time
 
 
 def req(name, allowed=None, default=None, exception=True):
@@ -143,6 +142,7 @@ def load_database(db_config):
         g.req = req
         g.filter_json = filter_json
         g.get_url_adapter = get_url_adapter
+        g.fileUrl = fileUrl
 
     return load_db
 
@@ -266,11 +266,6 @@ def prImage(id, if_no_image=None):
     return Markup(
         ' src="/static/images/0.gif" style="background-position: center; background-size: contain; background-repeat: no-repeat; background-image: url(\'%s\')" ' % (
         file,))
-
-
-def url_page(page=1, search_text='', endpoint=None):
-    ep = endpoint if endpoint else request.endpoint
-    return url_for(ep, page=page, search_text=search_text)
 
 
 def translates(template):

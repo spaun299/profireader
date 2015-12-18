@@ -1,0 +1,57 @@
+
+.pager {
+    position: relative;
+    padding: 0px;
+    height: 36px;
+}
+
+.pager li > a, .pager li > span {
+    border: none;
+    font-size: 18px !important;
+    color: #999 !important;
+    background-color: transparent;
+}
+
+.pager li.current-page > a {
+    color: #336699 !important;
+}
+
+.pager li.previous,
+.pager li.next {
+    /*background: #ccc;*/
+    position: absolute;
+    top: 7px;
+}
+
+.pager li.previous a,
+.pager li.next a,
+.pager li.previous span,
+.pager li.next span {
+    /*padding: 3px;*/
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: transparent !important;
+}
+
+.pager li.previous,
+.pager li.next {
+    height: 24px;
+}
+
+.pager li.previous:hover,
+.pager li.next:hover {
+    background-position-y: bottom;
+}
+
+.pager li.previous {
+    left: 20px;
+    padding-left: 0px;
+    background: url("../images/prev.png") top left no-repeat;
+}
+
+.pager li.next {
+    right: 20px;
+    padding-right: 0px;
+    background: url("../images/next.png") top right no-repeat;
+}
