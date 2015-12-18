@@ -23,6 +23,7 @@ class Portal(Base, PRBase):
                 primary_key=True)
     name = Column(TABLE_TYPES['name'])
     host = Column(TABLE_TYPES['short_name'])
+
     url_facebook = Column(TABLE_TYPES['url'])
     url_google = Column(TABLE_TYPES['url'])
     url_tweeter = Column(TABLE_TYPES['url'])
@@ -36,6 +37,8 @@ class Portal(Base, PRBase):
     favicon_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'))
 
     layout = relationship('PortalLayout')
+
+    advs = relationship('PortalAdv', uselist=True)
 
     divisions = relationship('PortalDivision',
                              # backref='portal',
@@ -134,7 +137,7 @@ class Portal(Base, PRBase):
                  # portal_plan_id=None,
                  logo_file_id=None,
                  company_owner=None,
-                 favicon_file_id = None,
+                 favicon_file_id=None,
                  host=None, divisions=[], portal_layout_id=None):
         self.name = name
         self.logo_file_id = logo_file_id
@@ -167,7 +170,7 @@ class Portal(Base, PRBase):
         pass
 
     def setup_created_portal(self, logo_file_id=None):
-# TODO: OZ by OZ: move this to some event maybe
+        # TODO: OZ by OZ: move this to some event maybe
         """This method create portal in db. Before define this method you have to create
         instance of class with parameters: name, host, portal_layout_id, company_owner_id,
         divisions. Return portal)"""
@@ -232,7 +235,8 @@ class Portal(Base, PRBase):
                     check_division.max, check_division.id)
         return ret
 
-    def get_client_side_dict(self, fields='id|name, divisions.*, layout.*, logo_file_id, favicon_file_id, company_owner_id, url_facebook',
+    def get_client_side_dict(self,
+                             fields='id|name, divisions.*, layout.*, logo_file_id, favicon_file_id, company_owner_id, url_facebook',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
@@ -323,6 +327,19 @@ class PortalLayout(Base, PRBase):
         return self.to_dict(fields, more_fields)
 
 
+class PortalAdv(Base, PRBase):
+    __tablename__ = 'portal_adv'
+    id = Column(TABLE_TYPES['id_profireader'], nullable=False, primary_key=True)
+    portal_id = Column(TABLE_TYPES['name'], ForeignKey('portal.id'), nullable=False)
+    place = Column(TABLE_TYPES['name'], nullable=False)
+    html = Column(TABLE_TYPES['text'], nullable=False)
+
+    portal = relationship(Portal, uselist=False)
+
+    def get_client_side_dict(self, fields='id,portal_id,place,html', more_fields=None):
+        return self.to_dict(fields, more_fields)
+
+
 class MemberCompanyPortalPlan(Base, PRBase):
     __tablename__ = 'member_company_portal_plan'
     id = Column(TABLE_TYPES['id_profireader'], nullable=False, primary_key=True)
@@ -346,7 +363,6 @@ class PortalDivision(Base, PRBase):
     portal_division_type = relationship('PortalDivisionType', uselist=False)
 
     settings = None
-
 
     def __init__(self, portal=portal,
                  portal_division_type_id=portal_division_type_id,
@@ -372,9 +388,9 @@ class PortalDivision(Base, PRBase):
 
     def search_filter(self):
         return and_(ArticlePortalDivision.portal_division_id.in_(
-                                                      db(PortalDivision.id, portal_id=portal.id)),
-                                                      ArticlePortalDivision.status ==
-                                                      ARTICLE_STATUS_IN_PORTAL.published)
+            db(PortalDivision.id, portal_id=portal.id)),
+            ArticlePortalDivision.status ==
+            ARTICLE_STATUS_IN_PORTAL.published)
 
     @orm.reconstructor
     def init_on_load(self):

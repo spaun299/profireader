@@ -58,6 +58,7 @@ def portal_and_settings(portal):
             di['member_company'] = Company.get(com_port.company_id)
         newd.append(di)
     ret['divisions'] = newd
+    ret['advs'] = {a.place: a.html for a in portal.advs}
     return ret
 
 
