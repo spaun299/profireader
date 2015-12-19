@@ -28,15 +28,19 @@ except ImportError:
 def download(file_id):
     file = file_query(File, file_id)
     file_c = file_query(FileContent, file_id)
-    content = file_c.content
-    response = make_response(content)
-    response.headers['Content-Type'] = "application/octet-stream"
-    response.headers['Content-Disposition'] = 'attachment; filename=%s' % file.name
-    return response
+    if not file or not file_c:
+        abort(404)
+    else:
+        content = file_c.content
+        response = make_response(content)
+        response.headers['Content-Type'] = "application/octet-stream"
+        response.headers['Content-Disposition'] = 'attachment; filename=%s' % file.name
+        return response
 
 def send_file(filename_or_fp, mimetype=None, as_attachment=False,
               attachment_filename=None, add_etags=True,
               cache_timeout=None, conditional=False, headers={}):
+
     """Sends the contents of a file to the client.  This will use the
     most efficient method available and configured.  By default it will
     try to use the WSGI server's file_wrapper support.  Alternatively
@@ -95,6 +99,7 @@ def send_file(filename_or_fp, mimetype=None, as_attachment=False,
                           :data:`~flask.current_app`.
     """
     mtime = None
+
     if isinstance(filename_or_fp, string_types):
         filename = filename_or_fp
         file = None
@@ -190,6 +195,7 @@ def allowed_referrers(domain):
 
 @file_bp.route('<string:file_id>/')
 def get(file_id):
+
     image_query = file_query(File, file_id)
     image_query_content = g.db.query(FileContent).filter_by(id=file_id).first()
 
