@@ -40,7 +40,7 @@ def url_page(endpoint=None, **kwargs):
 #        with app_front.app_context():
 #            func = current_app.view_functions[ep]
 
-    print(func)
+#    print(func)
     argspec = inspect.getargspec(func)
     args = argspec.args
     defaults = argspec.defaults or []
