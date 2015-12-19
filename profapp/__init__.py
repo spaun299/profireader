@@ -429,7 +429,7 @@ class AnonymousUser(AnonymousUserMixin):
 login_manager.anonymous_user = AnonymousUser
 
 
-def create_app(config='config.ProductionDevelopmentConfig', front='y'):
+def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     app = Flask(__name__)
 
     app.config.from_object(config)
@@ -444,7 +444,7 @@ def create_app(config='config.ProductionDevelopmentConfig', front='y'):
     app.before_request(load_user)
     app.before_request(setup_authomatic(app))
 
-    if front == 'y':
+    if apptype == 'front':
         app.before_request(load_portal_id(app))
         register_blueprints_front(app)
         my_loader = jinja2.ChoiceLoader([
@@ -452,7 +452,7 @@ def create_app(config='config.ProductionDevelopmentConfig', front='y'):
             jinja2.FileSystemLoader('templates_front'),
         ])
         app.jinja_loader = my_loader
-    if front == 'f':
+    elif apptype == 'file':
         register_blueprints_file(app)
     else:
         register_blueprints(app)
