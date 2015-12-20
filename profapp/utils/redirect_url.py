@@ -31,15 +31,16 @@ def url_page(endpoint=None, **kwargs):
     ep = endpoint if endpoint else request.endpoint
     kwargs_new = request.view_args
 
-    try:
-        from run_profi import app_profi
-        with app_profi.app_context():
-            func = current_app.view_functions[ep]
-    except:
-        from run_front import app_front
-        with app_front.app_context():
-            func = current_app.view_functions[ep]
+#    try:
+    from run import app
+    with app.app_context():
+        func = current_app.view_functions[ep]
+#    except:
+#        from run_front import app_front
+#        with app_front.app_context():
+#            func = current_app.view_functions[ep]
 
+#    print(func)
     argspec = inspect.getargspec(func)
     args = argspec.args
     defaults = argspec.defaults or []

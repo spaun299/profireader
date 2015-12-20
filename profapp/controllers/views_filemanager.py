@@ -14,7 +14,7 @@ from ..models.google import GoogleAuthorize, GoogleToken
 from utils.db_utils import db
 from ..models.company import Company
 from ..models.translate import TranslateTemplate
-
+import urllib.parse
 
 def parent_folder(func):
     @wraps(func)
@@ -147,7 +147,7 @@ def send(parent_id):
         root = parent.id
     data = request.form
     uploaded_file = request.files['file']
-    name = File.get_unique_name(uploaded_file.filename, data.get('ftype'), parent.id)
+    name = File.get_unique_name(urllib.parse.unquote(uploaded_file.filename).replace('"','_').replace('*','_').replace('/','_').replace('\\','_'), data.get('ftype'), parent.id)
     company = db(Company, journalist_folder_file_id=root).one()
     if re.match('^video/.*', data.get('ftype')):
         body = {'title': file.filename,

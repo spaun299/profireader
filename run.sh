@@ -1,7 +1,9 @@
 #!/bin/bash
-
+#cd /var/www/profireader
+#../.profi_env/bin/activate
 source .venv/bin/activate
-while [[ True ]]; do
-    python run.py --host=$1 --port=$2 >> /var/log/profi-$1.log 2>&1
-    sleep 5
+while [[ true ]]; do
+    sleep 1
+    echo "starting $1"
+    python run.py $1 >> /var/log/profi/"$1"_python.log 2>&1
 done
