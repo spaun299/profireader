@@ -568,8 +568,8 @@ class PRBase:
         event.listen(cls, 'before_insert', cls.validate_before_insert)
         # event.listen(cls, 'before_delete', cls.validate_before_delete)
         event.listen(cls, 'after_insert', cls.add_to_search)
-        event.listen(cls, 'before_update', cls.update_search_table)
-        event.listen(cls, 'before_delete', cls.delete_from_search)
+        event.listen(cls, 'after_update', cls.update_search_table)
+        event.listen(cls, 'after_delete', cls.delete_from_search)
 
 #
 #

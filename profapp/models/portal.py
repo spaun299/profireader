@@ -364,6 +364,7 @@ class PortalDivision(Base, PRBase):
 
     settings = None
 
+
     def __init__(self, portal=portal,
                  portal_division_type_id=portal_division_type_id,
                  name='',

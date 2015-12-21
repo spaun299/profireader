@@ -276,10 +276,14 @@ def employees(company_id):
 # @check_rights(simple_permissions([RIGHTS.MANAGE_RIGHTS_COMPANY()]))
 def update_rights():
     data = request.form
-    UserCompany.update_rights(user_id=data['user_id'],
-                              company_id=data['company_id'],
-                              new_rights=data.getlist('right'),
-                              position=data['position'])
+    company_id, user_id, position = (data.get('company_id'), data.get('user_id'), data['position'])
+    if not db(Company, id=company_id, author_user_id=user_id).count():
+        UserCompany.update_rights(user_id=data['user_id'],
+                                  company_id=data['company_id'],
+                                  new_rights=data.getlist('right'),
+                                  position=data['position'])
+    else:
+        db(UserCompany, company_id=company_id, user_id=user_id).update(dict(position=position))
     return redirect(url_for('company.employees',
                             company_id=data['company_id']))
 
