@@ -7,6 +7,7 @@ from PIL import Image
 from time import gmtime, strftime
 import sys
 import re
+from sqlalchemy import or_
 from ..models.articles import Article, ArticlePortalDivision
 from ..models.portal import MemberCompanyPortal, PortalDivision, Portal
 from config import Config
@@ -235,7 +236,9 @@ def crop_image(image_id, coordinates):
     image_query = db(File, id=image_id).one()
     if db(ImageCroped, original_image_id=image_id).count():
         return update_croped_image(image_id, coordinates)
-    company_owner = db(Company, journalist_folder_file_id=image_query.root_folder_id).one()
+    company_owner = db(Company).filter(or_(
+        Company.system_folder_file_id == image_query.root_folder_id,
+        Company.journalist_folder_file_id == image_query.root_folder_id)).one()
     bytes_file = crop_with_coordinates(image_query, coordinates)
     if bytes_file:
         croped = File()

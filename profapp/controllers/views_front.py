@@ -108,7 +108,8 @@ def division(division_name, page=1):
         current_division = division.get_client_side_dict()
 
         def url_page_division(page=1, search_text=''):
-            return url_for('front.division', division_name=current_division['name'], page=page, search_text=search_text)
+            return url_for('front.division', division_name=current_division['name'], page=page,
+                           search_text=search_text)
 
         return render_template('front/bird/division.html',
                                articles=articles,
