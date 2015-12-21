@@ -191,6 +191,9 @@ class File(Base, PRBase):
         elif file_manager_called_for == 'file_browse_media':
             default_actions['choose'] = lambda file: False if None == re.search('^video/.*', file.mime) else True
             actions['choose'] = lambda file: False if None == re.search('^video/.*', file.mime) else True
+        elif file_manager_called_for == 'file_browse_file':
+            default_actions['choose'] = lambda file: True
+            actions['choose'] = lambda file: True
 
         search_files = File.search(name, parent_id, actions, file_manager_called_for)
         parent = File.get(parent_id)
