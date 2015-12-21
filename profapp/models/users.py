@@ -1,5 +1,5 @@
 from flask import request, current_app, g, flash
-#from sqlalchemy.orm import relationship, backref
+# from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from flask.ext.login import logout_user
@@ -55,12 +55,9 @@ class User(Base, UserMixin, PRBase):
                            default=datetime.datetime.utcnow)
     last_seen = Column(TABLE_TYPES['timestamp'],
                        default=datetime.datetime.utcnow)
-    profireader_avatar_url = Column(TABLE_TYPES['avatar_url'], nullable=False,
-                                    default='/static/no_avatar.png')
-    profireader_small_avatar_url = \
-        Column(TABLE_TYPES['avatar_url'],
-               nullable=False, default='/static/no_avatar_small.png')
-    #status_id = Column(Integer, db.ForeignKey('status.id'))
+    profireader_avatar_url = Column(TABLE_TYPES['url'], nullable=False, default='/static/no_avatar.png')
+    profireader_small_avatar_url = Column(TABLE_TYPES['url'], nullable=False, default='/static/no_avatar_small.png')
+    # status_id = Column(Integer, db.ForeignKey('status.id'))
 
     email_conf_token = Column(TABLE_TYPES['token'])
     email_conf_tm = Column(TABLE_TYPES['timestamp'])
@@ -75,8 +72,8 @@ class User(Base, UserMixin, PRBase):
     companies = relationship('Company', back_populates='user_owner')
 
 
-# FB_NET_FIELD_NAMES = ['id', 'email', 'first_name', 'last_name', 'name', 'gender', 'link', 'phone']
-# SOCIAL_NETWORKS = ['profireader', 'google', 'facebook', 'linkedin', 'twitter', 'microsoft', 'yahoo']
+    # FB_NET_FIELD_NAMES = ['id', 'email', 'first_name', 'last_name', 'name', 'gender', 'link', 'phone']
+    # SOCIAL_NETWORKS = ['profireader', 'google', 'facebook', 'linkedin', 'twitter', 'microsoft', 'yahoo']
 
     # GOOGLE
     google_id = Column(TABLE_TYPES['id_soc_net'])
@@ -141,8 +138,8 @@ class User(Base, UserMixin, PRBase):
                      'about_me': {'relevance': lambda field='about_me': RELEVANCE.about_me},
                      'profireader_email': {'relevance': lambda field='profireader_email': RELEVANCE.profireader_email}}
 
-# get all users in company : company.employees
-# get all users companies : user.employers
+    # get all users in company : company.employees
+    # get all users companies : user.employers
 
     def __init__(self,
                  # user_rights_in_profireader_def=[],
@@ -185,14 +182,14 @@ class User(Base, UserMixin, PRBase):
         self.password = password
         self.confirmed = confirmed
         self.banned = banned
-        self.registered_tm = datetime.datetime.utcnow()   # here problems are possible
+        self.registered_tm = datetime.datetime.utcnow()  # here problems are possible
         self.lang = lang
         self.email_conf_key = email_conf_key
         self.email_conf_tm = email_conf_tm
         self.pass_reset_key = pass_reset_key
         self.pass_reset_conf_tm = pass_reset_conf_tm
 
-# FB_NET_FIELD_NAMES = ['id', 'email', 'first_name', 'last_name', 'name', 'gender', 'link', 'phone']
+        # FB_NET_FIELD_NAMES = ['id', 'email', 'first_name', 'last_name', 'name', 'gender', 'link', 'phone']
 
         self.google_id = GOOGLE_ALL['id']
         self.google_email = GOOGLE_ALL['email']
@@ -320,9 +317,9 @@ class User(Base, UserMixin, PRBase):
             if not getattr(self, field):
                 completeness = False
                 break
-        #self.completeness = completeness
-        #g.db.add(self)
-        #g.db.commit()
+        # self.completeness = completeness
+        # g.db.add(self)
+        # g.db.commit()
         return completeness
 
     def logged_in_via(self):
@@ -332,7 +329,7 @@ class User(Base, UserMixin, PRBase):
         else:
             short_soc_net = SOCIAL_NETWORKS[1:]
             for soc_net in short_soc_net:
-                x = soc_net+'_id'
+                x = soc_net + '_id'
                 if getattr(self, x):
                     via = REGISTERED_WITH_FLIPPED[soc_net]
                     break
@@ -358,7 +355,7 @@ class User(Base, UserMixin, PRBase):
 
     # attr below is one of the
     # ['email', 'first_name', 'last_name', 'name', 'gender', 'link', 'phone']
-    #@property
+    # @property
     def attribute_getter(self, logged_via, attr):
         if logged_via == 'profireader' and attr == 'id':
             full_attr = 'id'
@@ -389,10 +386,10 @@ class User(Base, UserMixin, PRBase):
 
     def verify_password(self, password):
         return self.password_hash and \
-            check_password_hash(self.password_hash, password)
+               check_password_hash(self.password_hash, password)
 
     def generate_confirmation_token(self, expiration=3600):
-        #with app.app_context
+        # with app.app_context
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'confirm': self.id})
 
@@ -470,7 +467,7 @@ class User(Base, UserMixin, PRBase):
     #     return self.role is not None and \
     #         (self.role.permissions & permissions) == permissions
 
-    #def is_administrator(self):
+    # def is_administrator(self):
     #    return self.can(Permission.ADMINISTER)
 
     # TODO (AA to AA): it should be corrected

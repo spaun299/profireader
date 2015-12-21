@@ -26,7 +26,6 @@ class ValidateDisplayname(object):
         self.message = message
 
     def __call__(self, form, field):
-        print('!!!')
         if g.db.query(User).filter_by(profireader_name=field.data).first():
             raise ValidationError(self.message)
             # pass

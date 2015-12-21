@@ -1,12 +1,7 @@
-<a class="btn btn-social-icon btn-facebook">
-    <i class="fa fa-facebook"></i>
-</a>
-<a class="btn btn-social-icon btn-twitter">
-    <i class="fa fa-twitter"></i>
-</a>
-<a class="btn btn-social-icon btn-linkedin">
-    <i class="fa fa-linkedin"></i>
-</a>
-<a class="btn btn-social-icon btn-google">
-    <i class="fa fa-google"></i>
-</a>
+{% for sn in ['facebook','google', 'tweeter', 'linkedin'] %}
+    {% if portal['url_' + sn] %}
+        <a href="{{ portal['url_' + sn] }}" class="btn btn-social-icon btn-{{ sn }}">
+            <i class="fa fa-{{ sn }}"></i>
+        </a>
+    {% endif %}
+{% endfor %}

@@ -42,6 +42,6 @@ TABLE_TYPES = {
     'text': UnicodeText(length=65535),
     'gender': String(6),
     'language': String(3),
-    'avatar_url': String(100), #URLType,
+    'url': String(1000), #URLType,
     'binary': Binary
 }

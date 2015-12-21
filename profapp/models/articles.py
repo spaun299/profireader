@@ -329,7 +329,6 @@ class ArticleCompany(Base, PRBase):
 
     @staticmethod
     def subquery_company_articles(search_text=None, company_id=None, portal_id=None, **kwargs):
-        print(kwargs)
         sub_query = db(ArticleCompany, company_id=company_id)
         if kwargs['status']:
             sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['status'])

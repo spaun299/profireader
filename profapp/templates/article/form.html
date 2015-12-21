@@ -97,8 +97,6 @@
             };
 
             $scope.getData = function (model, deff) {
-                console.log(model, deff, model.portal_division.current);
-
                 model.portal_division.insert_after = model.portal_division.positioned_articles[model.portal_division.current].id;
                 return deff(model);
             };
@@ -161,7 +159,6 @@
 
             {% if  article_portal_division_id %}
                 var custom_formats = {{ tinymce_format_groups('birdy')|tojson }};
-                console.log('custom_formats', custom_formats);
                 $scope.tinymceImageOptions['toolbar2'] = 'foreground | background | font | border | margin | padding';
             {% else %}
                 var custom_formats = {};
@@ -178,8 +175,6 @@
                             }).
                             object(). // convert each [key, val] pair to {key: val} element
                             value(); // get result
-
-            console.log('$scope.tinymceImageOptions["formats"]', $scope.tinymceImageOptions['formats']);
 
             var custom_formats_menu = _.size(custom_formats) ? get_array_for_menu_build(custom_formats) : [];
 
@@ -316,9 +311,9 @@
     </script>
 
     {% raw %}
+
     <div ng-init="init()" ng-controller="article_edit">
         <h1 class="nice-title">{{ _(getTitle()) }}<span></span></h1>
-
 
         <div af af-amid-load="amidLoad" af-amid-save="amidSave" af-before-save="getData"
              af-beforeValidate="getData" af-watch="data.article" ng-model="data">
@@ -375,7 +370,8 @@
             </div>
 
             <!-- TODO: AA by OZ -->
-            <div ng-if="data.article.division" class="update_col1" pr-tags="data['portal_division']['availableTags']" ng-model="data.article.tags">
+            <div ng-if="data.article.division" class="update_col1" pr-tags="data['portal_division']['availableTags']"
+                 ng-model="data.article.tags"></div>
 
             <div class="update_col1">
                 <button class="create_button" ng-disabled="!$af.isActionAllowed(data, 'save')"
@@ -386,10 +382,8 @@
             </div>
         </div>
     </div>
-
-
     {% endraw %}
 
-    </div>
-
 {% endblock %}
+
+

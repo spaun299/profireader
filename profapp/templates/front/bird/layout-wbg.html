@@ -14,12 +14,9 @@
 <div class="container">
 
     <div class="row site-content">
-
         {% if member_company %}
             {% include 'front/bird/subportal_nav.html' %}
         {% endif %}
-
-
 
         <!-- Blog Entries Column -->
         <div class="col-md-9">
@@ -28,37 +25,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <a href="#" class="right-banner"><!--/*
-  *
-  * Revive Adserver Asynchronous JS Tag
-  * - Generated with Revive Adserver v3.2.1
-  *
-  */-->
-
-                <ins data-revive-zoneid="4" data-revive-id="f76734462838a80d480b0a681f019555"></ins>
-                <script async src="//ban.prominfo.com.ua/delivery/asyncjs.php"></script>
-
-
-            </a>
-            <a href="#" class="right-banner"><!--/*
-
-  *
-
-  * Revive Adserver Asynchronous JS Tag
-
-  * - Generated with Revive Adserver v3.2.1
-
-  *
-
-  */-->
-
-
-                <ins data-revive-zoneid="3" data-revive-id="f76734462838a80d480b0a681f019555"></ins>
-
-                <script async src="//ban.prominfo.com.ua/delivery/asyncjs.php"></script>
-            </a>
-
-
+            {{ portal.advs['right_banner']|safe }}
             {% if articles_related %}
                 <div class="right-list-container">
                     {% for article_related_id  in articles_related %}
