@@ -117,3 +117,15 @@
     overflow: hidden;
 }
 
+div[aria-label="Insert/edit video"]>div:nth-child(1)>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(1)>div:nth-child(2)
+{
+  display: none
+}
+div[aria-label="Insert/edit video"]>div:nth-child(1)>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(1)>div:nth-child(3)
+{
+  display: none
+}
+div[aria-label="Insert/edit video"]>div:nth-child(1)>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(1)>div:nth-child(4)
+{
+  display: none
+}
