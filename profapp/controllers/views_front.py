@@ -73,7 +73,7 @@ def portal_and_settings(portal):
 def index(page=1):
     search_text, portal, _ = get_params()
 
-    portal.get_value_from_config(key=PortalConfig.PAGE_SIZE_PER_DIVISION, division_name='Компанії')
+    # portal.config.set_division_page_size(page_size_for_divisions={portal.divisions[1].name: 10000})
     division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                       portal_division_type_id='index').one()
     order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE

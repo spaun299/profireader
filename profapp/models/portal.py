@@ -480,27 +480,28 @@ class PortalConfig(Base, PRBase):
         super(PortalConfig, self).__init__()
         self.portal = portal
         self.page_size_for_divisions = page_size_for_divisions
-        self.division_page_size = self.set_division_page_size()
+        self.set_division_page_size()
 
     PAGE_SIZE_PER_DIVISION = 'division_page_size'
 
-    def set_division_page_size(self):
+    def set_division_page_size(self, page_size_for_divisions=None):
+        page_size_for_divisions = page_size_for_divisions or self.page_size_for_divisions
         config = db(PortalConfig, id=self.id).first()
         dps = dict()
-        if config and self.page_size_for_divisions:
+        if config and page_size_for_divisions:
             dps = simplejson.loads(getattr(config, PortalConfig.PAGE_SIZE_PER_DIVISION))
-            dps.update(self.page_size_for_divisions)
-        elif self.page_size_for_divisions:
+            dps.update(page_size_for_divisions)
+        elif page_size_for_divisions:
             for division in self.portal.divisions:
-                if self.page_size_for_divisions.get(division.name):
-                    dps[division.name] = self.page_size_for_divisions.get(division.name)
+                if page_size_for_divisions.get(division.name):
+                    dps[division.name] = page_size_for_divisions.get(division.name)
                 else:
                     dps[division.name] = Config.ITEMS_PER_PAGE
         else:
             for division in self.portal.divisions:
                 dps[division.name] = Config.ITEMS_PER_PAGE
         dps = simplejson.dumps(dps)
-        return dps
+        self.division_page_size = dps
 
 class UserPortalReader(Base, PRBase):
     __tablename__ = 'user_portal_reader'
