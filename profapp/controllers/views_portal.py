@@ -5,7 +5,7 @@ from flask.ext.login import current_user, login_required
 from ..models.portal import PortalDivisionType
 from utils.db_utils import db
 from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDivision, \
-    PortalDivisionSettingsCompanySubportal
+    PortalDivisionSettingsCompanySubportal, PortalConfig
 from ..models.tag import Tag, TagPortal, TagPortalDivision
 from .request_wrapers import ok, check_rights
 from ..models.articles import ArticlePortalDivision, ArticleCompany, Article
@@ -60,11 +60,16 @@ def create_save(json, create_or_update, company_id):
                           'logo_file_id': company.logo_file_id,
                           'portal_layout_id': layouts[0]['id'],
                           'divisions': [
-                              {'name': 'index page', 'portal_division_type_id': 'index'},
-                              {'name': 'news', 'portal_division_type_id': 'news'},
-                              {'name': 'events', 'portal_division_type_id': 'events'},
-                              {'name': 'catalog', 'portal_division_type_id': 'catalog'},
-                              {'name': 'our subportal', 'portal_division_type_id': 'company_subportal',
+                              {'name': 'index page', 'portal_division_type_id': 'index',
+                               'page_size': ''},
+                              {'name': 'news', 'portal_division_type_id': 'news', 'page_size': ''},
+                              {'name': 'events', 'portal_division_type_id': 'events',
+                               'page_size': ''},
+                              {'name': 'catalog', 'portal_division_type_id': 'catalog',
+                               'page_size': ''},
+                              {'name': 'our subportal',
+                               'portal_division_type_id': 'company_subportal',
+                               'page_size': '',
                                'settings': {'company_id': company_id}}]},
                'layouts': layouts, 'division_types': types}
         if create_or_update == 'update':
@@ -76,6 +81,11 @@ def create_save(json, create_or_update, company_id):
         if create_or_update == 'update':
             pass
         elif create_or_update == 'create':
+            page_size_for_config = dict()
+            for a in json_portal['divisions']:
+                page_size_for_config[a.get('name')] = a.get('page_size') \
+                    if type(a.get('page_size')) is int and a.get('page_size') != 0 \
+                    else Config.ITEMS_PER_PAGE
             portal = Portal(company_owner=company, **g.filter_json(json_portal, 'name', 'portal_layout_id', 'host'))
             divisions = []
             for division_json in json['portal']['divisions']:
@@ -87,6 +97,7 @@ def create_save(json, create_or_update, company_id):
                 divisions.append(division)
             # self, portal=portal, portal_division_type=portal_division_type, name='', settings={}
             portal.divisions = divisions
+            PortalConfig(portal=portal, page_size_for_divisions=page_size_for_config)
         if action == 'save':
             return portal.setup_created_portal(g.filter_json(json_portal, 'logo_file_id')).save().get_client_side_dict()
         else:
