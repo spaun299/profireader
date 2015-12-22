@@ -2,7 +2,7 @@ from ..constants.TABLE_TYPES import TABLE_TYPES
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.orm import relationship, remote
 from ..controllers import errors
-from flask import g
+from flask import g, jsonify
 from utils.db_utils import db
 # from .company import Company
 from .pr_base import PRBase, Base
@@ -13,6 +13,8 @@ from ..constants.SEARCH import RELEVANCE
 import itertools
 from sqlalchemy import orm
 import itertools
+from config import Config
+import simplejson
 from .files import File
 from profapp.controllers.errors import BadDataProvided
 
@@ -44,6 +46,7 @@ class Portal(Base, PRBase):
                              # backref='portal',
                              order_by='desc(PortalDivision.position)',
                              primaryjoin='Portal.id==PortalDivision.portal_id')
+    config = relationship('PortalConfig', back_populates='portal')
 
     divisions_lazy_dynamic = relationship('PortalDivision',
                                           order_by='desc(PortalDivision.position)',
@@ -445,6 +448,37 @@ class PortalDivisionType(Base, PRBase):
     def get_division_types():
         """Return all divisions on profireader"""
         return db(PortalDivisionType).all()
+
+class PortalConfig(Base, PRBase):
+    __tablename__ = 'portal_config'
+    id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'), primary_key=True)
+    division_page_size = Column(TABLE_TYPES['credentials'])
+    portal = relationship(Portal, back_populates='config')
+
+    def __init__(self, page_size_for_divisions=None, portal=None):
+        """
+        optional:
+            :parameter - page_size_for_divisions = dictionary with key = division name
+                                                             and value = page size per this division
+                       , default = all divisions have page size from global config. It will converts
+                         to json.
+        """
+        super(PortalConfig, self).__init__()
+        self.portal = portal
+        self.page_size_for_divisions = page_size_for_divisions
+        self.division_page_size = self.set_division_page_size()
+
+    def set_division_page_size(self):
+        config = db(PortalConfig, id=self.id).first()
+        dps = dict()
+        if config:
+            if self.page_size_for_divisions:
+                pass
+            else:
+                for division in self.portal.divisions:
+                    dps[division.name] = Config.ITEMS_PER_PAGE
+                dps = simplejson.dumps(dps)
+        return dps
 
 
 class UserPortalReader(Base, PRBase):

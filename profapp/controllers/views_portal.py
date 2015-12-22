@@ -5,7 +5,7 @@ from flask.ext.login import current_user, login_required
 from ..models.portal import PortalDivisionType
 from utils.db_utils import db
 from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDivision, \
-    PortalDivisionSettingsCompanySubportal
+    PortalDivisionSettingsCompanySubportal, PortalConfig
 from ..models.tag import Tag, TagPortal, TagPortalDivision
 from .request_wrapers import ok, check_rights
 from ..models.articles import ArticlePortalDivision, ArticleCompany, Article
@@ -87,6 +87,7 @@ def create_save(json, create_or_update, company_id):
                 divisions.append(division)
             # self, portal=portal, portal_division_type=portal_division_type, name='', settings={}
             portal.divisions = divisions
+            PortalConfig(portal=portal)
         if action == 'save':
             return portal.setup_created_portal(g.filter_json(json_portal, 'logo_file_id')).save().get_client_side_dict()
         else:
