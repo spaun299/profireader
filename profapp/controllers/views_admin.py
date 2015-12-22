@@ -52,7 +52,6 @@ def translations_load(json):
     templates_g = TranslateTemplate.list_for_grid_tables(templates, add_param,False)
     grid_data = TranslateTemplate.getListGridDataTranslation(translations)
     grid_filters = {'template': templates_g,'url': urls_g}
-    print(grid_filters)
     return {'grid_data': grid_data,
             'grid_filters': grid_filters,
             'total': subquery.count()

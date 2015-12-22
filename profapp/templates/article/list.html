@@ -17,6 +17,7 @@
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
+            $scope.noData = 'No publications';
 
             $scope.sendData = function () {
                 $scope.loading = true;
@@ -24,7 +25,7 @@
                 var data = {};
                 data.gr_data = $scope.all_grid_data;
                 $ok($scope.url_search_article, data, function (resp) {
-                    $scope.data = resp;
+                    $scope.datas = resp;
                     $scope.applyGridExtarnals(resp);
                 }).finally(function () {
                     $scope.loading = false;
@@ -33,7 +34,7 @@
             };
 
             $scope.gridOptions1 = {
-                    data: 'data.grid_data',
+                    data: 'datas.grid_data',
                     paginationPageSizes: [10, 25, 50, 75],
                     paginationPageSize: $scope.paginationOptions.pageSize,
                     enableFiltering: true,
@@ -74,9 +75,7 @@
         <a class="h1-btn icon icon-add" href="{{ url_create_article }}" title="{{ _('CREATE NEW ARTICLE') }}"><img src="../../static/front/img/ico/articles.png" /></a>
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
         <div ng-if="load_contr">
-            <div ng-show="!areAllEmpty(data.grid_data)" class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
-            <div ng-show="!loading && areAllEmpty(data.grid_data)">{{_('No publications')}}</div>
-            <button ng-click="refresh(gridOptions1.columnDefs)" ng-show="!loading && areAllEmpty(data.grid_data)" class="btn btn-warning" >Back</button>
+            <div id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
         </div>
     </div>
     {% endraw %}

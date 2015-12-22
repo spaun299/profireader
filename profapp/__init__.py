@@ -1,34 +1,33 @@
-from flask import Flask, session, g, request, redirect, current_app
-from authomatic.providers import oauth2
-from authomatic import Authomatic
-from profapp.controllers.blueprints_register import register as register_blueprints
-from profapp.controllers.blueprints_register import register_front as register_blueprints_front
-from profapp.controllers.blueprints_register import register_file as register_blueprints_file
+import hashlib
+import re
+import json
 
+from flask import Flask, g, request, current_app
+from authomatic import Authomatic
+from profapp.utils.redirect_url import url_page
 from flask import url_for
-from profapp.controllers.errors import csrf
 from flask.ext.bootstrap import Bootstrap
 from flask.ext.moment import Moment
 from flask.ext.login import LoginManager, \
-    login_user, logout_user, current_user, \
-    login_required
+    current_user
 from flask.ext.mail import Mail
-import hashlib
 from flask.ext.login import AnonymousUserMixin
+from flask import globals
+from flask.ext.babel import Babel
+import jinja2
+from jinja2 import Markup
+
+from profapp.controllers.blueprints_register import register as register_blueprints
+from profapp.controllers.blueprints_register import register_front as register_blueprints_front
+from profapp.controllers.blueprints_register import register_file as register_blueprints_file
+from profapp.controllers.errors import csrf
 from .constants.SOCIAL_NETWORKS import INFO_ITEMS_NONE, SOC_NET_FIELDS
 from .constants.USER_REGISTERED import REGISTERED_WITH
-from flask import globals
-import re
-from flask.ext.babel import Babel, gettext
-import jinja2
 from .models.users import User
 from .models.config import Config
 from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
 from .models.tools import HtmlHelper
-import json
-from jinja2 import Markup
-import time
 
 
 def req(name, allowed=None, default=None, exception=True):
@@ -143,6 +142,7 @@ def load_database(db_config):
         g.req = req
         g.filter_json = filter_json
         g.get_url_adapter = get_url_adapter
+        g.fileUrl = fileUrl
 
     return load_db
 
@@ -263,7 +263,9 @@ def fileUrl(id, down=False, if_no_file=None):
 
 def prImage(id, if_no_image=None):
     file = fileUrl(id, False, if_no_image if if_no_image else "/static/images/no_image.png")
-    return Markup(' src="/static/images/0.gif" style="background-position: center; background-size: contain; background-repeat: no-repeat; background-image: url(\'%s\')" ' % (file,))
+    return Markup(
+        ' src="/static/images/0.gif" style="background-position: center; background-size: contain; background-repeat: no-repeat; background-image: url(\'%s\')" ' % (
+        file,))
 
 
 def translates(template):
@@ -427,7 +429,7 @@ class AnonymousUser(AnonymousUserMixin):
 login_manager.anonymous_user = AnonymousUser
 
 
-def create_app(config='config.ProductionDevelopmentConfig', front='y'):
+def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     app = Flask(__name__)
 
     app.config.from_object(config)
@@ -442,7 +444,7 @@ def create_app(config='config.ProductionDevelopmentConfig', front='y'):
     app.before_request(load_user)
     app.before_request(setup_authomatic(app))
 
-    if front == 'y':
+    if apptype == 'front':
         app.before_request(load_portal_id(app))
         register_blueprints_front(app)
         my_loader = jinja2.ChoiceLoader([
@@ -450,7 +452,7 @@ def create_app(config='config.ProductionDevelopmentConfig', front='y'):
             jinja2.FileSystemLoader('templates_front'),
         ])
         app.jinja_loader = my_loader
-    if front == 'f':
+    elif apptype == 'file':
         register_blueprints_file(app)
     else:
         register_blueprints(app)
@@ -477,6 +479,7 @@ def create_app(config='config.ProductionDevelopmentConfig', front='y'):
     app.jinja_env.globals.update(translates=translates)
     app.jinja_env.globals.update(fileUrl=fileUrl)
     app.jinja_env.globals.update(prImage=prImage)
+    app.jinja_env.globals.update(url_page=url_page)
     app.jinja_env.globals.update(config_variables=config_variables)
     app.jinja_env.globals.update(_=translate_phrase)
     app.jinja_env.globals.update(tinymce_format_groups=HtmlHelper.tinymce_format_groups)

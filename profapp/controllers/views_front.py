@@ -1,12 +1,13 @@
 from .blueprints_declaration import front_bp
 from flask import render_template, request, url_for, redirect, g, current_app, session
 from ..models.articles import Article, ArticlePortalDivision, ArticleCompany
-from ..models.portal import MemberCompanyPortal, PortalDivision, Portal, Company, \
+from ..models.portal import MemberCompanyPortal, PortalDivision, Portal, \
     PortalDivisionSettingsCompanySubportal
+from ..models.company import Company
 from utils.db_utils import db
 from ..models.users import User
 from ..models.company import UserCompany
-from ..models.pr_base import Search
+from ..models.pr_base import Search, PRBase
 from config import Config
 # from profapp import
 from .pagination import pagination
@@ -16,6 +17,8 @@ from flask import send_from_directory
 import collections
 from sqlalchemy import and_
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
+from .request_wrapers import ok
+from ..utils.email import send_email
 
 
 def get_division_for_subportal(portal_id, member_company_id):
@@ -55,40 +58,32 @@ def portal_and_settings(portal):
             di['member_company'] = Company.get(com_port.company_id)
         newd.append(di)
     ret['divisions'] = newd
+    ret['advs'] = {a.place: a.html for a in portal.advs}
     return ret
 
 
-@front_bp.route('favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(current_app.root_path, 'static'),
-                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+# @front_bp.route('favicon.ico')
+# def favicon():
+#     return send_from_directory(os.path.join(current_app.root_path, 'static'),
+#                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 @front_bp.route('/', methods=['GET'])
 @front_bp.route('<int:page>/', methods=['GET'])
 def index(page=1):
     search_text, portal, _ = get_params()
+
     division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                       portal_division_type_id='index').one()
-    order = Search.ORDER_MD_TM if not search_text else Search.ORDER_RELEVANCE
+    order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
     page = page if session.get('original_search_text') == search_text else 1
-    articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
-                                              'filter':
-                                                  and_(ArticlePortalDivision.portal_division_id.in_(
-                                                      db(PortalDivision.id, portal_id=portal.id)),
-                                                      ArticlePortalDivision.status ==
-                                                      ARTICLE_STATUS_IN_PORTAL.published),
-                                              'return_fields': 'default_dict'},
-                                             search_text=search_text, page=page,
-                                             order_by=order, pagination=True)
-    ordered_articles = collections.OrderedDict()
-    for a in db(ArticlePortalDivision).filter(
-            ArticlePortalDivision.id.in_(articles_id.keys())).all():
-        ordered_articles[a.id] = dict(list(a.get_client_side_dict().items()) +
-                                      list({'tags': a.tags}.items()))
+    articles, pages, page = Search.search(ArticlePortalDivision().search_filter_default(division.id),
+                                          search_text=search_text, page=page,
+                                          order_by=order, pagination=True)
     session['original_search_text'] = search_text
+
     return render_template('front/bird/index.html',
-                           articles=ordered_articles,
+                           articles=articles,
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
                            pages=pages,
@@ -106,22 +101,22 @@ def division(division_name, page=1):
         return redirect(url_for('front.index', search_text=search_text))
     if division.portal_division_type_id == 'news' or division.portal_division_type_id == 'events':
         order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
-        articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
-                                                  'filter': and_(ArticlePortalDivision.
-                                                  portal_division_id == division.id,
-                                                  ArticlePortalDivision.status ==
-                                                  ARTICLE_STATUS_IN_PORTAL.published)},
-                                                 search_text=search_text, page=page,
-                                                 order_by=order, pagination=True)
-        ordered_articles = dict()
-        for a in db(ArticlePortalDivision).filter(
-            ArticlePortalDivision.id.in_(articles_id.keys())).all():
-            ordered_articles[a.id] = a.get_client_side_dict()
+        articles, pages, page = Search.search(
+            ArticlePortalDivision().search_filter_default(division.id),
+            search_text=search_text, page=page, order_by=order, pagination=True)
+
+        current_division = division.get_client_side_dict()
+
+        def url_page_division(page=1, search_text=''):
+            return url_for('front.division', division_name=current_division['name'], page=page,
+                           search_text=search_text)
+
         return render_template('front/bird/division.html',
-                               articles=ordered_articles,
-                               current_division=division.get_client_side_dict(),
+                               articles=articles,
+                               current_division=current_division,
                                portal=portal_and_settings(portal),
                                pages=pages,
+                               url_page=url_page_division,
                                current_page=page,
                                page_buttons=Config.PAGINATION_BUTTONS,
                                search_text=search_text)
@@ -160,14 +155,18 @@ def details(article_portal_division_id):
     division = g.db().query(PortalDivision).filter_by(id=article.portal_division_id).one()
 
     related_articles = g.db().query(ArticlePortalDivision).filter(
-        division.portal.id == article.division.portal_id).order_by(
-        ArticlePortalDivision.cr_tm.desc()).limit(5).all()
+        and_(ArticlePortalDivision.id != article.id,
+             ArticlePortalDivision.portal_division_id.in_(
+                 db(PortalDivision.id).filter(PortalDivision.portal_id == article.division.portal_id))
+             )).order_by(ArticlePortalDivision.cr_tm.desc()).limit(5).all()
 
     return render_template('front/bird/article_details.html',
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
-                           articles_related={a.id: a.get_client_side_dict(fields='id, title, cr_tm, company.name|id') for a
-                                             in related_articles},
+                           articles_related={
+                               a.id: a.get_client_side_dict(fields='id, title, publishing_tm, company.name|id')
+                               for a
+                               in related_articles},
                            article=article_dict
                            )
 
@@ -184,19 +183,9 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
     subportal_division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                                 name=division_name).one()
     order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
-    articles_id, pages, page = Search.search({'class': ArticlePortalDivision,
-                                              'filter': and_(ArticlePortalDivision.
-                                                             portal_division_id ==
-                                                             subportal_division.id,
-                                                             ArticlePortalDivision.status ==
-                                                             ARTICLE_STATUS_IN_PORTAL.published,
-                                                             db(ArticleCompany,
-                                                                company_id=member_company_id,
-                                                                id=ArticlePortalDivision.
-                                                                article_company_id).exists())
-                                              },
-                                             search_text=search_text, page=page,
-                                             order_by=order, pagination=True)
+    articles, pages, page = Search.search(ArticlePortalDivision().search_filter_default(
+        subportal_division.id, company_id=member_company_id), search_text=search_text, page=page,
+        order_by=order, pagination=True)
 
     # sub_query = Article.subquery_articles_at_portal(
     #     search_text=search_text,
@@ -207,22 +196,25 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
     # filter(Company.id == member_company_id)
 
     # articles, pages, page = pagination(query=sub_query, page=page)
-    ordered_articles = dict()
 
-    for a in db(ArticlePortalDivision).filter(ArticlePortalDivision.id.in_
-                                              (articles_id.keys())).all():
-        ordered_articles[a.id] = a.get_client_side_dict()
+    def url_page_division(page=1, search_text=''):
+        return url_for('front.subportal_division', division_name=division_name,
+                       member_company_id=member_company_id, member_company_name=member_company_name,
+                       page=page, search_text=search_text)
+
     return render_template('front/bird/subportal_division.html',
-                           articles=ordered_articles,
+                           articles=articles,
                            subportal=True,
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
                            current_subportal_division=subportal_division.get_client_side_dict(),
                            member_company=member_company.get_client_side_dict(),
-                           pages=False,
+                           pages=pages,
+                           page=page,
                            current_page=page,
                            page_buttons=Config.PAGINATION_BUTTONS,
-                           search_text=search_text)
+                           search_text=search_text,
+                           url_page=url_page_division)
 
 
 @front_bp.route('_c/<string:member_company_id>/<string:member_company_name>/')
@@ -306,3 +298,13 @@ def subportal_contacts(member_company_id, member_company_name):
                            # page_buttons=Config.PAGINATION_BUTTONS,
                            # search_text=search_text
                            )
+
+
+@front_bp.route('_c/<string:member_company_id>/send_message/', methods=['POST'])
+@ok
+def send_message(json, member_company_id):
+    send_to = User.get(json['user_id'])
+    send_email(send_to.profireader_email, 'New message',
+               'messanger/email_send_message', user_to=send_to, user_from=g.user_dict,
+               in_company=Company.get(member_company_id), message=json['message'])
+    return {}

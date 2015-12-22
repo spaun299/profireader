@@ -1,8 +1,5 @@
 {% extends "index_lazy_layout.html" %}
 {% block title %}Profireader{% endblock title %}
-{% block head %}
-    {{ super() }}
-{% endblock head %}
 
 {% block portal_base %}
     {% include 'partials/portal_base_Profireader_auth_user.html' %}
@@ -13,7 +10,7 @@
     {% endblock company_base %}
 
     <script>
-        module.controller('portal_list', ['$scope', '$ok', function ($scope, $ok) {
+        module.controller('portal_list', ['$scope', '$ok','uiGridConstants', function ($scope, $ok, uiGridConstants) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('portals_partners')
             $scope.url_portal_profile = {{ raw_url_for('portal.profile')|safe }};
             $scope.url_search_for_portal = function () { return( '/portal/search_for_portal_to_join/' ); };
@@ -24,6 +21,7 @@
             $scope.selectedPortal = null;
             $scope.selectedPortal_sending = false;
             $scope.$$translate = {{ translates('portal_list')|safe }};
+            {% raw %}
             $scope.myRights = function(){
                 if (!$scope.data || !$scope.data.user_rights) return false;
 
@@ -59,7 +57,6 @@
                     $scope.selectedPortal = null;
                     $scope.selectedPortal_name = null;
                     $scope.data['portals_partners'] = resp['portals_partners'];
-{#TODO OZ BY VK: javascript error                #}
                     setTimeout(function () {
                         scrool($('#joined_portal_' + resp['portals_partners']['id']), {
                             afterScroll: function () {
@@ -70,8 +67,50 @@
                 }).finally(function () {
                     $scope.selectedPortal_sending = false;
                 });
-            }
+            };
+
+            $scope.sendData = function () {
+                $scope.loading = true;
+                var data = {};
+                data.gr_data = $scope.all_grid_data;
+                $ok($scope.partners({}), data, function (resp) {
+                    $scope.datas = resp;
+                    $scope.applyGridExtarnals(resp);
+                }).finally(function () {
+                    $scope.loading = false;
+                    $scope.load_contr = true;
+                });
+            };
+
+            $scope.gridOptions1 = {
+                    data: 'datas.grid_data',
+                    paginationPageSizes: [10, 25, 50, 75],
+                    paginationPageSize: $scope.paginationOptions.pageSize,
+                    enableFiltering: true,
+                    useExternalPagination: true,
+                    useExternalSorting: true,
+                    useExternalFiltering: true,
+                    showTreeExpandNoChildren: false,
+                    columnDefs: [
+                      { name: 'portal', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
+                          displayName: 'Portal',
+                          width: '35%',
+                          cellTemplate: '<div ng-class="link" class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.title"></a></div>',
+                      },
+                      { name: 'link',enableCellEdit: false,enableFiltering: false, groupingShowAggregationMenu: false,
+                          displayName: 'Link',
+                          groupingShowGroupingMenu: false
+                      },
+                      { name: 'company', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
+                          displayName: 'Company',
+                          cellTemplate: '<div class="link"><a style="{{grid.appScope.lclass(row.entity.Portals)}}" href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{row.entity.portals}}</a></div>',
+
+                      }
+                    ],
+                    onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions)}
+                  };
         }]);
+    {% endraw %}
     </script>
     {% raw %}
     <div ng-init="loadData()" ng-controller="portal_list">
@@ -100,6 +139,12 @@
             <span ng-repeat="portal in data.portals_partners">
                 <a href="{{ url_portal_profile({portal_id: portal.id}) }}">"{{ portal.name }}" </a>
             </span>
+            <div ng-init="sendData()">
+                <div ng-if="!load_contr">{{_('Loading...')}}</div>
+                <div ng-if="load_contr">
+                    <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
+                </div>
+            </div>
         </div>
     </h3>
     </div>

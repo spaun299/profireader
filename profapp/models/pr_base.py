@@ -20,6 +20,7 @@ from sqlalchemy.sql import expression, functions, update
 from utils.validators import validators
 from sqlalchemy import and_
 import datetime
+import operator
 
 Base = declarative_base()
 
@@ -72,6 +73,8 @@ class Search(Base):
                 optional:    -fields: (tuple ot list) with fields name from table Search.kind
                              , if provided and search_text is not None, this function will look
                              for search text only in this fields.
+                             -tags: boolean. If True, function will return dict with fields
+                             updated with tags
                 optional:    -return_fields: String. If return_fields provided,
                              this function return dictionary with fields you want, else return id's.
                              example: "name,country,region". Also you can pass to this argument
@@ -211,11 +214,11 @@ class Search(Base):
             order = get_order(ord_to_str, desc_asc, ord_to_str)
         else:
             order = get_order('relevance', desc_asc, 'relevance')
-        if 'position' in str(order):
-            subquery_search = subquery_search.order_by(order).order_by(
-                get_order('md_tm', 'asc', 'md_tm'))
-        else:
+        if 'md_tm' in str(order):
             subquery_search = subquery_search.order_by(order)
+        else:
+            subquery_search = subquery_search.order_by(order).order_by(
+                get_order('md_tm', desc_asc, 'md_tm'))
         if pagination:
             pages = math.ceil(subquery_search.count() / items_per_page)
             if items_per_page:
@@ -238,26 +241,33 @@ class Search(Base):
         for search in join_search:
             for cls in db(search).all():
                 objects[cls.index] = {'id': cls.index, 'table_name': cls.table_name,
-                                      'order': getattr(cls, ord_by)}
-                to_order[cls.index] = getattr(cls, ord_by)
+                                      'order': getattr(cls, ord_by), 'md_tm': cls.md_tm}
+                to_order[cls.index] = (getattr(cls, ord_by), getattr(cls, 'md_tm'))
         objects = {obj['id']: obj for obj in
                    collections.OrderedDict(sorted(objects.items())).values()}
-        ordered = sorted(to_order.items(), reverse=False if desc_asc == 'asc' else True)
+        ordered = sorted(tuple(to_order.items()), reverse=False if desc_asc == 'asc' else True,
+                         key=operator.itemgetter(1))
         objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
         if return_objects:
             items = dict()
             for cls in args:
                 fields = cls.get('return_fields') or 'id'
+                tags = cls.get('tags')
                 assert type(fields) is str, \
                     'Arg parameter return_fields must be string but %s given' % fields
                 for a in db(cls['class']).filter(cls['class'].id.in_(objects.keys())).all():
-                    if fields != 'default_dict':
+                    if fields != 'default_dict' and not tags:
                         items[a.id] = a.get_client_side_dict(fields=fields)
+                    elif fields != 'default_dict' and tags:
+                        items[a.id] = a.get_client_side_dict(fields=fields)
+                        items[a.id].update(dict(tags=a.tags))
+                    elif fields == 'default_dict' and not tags:
+                        items[a.id] = a.get_client_side_dict()
                     else:
                         items[a.id] = a.get_client_side_dict()
+                        items[a.id].update(dict(tags=a.tags))
             objects = collections.OrderedDict((id, items[id]) for id, val in ordered)
         return objects, pages, page + 1
-
 
 class MLStripper(HTMLParser):
     def __init__(self):
@@ -484,6 +494,11 @@ class PRBase:
 
         return ret
 
+    def search_filter_default(self, division_id):
+        """ :param division_id: 'string with id from table portal_division'
+            :return: dict with prepared filter parameters for search method """
+        pass
+
     @staticmethod
     def validate_before_update(mapper, connection, target):
         ret = target.validate(False)
@@ -553,8 +568,8 @@ class PRBase:
         event.listen(cls, 'before_insert', cls.validate_before_insert)
         # event.listen(cls, 'before_delete', cls.validate_before_delete)
         event.listen(cls, 'after_insert', cls.add_to_search)
-        event.listen(cls, 'before_update', cls.update_search_table)
-        event.listen(cls, 'before_delete', cls.delete_from_search)
+        event.listen(cls, 'after_update', cls.update_search_table)
+        event.listen(cls, 'after_delete', cls.delete_from_search)
 
 #
 #

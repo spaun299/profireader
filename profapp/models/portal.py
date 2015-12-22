@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, remote
 from ..controllers import errors
 from flask import g
 from utils.db_utils import db
-from .company import Company
+# from .company import Company
 from .pr_base import PRBase, Base
 import re
 from .tag import TagPortalDivision, Tag
@@ -14,6 +14,7 @@ import itertools
 from sqlalchemy import orm
 import itertools
 from .files import File
+from profapp.controllers.errors import BadDataProvided
 
 
 class Portal(Base, PRBase):
@@ -22,13 +23,22 @@ class Portal(Base, PRBase):
                 primary_key=True)
     name = Column(TABLE_TYPES['name'])
     host = Column(TABLE_TYPES['short_name'])
+
+    url_facebook = Column(TABLE_TYPES['url'])
+    url_google = Column(TABLE_TYPES['url'])
+    url_tweeter = Column(TABLE_TYPES['url'])
+    url_linkedin = Column(TABLE_TYPES['url'])
+
     company_owner_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'), unique=True)
     # portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))
     portal_layout_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal_layout.id'))
 
     logo_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'))
+    favicon_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'))
 
     layout = relationship('PortalLayout')
+
+    advs = relationship('PortalAdv', uselist=True)
 
     divisions = relationship('PortalDivision',
                              # backref='portal',
@@ -127,9 +137,12 @@ class Portal(Base, PRBase):
                  # portal_plan_id=None,
                  logo_file_id=None,
                  company_owner=None,
+                 favicon_file_id=None,
                  host=None, divisions=[], portal_layout_id=None):
         self.name = name
         self.logo_file_id = logo_file_id
+        self.favicon_file_id = favicon_file_id
+
         # self.company_owner_id = company_owner_id
         # self.articles = articles
         self.host = host
@@ -157,7 +170,7 @@ class Portal(Base, PRBase):
         pass
 
     def setup_created_portal(self, logo_file_id=None):
-# TODO: OZ by OZ: move this to some event maybe
+        # TODO: OZ by OZ: move this to some event maybe
         """This method create portal in db. Before define this method you have to create
         instance of class with parameters: name, host, portal_layout_id, company_owner_id,
         divisions. Return portal)"""
@@ -222,7 +235,8 @@ class Portal(Base, PRBase):
                     check_division.max, check_division.id)
         return ret
 
-    def get_client_side_dict(self, fields='id|name, divisions.*, layout.*, logo_file_id, company_owner_id',
+    def get_client_side_dict(self,
+                             fields='id|name, divisions.*, layout.*, logo_file_id, favicon_file_id, company_owner_id, url_facebook',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
@@ -249,7 +263,7 @@ class MemberCompanyPortal(Base, PRBase):
                           # , back_populates='member_companies'
                           )
 
-    company = relationship(Company
+    company = relationship('Company'
                            # ,back_populates = 'portal_members'
                            #                        ,backref = 'portal'
                            #                         ,backref='member_companies'
@@ -260,15 +274,19 @@ class MemberCompanyPortal(Base, PRBase):
                         )
 
     def __init__(self, company_id=None, portal=None, company=None, plan=None):
-        self.company_id = company_id
+        if company_id and company:
+            raise BadDataProvided
+        if company_id:
+            self.company_id = company_id
+        else:
+            self.company = company
         self.portal = portal
-        self.company = company
         self.plan = plan
 
     @staticmethod
     def apply_company_to_portal(company_id, portal_id):
         """Add company to MemberCompanyPortal table. Company will be partner of this portal"""
-        g.db.add(MemberCompanyPortal(company=db(Company, id=company_id).one(),
+        g.db.add(MemberCompanyPortal(company_id=company_id,
                                      portal=db(Portal, id=portal_id).one(),
                                      plan=db(MemberCompanyPortalPlan).first()))
         g.db.flush()
@@ -306,6 +324,19 @@ class PortalLayout(Base, PRBase):
 
     def get_client_side_dict(self, fields='id|name',
                              more_fields=None):
+        return self.to_dict(fields, more_fields)
+
+
+class PortalAdv(Base, PRBase):
+    __tablename__ = 'portal_adv'
+    id = Column(TABLE_TYPES['id_profireader'], nullable=False, primary_key=True)
+    portal_id = Column(TABLE_TYPES['name'], ForeignKey('portal.id'), nullable=False)
+    place = Column(TABLE_TYPES['name'], nullable=False)
+    html = Column(TABLE_TYPES['text'], nullable=False)
+
+    portal = relationship(Portal, uselist=False)
+
+    def get_client_side_dict(self, fields='id,portal_id,place,html', more_fields=None):
         return self.to_dict(fields, more_fields)
 
 
@@ -355,6 +386,12 @@ class PortalDivision(Base, PRBase):
     #         g.db.add(addsettings)
     #         # target.settings = db(PortalDivisionSettingsCompanySubportal).filter_by(
     #         #     portal_division_id=self.id).one()
+
+    def search_filter(self):
+        return and_(ArticlePortalDivision.portal_division_id.in_(
+            db(PortalDivision.id, portal_id=portal.id)),
+            ArticlePortalDivision.status ==
+            ARTICLE_STATUS_IN_PORTAL.published)
 
     @orm.reconstructor
     def init_on_load(self):

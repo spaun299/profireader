@@ -16,6 +16,7 @@
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
+            $scope.noData = 'No materials';
 
             $scope.sendData = function () {
                 $scope.loading = true;
@@ -84,10 +85,8 @@
     <div ng-init="sendData()" ng-controller="article_list">
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
         <div ng-if="load_contr">
-        <div ng-show="!areAllEmpty(datas.grid_data)" class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
-        <div ng-show="!loading && areAllEmpty(datas.grid_data)">{{ _('No materials') }}</div>
-        <button ng-click="refresh(gridOptions1.columnDefs)" ng-show="!loading && areAllEmpty(datas.grid_data)" class="btn btn-warning" >Back</button>
-    </div>
+            <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
+        </div>
     </div>
     {% endraw %}
 

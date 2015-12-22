@@ -81,6 +81,7 @@ def index(page=1):
                            pages=pages,
                            current_page=page,
                            page_buttons=Config.PAGINATION_BUTTONS,
+                           # search_text=None,
                            )
 
 

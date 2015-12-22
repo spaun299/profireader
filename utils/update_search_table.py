@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../../profireader')
+sys.path.append('..')
 from profapp.models.articles import Article, ArticleCompany, ArticleCompanyHistory, \
     ArticlePortalDivision
 from profapp.models.company import Company, UserCompany
@@ -29,12 +29,14 @@ def add_to_search(target=None):
                    'index': lambda target_id: target_id}
         md_time = datetime.datetime.now()
         default_time = datetime.datetime.now()
-        if hasattr(target, 'md_tm'):
+        if hasattr(target, 'publishing_tm'):
+            md_time = getattr(target, 'publishing_tm', default_time)
+        elif hasattr(target, 'md_tm'):
             md_time = getattr(target, 'md_tm', default_time)
-        elif hasattr(target, 'publishing_tm'):
-            md_time = (target, 'publishing_tm', default_time)
         elif hasattr(target, 'cr_tm'):
             md_time = getattr(target, 'cr_tm', default_time)
+        elif hasattr(target, 'registered_tm'):
+            md_time = getattr(target, 'registered_tm', default_time)
         for field in target_fields.split(','):
             field_options = target.search_fields[field]
             field_options.update({key: options[key] for key in options

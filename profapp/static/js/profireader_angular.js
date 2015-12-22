@@ -86,13 +86,36 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             );
         }
     }])
-    .directive('prCropper', function () {
+    .directive('prCropper', ['$compile', '$templateCache', '$controller', function ($compile, $templateCache, $controller) {
         return {
             restrict: 'A',
             require: 'ngModel',
             link: function (scope, element, attrs, model) {
 
-                var $image = $(element);
+                element.html($templateCache.get('cropper.html'));
+
+                $compile(element.contents())(scope);
+
+                scope.ImageSelected = function (item) {
+                    model.$modelValue.coordinates = {rotate: 0};
+                    model.$modelValue.image_file_id = item.id;
+                    closeFileManager();
+                };
+
+                var callback_name = 'prcropper_image_selected_callback_' + scope.controllerName + '_' + randomHash();
+
+                window[callback_name] = scope.ImageSelected;
+
+                scope.chooseImage = function (setImage) {
+                    if (setImage) {
+                        scope.chooseImageinFileManager("parent." + callback_name, 'choose');
+                    }
+                    else {
+                        model.$modelValue.image_file_id = null;
+                    }
+                }
+
+                var $image = $('img', element);
 
                 var options = {
                     crop: function (e) {
@@ -110,13 +133,9 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                         $image.cropper(options);
                     }
                     else {
-                        $image.attr('src', fileUrl(model.$modelValue.no_image_file_id));
+                        $image.attr('src', model.$modelValue.no_image_url);
                     }
                 };
-
-
-                //restartCropper();
-
 
                 if (attrs['prCropper']) {
                     scope[attrs['prCropper']] = function () {
@@ -164,7 +183,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
 
             }
         };
-    })
+    }])
     .directive('dateTimestampFormat', function () {
         return {
             require: 'ngModel',
@@ -697,7 +716,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
                         'name': rowEntity.name,
                         'newValue': newValue,
                         'template': rowEntity.template,
-                        'col': colDef.field
+                        'col': colDef.name
                     };
                     externalFunction();
                 }
@@ -786,12 +805,12 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
         tinymceImageOptions: {
             inline: false,
             menu: [],
-            plugins: 'advlist autolink link image charmap print paste table',
+            plugins: 'advlist autolink link image charmap print paste table media',
             skin: 'lightgray',
             theme: 'modern',
-            'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table",
+            'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | media link image table",
             //'toolbar1': "undo redo | bold italic | alignleft aligncenter alignright alignjustify | styleselect | bullist numlist outdent indent | link image table"[*],
-            'valid_elements': "img[*],table[*],tbody[*],td[*],th[*],tr[*],p[*],h1[*],h2[*],h3[*],h4[*],h5[*],h6[*],div[*],ul[*],ol[*],li[*],strong/b[*],em/i[*],span[*],blockquote[*],sup[*],sub[*],code[*],pre[*],a[*]",
+            'valid_elements': "iframe[*],img[*],table[*],tbody[*],td[*],th[*],tr[*],p[*],h1[*],h2[*],h3[*],h4[*],h5[*],h6[*],div[*],ul[*],ol[*],li[*],strong/b[*],em/i[*],span[*],blockquote[*],sup[*],sub[*],code[*],pre[*],a[*]",
             //init_instance_callback1: function () {
             //    console.log('init_instance_callback', arguments);
             //},

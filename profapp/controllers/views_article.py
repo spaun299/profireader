@@ -38,12 +38,12 @@ def load_mine(json):
                 params['sort'][n] = json.get('gr_data')['sort'][n]
         if json.get('gr_data')['filter']:
             for b in json.get('gr_data')['filter']:
-                if json.get('gr_data')['filter'][b] != '--all--':
+                if json.get('gr_data')['filter'][b] != '-- all --':
                     params['filter'][b] = json.get('gr_data')['filter'][b]
     subquery = ArticleCompany.subquery_user_articles(search_text=search_text,**params)
     articles, pages, current_page = pagination(subquery,
                                                page=page, items_per_page=pageSize)
-    add_param = {'value': '1', 'label': 'All'}
+    add_param = {'value': '1', 'label': '-- all --'}
     statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
     company_list_for_grid = Article.list_for_grid_tables(ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
     articles_drid_data = Article.getListGridDataArticles(articles.all())
@@ -107,7 +107,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
                       'image_file_id': article_dict['image_file_id'],
-                      'no_image_file_id': FOLDER_AND_FILE.no_article_image()
+                      'no_image_url': g.fileUrl(FOLDER_AND_FILE.no_article_image())
                       }
         # article_dict['long'] = '<table><tr><td><em>cell</em> 1</td><td><strong>cell<strong> 2</td></tr></table>'
         # TODO: VK by OZ: this code should be moved to model
@@ -134,7 +134,6 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
             image_id = parameters['image'].get('image_file_id')
             # TODO: VK by OZ: this code dont work if ArticlePortalDivision updated
             if image_id:
-                del parameters['image']['image_file_id']
                 articleVersion.image_file_id = crop_image(image_id, parameters['image']['coordinates'])
             else:
                 articleVersion.image_file_id = None

@@ -14,65 +14,28 @@
 <div class="container">
 
     <div class="row site-content">
-
         {% if member_company %}
             {% include 'front/bird/subportal_nav.html' %}
         {% endif %}
 
-
-
         <!-- Blog Entries Column -->
         <div class="col-md-9">
             {% block content %}{% endblock content %}
-                {% if pages %}
-                    {% if current_division['name']=='index page' %}
-                        {% include 'front/bird/pager_index.html' %}
-                    {% else %}
-                        {% include 'front/bird/pager.html' %}
-                    {% endif %}
-                {% endif %}
+            {% if pages and articles %}
+                {% include 'partials/pager.html' %}
+            {% endif %}
         </div>
         <div class="col-md-3">
-            <a href="#" class="right-banner"><!--/*
-  *
-  * Revive Adserver Asynchronous JS Tag
-  * - Generated with Revive Adserver v3.2.1
-  *
-  */-->
-
-                <ins data-revive-zoneid="4" data-revive-id="f76734462838a80d480b0a681f019555"></ins>
-                <script async src="//ban.prominfo.com.ua/delivery/asyncjs.php"></script>
-
-
-            </a>
-            <a href="#" class="right-banner"><!--/*
-
-  *
-
-  * Revive Adserver Asynchronous JS Tag
-
-  * - Generated with Revive Adserver v3.2.1
-
-  *
-
-  */-->
-
-
-                <ins data-revive-zoneid="3" data-revive-id="f76734462838a80d480b0a681f019555"></ins>
-
-                <script async src="//ban.prominfo.com.ua/delivery/asyncjs.php"></script>
-            </a>
-
-
+            {{ portal.advs['right_banner']|safe }}
             {% if articles_related %}
                 <div class="right-list-container">
                     {% for article_related_id, related_article  in articles_related.items() %}
-                        <div class="list-elements right-sidebar">
+                        <div class="list-elements right-sidebar oh">
                             <a href="{{ url_for('front.details', article_portal_division_id=related_article['id']) }}">{{ related_article['title']|safe }}</a>
 
                             <div class="item-additional-info">
                                 <div class="item-company"><a href="{{ url_for('front.subportal', member_company_id = related_article['company']['id'], member_company_name = related_article['company']['name']) }}">{{ related_article['company']['name'] }}</a></div>
-                                <div class="item-publication-date">{{ related_article['cr_tm'] }}</div>
+                                <div class="item-publication-date">{{ related_article['publishing_tm'] }}</div>
                             </div>
                         </div>
                     {% endfor %}
