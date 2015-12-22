@@ -33,7 +33,6 @@ class TranslateTemplate(Base, PRBase):
     @staticmethod
     def getTranslate(template, phrase, url=None):
         url_adapter = g.get_url_adapter()
-
         if url is None:
             url_adapter = g.get_url_adapter()
             rules = url_adapter.map._rules_by_endpoint.get(request.endpoint, ())
@@ -86,7 +85,7 @@ class TranslateTemplate(Base, PRBase):
     @staticmethod
     def delete(objects):
         for obj in objects:
-            f = db(TranslateTemplate, template=obj['Template'], name=obj['Phrase']).first()
+            f = db(TranslateTemplate, template=obj['template'], name=obj['name']).first()
             TranslateTemplate.delfile(f)
         return 'True'
 
@@ -97,30 +96,70 @@ class TranslateTemplate(Base, PRBase):
 
     @staticmethod
     def subquery_search(template=None, url=None, **kwargs):
-
         sub_query = db(TranslateTemplate)
-        if template:
-            sub_query = sub_query.filter_by(template=template)
-
-        if url:
-            sub_query = sub_query.filter_by(url=url)
-
-        if kwargs['search_in_phrase']:
-            sub_query = sub_query.filter(TranslateTemplate.name.ilike("%" + kwargs['search_in_phrase'] + "%"))
-        if kwargs['search_in_uk']:
-            sub_query = sub_query.filter(TranslateTemplate.uk.ilike("%" + kwargs['search_in_uk'] + "%"))
-        if kwargs['search_in_en']:
-            sub_query = sub_query.filter(TranslateTemplate.en.ilike("%" + kwargs['search_in_en'] + "%"))
-
-        if kwargs['sort_creation_time']:
-            sub_query = sub_query.order_by(TranslateTemplate.cr_tm.asc()) if kwargs['sort_creation_time'] == 'asc' else sub_query.order_by(TranslateTemplate.cr_tm.desc())
-        elif kwargs['sort_last_accessed_time']:
-            sub_query = sub_query.order_by(TranslateTemplate.ac_tm.asc()) if kwargs['sort_last_accessed_time'] == 'asc' else sub_query.order_by(TranslateTemplate.ac_tm.desc())
+        if 'filter' in kwargs:
+            if 'url' in kwargs['filter']:
+                sub_query = sub_query.filter_by(url=kwargs['filter']['url'][0])
+            if 'template' in kwargs['filter']:
+                sub_query = sub_query.filter_by(template=kwargs['filter']['template'][0])
+        if 'search_text' in kwargs:
+            if 'name' in kwargs['search_text']:
+                sub_query = sub_query.filter(TranslateTemplate.name.ilike("%" + kwargs['search_text']['name'] + "%"))
+            if 'uk' in kwargs['search_text']:
+                sub_query = sub_query.filter(TranslateTemplate.uk.ilike("%" + kwargs['search_text']['uk'] + "%"))
+            if 'en' in kwargs['search_text']:
+                sub_query = sub_query.filter(TranslateTemplate.en.ilike("%" + kwargs['search_text']['en'] + "%"))
+        if 'sort' in kwargs:
+            if 'cr_tm' in kwargs['sort']:
+                sub_query = sub_query.order_by(TranslateTemplate.cr_tm.asc()) if kwargs['sort']['cr_tm'] == 'asc' else sub_query.order_by(TranslateTemplate.cr_tm.desc())
+            if 'ac_tm' in kwargs['sort']:
+                sub_query = sub_query.order_by(TranslateTemplate.ac_tm.asc()) if kwargs['sort']['ac_tm'] == 'asc' else sub_query.order_by(TranslateTemplate.ac_tm.desc())
         else:
             sub_query = sub_query.order_by(TranslateTemplate.template)
+        # if kwargs['sort_creation_time']:
+        #     sub_query = sub_query.order_by(TranslateTemplate.cr_tm.asc()) if kwargs['sort_creation_time'] == 'asc' else sub_query.order_by(TranslateTemplate.cr_tm.desc())
+        # elif kwargs['sort_last_accessed_time']:
+        #     sub_query = sub_query.order_by(TranslateTemplate.ac_tm.asc()) if kwargs['sort_last_accessed_time'] == 'asc' else sub_query.order_by(TranslateTemplate.ac_tm.desc())
+        # else:
+        #     sub_query = sub_query.order_by(TranslateTemplate.template)
 
         return sub_query
 
     def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
+
+    @staticmethod
+    def getListGridDataTranslation(translations):
+        grid_data = []
+        for translate in translations:
+            grid_data.append({
+                            'cr_tm' : translate.cr_tm,
+                            'ac_tm' : translate.ac_tm,
+                            'template' : translate.template,
+                            'url' : translate.url,
+                            'name': translate.name,
+                            'uk' : translate.uk,
+                            'en' : translate.en
+                        })
+        return grid_data
+
+    @staticmethod
+    def list_for_grid_tables(list, add_param, is_dict):
+        new_list = []
+        n = 1
+        if add_param:
+            new_list.append(add_param)
+            n = 2
+        if is_dict == False:
+            list.sort()
+        for s in list:
+            label = list[s] if is_dict else s
+            id = s if is_dict else ''
+            new_list.append({
+                'value': str(n),
+                'label': label,
+                'id': id
+            })
+            n += 1
+        return new_list

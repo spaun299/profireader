@@ -190,6 +190,7 @@ def allowed_referrers(domain):
 
 @file_bp.route('<string:file_id>/')
 def get(file_id):
+
     image_query = file_query(File, file_id)
     image_query_content = g.db.query(FileContent).filter_by(id=file_id).first()
 

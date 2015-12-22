@@ -81,13 +81,20 @@ def materials_load(json, company_id):
     company = db(Company, id=company_id).one()
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
-    page = json.get('grid_data')['page'] or 1
-    search_text = json.get('grid_data')['search_text']
+    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
+    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
+    search_text = json.get('gr_data')['search_text'] if json.get('gr_data') else None
     params = {}
-    params['status'] = json.get('grid_data')['status'] if json.get('grid_data')['status'] else None
-    params['publ_status'] = json.get('grid_data')['publ_status'] if json.get('grid_data')['publ_status'] else None
-    params['sort_date'] = json.get('grid_data')['sort_date'] if json.get('grid_data')['sort_date'] else None
-
+    if json.get('gr_data'):
+        params['sort'] = {}
+        params['filter'] = {}
+        if json.get('gr_data')['sort']:
+            for n in json.get('gr_data')['sort']:
+                params['sort'][n] = json.get('gr_data')['sort'][n]
+        if json.get('gr_data')['filter']:
+            for b in json.get('gr_data')['filter']:
+                if json.get('gr_data')['filter'][b] != '-- all --':
+                    params['filter'][b] = json.get('gr_data')['filter'][b]
     # if json.get('grid_data')['new_status']:
     #     ArticleCompany.update_article(
     #         company_id=company_id,
@@ -95,20 +102,17 @@ def materials_load(json, company_id):
     #         **{'status': json.get('grid_data')['new_status']})
     subquery = ArticleCompany.subquery_company_articles(search_text=search_text,
                                                         company_id=company_id,
-                                                        portal_id=json.get('portal_id'),
                                                         **params)
-    articles, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('grid_data')['pageSize'])
+    articles, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
 
     add_param = {'value': '1','label': '-- all --'}
     statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
     portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id), add_param, True)
     gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
     grid_data = Article.getListGridDataMaterials(articles)
-
+    grid_filters = {'portals': portals_g,'material_status': statuses_g, 'publication_status': gr_publ_st}
     return {'grid_data': grid_data,
-            'portals': portals_g,
-            'statuses': statuses_g,
-            'publ_statuses': gr_publ_st,
+            'grid_filters': grid_filters,
             'total': subquery.count()
             }
 

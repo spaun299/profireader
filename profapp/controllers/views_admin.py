@@ -17,28 +17,44 @@ def translations():
 @admin_bp.route('/translations', methods=['POST'])
 @ok
 def translations_load(json):
-    page = json.get('page') or 1
-
+    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
+    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
     params = {}
-    params['search_in_phrase'] = json.get('search_in_phrase') if json.get('search_in_phrase') else None
-    params['search_in_uk'] = json.get('search_in_uk') if json.get('search_in_uk') else None
-    params['search_in_en'] = json.get('search_in_en') if json.get('search_in_en') else None
-    params['sort_creation_time'] = json.get('sort_creation_time') if json.get('sort_creation_time') else None
-    params['sort_last_accessed_time'] = json.get('sort_last_accessed_time') if json.get('sort_last_accessed_time') else None
+    if json.get('gr_data'):
+        params['sort'] = {}
+        params['filter'] = {}
+        params['search_text'] = {}
+        if json.get('gr_data')['sort']:
+            for n in json.get('gr_data')['sort']:
+                params['sort'][n] = json.get('gr_data')['sort'][n]
+        if json.get('gr_data')['filter']:
+            for b in json.get('gr_data')['filter']:
+                if json.get('gr_data')['filter'][b] != '-- all --':
+                    params['filter'][b] = json.get('gr_data')['filter'][b]
+        if json.get('gr_data')['search_text']:
+            for d in json.get('gr_data')['search_text']:
+                if json.get('gr_data')['search_text'][d] != '-- all --':
+                    params['search_text'][d] = json.get('gr_data')['search_text'][d]
+        if json.get('gr_data')['editItem']:
+            exist = db(TranslateTemplate, template=json.get('gr_data')['editItem']['template'], name=json.get('gr_data')['editItem']['name']).first()
+            TranslateTemplate.get(exist.id).attr({json.get('gr_data')['editItem']['col']: json.get('gr_data')['editItem']['newValue']}).save().get_client_side_dict()
     subquery = TranslateTemplate.subquery_search(template=json.get('template') or None,
                                                  url=json.get('url') or None,
                                                  **params)
-    translations, pages, current_page = pagination(subquery, page=page, items_per_page=json.get('pageSize'))
-    tr = [t.get_client_side_dict() for t in translations]
+    translations, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
+    add_param = {'value': '1','label': '-- all --'}
     templates = db(TranslateTemplate.template).group_by(TranslateTemplate.template) \
         .order_by(expression.asc(expression.func.lower(TranslateTemplate.template))).all()
     urls = db(TranslateTemplate.url).group_by(TranslateTemplate.url) \
         .order_by(expression.asc(expression.func.lower(TranslateTemplate.url))).all()
-    return {'languages': TranslateTemplate.languages, 'translations': tr,
-            'pages': {'total': pages, 'current_page': current_page,
-                      'page_buttons': Config.PAGINATION_BUTTONS},
-            'templates': [{'label': t.template, 'value': t.template} for t in templates],
-            'urls': [{'label': t[0], 'value': t[0]} for t in urls],
+
+    urls_g = TranslateTemplate.list_for_grid_tables(urls, add_param,False)
+    templates_g = TranslateTemplate.list_for_grid_tables(templates, add_param,False)
+    grid_data = TranslateTemplate.getListGridDataTranslation(translations)
+    grid_filters = {'template': templates_g,'url': urls_g}
+    print(grid_filters)
+    return {'grid_data': grid_data,
+            'grid_filters': grid_filters,
             'total': subquery.count()
             }
 
