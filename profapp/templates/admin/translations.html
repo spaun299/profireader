@@ -225,6 +225,13 @@
                       },
                       { field: 'en', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
                                 type: uiGridConstants.filter.INPUT}
+                      },
+// TODO SS by OZ: 1. why allow_html is not visible?. 2 Pls allow dot-delimitted keys fields format like `portal.name`
+                      { field: 'allow_html', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
+                                type: uiGridConstants.filter.INPUT}
+                      },
+                      { field: 'portal.name', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
+                                type: uiGridConstants.filter.INPUT}
                       }
 
                     ],
