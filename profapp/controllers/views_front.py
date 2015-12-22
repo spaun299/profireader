@@ -73,14 +73,17 @@ def portal_and_settings(portal):
 def index(page=1):
     search_text, portal, _ = get_params()
 
-    # portal.config.set_division_page_size(page_size_for_divisions={portal.divisions[1].name: 10000})
     division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                       portal_division_type_id='index').one()
     order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
     page = page if session.get('original_search_text') == search_text else 1
+    # portal.config.set_division_page_size(page_size_for_divisions={division.name: 1})
+    items_per_page = portal.get_value_from_config(key=PortalConfig.PAGE_SIZE_PER_DIVISION,
+                                                  division_name=division.name)
     articles, pages, page = Search.search(ArticlePortalDivision().search_filter_default(division.id),
                                           search_text=search_text, page=page,
-                                          order_by=order, pagination=True)
+                                          order_by=order, pagination=True,
+                                          items_per_page=items_per_page)
     session['original_search_text'] = search_text
 
     return render_template('front/bird/index.html',
@@ -98,13 +101,16 @@ def index(page=1):
 def division(division_name, page=1):
     search_text, portal, _ = get_params()
     division = g.db().query(PortalDivision).filter_by(portal_id=portal.id, name=division_name).one()
+    items_per_page = portal.get_value_from_config(key=PortalConfig.PAGE_SIZE_PER_DIVISION,
+                                                  division_name=division.name)
     if division.portal_division_type_id == 'catalog' and search_text:
         return redirect(url_for('front.index', search_text=search_text))
     if division.portal_division_type_id == 'news' or division.portal_division_type_id == 'events':
         order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
         articles, pages, page = Search.search(
             ArticlePortalDivision().search_filter_default(division.id),
-            search_text=search_text, page=page, order_by=order, pagination=True)
+            search_text=search_text, page=page, order_by=order, pagination=True,
+            items_per_page=items_per_page)
 
         current_division = division.get_client_side_dict()
 
@@ -184,9 +190,11 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
     subportal_division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                                 name=division_name).one()
     order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
+    items_per_page = portal.get_value_from_config(key=PortalConfig.PAGE_SIZE_PER_DIVISION,
+                                                  division_name=subportal_division.name)
     articles, pages, page = Search.search(ArticlePortalDivision().search_filter_default(
         subportal_division.id, company_id=member_company_id), search_text=search_text, page=page,
-        order_by=order, pagination=True)
+        order_by=order, pagination=True, items_per_page=items_per_page)
 
     # sub_query = Article.subquery_articles_at_portal(
     #     search_text=search_text,
