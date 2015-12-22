@@ -28,6 +28,7 @@ from .models.config import Config
 from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
 from .models.tools import HtmlHelper
+from .models.pr_base import MLStripper
 
 
 def req(name, allowed=None, default=None, exception=True):
@@ -283,15 +284,16 @@ def translates(template):
     ret = {}
     for ph in phrases:
         tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
-        ret[ph.name] = {'lang': getattr(ph, g.lang), 'time': tim}
+        html_or_text = getattr(ph, g.lang)
+        html_or_text = MLStripper().strip_tags(html_or_text) if ph.allow_html == '' else html_or_text
+        ret[ph.name] = {'lang': html_or_text, 'time': tim, 'allow_html': ph.allow_html}
 
     return json.dumps(ret)
 
 
-@jinja2.contextfunction
-def translate_phrase(context, phrase, dictionary=None):
+def translate_phrase_or_html(context, phrase, dictionary=None, allow_html=''):
     template = context.name
-    translated = TranslateTemplate.getTranslate(template, phrase)
+    translated = TranslateTemplate.getTranslate(template, phrase, None, allow_html)
     r = re.compile("%\\(([^)]*)\\)s")
 
     def getFromContext(context, indexes, default):
@@ -310,11 +312,19 @@ def translate_phrase(context, phrase, dictionary=None):
     return r.sub(replaceinphrase, translated)
 
 
-_paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
+@jinja2.contextfunction
+def translate_phrase(context, phrase, dictionary=None):
+    return MLStripper().strip_tags(translate_phrase_or_html(context, phrase, dictionary, ''))
+
+
+@jinja2.contextfunction
+def translate_html(context, phrase, dictionary=None):
+    return Markup(translate_phrase_or_html(context, phrase, dictionary, '*'))
 
 
 @jinja2.contextfunction
 def nl2br(value):
+    _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
     result = u'\n\n'.join(u'<p>%s</p>' % p.replace('\n', Markup('<br>\n'))
                           for p in _paragraph_re.split(escape(value)))
     result = Markup(result)
@@ -495,6 +505,7 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     app.jinja_env.globals.update(url_page=url_page)
     app.jinja_env.globals.update(config_variables=config_variables)
     app.jinja_env.globals.update(_=translate_phrase)
+    app.jinja_env.globals.update(__=translate_html)
     app.jinja_env.globals.update(tinymce_format_groups=HtmlHelper.tinymce_format_groups)
 
     app.jinja_env.filters['nl2br'] = nl2br
