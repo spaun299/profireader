@@ -25,6 +25,7 @@ class Portal(Base, PRBase):
                 primary_key=True)
     name = Column(TABLE_TYPES['name'])
     host = Column(TABLE_TYPES['short_name'])
+    lang = Column(TABLE_TYPES['short_name'])
 
     url_facebook = Column(TABLE_TYPES['url'])
     url_google = Column(TABLE_TYPES['url'])
@@ -141,8 +142,10 @@ class Portal(Base, PRBase):
                  logo_file_id=None,
                  company_owner=None,
                  favicon_file_id=None,
+                 lang='uk',
                  host=None, divisions=[], portal_layout_id=None):
         self.name = name
+        self.lang = lang
         self.logo_file_id = logo_file_id
         self.favicon_file_id = favicon_file_id
 

@@ -88,8 +88,8 @@
                     if ($scope.data.article.company_id)
                         return 'update version of article for company `%(data.article.company.name)s`';
                     if (!$scope.data.article.id)
-                        return 'update your version of article';
-                    return 'Create new article';
+                        return 'Create new article';
+                    return 'update your version of article';
 
 
                 }
@@ -154,6 +154,7 @@
             };
 
             $scope.tinymceImageOptions['height'] = '450px';
+            $scope.tinymceImageOptions['body_class'] = 'article-content';
 
             var general_formats = {{ tinymce_format_groups()|tojson }};
 

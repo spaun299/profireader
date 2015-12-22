@@ -762,7 +762,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             },
             //valid_elements: Config['article_html_valid_elements'],
             //valid_elements: 'a[class],img[class|width|height],p[class],table[class|width|height],th[class|width|height],tr[class],td[class|width|height],span[class],div[class],ul[class],ol[class],li[class]',
-            content_css: ["/static/css/article.css", "/static/front/bird/css/article.css"],
+            content_css: ["/static/front/css/bootstrap.css", "/static/css/article.css", "/static/front/bird/css/article.css"],
 
 
             //paste_auto_cleanup_on_paste : true,
