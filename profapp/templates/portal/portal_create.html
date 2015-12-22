@@ -130,6 +130,7 @@
                             value="{{ division_type_id }}">{{ division_type.id }}
                     </option>
                 </select>
+                <input type="number" placeholder="Articles per page" ng-model="division.page_size">
                 <select ng-if="division.portal_division_type_id == 'company_subportal'"
                         ng-model="division.settings.company_id">
                     <option ng-selected="portal_member_company.id == division.settings.company_id"
