@@ -15,7 +15,7 @@ from flask.ext.login import AnonymousUserMixin
 from flask import globals
 from flask.ext.babel import Babel
 import jinja2
-from jinja2 import Markup
+from jinja2 import Markup, escape
 
 from profapp.controllers.blueprints_register import register as register_blueprints
 from profapp.controllers.blueprints_register import register_front as register_blueprints_front
@@ -307,6 +307,15 @@ def translate_phrase(context, phrase, dictionary=None):
 
     return r.sub(replaceinphrase, translated)
 
+_paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
+
+@jinja2.contextfunction
+def nl2br(value):
+    result = u'\n\n'.join(u'<p>%s</p>' % p.replace('\n', Markup('<br>\n'))
+                          for p in _paragraph_re.split(escape(value)))
+    result = Markup(result)
+    return result
+
 
 def config_variables():
     variables = g.db.query(Config).filter_by(client_side=1).all()
@@ -483,6 +492,8 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     app.jinja_env.globals.update(config_variables=config_variables)
     app.jinja_env.globals.update(_=translate_phrase)
     app.jinja_env.globals.update(tinymce_format_groups=HtmlHelper.tinymce_format_groups)
+
+    app.jinja_env.filters['nl2br'] = nl2br
 
 
     # see: http://flask.pocoo.org/docs/0.10/patterns/sqlalchemy/

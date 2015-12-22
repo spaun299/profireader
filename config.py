@@ -84,10 +84,10 @@ class Config(object):
     DATABASE_CONNECT_OPTIONS = {}
 
     # Enable protection against *Cross-site Request Forgery (CSRF)*
-    CSRF_ENABLED = True
+    CSRF_ENABLED = False
 
     # Secret key for wtforms
-    WTF_CSRF_ENABLED = True
+    WTF_CSRF_ENABLED = False
     WTF_CSRF_SECRET_KEY = secret_data.WTF_CSRF_SECRET_KEY
 
     host = secret_data.DB_HOST
@@ -118,6 +118,8 @@ class ProductionDevelopmentConfig(Config):
     db_name = os.getenv('PRODUCTION_SERVER_DB_NAME', Config.database)
 
     # SERVER_NAME = os.getenv('PRODUCTION_SERVER_NAME', Config.SERVER_NAME)
+
+    CSRF_ENABLED = False
 
     # Define production database
     SQLALCHEMY_DATABASE_URI = \
