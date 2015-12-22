@@ -234,9 +234,19 @@ def load_portal_id(app):
     from profapp.models.portal import Portal
 
     def func():
-        g.portal_id = g.db.query(Portal.id).filter_by(host=request.host).one()[0]
-        # g.portal_id = db_session_func(app.config['SQLALCHEMY_DATABASE_URI']).\
-        #             query(Portal.id).filter_by(host=app.config['SERVER_NAME']).one()[0]
+
+        portal = g.db.query(Portal).filter_by(host=request.host).first()
+
+        g.portal_id = portal.id if portal else None
+
+        if portal:
+            g.lang = portal.lang
+        else:
+            g.lang = g.user_dict['lang']
+
+
+            # g.portal_id = db_session_func(app.config['SQLALCHEMY_DATABASE_URI']).\
+            #             query(Portal.id).filter_by(host=app.config['SERVER_NAME']).one()[0]
 
     return func
 
@@ -265,24 +275,16 @@ def prImage(id, if_no_image=None):
     file = fileUrl(id, False, if_no_image if if_no_image else "/static/images/no_image.png")
     return Markup(
         ' src="/static/images/0.gif" style="background-position: center; background-size: contain; background-repeat: no-repeat; background-image: url(\'%s\')" ' % (
-        file,))
+            file,))
 
 
 def translates(template):
-    if g.user:
-        user_language = g.user.lang
-    else:
-        user_language = 'uk'
     phrases = g.db.query(TranslateTemplate).filter_by(template=template).all()
     ret = {}
-    if user_language == 'uk':
-        for ph in phrases:
-            tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
-            ret[ph.name] = {'lang': ph.uk, 'time': tim}
-    else:
-        for ph in phrases:
-            tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
-            ret[ph.name] = {'lang': ph.en, 'time': tim}
+    for ph in phrases:
+        tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
+        ret[ph.name] = {'lang': getattr(ph, g.lang), 'time': tim}
+
     return json.dumps(ret)
 
 
@@ -307,7 +309,9 @@ def translate_phrase(context, phrase, dictionary=None):
 
     return r.sub(replaceinphrase, translated)
 
+
 _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
+
 
 @jinja2.contextfunction
 def nl2br(value):
@@ -452,9 +456,9 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
 
     app.before_request(load_user)
     app.before_request(setup_authomatic(app))
+    app.before_request(load_portal_id(app))
 
     if apptype == 'front':
-        app.before_request(load_portal_id(app))
         register_blueprints_front(app)
         my_loader = jinja2.ChoiceLoader([
             app.jinja_loader,

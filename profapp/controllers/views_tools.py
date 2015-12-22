@@ -21,5 +21,3 @@ def save_translate(json):
 @ok
 def update_last_accessed(json):
     return TranslateTemplate.update_last_accessed(json['template'], json['phrase'])
-
-
