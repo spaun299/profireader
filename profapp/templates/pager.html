@@ -1,4 +1,4 @@
-    <script type="text/ng-template" id="pagination.html">
+<script type="text/ng-template" id="pagination.html">
     <uib-pagination boundary-links="true" total-items="data.pages.total" items-per-page="1"
                     ng-model="data.pages.current_page" ng-change="page_changed()"
                     class="pagination-sm"
@@ -17,23 +17,26 @@
         <button ng-disabled="!data.image.image_file_id" ng-click="cropper('zoom', 0.1)" class="btn btn-primary"
                 type="button" title="Zoom In">
                   <span class="docs-tooltip" data-toggle="tooltip"><span
-                        class="glyphicon glyphicon-zoom-in" ></span></span>
+                          class="glyphicon glyphicon-zoom-in"></span></span>
         </button>
-        <button ng-disabled="!data.image.image_file_id" ng-click="cropper('zoom', -0.1)" class="btn btn-primary" type="button"
+        <button ng-disabled="!data.image.image_file_id" ng-click="cropper('zoom', -0.1)" class="btn btn-primary"
+                type="button"
                 title="Zoom Out">
                  <span class="docs-tooltip" data-toggle="tooltip"><span
-                        class="glyphicon glyphicon-zoom-out"></span></span>
+                         class="glyphicon glyphicon-zoom-out"></span></span>
         </button>
 
-        <button ng-disabled="!data.image.image_file_id" ng-click="cropper('rotate', -90)" class="btn btn-primary" type="button"
+        <button ng-disabled="!data.image.image_file_id" ng-click="cropper('rotate', -90)" class="btn btn-primary"
+                type="button"
                 title="Rotate Left">
                <span class="rotate" data-toggle="tooltip"><span
-                        class="icon-transform-rotate-counterclockwise"></span></span>
+                       class="icon-transform-rotate-counterclockwise"></span></span>
         </button>
-        <button class="btn btn-primary" ng-disabled="!data.image.image_file_id" ng-click="cropper('rotate', 90)"  type="button"
+        <button class="btn btn-primary" ng-disabled="!data.image.image_file_id" ng-click="cropper('rotate', 90)"
+                type="button"
                 title="Rotate Right">
              <span class="rotate" data-toggle="tooltip"><span
-                        class="icon-transform-rotate-clockwise"></span></span>
+                     class="icon-transform-rotate-clockwise"></span></span>
         </button>
         <button class="btn btn-primary" type="button" value="{{ image_file_url }}"
                 ng-click="chooseImage(true)">
@@ -51,4 +54,9 @@
     <input type="hidden" ng-model="data.article.image_file_id">
     </div>
     {% endraw %}
+</script>
+
+<script type="text/ng-template" id="prHelpPopoverTemplate.html">
+    <div>!!!!</div>
+    <label>Popup Title:</label>
 </script>
