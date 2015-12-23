@@ -24,6 +24,7 @@ from .files import YoutubePlaylist
 from ..constants.SEARCH import RELEVANCE
 from .users import User
 from ..models.portal import Portal
+from ..models.portal import MemberCompanyPortal
 from ..models.portal import UserPortalReader
 
 
@@ -177,6 +178,28 @@ class Company(Base, PRBase):
     def get_client_side_dict(self, fields='id,name,author_user_id,country,region,address,phone,phone2,email,short_description,logo_file_id,about,lat,lon,own_portal.id|host',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
+
+    @staticmethod
+    def getListGridDataPortalPartners(partners):
+        return [{'portal' : partner.portal.name,
+                            'link' : partner.portal.host,
+                            'company' : Company.get(partner.portal.company_owner_id).name
+                        } for partner in partners]
+
+    @staticmethod
+    def subquery_company_partners(company_id, search_text, **kwargs):
+        sub_query = db(MemberCompanyPortal, company_id=company_id)
+        if search_text:
+            if 'portal' in search_text:
+                sub_query = sub_query.join(MemberCompanyPortal.portal)
+                sub_query = sub_query.filter(Portal.name.ilike("%" + search_text['portal'] + "%"))
+            if 'company' in search_text:
+                sub_query = sub_query.join(Company, MemberCompanyPortal.company_id == Company.id).\
+                filter(Company.name.ilike("%" + search_text['company'] + "%"))
+            if 'link' in search_text:
+                sub_query = sub_query.join(MemberCompanyPortal.portal)
+                sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
+        return sub_query
 
 
 def forbidden_for_current_user(**kwargs):

@@ -448,15 +448,24 @@ def portals_partners(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def portals_partners_load(json, company_id):
+    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
+    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
+    search_text = json.get('gr_data')['search_text'] if json.get('gr_data') else None
     portal = db(Company, id=company_id).one().own_portal
     portals_partners = [port.portal.get_client_side_dict(fields='name, company_owner_id, id')
                         for port in MemberCompanyPortal.get_portals(
             company_id) if port]
+    params = {}
+    print(json)
+    subquery = Company.subquery_company_partners(company_id=company_id, search_text=search_text, **params)
+    partners = [port.portal.get_client_side_dict(fields='name, company_owner_id, id, host')
+                        for port in MemberCompanyPortal.get_portals(
+            company_id) if port]
+    partners_g, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
     user_rights = list(g.user.user_rights_in_company(company_id))
-    grid_data = {}
-    grid_filters = {}
+    grid_data = Company.getListGridDataPortalPartners(partners_g)
     return {'grid_data':grid_data,
-            'grid_filters': grid_filters,
+            'total': len(partners),
             'portal': portal.get_client_side_dict(fields='name') if portal else [],
             'portals_partners': portals_partners,
             'company_id': company_id,

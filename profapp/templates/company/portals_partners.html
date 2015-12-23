@@ -17,10 +17,12 @@
 {#            {{ raw_url_for('portal.search_for_portal_to_join')|safe }};#}
             $scope.url_join = {{ raw_url_for('portal.apply_company')|safe }};
             $scope.partners = {{ raw_url_for('portal.portals_partners')|safe }};
+            $scope.load_partners = {{ raw_url_for('portal.portals_partners_load')|safe }};
             $scope.selectedPortal_name = '';
             $scope.selectedPortal = null;
             $scope.selectedPortal_sending = false;
             $scope.$$translate = {{ translates('portal_list')|safe }};
+            $scope.own_company_id = '{{ company_id }}';
             {% raw %}
             $scope.myRights = function(){
                 if (!$scope.data || !$scope.data.user_rights) return false;
@@ -69,11 +71,11 @@
                 });
             };
 
-            $scope.sendData = function () {
+           $scope.sendData = function () {
                 $scope.loading = true;
                 var data = {};
                 data.gr_data = $scope.all_grid_data;
-                $ok($scope.partners({}), data, function (resp) {
+                $ok($scope.partners({company_id: $scope.own_company_id}), data, function (resp) {
                     $scope.datas = resp;
                     $scope.applyGridExtarnals(resp);
                 }).finally(function () {
@@ -95,15 +97,16 @@
                       { name: 'portal', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
                           displayName: 'Portal',
                           width: '35%',
-                          cellTemplate: '<div ng-class="link" class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.title"></a></div>',
+                          filter: {type: uiGridConstants.filter.INPUT}
+                          //cellTemplate: '<div ng-class="link" class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.title"></a></div>',
                       },
-                      { name: 'link',enableCellEdit: false,enableFiltering: false, groupingShowAggregationMenu: false,
-                          displayName: 'Link',
-                          groupingShowGroupingMenu: false
+                      { name: 'link', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                          displayName: 'Link',filter: {type: uiGridConstants.filter.INPUT}
+
                       },
                       { name: 'company', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
-                          displayName: 'Company',
-                          cellTemplate: '<div class="link"><a style="{{grid.appScope.lclass(row.entity.Portals)}}" href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{row.entity.portals}}</a></div>',
+                          displayName: 'Company',filter: {type: uiGridConstants.filter.INPUT}
+                          //cellTemplate: '<div class="link"><a style="{{grid.appScope.lclass(row.entity.Portals)}}" href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{row.entity.portals}}</a></div>',
 
                       }
                     ],
@@ -139,14 +142,15 @@
             <span ng-repeat="portal in data.portals_partners">
                 <a href="{{ url_portal_profile({portal_id: portal.id}) }}">"{{ portal.name }}" </a>
             </span>
-            <div ng-init="sendData()">
-                <div ng-if="!load_contr">{{_('Loading...')}}</div>
-                <div ng-if="load_contr">
-                    <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
-                </div>
-            </div>
+
         </div>
     </h3>
+    </div>
+    <div ng-init="sendData()" ng-controller="portal_list">
+                <div ng-if="!load_contr">{{_('Loading...')}}</div>
+                <div ng-if="load_contr">
+                    <div class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1" ></div>
+                </div>
     </div>
 {% endraw %}
 {% endblock portal_content %}
