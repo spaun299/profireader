@@ -172,11 +172,20 @@ class File(Base, PRBase):
     @staticmethod
     def list(parent_id=None, file_manager_called_for='', name=None):
         show = lambda file: True
-
+        actions = {}
         default_actions = {}
         files = [file for file in db(File, parent_id = parent_id) if show(file)]
-        # default_actions['choose'] = lambda file: None
+        default_actions['choose'] = lambda file: None
         default_actions['download'] = lambda file: None if ((file.mime == 'directory') or (file.mime == 'root')) else True
+        if file_manager_called_for == 'file_browse_image':
+            default_actions['choose'] = lambda file: False if None == re.search('^image/.*', file.mime) else True
+            actions['choose'] = lambda file: False if None == re.search('^image/.*', file.mime) else True
+        elif file_manager_called_for == 'file_browse_media':
+            default_actions['choose'] = lambda file: False if None == re.search('^video/.*', file.mime) else True
+            actions['choose'] = lambda file: False if None == re.search('^video/.*', file.mime) else True
+        elif file_manager_called_for == 'file_browse_file':
+            default_actions['choose'] = lambda file: True
+            actions['choose'] = lambda file: True
         actions = {act: default_actions[act] for act in default_actions}
 
         actions['remove'] = lambda file: None if file.mime == "root" else True
@@ -184,13 +193,6 @@ class File(Base, PRBase):
         actions['paste'] = lambda file: None if file == None else True
         actions['cut'] = lambda file: None if file.mime == "root" else True
         actions['properties'] = lambda file: None if file.mime == "root" else True
-
-        if file_manager_called_for == 'file_browse_image':
-            default_actions['choose'] = lambda file: False if None == re.search('^image/.*', file.mime) else True
-            actions['choose'] = lambda file: False if None == re.search('^image/.*', file.mime) else True
-        elif file_manager_called_for == 'file_browse_media':
-            default_actions['choose'] = lambda file: False if None == re.search('^video/.*', file.mime) else True
-            actions['choose'] = lambda file: False if None == re.search('^video/.*', file.mime) else True
 
         search_files = File.search(name, parent_id, actions, file_manager_called_for)
         parent = File.get(parent_id)

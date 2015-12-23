@@ -15,7 +15,7 @@ from flask.ext.login import AnonymousUserMixin
 from flask import globals
 from flask.ext.babel import Babel
 import jinja2
-from jinja2 import Markup
+from jinja2 import Markup, escape
 
 from profapp.controllers.blueprints_register import register as register_blueprints
 from profapp.controllers.blueprints_register import register_front as register_blueprints_front
@@ -28,6 +28,7 @@ from .models.config import Config
 from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
 from .models.tools import HtmlHelper
+from .models.pr_base import MLStripper
 
 
 def req(name, allowed=None, default=None, exception=True):
@@ -234,9 +235,19 @@ def load_portal_id(app):
     from profapp.models.portal import Portal
 
     def func():
-        g.portal_id = g.db.query(Portal.id).filter_by(host=request.host).one()[0]
-        # g.portal_id = db_session_func(app.config['SQLALCHEMY_DATABASE_URI']).\
-        #             query(Portal.id).filter_by(host=app.config['SERVER_NAME']).one()[0]
+
+        portal = g.db.query(Portal).filter_by(host=request.host).first()
+
+        g.portal_id = portal.id if portal else None
+
+        if portal:
+            g.lang = portal.lang
+        else:
+            g.lang = g.user_dict['lang']
+
+
+            # g.portal_id = db_session_func(app.config['SQLALCHEMY_DATABASE_URI']).\
+            #             query(Portal.id).filter_by(host=app.config['SERVER_NAME']).one()[0]
 
     return func
 
@@ -265,31 +276,24 @@ def prImage(id, if_no_image=None):
     file = fileUrl(id, False, if_no_image if if_no_image else "/static/images/no_image.png")
     return Markup(
         ' src="/static/images/0.gif" style="background-position: center; background-size: contain; background-repeat: no-repeat; background-image: url(\'%s\')" ' % (
-        file,))
+            file,))
 
 
 def translates(template):
-    if g.user:
-        user_language = g.user.lang
-    else:
-        user_language = 'uk'
     phrases = g.db.query(TranslateTemplate).filter_by(template=template).all()
     ret = {}
-    if user_language == 'uk':
-        for ph in phrases:
-            tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
-            ret[ph.name] = {'lang': ph.uk, 'time': tim}
-    else:
-        for ph in phrases:
-            tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
-            ret[ph.name] = {'lang': ph.en, 'time': tim}
+    for ph in phrases:
+        tim = ph.ac_tm.timestamp() if ph.ac_tm else ''
+        html_or_text = getattr(ph, g.lang)
+        html_or_text = MLStripper().strip_tags(html_or_text) if ph.allow_html == '' else html_or_text
+        ret[ph.name] = {'lang': html_or_text, 'time': tim, 'allow_html': ph.allow_html}
+
     return json.dumps(ret)
 
 
-@jinja2.contextfunction
-def translate_phrase(context, phrase, dictionary=None):
+def translate_phrase_or_html(context, phrase, dictionary=None, allow_html=''):
     template = context.name
-    translated = TranslateTemplate.getTranslate(template, phrase)
+    translated = TranslateTemplate.getTranslate(template, phrase, None, allow_html)
     r = re.compile("%\\(([^)]*)\\)s")
 
     def getFromContext(context, indexes, default):
@@ -306,6 +310,25 @@ def translate_phrase(context, phrase, dictionary=None):
         return str(getFromContext(context if dictionary is None else dictionary, indexes, match.group(1)))
 
     return r.sub(replaceinphrase, translated)
+
+
+@jinja2.contextfunction
+def translate_phrase(context, phrase, dictionary=None):
+    return MLStripper().strip_tags(translate_phrase_or_html(context, phrase, dictionary, ''))
+
+
+@jinja2.contextfunction
+def translate_html(context, phrase, dictionary=None):
+    return Markup(translate_phrase_or_html(context, phrase, dictionary, '*'))
+
+
+@jinja2.contextfunction
+def nl2br(value):
+    _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
+    result = u'\n\n'.join(u'<p>%s</p>' % p.replace('\n', Markup('<br>\n'))
+                          for p in _paragraph_re.split(escape(value)))
+    result = Markup(result)
+    return result
 
 
 def config_variables():
@@ -443,9 +466,9 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
 
     app.before_request(load_user)
     app.before_request(setup_authomatic(app))
+    app.before_request(load_portal_id(app))
 
     if apptype == 'front':
-        app.before_request(load_portal_id(app))
         register_blueprints_front(app)
         my_loader = jinja2.ChoiceLoader([
             app.jinja_loader,
@@ -482,7 +505,10 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     app.jinja_env.globals.update(url_page=url_page)
     app.jinja_env.globals.update(config_variables=config_variables)
     app.jinja_env.globals.update(_=translate_phrase)
+    app.jinja_env.globals.update(__=translate_html)
     app.jinja_env.globals.update(tinymce_format_groups=HtmlHelper.tinymce_format_groups)
+
+    app.jinja_env.filters['nl2br'] = nl2br
 
 
     # see: http://flask.pocoo.org/docs/0.10/patterns/sqlalchemy/

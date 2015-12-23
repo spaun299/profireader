@@ -282,6 +282,9 @@
                 if($scope.file_manager_default_action === actionname && (type !== 'parent' && type !== 'dir')){
                     style += 'font-weight: bold;color:black'
                 }
+                if(actionname === 'choose' && type !== 'img'){
+                    style = 'cursor: default;pointer-events: none;color: gainsboro;'
+                }
                 return style
             };
 

@@ -96,12 +96,12 @@ class WrongNumberOfParameters(Error):
 class WrongMandatoryParametersPassedToFunction(Error):
     pass
 
-
-@csrf.error_handler
-def csrf_error(reason):
-    return render_template('errors/404.html', reason=reason), 400
-
-
-@exception_bp.errorhandler(404)
-def page_not_found(reason):
-    return render_template('errors/404.html', reason=reason), 404
+#
+# @csrf.error_handler
+# def csrf_error(reason):
+#     return render_template('errors/404.html', reason=reason), 400
+#
+#
+# @exception_bp.errorhandler(404)
+# def page_not_found(reason):
+#     return render_template('errors/404.html', reason=reason), 404

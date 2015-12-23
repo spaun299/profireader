@@ -67,7 +67,7 @@ def materials(company_id):
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template(
         'company/materials.html',
-        company=company.get_client_side_dict(fields='name'),
+        company=company,
         company_id=company_id,
         angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js',
         company_logo=company_logo
@@ -130,7 +130,7 @@ def material_details(company_id, article_id):
                            article_id=article_id,
                            company_logo=company_logo,
                            company_name=company.name,
-                           company=company.get_client_side_dict())
+                           company=company)
 
 
 # TODO: VK by OZ: remove company_* kwargs
@@ -233,7 +233,7 @@ def profile(company_id):
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template('company/company_profile.html',
-                           company=company.get_client_side_dict(more_fields='own_portal'),
+                           company=company,
                            user_rights=user_rights,
                            company_logo=company_logo,
                            company_id=company_id,
@@ -300,7 +300,7 @@ def update(company_id=None):
     company = db(Company, id=company_id).first()
     return render_template('company/company_edit.html', company_id=company_id,
                            company_name=company.name if company else '',
-                           company=company.get_client_side_dict() if company else {})
+                           company=company if company else {})
 
 
 # TODO: VK by OZ: remove company_* kwargs
@@ -472,7 +472,8 @@ def unsuspend(user_id, company_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def suspended_employees(company_id):
-    return render_template('company/company_fired.html', company_id=company_id)
+    company = db(Company, id=company_id).one()
+    return render_template('company/company_fired.html', company_id=company_id, company=company)
 
 
 @company_bp.route('/suspended_employees/<string:company_id>', methods=['POST'])
@@ -501,7 +502,7 @@ def readers(company_id, page=1):
     company_readers_list_dict = list(map(lambda x: dict(zip(reader_fields, x)), company_readers))
 
     return render_template('company/company_readers.html',
-                           company=company_dict,
+                           company=company,
                            company_id=company_id,
                            company_logo=company_logo,
                            companyReaders=company_readers_list_dict,

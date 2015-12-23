@@ -12,12 +12,26 @@
     {% block company_base %}
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
+    <style>
+    #change_position_href {
+        color: #003f81;
+    }
+    #change_position_href:hover {
+    color: #000080;
+   }
+    </style>
 <script>
     module.controller('CompanyEmployees', ['$scope', '$modal','$ok', function ($scope, $modal, $ok) {
         angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_employees')
         $scope.user = {{ g.user_dict|tojson|safe }};
         $scope.$$translate = {{ translates('CompanyEmployees')|safe }};
     }]);
+    change_pos = function(){
+        $('#change_position_input').show();
+        $('#change_position_href').hide();
+
+    }
+
 </script>
 <div ng-controller="CompanyEmployees">
     <span ng-cloak ng-show="'{{ g.user_dict['id'] }}'">
@@ -40,7 +54,8 @@
                     {{ '{{' }}_('Phone number'){{ '}}' }} : {{ company_user_rights[user_id]['user'].phone_number }}<br/>
                     {{ '{{' }}_('Email'){{ '}}' }} : {{ company_user_rights[user_id]['user'].show_email }}<br/>
                     {{ '{{' }}_('Subscribed'){{ '}}' }} : {{ company_user_rights[user_id]['date'] }}<br/>
-                    {{ '{{' }}_('Position'){{ '}}' }} : <input type="text" name="position" value={{ company_user_rights[user_id]['position'] }}><br/>
+                    {{ '{{' }}_('Position'){{ '}}' }} : {{ company_user_rights[user_id]['position'] }}<a href id="change_position_href" onclick="change_pos()"> change</a>
+                    <input id='change_position_input' hidden name="position"/>
                 </dt>
                 {% for company in company_user_rights[user_id]['companies'] %}
                     <dt> {{ '{{' }}_('ALL COMPANIES'){{ '}}' }} :

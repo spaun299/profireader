@@ -181,7 +181,8 @@ class Company(Base, PRBase):
 
     @staticmethod
     def getListGridDataPortalPartners(partners):
-        return [{'portal' : partner.portal.name,
+        return [{'portal' : {'name':partner.portal.name,
+                             'id': partner.portal.id},
                             'link' : partner.portal.host,
                             'company' : Company.get(partner.portal.company_owner_id).name
                         } for partner in partners]
@@ -190,14 +191,13 @@ class Company(Base, PRBase):
     def subquery_company_partners(company_id, search_text, **kwargs):
         sub_query = db(MemberCompanyPortal, company_id=company_id)
         if search_text:
-            if 'portal' in search_text:
-                sub_query = sub_query.join(MemberCompanyPortal.portal)
-                sub_query = sub_query.filter(Portal.name.ilike("%" + search_text['portal'] + "%"))
+            sub_query = sub_query.join(MemberCompanyPortal.portal)
+            if 'portal.name' in search_text:
+                sub_query = sub_query.filter(Portal.name.ilike("%" + search_text['portal.name'] + "%"))
             if 'company' in search_text:
-                sub_query = sub_query.join(Company, MemberCompanyPortal.company_id == Company.id).\
+                sub_query = sub_query.join(Company, Portal.company_owner_id == Company.id).\
                 filter(Company.name.ilike("%" + search_text['company'] + "%"))
             if 'link' in search_text:
-                sub_query = sub_query.join(MemberCompanyPortal.portal)
                 sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
         return sub_query
 

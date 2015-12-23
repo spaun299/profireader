@@ -6,6 +6,9 @@ import datetime
 import re
 from flask import g, request, current_app
 from sqlalchemy.sql import expression
+from .portal import Portal
+from sqlalchemy.orm import relationship
+
 
 class TranslateTemplate(Base, PRBase):
     __tablename__ = 'translate'
@@ -17,22 +20,62 @@ class TranslateTemplate(Base, PRBase):
     ac_tm = Column(TABLE_TYPES['timestamp'])
     md_tm = Column(TABLE_TYPES['timestamp'])
     template = Column(TABLE_TYPES['short_name'], default='')
+    allow_html = Column(TABLE_TYPES['text'], default='')
     name = Column(TABLE_TYPES['name'], default='')
+    portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
     url = Column(TABLE_TYPES['keywords'], default='')
     uk = Column(TABLE_TYPES['name'], default='')
     en = Column(TABLE_TYPES['name'], default='')
 
-    def __init__(self, id=None, template=None, url='', name=None, uk=None, en=None):
+    portal = relationship(Portal, uselist=False)
+
+    exemplary_portal_id = '560b9fee-3d87-4001-87d9-ad0d4582dd02'
+
+    def __init__(self, id=None, template=None, portal_id=portal_id, url='', name=None, uk=None, en=None, allow_html=''):
         self.id = id
         self.template = template
         self.name = name
+        self.allow_html = allow_html
         self.url = url
         self.uk = uk
         self.en = en
+        self.portal_id = portal_id
 
     @staticmethod
-    def getTranslate(template, phrase, url=None):
+    def try_to_get_phrase(template, phrase, url, portal_id=None, allow_html=''):
+
+        exist = db(TranslateTemplate, template=template, name=phrase, portal_id=portal_id).first()
+
+        if portal_id and not exist:
+            exist_for_another = db(TranslateTemplate, template=template, name=phrase,
+                                   portal_id=TranslateTemplate.exemplary_portal_id).first()
+            if not exist_for_another:
+                exist_for_another = db(TranslateTemplate, template=template, name=phrase).filter(
+                    TranslateTemplate.portal != None).order_by(expression.desc(TranslateTemplate.cr_tm)).first()
+            if exist_for_another:
+                exist = TranslateTemplate(template=template, name=phrase, portal_id=portal_id,
+                                          url=url,
+                                          **{l: getattr(exist_for_another, l) for l in
+                                             TranslateTemplate.languages}).save()
+                return exist
+
+        if not exist:
+            exist = TranslateTemplate(template=template, name=phrase, portal_id=portal_id, allow_html=allow_html,
+                                      url=url, **{l: phrase for l in TranslateTemplate.languages}).save()
+        return exist
+
+    @staticmethod
+    def try_to_guess_lang(translation):
+        # lang = TranslateTemplate.languages[0]
+        # if g.user_dict['lang'] in TranslateTemplate.languages:
+        #     lang = g.user_dict['lang']
+        return getattr(translation, g.lang)
+
+    @staticmethod
+    def try_to_guess_url(url):
+
         url_adapter = g.get_url_adapter()
+
         if url is None:
             url_adapter = g.get_url_adapter()
             rules = url_adapter.map._rules_by_endpoint.get(request.endpoint, ())
@@ -47,39 +90,49 @@ class TranslateTemplate(Base, PRBase):
             except Exception:
                 url = ''
 
-        if phrase[:2] == '__':
-            phrase = phrase[2:]
-            template = '__GLOBAL'
+        return url
 
-        exist = db(TranslateTemplate, template=template, name=phrase).first()
+    @staticmethod
+    def getTranslate(template, phrase, url=None, allow_html=''):
 
-        lang = TranslateTemplate.languages[0]
-        if g.user_dict['lang'] in TranslateTemplate.languages:
-            lang = g.user_dict['lang']
+        portal_id = g.portal_id
 
-        if exist:
+        url = TranslateTemplate.try_to_guess_url(url)
+
+        (phrase, template) = (phrase[2:], '__GLOBAL') if phrase[:2] == '__' else (phrase, template)
+
+        translation = TranslateTemplate.try_to_get_phrase(template, phrase, url, portal_id=portal_id,
+                                                          allow_html=allow_html)
+
+        if translation:
+            if translation.allow_html != allow_html:
+                translation.updates({'allow_html': allow_html})
             if current_app.config['DEBUG']:
 
                 # TODO: OZ by OZ change ac without changing md (md changed by trigger)
                 # ac updated without changing md
 
                 i = datetime.datetime.now()
-                if exist.ac_tm:
-                    if i.timestamp()-exist.ac_tm.timestamp() > 86400:
-                        exist.updates({'ac_tm': i})
+                if translation.ac_tm:
+                    if i.timestamp() - translation.ac_tm.timestamp() > 86400:
+                        translation.updates({'ac_tm': i})
                 else:
-                    exist.updates({'ac_tm': i})
-
+                    translation.updates({'ac_tm': i})
+            return TranslateTemplate.try_to_guess_lang(translation)
         else:
-            exist = TranslateTemplate(template=template, name=phrase,
-                                      url=url, **{l: phrase for l in TranslateTemplate.languages}).save()
-        return getattr(exist, lang)
+            return phrase
 
     @staticmethod
     def update_last_accessed(template, phrase):
         i = datetime.datetime.now()
         obj = db(TranslateTemplate, template=template, name=phrase).first()
         obj.updates({'ac_tm': i})
+        return 'True'
+
+    @staticmethod
+    def change_allowed_html(template, phrase, allow_html):
+        obj = db(TranslateTemplate, template=template, name=phrase).first()
+        obj.updates({'allow_html': allow_html})
         return 'True'
 
     @staticmethod
@@ -116,16 +169,10 @@ class TranslateTemplate(Base, PRBase):
                 sub_query = sub_query.order_by(TranslateTemplate.ac_tm.asc()) if kwargs['sort']['ac_tm'] == 'asc' else sub_query.order_by(TranslateTemplate.ac_tm.desc())
         else:
             sub_query = sub_query.order_by(TranslateTemplate.template)
-        # if kwargs['sort_creation_time']:
-        #     sub_query = sub_query.order_by(TranslateTemplate.cr_tm.asc()) if kwargs['sort_creation_time'] == 'asc' else sub_query.order_by(TranslateTemplate.cr_tm.desc())
-        # elif kwargs['sort_last_accessed_time']:
-        #     sub_query = sub_query.order_by(TranslateTemplate.ac_tm.asc()) if kwargs['sort_last_accessed_time'] == 'asc' else sub_query.order_by(TranslateTemplate.ac_tm.desc())
-        # else:
-        #     sub_query = sub_query.order_by(TranslateTemplate.template)
 
         return sub_query
 
-    def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url',
+    def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url|allow_html, portal.id|name',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
@@ -133,15 +180,7 @@ class TranslateTemplate(Base, PRBase):
     def getListGridDataTranslation(translations):
         grid_data = []
         for translate in translations:
-            grid_data.append({
-                            'cr_tm' : translate.cr_tm,
-                            'ac_tm' : translate.ac_tm,
-                            'template' : translate.template,
-                            'url' : translate.url,
-                            'name': translate.name,
-                            'uk' : translate.uk,
-                            'en' : translate.en
-                        })
+            grid_data.append(translate.get_client_side_dict())
         return grid_data
 
     @staticmethod
