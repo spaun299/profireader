@@ -20,6 +20,7 @@ class TranslateTemplate(Base, PRBase):
     ac_tm = Column(TABLE_TYPES['timestamp'])
     md_tm = Column(TABLE_TYPES['timestamp'])
     template = Column(TABLE_TYPES['short_name'], default='')
+    allow_html = Column(TABLE_TYPES['text'], default='')
     name = Column(TABLE_TYPES['name'], default='')
     portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
     url = Column(TABLE_TYPES['keywords'], default='')
@@ -30,17 +31,18 @@ class TranslateTemplate(Base, PRBase):
 
     exemplary_portal_id = '560b9fee-3d87-4001-87d9-ad0d4582dd02'
 
-    def __init__(self, id=None, template=None, portal_id=portal_id, url='', name=None, uk=None, en=None):
+    def __init__(self, id=None, template=None, portal_id=portal_id, url='', name=None, uk=None, en=None, allow_html=''):
         self.id = id
         self.template = template
         self.name = name
+        self.allow_html = allow_html
         self.url = url
         self.uk = uk
         self.en = en
         self.portal_id = portal_id
 
     @staticmethod
-    def try_to_get_phrase(template, phrase, url, portal_id=None):
+    def try_to_get_phrase(template, phrase, url, portal_id=None, allow_html=''):
 
         exist = db(TranslateTemplate, template=template, name=phrase, portal_id=portal_id).first()
 
@@ -53,11 +55,12 @@ class TranslateTemplate(Base, PRBase):
             if exist_for_another:
                 exist = TranslateTemplate(template=template, name=phrase, portal_id=portal_id,
                                           url=url,
-                                          **{l: getattr(exist_for_another,l) for l in TranslateTemplate.languages}).save()
+                                          **{l: getattr(exist_for_another, l) for l in
+                                             TranslateTemplate.languages}).save()
                 return exist
 
         if not exist:
-            exist = TranslateTemplate(template=template, name=phrase, portal_id=portal_id,
+            exist = TranslateTemplate(template=template, name=phrase, portal_id=portal_id, allow_html=allow_html,
                                       url=url, **{l: phrase for l in TranslateTemplate.languages}).save()
         return exist
 
@@ -90,7 +93,7 @@ class TranslateTemplate(Base, PRBase):
         return url
 
     @staticmethod
-    def getTranslate(template, phrase, url=None):
+    def getTranslate(template, phrase, url=None, allow_html=''):
 
         portal_id = g.portal_id
 
@@ -98,9 +101,12 @@ class TranslateTemplate(Base, PRBase):
 
         (phrase, template) = (phrase[2:], '__GLOBAL') if phrase[:2] == '__' else (phrase, template)
 
-        translation = TranslateTemplate.try_to_get_phrase(template, phrase, url, portal_id=portal_id)
+        translation = TranslateTemplate.try_to_get_phrase(template, phrase, url, portal_id=portal_id,
+                                                          allow_html=allow_html)
 
         if translation:
+            if translation.allow_html != allow_html:
+                translation.updates({'allow_html': allow_html})
             if current_app.config['DEBUG']:
 
                 # TODO: OZ by OZ change ac without changing md (md changed by trigger)
@@ -121,6 +127,12 @@ class TranslateTemplate(Base, PRBase):
         i = datetime.datetime.now()
         obj = db(TranslateTemplate, template=template, name=phrase).first()
         obj.updates({'ac_tm': i})
+        return 'True'
+
+    @staticmethod
+    def change_allowed_html(template, phrase, allow_html):
+        obj = db(TranslateTemplate, template=template, name=phrase).first()
+        obj.updates({'allow_html': allow_html})
         return 'True'
 
     @staticmethod
@@ -165,6 +177,6 @@ class TranslateTemplate(Base, PRBase):
 
         return sub_query
 
-    def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url',
+    def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url|allow_html, portal.id|name',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
