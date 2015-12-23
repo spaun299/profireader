@@ -49,6 +49,23 @@ function getObjectsDifference(a, b, setval, notstrict) {
     return ret;
 }
 
+function quoteattr(s, preserveCR) {
+    preserveCR = preserveCR ? '&#13;' : '\n';
+    return ('' + s)/* Forces the conversion to string. */
+        .replace(/&/g, '&amp;')/* This MUST be the 1st replacement. */
+        .replace(/'/g, '&apos;')/* The 4 other predefined entities, required. */
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        /*
+         You may add other replacements here for HTML only
+         (but it's not necessary).
+         Or for XML, only if the named entities are defined in its DTD.
+         */
+        .replace(/\r\n/g, preserveCR)/* Must be before the next replacement. */
+        .replace(/[\r\n]/g, preserveCR);
+}
+
 
 angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip'])
     .factory('$ok', ['$http', function ($http) {
@@ -84,6 +101,18 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     return error('wrong response', -1);
                 }
             );
+        }
+    }])
+    .directive('prHelpTooltip', ['$compile', '$templateCache', '$controller', function ($compile, $templateCache, $controller) {
+        return {
+            restrict: 'E',
+            link: function (scope, element, attrs) {
+                element.html('<span uib-popover-html="\'' + quoteattr(scope.__('help tooltip ' + element.html())) + '\'" ' +
+                    'popover-placement="' + (attrs['placement'] ? attrs['placement'] : 'bottom') + '" ' +
+                    'popover-trigger="' + (attrs['trigger'] ? attrs['trigger'] : 'mouseenter') + '" ' +
+                    'class="' + (attrs['classes'] ? attrs['classes'] : 'glyphicon glyphicon-question-sign') + '"></span>');
+                $compile(element.contents())(scope);
+            }
         }
     }])
     .directive('prCropper', ['$compile', '$templateCache', '$controller', function ($compile, $templateCache, $controller) {

@@ -323,6 +323,15 @@ def translate_html(context, phrase, dictionary=None):
 
 
 @jinja2.contextfunction
+def pr_help_tooltip(context, phrase, placement='bottom', trigger='mouseenter',
+                    classes='glyphicon glyphicon-question-sign'):
+    return Markup(
+        '<span popover-placement="' + placement + '" popover-trigger="' + trigger + '" class="' + classes +
+        '" uib-popover-html="\'' + HtmlHelper.quoteattr(
+            translate_phrase_or_html(context, 'help tooltip ' + phrase, None, '*')) + '\'"></span>')
+
+
+@jinja2.contextfunction
 def nl2br(value):
     _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
     result = u'\n\n'.join(u'<p>%s</p>' % p.replace('\n', Markup('<br>\n'))
@@ -507,6 +516,7 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     app.jinja_env.globals.update(_=translate_phrase)
     app.jinja_env.globals.update(__=translate_html)
     app.jinja_env.globals.update(tinymce_format_groups=HtmlHelper.tinymce_format_groups)
+    app.jinja_env.globals.update(pr_help_tooltip=pr_help_tooltip)
 
     app.jinja_env.filters['nl2br'] = nl2br
 
