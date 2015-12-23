@@ -2,7 +2,7 @@ from ..constants.TABLE_TYPES import TABLE_TYPES
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.orm import relationship, remote
 from ..controllers import errors
-from flask import g
+from flask import g, jsonify
 from utils.db_utils import db
 # from .company import Company
 from .pr_base import PRBase, Base
@@ -13,6 +13,8 @@ from ..constants.SEARCH import RELEVANCE
 import itertools
 from sqlalchemy import orm
 import itertools
+from config import Config
+import simplejson
 from .files import File
 from profapp.controllers.errors import BadDataProvided
 
@@ -45,6 +47,7 @@ class Portal(Base, PRBase):
                              # backref='portal',
                              order_by='desc(PortalDivision.position)',
                              primaryjoin='Portal.id==PortalDivision.portal_id')
+    config = relationship('PortalConfig', back_populates='portal', uselist=False)
 
     divisions_lazy_dynamic = relationship('PortalDivision',
                                           order_by='desc(PortalDivision.position)',
@@ -200,6 +203,20 @@ class Portal(Base, PRBase):
                     parent_folder_id=self.own_company.system_folder_file_id,
                     article_portal_division_id=None).save().id
         return self
+
+    def get_value_from_config(self, key=None, division_name=None):
+        """
+        :param key: string, variable which you want to return from config
+        optional:
+            :param division_name: string, if provided return value from config for division this.
+        :return: variable which you want to return from config
+        """
+        values = simplejson.loads(getattr(self.config, key))
+        if division_name:
+            ret = values.get(division_name)
+        else:
+            ret = values
+        return ret
 
     def validate(self, is_new):
         ret = super().validate(is_new)
@@ -449,6 +466,45 @@ class PortalDivisionType(Base, PRBase):
         """Return all divisions on profireader"""
         return db(PortalDivisionType).all()
 
+class PortalConfig(Base, PRBase):
+    __tablename__ = 'portal_config'
+    id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'), primary_key=True)
+    division_page_size = Column(TABLE_TYPES['credentials'])
+    portal = relationship(Portal, back_populates='config', uselist=False)
+
+    def __init__(self, page_size_for_divisions=None, portal=None):
+        """
+        optional:
+            :parameter - page_size_for_divisions = dictionary with key = division name
+                                                             and value = page size per this division
+                       , default = all divisions have page size from global config. It will converts
+                         to json.
+        """
+        super(PortalConfig, self).__init__()
+        self.portal = portal
+        self.page_size_for_divisions = page_size_for_divisions
+        self.set_division_page_size()
+
+    PAGE_SIZE_PER_DIVISION = 'division_page_size'
+
+    def set_division_page_size(self, page_size_for_divisions=None):
+        page_size_for_divisions = page_size_for_divisions or self.page_size_for_divisions
+        config = db(PortalConfig, id=self.id).first()
+        dps = dict()
+        if config and page_size_for_divisions:
+            dps = simplejson.loads(getattr(config, PortalConfig.PAGE_SIZE_PER_DIVISION))
+            dps.update(page_size_for_divisions)
+        elif page_size_for_divisions:
+            for division in self.portal.divisions:
+                if page_size_for_divisions.get(division.name):
+                    dps[division.name] = page_size_for_divisions.get(division.name)
+                else:
+                    dps[division.name] = Config.ITEMS_PER_PAGE
+        else:
+            for division in self.portal.divisions:
+                dps[division.name] = Config.ITEMS_PER_PAGE
+        dps = simplejson.dumps(dps)
+        self.division_page_size = dps
 
 class UserPortalReader(Base, PRBase):
     __tablename__ = 'user_portal_reader'
