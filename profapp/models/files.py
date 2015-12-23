@@ -255,9 +255,11 @@ class File(Base, PRBase):
         thumbnail = self.get_thumbnail()
         return thumbnail.url()
 
-    def get_thumbnail(self, size='133x100'):
-        thumbnail = db(File,
-                       thumbnail_id=self.id, name=self.name+'_thumbnail_'+size).first()
+    def get_thumbnail(self, size='133x100', any=False):
+        if any:
+            thumbnail = db(File, thumbnail_id=self.id).first()
+        else:
+            thumbnail = db(File, thumbnail_id=self.id, name=self.name+'_thumbnail_'+size).first()
         return thumbnail
 
     def type(self):
@@ -413,8 +415,8 @@ class File(Base, PRBase):
         elif file.mime == 'video/*':
             YoutubeVideo.delfile(YoutubeVideo.get(file.id))
         else:
-            if file.thumbnail_id:
-                FileContent.delfile(FileContent.get(file.thumbnail_id))
+            # file = file.get_thumbnail(any=True) or file
+            FileContent.delfile(FileContent.get(file_id))
 
         resp = (False if File.get(file_id) else "Success")
         return resp
