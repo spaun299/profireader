@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship, backref
 from flask import g
 from .pr_base import PRBase, Base
 from ..controllers.errors import VideoAlreadyExistInPlaylist
+from PIL import Image
 import json
 from config import Config
 from urllib import request as req
@@ -13,6 +14,7 @@ from flask import session
 from urllib.error import HTTPError as response_code
 from urllib import parse
 from sqlalchemy import desc
+from io import BytesIO
 from .google import GoogleAuthorize,GoogleToken
 import sys
 
@@ -43,6 +45,7 @@ class File(Base, PRBase):
     ac_tm = Column(TABLE_TYPES['timestamp'], nullable=False)
 
     UniqueConstraint('name', 'parent_id', name='unique_name_in_folder')
+    thumbnail_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'))
 
     owner = relationship('User',
                          backref=backref('files', lazy='dynamic'),
@@ -52,7 +55,8 @@ class File(Base, PRBase):
     def __init__(self, parent_id=None, name=None, mime='text/plain', size=0,
                  user_id=None, cr_tm=None, md_tm=None, ac_tm=None,
                  root_folder_id=None, youtube_id=None,
-                 company_id=None, author_user_id=None, image_croped=None):
+                 company_id=None, author_user_id=None, image_croped=None,
+                 thumbnail=None):
         super(File, self).__init__()
         self.parent_id = parent_id
         self.name = name
@@ -61,6 +65,7 @@ class File(Base, PRBase):
         self.user_id = user_id
         self.cr_tm = cr_tm
         self.md_tm = md_tm
+        self.thumbnail = thumbnail
         self.root_folder_id = root_folder_id
         self.ac_tm = ac_tm
         self.author_user_id = author_user_id
@@ -156,7 +161,7 @@ class File(Base, PRBase):
                 sort_dirs.append(file) if file.mime == 'directory' else sort_files.append(file)
         sort_d = File.sort_search(name, sort_dirs)
         sort_f = File.sort_search(name, sort_files)
-        s =  sort_d+sort_f
+        s = sort_d+sort_f
         ret = list({'size': file.size, 'name': file.name, 'id': file.id, 'parent_id': file.parent_id,
                                 'type': File.type(file),
                                 'date': str(file.md_tm).split('.')[0],
@@ -174,7 +179,7 @@ class File(Base, PRBase):
         show = lambda file: True
 
         default_actions = {}
-        files = [file for file in db(File, parent_id = parent_id) if show(file)]
+        files = [file for file in db(File, parent_id=parent_id) if show(file)]
         # default_actions['choose'] = lambda file: None
         default_actions['download'] = lambda file: None if ((file.mime == 'directory') or (file.mime == 'root')) else True
         actions = {act: default_actions[act] for act in default_actions}
@@ -201,19 +206,24 @@ class File(Base, PRBase):
             ret = search_files
         else:
             # 'cropable': True if File.is_cropable(file) else False,
-            ret = list({'size': file.size, 'name': file.name, 'id': file.id, 'parent_id': file.parent_id,
-                                    'type': File.type(file),
-                                    'date': str(file.md_tm).split('.')[0],
-                        'url': file.url(),
+            ret = list({'size': file.size, 'name': file.name, 'id': file.id,
+                        'parent_id': file.parent_id, 'type': File.type(file),
+                        'date': str(file.md_tm).split('.')[0],
+                        'url': file.url(field='thumbnail_id'),
                         'path_to': File.path(file),
                         'author_name': file.copyright_author_name,
                         'description': file.description,
                         'actions': {action: actions[action](file) for action in actions},
                         }
-                                            for file in db(File, parent_id = parent_id) if show(file))# we need all records from the table "file"
-            ret.append({ 'id': parent.id, 'parent_id': parent.parent_id,
-                                    'type': 'parent',
-                                    'date': str(parent.md_tm).split('.')[0],
+                       for file in [
+                           file.get_thumbnail(size=(int(
+                               Config.IMAGE_EDITOR_RATIO*100), 100))
+                           for file in db(File, parent_id=parent_id)] if show(file) and
+                       file.mime != 'image/thumbnail')
+            # we need all records from the table "file"
+            ret.append({'id': parent.id, 'parent_id': parent.parent_id,
+                        'type': 'parent',
+                        'date': str(parent.md_tm).split('.')[0],
                         'url': parent.url(),
                         'author_name': parent.copyright_author_name,
                         'description': parent.description,
@@ -221,6 +231,24 @@ class File(Base, PRBase):
                         })
 
         return ret
+
+    def get_thumbnail(self, size):
+        if self.mime.split('/')[0] == 'image' and self.mime != 'image/thumbnail':
+            if not self.thumbnail_id:
+                image_pil = Image.open(BytesIO(self.file_content.content))
+                resized = image_pil.resize(size)
+                bytes_file = BytesIO()
+                resized.save(bytes_file, self.mime.split('/')[-1].upper())
+                thumbnail = File(md_tm=self.md_tm, size=sys.getsizeof(bytes_file.getvalue()),
+                                 name=self.name + '_thumbnail', parent_id=self.parent_id,
+                                 root_folder_id=self.root_folder_id,
+                                 mime=self.mime.split('/')[0]+'/thumbnail')
+                FileContent(content=bytes_file.getvalue(), file=thumbnail)
+                g.db.add(thumbnail)
+                g.db.flush()
+                self.thumbnail_id = thumbnail.id
+
+        return self
 
     def type(self):
         if self.mime == 'root' or self.mime == 'directory':
@@ -243,9 +271,10 @@ class File(Base, PRBase):
         path += self.name
         return path
 
-    def url(self):
-        server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', self.id)
-        return 'http://file' + server + '.profireader.com/' + self.id + '/'
+    def url(self, field=None):
+        field = field or 'id'
+        server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', getattr(self, field))
+        return 'http://file' + server + '.profireader.com/' + getattr(self, field) + '/'
 
     @staticmethod
     def get_index(file, lists):
@@ -375,7 +404,9 @@ class File(Base, PRBase):
         elif file.mime == 'video/*':
             YoutubeVideo.delfile(YoutubeVideo.get(file.id))
         else:
-            FileContent.delfile(FileContent.get(file_id))
+            if file.thumbnail_id:
+                FileContent.delfile(FileContent.get(file.thumbnail_id))
+
         resp = (False if File.get(file_id) else "Success")
         return resp
 
