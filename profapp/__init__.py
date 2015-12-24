@@ -269,7 +269,7 @@ def fileUrl(id, down=False, if_no_file=None):
         return if_no_file if if_no_file else ''
 
     server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', id)
-    return 'http://file' + server + '.profireader.com/' + id + '/' + ('?d' if down else '')
+    return '//file' + server + '.profireader.com/' + id + '/' + ('?d' if down else '')
 
 
 def prImage(id, if_no_image=None):
