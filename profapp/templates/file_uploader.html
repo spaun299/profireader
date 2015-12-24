@@ -28,9 +28,9 @@ app.controller('MyCtrl', ['$scope', 'Upload', '$timeout', function ($scope, Uplo
       console.log(file);
     file.upload = Upload.upload({
 
-      url: 'http://profireader.com/filemanager/send/{{ company_id }}/',
+      url: '//profireader.com/filemanager/send/{{ company_id }}/',
         data : $scope.name,
-      resumeSizeUrl: 'http://profireader.com/filemanager/resumeupload/',
+      resumeSizeUrl: '//profireader.com/filemanager/resumeupload/',
       resumeChunkSize: $scope.chunkSize,
       headers: {
         'optional-header': 'header-value'

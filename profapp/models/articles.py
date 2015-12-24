@@ -367,7 +367,7 @@ class ArticleCompany(Base, PRBase):
 
     def clone_for_portal(self, portal_division_id, tag_names=[]):
         filesintext = {found[1]: True for found in
-                       re.findall('(http://file001.profireader.com/([^/]*)/)', self.long)}
+                       re.findall('(https?://file001.profireader.com/([^/]*)/)', self.long)}
         if self.image_file_id:
             filesintext[self.image_file_id] = True
         company = db(PortalDivision, id=portal_division_id).one().portal.own_company
@@ -413,9 +413,8 @@ class ArticleCompany(Base, PRBase):
 
         long_text = self.long
         for old_image_id in filesintext:
-            long_text = long_text.replace('http://file001.profireader.com/%s/' % (old_image_id,),
-                                          'http://file001.profireader.com/%s/' % (
-                                              filesintext[old_image_id],))
+            long_text = long_text.replace('://file001.profireader.com/%s/' % (old_image_id,),
+                                          '://file001.profireader.com/%s/' % ( filesintext[old_image_id],))
 
         article_portal_division.long = long_text
 
