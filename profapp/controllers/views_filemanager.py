@@ -44,7 +44,6 @@ def filemanager():
         if user_company.status == 'active' and 'upload_files' in g.user.user_rights_in_company(user_company.company_id):
             library[user_company.employer.journalist_folder_file_id] = {
             'name': "%s files" % (user_company.employer.name,), 'icon': ''}
-
     file_manager_called_for = request.args[
         'file_manager_called_for'] if 'file_manager_called_for' in request.args else ''
     file_manager_on_action = jsonmodule.loads(
@@ -118,6 +117,10 @@ def cut(json):
     file = File.get(request.json['params']['id'])
     return File.move_to(file, request.json['params']['folder_id'])
 
+@filemanager_bp.route('/auto_remove/', methods=['POST'])
+@ok
+def auto_remove(json):
+    return File.auto_remove(json.get('name'), json.get('folder_id'))
 
 @filemanager_bp.route('/remove/<string:file_id>', methods=['POST'])
 def remove(file_id):

@@ -286,7 +286,7 @@ class User(Base, UserMixin, PRBase):
         logged_via = REGISTERED_WITH[self.logged_in_via()]
         if logged_via == 'facebook':
             avatar = json.load(req.urlopen(
-                url='http://graph.facebook.com/{facebook_id}/picture?width={size}&height={size}&redirect=0'.
+                url='//graph.facebook.com/{facebook_id}/picture?width={size}&height={size}&redirect=0'.
                     format(facebook_id=self.facebook_id, size=size)))
             if avatar['data'].get('is_silhouette'):
                 avatar = self.gravatar(size=size)
@@ -302,9 +302,9 @@ class User(Base, UserMixin, PRBase):
 
     def gravatar(self, size=100, default='identicon', rating='g'):
         if request.is_secure:
-            url = 'https://secure.gravatar.com/avatar'
+            url = '//secure.gravatar.com/avatar'
         else:
-            url = 'http://www.gravatar.com/avatar'
+            url = '//www.gravatar.com/avatar'
 
         email = getattr(self, 'profireader_email', 'guest@profireader.com')
         hash = hashlib.md5(email.encode('utf-8')).hexdigest()

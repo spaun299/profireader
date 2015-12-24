@@ -17,62 +17,24 @@
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
-            $scope.pos = {
-                'Campanies': '1',
-                'Status': '1'
-            };
+            $scope.noData = 'No publications';
 
-            $scope.update = function(){
-                $scope.paginationOptions.pageNumber = 1;
-                $scope.sendData($scope.gridOptions1.columnDefs[0].filter.search_text,$scope.paginationOptions);
-            };
-
-            $scope.refresh = function(){
-                $scope.gridOptions1.columnDefs[0].filter.term = '';
-                $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
-                $scope.gridOptions1.columnDefs[3]['filter']['term'] = '1';
-                $scope.chosen_company = null;
-                $scope.chosen_status = null;
-                $scope.sendData('', $scope.paginationOptions);
-            };
-
-            $scope.sendData = function (new_search_text, paginationOptions) {
+            $scope.sendData = function () {
                 $scope.loading = true;
                 $scope.error = '';
                 var data = {};
-                data.search_text = (new_search_text !== false) ? new_search_text : null;
-                data.chosen_company = $scope.chosen_company ? $scope.chosen_company : null;
-                data.chosen_status = $scope.chosen_status ? $scope.chosen_status : null;
-                data.pages = $scope.paginationOptions.pageNumber;
-                data.pageSize = $scope.paginationOptions.pageSize;
-                data.sort_date = $scope.paginationOptions.sort;
+                data.gr_data = $scope.all_grid_data;
                 $ok($scope.url_search_article, data, function (resp) {
-                    $scope.data = resp;
-                    $scope.gridOptions1.totalItems = resp.total;
-                    for(var m=0;m<$scope.data.grid_data.length;m++){
-                        if($scope.data.grid_data[m]['level'])
-                            $scope.data.grid_data[m].$$treeLevel = 0
-                    }
-                    $scope.gridOptions1.columnDefs[3]['filter']['selectOptions'] = $scope.data.statuses;
-                    $scope.gridOptions1.columnDefs[2]['filter']['selectOptions'] = $scope.data.companies;
+                    $scope.datas = resp;
+                    $scope.applyGridExtarnals(resp);
                 }).finally(function () {
                     $scope.loading = false;
                     $scope.load_contr = true
                 });
             };
 
-            $scope.getFilter = function(col, term){
-                $scope.paginationOptions.pageNumber = 1;
-                if(col === 'Campanies'){
-                    $scope.chosen_company = $scope.data.companies[term - 1]['label'] === 'All' ? undefined : $scope.data.companies[term - 1]['id'];
-                }else if (col === 'Status'){
-                    $scope.chosen_status = $scope.data.statuses[term - 1]['label'] === 'All' ? undefined : $scope.data.statuses[term - 1]['label'];
-                }
-                $scope.sendData('', $scope.paginationOptions);
-            };
-
             $scope.gridOptions1 = {
-                    data: 'data.grid_data',
+                    data: 'datas.grid_data',
                     paginationPageSizes: [10, 25, 50, 75],
                     paginationPageSize: $scope.paginationOptions.pageSize,
                     enableFiltering: true,
@@ -80,19 +42,24 @@
                     useExternalPagination: true,
                     useExternalSorting: true,
                     useExternalFiltering: true,
+                    showTreeExpandNoChildren: false,
                     treeRowHeaderAlwaysVisible: false,
                     columnDefs: [
-                      { name: 'Title', enableSorting:false,enableCellEdit: false,groupingShowAggregationMenu: false, enableColumnMenu: false,
-                          width: '35%', cellTemplate: '<div class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.Title"></a></div>',
+                      { name: 'title', enableSorting:false,enableCellEdit: false,groupingShowAggregationMenu: false, enableColumnMenu: false,
+                          displayName: 'Title',
+                          width: '35%', cellTemplate: '<div class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.title"></a></div>',
                           filter: {type: uiGridConstants.filter.INPUT}
                       },
-                      { name: 'Date', enableSorting: true,enableCellEdit: false, enableFiltering: false,groupingShowAggregationMenu: false, enableColumnMenus: true,
+                      { name: 'date', enableSorting: true,enableCellEdit: false, enableFiltering: false,groupingShowAggregationMenu: false, enableColumnMenus: true,
+                          displayName: 'Date',
                           groupingShowGroupingMenu: false
                       },
-                      { name: 'Campanies', enableSorting: false,enableCellEdit: false,groupingShowAggregationMenu: false,enableColumnMenu: false,
+                      { name: 'company', enableSorting: false,enableCellEdit: false,groupingShowAggregationMenu: false,enableColumnMenu: false,
+                          displayName: 'Companies',
                           filter: $scope.filterForSelect(uiGridConstants)
                       },
-                      { name: 'Status', enableSorting: false,enableCellEdit: false,groupingShowAggregationMenu: false,enableColumnMenu: false,
+                      { name: 'status', enableSorting: false,enableCellEdit: false,groupingShowAggregationMenu: false,enableColumnMenu: false,
+                          displayName: 'Status',
                           filter: $scope.filterForSelect(uiGridConstants)
                       }
                     ],
@@ -102,15 +69,13 @@
     {% endraw %}
     </script>
     {% raw %}
-    <div ng-init="sendData('', paginationOptions)" ng-controller="article_list">
+    <div ng-init="sendData()" ng-controller="article_list">
         <h1 class="nice-title">{{ _('Article list') }}<span></span></h1>
         <h1 class="nice-title" style="margin-left: 125px">{{ _('Create article') }}<span></span></h1>
         <a class="h1-btn icon icon-add" href="{{ url_create_article }}" title="{{ _('CREATE NEW ARTICLE') }}"><img src="../../static/front/img/ico/articles.png" /></a>
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
         <div ng-if="load_contr">
-            <div ng-show="!areAllEmpty(data.grid_data)" class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
-            <div ng-show="!loading && areAllEmpty(data.grid_data)">{{_('No publications')}}</div>
-            <button ng-click="refresh()" ng-show="!loading && areAllEmpty(data.grid_data)" class="btn btn-warning" >Back</button>
+            <div id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
         </div>
     </div>
     {% endraw %}
