@@ -6,3 +6,4 @@ while [[ true ]]; do
     echo "starting $1"
     python run.py $1 >> /var/log/profi/"$1"_python.log 2>&1
 done
+
