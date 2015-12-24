@@ -225,6 +225,10 @@
                 return defaultpermited
             };
 
+            $scope.abort = function(){
+                console.log('abort')
+            }
+            $scope.aborting = false
             $scope.uploadUsingUpload = function () {
                 var file = $scope.uploadFileList[0];
                 $scope.f = file;
@@ -245,9 +249,13 @@
                 file.upload.progress(function (evt) {
                     file.progress = Math.min(100, parseInt(100.0 *
                         evt.loaded / evt.total));
+                    console.log($scope.aborting)
                 }).success(function (data) {
+                    $scope.f = null;
                     $scope.fileNavigator.refresh();
+                    $('#uploadfile').find('input[type=file], input[type=password], input[type=number], input[type=email], textarea').val('');
                     $('#uploadfile').modal('hide');
+
                 }).error(function (data) {
                     var errorMsg = data.result && data.result.error || $translate.instant('error_uploading_files');
                     $scope.temp.error = errorMsg;
