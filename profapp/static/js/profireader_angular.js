@@ -999,9 +999,9 @@ function fileUrl(id, down, if_no_file) {
 
     var server = id.replace(/^[^-]*-[^-]*-4([^-]*)-.*$/, "$1");
     if (down) {
-        return 'http://file' + server + '.profireader.com/' + id + '?d'
+        return '//file' + server + '.profireader.com/' + id + '?d'
     } else {
-        return 'http://file' + server + '.profireader.com/' + id + '/'
+        return '//file' + server + '.profireader.com/' + id + '/'
     }
 }
 
