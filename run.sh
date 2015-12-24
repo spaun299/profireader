@@ -1,6 +1,5 @@
 #!/bin/bash
-#cd /var/www/profireader
-#../.profi_env/bin/activate
+
 source .venv/bin/activate
 while [[ true ]]; do
     sleep 1

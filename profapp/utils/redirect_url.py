@@ -31,7 +31,7 @@ def url_page(endpoint=None, **kwargs):
     ep = endpoint if endpoint else request.endpoint
     kwargs_new = request.view_args
 
-# #    try:
+#    try:
 #     from run import app
 #     with app.app_context():
 #         func = current_app.view_functions[ep]
@@ -47,9 +47,9 @@ def url_page(endpoint=None, **kwargs):
 #
 #     len_obligatory_args = len(args) - len(defaults)
 #     obligatory_args = args[0:len_obligatory_args]
-
-    if not set(obligatory_args).issubset(set(kwargs.keys())):
-        raise WrongMandatoryParametersPassedToFunction
+#
+#     if not set(obligatory_args).issubset(set(kwargs.keys())):
+#         raise WrongMandatoryParametersPassedToFunction
 
     kwargs_new.update(kwargs)
 

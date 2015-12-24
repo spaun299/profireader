@@ -211,7 +211,10 @@ class Portal(Base, PRBase):
             :param division_name: string, if provided return value from config for division this.
         :return: variable which you want to return from config
         """
-        values = simplejson.loads(getattr(self.config, key))
+        conf = getattr(self.config, key, None)
+        if not conf:
+            return Config.ITEMS_PER_PAGE
+        values = simplejson.loads(conf)
         if division_name:
             ret = values.get(division_name)
         else:

@@ -35,7 +35,7 @@
 
     }]);
 </script>
-<div ng-controller="message-controller" id="controller-message-controller">
+<div ng-controller="message-controller" id="controller-message-controller" style="position: fixed; top: 0px;z-index: 1; width: 1000px; ">
     {% raw %}
     <uib-alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}</uib-alert>
     {% endraw %}
