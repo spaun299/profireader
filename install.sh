@@ -192,6 +192,7 @@ service haproxy restart" sudo apache2_config
 
 function menu_apache2_config {
     conf_comm "cat profi-wsgi-apache2.conf | sed -e 's#----directory----#$PWD#g' > /etc/apache2/sites-enabled/profi-wsgi-apache2.conf
+rm /etc/apache2/sites-available/000-default.conf
 mkdir /var/log/profi
 service apache2 restart" sudo secret_data
     }
