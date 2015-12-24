@@ -46,6 +46,7 @@ class File(Base, PRBase):
 
     UniqueConstraint('name', 'parent_id', name='unique_name_in_folder')
     thumbnail_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'))
+    thumbnail = relationship('File', uselist=True, foreign_keys='File.thumbnail_id')
 
     owner = relationship('User',
                          backref=backref('files', lazy='dynamic'),
@@ -55,17 +56,16 @@ class File(Base, PRBase):
     def __init__(self, parent_id=None, name=None, mime='text/plain', size=0,
                  user_id=None, cr_tm=None, md_tm=None, ac_tm=None,
                  root_folder_id=None, youtube_id=None,
-                 company_id=None, author_user_id=None, image_croped=None,
-                 thumbnail=None):
+                 company_id=None, author_user_id=None, image_croped=None, thumbnail_id=None):
         super(File, self).__init__()
         self.parent_id = parent_id
         self.name = name
+        self.thumbnail_id = thumbnail_id
         self.mime = mime
         self.size = size
         self.user_id = user_id
         self.cr_tm = cr_tm
         self.md_tm = md_tm
-        self.thumbnail = thumbnail
         self.root_folder_id = root_folder_id
         self.ac_tm = ac_tm
         self.author_user_id = author_user_id
@@ -206,18 +206,18 @@ class File(Base, PRBase):
             ret = search_files
         else:
             # 'cropable': True if File.is_cropable(file) else False,
+            size = (int(Config.IMAGE_EDITOR_RATIO*100), 100)
+            str_size = '{height}x{width}'.format(height=str(size[0]), width=str(size[1]))
             ret = list({'size': file.size, 'name': file.name, 'id': file.id,
                         'parent_id': file.parent_id, 'type': File.type(file),
                         'date': str(file.md_tm).split('.')[0],
-                        'url': file.url(field='thumbnail_id'),
+                        'url': file.get_thumbnail_url(size=str_size),
                         'path_to': File.path(file),
                         'author_name': file.copyright_author_name,
                         'description': file.description,
                         'actions': {action: actions[action](file) for action in actions},
                         }
-                       for file in [
-                           file.get_thumbnail(size=(int(
-                               Config.IMAGE_EDITOR_RATIO*100), 100))
+                       for file in [file.get_thumbnails(size=size)
                            for file in db(File, parent_id=parent_id)] if show(file) and
                        file.mime != 'image/thumbnail')
             # we need all records from the table "file"
@@ -232,23 +232,38 @@ class File(Base, PRBase):
 
         return ret
 
-    def get_thumbnail(self, size):
+    def get_thumbnails(self, size):
         if self.mime.split('/')[0] == 'image' and self.mime != 'image/thumbnail':
-            if not self.thumbnail_id:
+            str_size = '{height}x{width}'.format(height=str(size[0]), width=str(size[1]))
+            if not self.get_thumbnail(size=str_size):
                 image_pil = Image.open(BytesIO(self.file_content.content))
                 resized = image_pil.resize(size)
                 bytes_file = BytesIO()
                 resized.save(bytes_file, self.mime.split('/')[-1].upper())
                 thumbnail = File(md_tm=self.md_tm, size=sys.getsizeof(bytes_file.getvalue()),
-                                 name=self.name + '_thumbnail', parent_id=self.parent_id,
+                                 name=self.name + '_thumbnail_{str_size}'.format(
+                                     str_size=str_size),
+                                 parent_id=self.parent_id,
                                  root_folder_id=self.root_folder_id,
-                                 mime=self.mime.split('/')[0]+'/thumbnail')
+                                 mime=self.mime.split('/')[0]+'/thumbnail',
+                                 thumbnail_id=self.id)
                 FileContent(content=bytes_file.getvalue(), file=thumbnail)
+                self.thumbnail.append(thumbnail)
                 g.db.add(thumbnail)
                 g.db.flush()
-                self.thumbnail_id = thumbnail.id
 
         return self
+
+    def get_thumbnail_url(self, size='133x100'):
+        thumbnail = self.get_thumbnail(size=size)
+        return thumbnail.url() if thumbnail else self.url()
+
+    def get_thumbnail(self, size=None, any=False):
+        if any:
+            thumbnail = db(File, thumbnail_id=self.id).first()
+        else:
+            thumbnail = db(File, thumbnail_id=self.id, name=self.name+'_thumbnail_'+size).first()
+        return thumbnail
 
     def type(self):
         if self.mime == 'root' or self.mime == 'directory':
@@ -271,10 +286,9 @@ class File(Base, PRBase):
         path += self.name
         return path
 
-    def url(self, field=None):
-        field = field or 'id'
-        server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', getattr(self, field))
-        return 'http://file' + server + '.profireader.com/' + getattr(self, field) + '/'
+    def url(self):
+        server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', self.id)
+        return 'http://file' + server + '.profireader.com/' + self.id + '/'
 
     @staticmethod
     def get_index(file, lists):
@@ -404,8 +418,8 @@ class File(Base, PRBase):
         elif file.mime == 'video/*':
             YoutubeVideo.delfile(YoutubeVideo.get(file.id))
         else:
-            if file.thumbnail_id:
-                FileContent.delfile(FileContent.get(file.thumbnail_id))
+            # file = file.get_thumbnail(any=True) or file
+            FileContent.delfile(FileContent.get(file_id))
 
         resp = (False if File.get(file_id) else "Success")
         return resp
