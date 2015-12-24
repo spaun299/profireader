@@ -205,18 +205,18 @@ class File(Base, PRBase):
             ret = search_files
         else:
             # 'cropable': True if File.is_cropable(file) else False,
+            size = (int(Config.IMAGE_EDITOR_RATIO*100), 100)
+            str_size = '{height}x{width}'.format(height=str(size[0]), width=str(size[1]))
             ret = list({'size': file.size, 'name': file.name, 'id': file.id,
                         'parent_id': file.parent_id, 'type': File.type(file),
                         'date': str(file.md_tm).split('.')[0],
-                        'url': file.get_thumbnail_url(),
+                        'url': file.get_thumbnail_url(size=str_size),
                         'path_to': File.path(file),
                         'author_name': file.copyright_author_name,
                         'description': file.description,
                         'actions': {action: actions[action](file) for action in actions},
                         }
-                       for file in [
-                           file.get_thumbnails(size=(int(
-                               Config.IMAGE_EDITOR_RATIO*1), 1))
+                       for file in [file.get_thumbnails(size=size)
                            for file in db(File, parent_id=parent_id)] if show(file) and
                        file.mime != 'image/thumbnail')
             # we need all records from the table "file"
@@ -231,33 +231,38 @@ class File(Base, PRBase):
         return ret
 
     def get_thumbnails(self, size):
-        print(self.name)
         if self.mime.split('/')[0] == 'image' and self.mime != 'image/thumbnail':
             str_size = '{height}x{width}'.format(height=str(size[0]), width=str(size[1]))
             if not self.get_thumbnail(size=str_size):
                 image_pil = Image.open(BytesIO(self.file_content.content))
-                resized = image_pil.resize(size)
-                bytes_file = BytesIO()
-                resized.save(bytes_file, self.mime.split('/')[-1].upper())
-                thumbnail = File(md_tm=self.md_tm, size=sys.getsizeof(bytes_file.getvalue()),
-                                 name=self.name + '_thumbnail_{str_size}'.format(
-                                     str_size=str_size),
-                                 parent_id=self.parent_id,
-                                 root_folder_id=self.root_folder_id,
-                                 mime=self.mime.split('/')[0]+'/thumbnail',
-                                 thumbnail_id=self.id)
-                FileContent(content=bytes_file.getvalue(), file=thumbnail)
-                g.db.add(thumbnail)
-                g.db.flush()
-                self.thumbnail.append(thumbnail)
+                try:
+                    resized = image_pil.resize(size)
+                    bytes_file = BytesIO()
+                    resized.save(bytes_file, self.mime.split('/')[-1].upper())
+                    thumbnail = File(md_tm=self.md_tm, size=sys.getsizeof(bytes_file.getvalue()),
+                                     name=self.name + '_thumbnail_{str_size}'.format(
+                                         str_size=str_size),
+                                     parent_id=self.parent_id,
+                                     root_folder_id=self.root_folder_id,
+                                     mime=self.mime.split('/')[0]+'/thumbnail',
+                                     thumbnail_id=self.id)
+                    FileContent(content=bytes_file.getvalue(), file=thumbnail)
+                    self.thumbnail.append(thumbnail)
+                    g.db.add(thumbnail)
+                    g.db.flush()
+                except:  # truncated png/gif
+                    File.remove(self.id)
+                # resized = image_pil.resize(size)
+
 
         return self
 
-    def get_thumbnail_url(self):
-        thumbnail = self.get_thumbnail()
+    def get_thumbnail_url(self, size='133x100'):
+        thumbnail = self.get_thumbnail(size=size)
+
         return thumbnail.url() if thumbnail else self.url()
 
-    def get_thumbnail(self, size='133x100', any=False):
+    def get_thumbnail(self, size=None, any=False):
         if any:
             thumbnail = db(File, thumbnail_id=self.id).first()
         else:
@@ -398,6 +403,15 @@ class File(Base, PRBase):
         else:
             self.updates({'name': name})
             return True
+
+    @staticmethod
+    def auto_remove(name, folder_id):
+        file = db(File, name=name, parent_id=folder_id).first()
+        if file.mime == 'video/*':
+            YoutubeVideo.delfile(YoutubeVideo.get(file.id))
+        else:
+            FileContent.delfile(FileContent.get(file.id))
+        return 's'
 
     @staticmethod
     def remove(file_id):

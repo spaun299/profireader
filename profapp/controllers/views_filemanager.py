@@ -117,6 +117,10 @@ def cut(json):
     file = File.get(request.json['params']['id'])
     return File.move_to(file, request.json['params']['folder_id'])
 
+@filemanager_bp.route('/auto_remove/', methods=['POST'])
+@ok
+def auto_remove(json):
+    return File.auto_remove(json.get('name'), json.get('folder_id'))
 
 @filemanager_bp.route('/remove/<string:file_id>', methods=['POST'])
 def remove(file_id):

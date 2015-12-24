@@ -1,8 +1,8 @@
 (function (window, angular, $) {
     "use strict";
-    angular.module('FileManagerApp').controller('FileManagerCtrl', [
-        '$scope', '$translate', '$cookies', '$timeout', 'fileManagerConfig', 'item', 'Upload', 'fileNavigator', 'fileUploader',
-        function ($scope, $translate, $cookies, $timeout, fileManagerConfig, Item, Upload, FileNavigator, fileUploader) {
+    angular.module('FileManagerApp').controller('FileManagerCtrl', ['$http',
+        '$scope', '$translate', '$cookies', '$timeout', 'fileManagerConfig', 'item', 'Upload', 'fileNavigator', 'fileUploader','$q',
+        function ($http, $scope, $translate, $cookies, $timeout, fileManagerConfig, Item, Upload, FileNavigator, fileUploader, $q) {
 
             $scope.config = fileManagerConfig;
             $scope.appName = fileManagerConfig.appName;
@@ -216,6 +216,19 @@
                 }
             };
 
+            $scope.auto_remove = function(name, folder,success, error){
+                var data = {
+                    'name':name,
+                    'folder_id':folder
+                };
+                return $http.post(fileManagerConfig.auto_removeUrl, data).success(function(data) {
+                    }).error(function(data) {
+                        console.log('auto_remove_error')
+                    })['finally'](function() {
+                        self.inprocess = false;
+                    });
+            };
+
             $scope.can_action = function (item, actionname, defaultpermited) {
                 if (actionname === 'paste') {
                     if (defaultpermited === true) {
@@ -226,9 +239,26 @@
             };
 
             $scope.abort = function(){
-                console.log('abort')
-            }
-            $scope.aborting = false
+                if($scope.uploadFileList.length>0){
+                    if($scope.f){
+                        $scope.f.upload.abort();
+                        $scope.f.progress = 0;
+                    }
+                    $('#uploadfile').find('input[type=file], input[type=password], input[type=number], input[type=email], textarea').val('');
+                }
+            };
+
+            $scope.uploading = function(list){
+                if(list.length>0){
+                    $timeout(function () {
+                            $scope.upl = true
+                    }, 1000);
+                }else{
+                    $scope.upl = false
+                }
+                return $scope.upl
+            };
+
             $scope.uploadUsingUpload = function () {
                 var file = $scope.uploadFileList[0];
                 $scope.f = file;
@@ -249,16 +279,19 @@
                 file.upload.progress(function (evt) {
                     file.progress = Math.min(100, parseInt(100.0 *
                         evt.loaded / evt.total));
-                    console.log($scope.aborting)
                 }).success(function (data) {
-                    $scope.f = null;
                     $scope.fileNavigator.refresh();
-                    $('#uploadfile').find('input[type=file], input[type=password], input[type=number], input[type=email], textarea').val('');
+                    $('#uploadfile').find('input[type=file]').val('');
                     $('#uploadfile').modal('hide');
 
                 }).error(function (data) {
-                    var errorMsg = data.result && data.result.error || $translate.instant('error_uploading_files');
+                    var errorMsg =  $translate.instant('error_uploading_files');
+                    $scope.auto_remove($scope.f.name, $scope.fileNavigator.getCurrentFolder());
                     $scope.temp.error = errorMsg;
+                    $timeout(function () {
+                        $scope.temp.error = ''
+                    }, 2000);
+
                 });
 
             };

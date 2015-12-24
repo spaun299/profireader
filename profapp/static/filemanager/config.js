@@ -14,6 +14,7 @@
             copyUrl: "/filemanager/copy/",
             cutUrl: "/filemanager/cut/",
             removeUrl: "/filemanager/remove/",
+            auto_removeUrl: "/filemanager/auto_remove/",
             editUrl: "bridges/php/handler.php",
             getContentUrl: "bridges/php/handler.php",
             createFolderUrl: "/filemanager/createdir/",
