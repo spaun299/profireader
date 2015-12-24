@@ -16,5 +16,7 @@ sys.path.insert(0, curdir + '/.venv/lib/python3.4/site-packages/')
 
 from profapp import create_app
 
+print(mod_wsgi.process_group)
+
 application=create_app(apptype = mod_wsgi.process_group)
 
