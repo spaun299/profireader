@@ -238,6 +238,11 @@
                 return defaultpermited
             };
 
+            $scope.hideModal = function(){
+                console.log('hide')
+                $('#uploadfile').find('.modal').css("width", 5);
+            };
+
             $scope.abort = function(){
                 if($scope.uploadFileList.length>0){
                     if($scope.f){
@@ -280,6 +285,7 @@
                     file.progress = Math.min(100, parseInt(100.0 *
                         evt.loaded / evt.total));
                 }).success(function (data) {
+                    $scope.f.progress = 0;
                     $scope.fileNavigator.refresh();
                     $('#uploadfile').find('input[type=file]').val('');
                     $('#uploadfile').modal('hide');
