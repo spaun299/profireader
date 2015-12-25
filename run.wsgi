@@ -1,5 +1,6 @@
 import os
 import sys
+import mod_wsgi
 
 curdir = os.path.dirname(os.path.realpath(__file__))
 
@@ -15,5 +16,7 @@ sys.path.insert(0, curdir + '/.venv/lib/python3.4/site-packages/')
 
 from profapp import create_app
 
-application=create_app(apptype = 'front')
+print(mod_wsgi.process_group)
+
+application=create_app(apptype = mod_wsgi.process_group)
 
