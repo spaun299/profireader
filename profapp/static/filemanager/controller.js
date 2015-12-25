@@ -9,13 +9,15 @@
             $scope.path_profireader = 'http://profireader.com';
             $scope.orderProp = ['model.type', 'model.name'];
             $scope.query = '';
+            $scope.rootdirs = library;
+            $scope.last_visit_root = last_visit_root;
+            $scope.last_root_id = last_root_id;
             $scope.temp = new Item();
-            $scope.fileNavigator = new FileNavigator(_.keys(library)[0], file_manager_called_for);
+            $scope.fileNavigator = new FileNavigator($scope.last_root_id? $scope.last_root_id:$scope.rootdirs[0]['id'], file_manager_called_for);
             $scope.fileUploader = fileUploader;
             $scope.uploadFileList = [];
             $scope.viewTemplate = $cookies.viewTemplate || 'main-table.html';
             $scope.error = error;
-            $scope.rootdirs = library;
             $scope.file_manager_called_for = file_manager_called_for;
             $scope.file_manager_on_action = file_manager_on_action;
             $scope.file_manager_default_action = file_manager_default_action;
@@ -33,8 +35,10 @@
                 $scope.viewTemplate = $cookies.viewTemplate = name;
             };
 
+
             $scope.changeRoot = function (root_id, root_name) {
                 $scope.fileNavigator.setRoot(root_id);
+                $cookies.last_root = root_name;
                 $scope.root_name = root_name;
             };
 
@@ -238,9 +242,16 @@
                 return defaultpermited
             };
 
+            $scope.showModal = function(){
+                $scope.modStyle = '';
+                $scope.show = false;
+                $scope.hide = false;
+            };
+
             $scope.hideModal = function(){
-                console.log('hide')
-                $('#uploadfile').find('.modal').css("width", 5);
+                $scope.modStyle = 'margin: 0!important;position: absolute;bottom: 0; width: 200px;';
+                $scope.hide = true;
+                $scope.show = true;
             };
 
             $scope.abort = function(){
@@ -365,7 +376,15 @@
 
             $scope.changeRoots = function () {
                 if (error == 'False') {
-                    $scope.changeRoot(_.keys($scope.rootdirs)[0], _.values($scope.rootdirs)[0]['name'])
+                    if($scope.last_visit_root && $scope.rootdirs){
+                        for(var n = 0;n < $scope.rootdirs.length;n++){
+                            if($scope.rootdirs[n]['name'] === $scope.last_visit_root){
+                                $scope.changeRoot($scope.rootdirs[n]['id'], $scope.rootdirs[n]['name']);
+                            }
+                        }
+                    }else{
+                        $scope.changeRoot($scope.rootdirs[0]['id'], $scope.rootdirs[0]['name'])
+                    }
                 } else {
                     $scope.changeRoot('', '')
                 }
