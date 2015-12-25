@@ -16,66 +16,16 @@
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
-            $scope.pos = {
-                'Portals': '1',
-                'Publication status': '1',
-                'Material status': '1'
-            };
+            $scope.noData = 'No materials';
 
-            $scope.update = function(){
-                $scope.paginationOptions.pageNumber = 1;
-                $scope.sendData($scope.gridOptions1.columnDefs[0].filter.search_text,$scope.paginationOptions);
-            };
-
-            $scope.refresh = function(){
-                $scope.gridOptions1.columnDefs[0].filter.term = '';
-                $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
-                $scope.gridOptions1.columnDefs[3]['filter']['term'] = '1';
-                $scope.gridOptions1.columnDefs[4]['filter']['term'] = '1';
-                $scope.portal_id = null;
-                $scope.status = null;
-                $scope.sendData('', $scope.paginationOptions);
-            };
-
-            $scope.getFilter = function(col, term){
-                $scope.paginationOptions.pageNumber = 1;
-                if(col === 'Portals'){
-                    $scope.portal_id = $scope.portals[term - 1]['label'] === '-- all --'? undefined: $scope.portals[term - 1]['id'];
-                }else if (col === 'Publication status'){
-                    $scope.publ_status = $scope.publ_statuses[term - 1]['label'] === '-- all --'? undefined: $scope.publ_statuses[term - 1]['label'];
-                }else if (col === 'Material status'){
-                    $scope.status = $scope.statuses[term - 1]['label'] === '-- all --'? undefined: $scope.statuses[term - 1]['label'];
-                }
-                $scope.sendData('', $scope.paginationOptions);
-            };
-
-            $scope.sendData = function (new_search_text, c) {
+            $scope.sendData = function () {
                 $scope.loading = true;
                 var data = {};
-                data.portal_id = $scope.portal_id ? $scope.portal_id : null;
                 data.article_id = $scope.article_id ? $scope.article_id : null;
-                data.grid_data = {
-                    'search_text': (new_search_text !== false) ? new_search_text : $scope.data['search_text'],
-                    'status': $scope.status ? $scope.status : null,
-                    'new_status': $scope.new_status ? $scope.new_status : null,
-                    'publ_status': $scope.publ_status ? $scope.publ_status : null,
-                    'page': $scope.paginationOptions.pageNumber,
-                    'pageSize': $scope.paginationOptions.pageSize,
-                    'sort_date':$scope.paginationOptions.sort
-                };
+                data.gr_data = $scope.all_grid_data;
                 $ok($scope.url_search_article({company_id: $scope.company_id}), data, function (resp) {
                     $scope.datas = resp;
-                    $scope.gridOptions1.totalItems = resp.total;
-                    $scope.portals = resp.portals;
-                    $scope.statuses = resp.statuses;
-                    $scope.publ_statuses = resp.publ_statuses;
-                    for(var m=0;m< $scope.datas.grid_data.length;m++){
-                        if($scope.datas.grid_data[m]['level'])
-                            $scope.datas.grid_data[m].$$treeLevel = 0
-                    }
-                    $scope.gridOptions1.columnDefs[2]['filter']['selectOptions'] = $scope.portals;
-                    $scope.gridOptions1.columnDefs[3]['filter']['selectOptions'] = $scope.publ_statuses;
-                    $scope.gridOptions1.columnDefs[4]['filter']['selectOptions'] = $scope.statuses;
+                    $scope.applyGridExtarnals(resp);
                 }).finally(function () {
                     $scope.loading = false;
                     $scope.load_contr = true;
@@ -94,31 +44,37 @@
                     useExternalPagination: true,
                     useExternalSorting: true,
                     useExternalFiltering: true,
+                    showTreeExpandNoChildren: false,
                     columnDefs: [
-                      { name: 'Title', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
+                      { name: 'title', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
+                          displayName: 'Title',
                           width: '35%',
-                          cellTemplate: '<div ng-class="link" class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.Title"></a></div>',
+                          cellTemplate: '<div ng-class="link" class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.title"></a></div>',
                           filter: {type: uiGridConstants.filter.INPUT}
                       },
-                      { name: 'Date',enableCellEdit: false,enableFiltering: false, groupingShowAggregationMenu: false,
+                      { name: 'date',enableCellEdit: false,enableFiltering: false, groupingShowAggregationMenu: false,
+                          displayName: 'Date',
                           groupingShowGroupingMenu: false
                       },
-                      { name: 'Portals', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
-                          cellTemplate: '<div class="link"><a style="{{grid.appScope.lclass(row.entity.Portals)}}" href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{row.entity.Portals}}</a></div>',
+                      { name: 'portals', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
+                          displayName: 'Portals',
+                          cellTemplate: '<div class="link"><a style="{{grid.appScope.lclass(row.entity.Portals)}}" href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{row.entity.portals}}</a></div>',
                           filter: $scope.filterForSelect(uiGridConstants)
                       },
-                      { name: 'Publication status', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                      { name: 'publication_status', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                          displayName: 'Publication status',
                           filter: $scope.filterForSelect(uiGridConstants)
                       },
-                      { name: 'Material status', enableSorting: false, //editableCellTemplate: $scope.editableTemplate,
+                      { name: 'material_status', enableSorting: false, //editableCellTemplate: $scope.editableTemplate,
                           //editDropdownValueLabel: 'value',
                           //cellTemplate: $scope.selectRowTemplate,
+                          displayName: 'Material status',
                           enableCellEdit: false,
                           enableColumnMenu: false,
                           filter: $scope.filterForSelect(uiGridConstants)
                       }
                     ],
-                    onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions, $scope.refresh())}
+                    onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions)}
                   };
 
         }]);
@@ -126,13 +82,11 @@
     </script>
     {% include 'company/company_base_angular.html' %}
     {% raw %}
-    <div ng-init="sendData('', paginationOptions)" ng-controller="article_list">
+    <div ng-init="sendData()" ng-controller="article_list">
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
         <div ng-if="load_contr">
-        <div ng-show="!areAllEmpty(datas.grid_data)" class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
-        <div ng-show="!loading && areAllEmpty(datas.grid_data)">{{ _('No materials') }}</div>
-        <button ng-click="refresh()" ng-show="!loading && areAllEmpty(datas.grid_data)" class="btn btn-warning" >Back</button>
-    </div>
+            <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1" ></div>
+        </div>
     </div>
     {% endraw %}
 

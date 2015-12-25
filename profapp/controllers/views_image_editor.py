@@ -76,4 +76,4 @@ def cropped(id):
 
 @image_editor_bp.route('/get_file')
 def get_file():
-    return 'http://file001.profireader.com/560baa85-31eb-4001-9685-d807fa6b6807/'
+    return '//file001.profireader.com/560baa85-31eb-4001-9685-d807fa6b6807/'

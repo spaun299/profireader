@@ -13,79 +13,11 @@
             $scope.url_delete_translations = {{ raw_url_for('admin.delete')|safe }}
 
             {% raw %}
-
+            $scope.noData = 'No translations';
             $scope.error = '';
-            $scope.list_templates = [];
-            $scope.list_urls = [];
-            $scope.list_select= [];
             $scope.myModal = modal;
-            $scope.pos1 = '1';$scope.pos2 = '1';
 
-            $scope.update = function(row){
-                $scope.paginationOptions.pageNumber = 1;
-                if(row.field === 'Phrase'){
-                    $scope.search_in_phrase = $scope.gridOptions1.columnDefs[4].filter.search_text;
-                }else if(row.field === 'uk'){
-                    $scope.search_in_uk = $scope.gridOptions1.columnDefs[5].filter.search_text;
-                }else if(row.field === 'en'){
-                    $scope.search_in_en = $scope.gridOptions1.columnDefs[6].filter.search_text;
-                }
-                $scope.sendData('', $scope.paginationOptions);
-            };
-
-            $scope.storeFile = function( gridRow, gridCol, files ) {
-                gridRow.entity.filename = files[0].name;
-                var setFile = function(fileContent){
-                  gridRow.entity.file = fileContent.currentTarget.result;
-                  $scope.lastFile = fileContent.currentTarget.result;
-                  $scope.$apply();
-                  $scope.saveTranslation(files[0].id, files[0].lang, $scope.lastFile, files[0])
-                };
-                var reader = new FileReader();
-                reader.onload = setFile;
-                reader.readAsText( files[0] );
-              };
-
-            $scope.Filtered = function( row, rowRenderIndex, col, colRenderIndex) {
-                if (col.filters[0].term){
-                    if($scope.gridOptions1.columnDefs[2].filter['term'] == col.filters[0].term && $scope.pos1 != $scope.gridOptions1.columnDefs[2].filter['term']){
-                        $scope.pos1 = $scope.gridOptions1.columnDefs[2].filter['term'];
-                        $scope.template = $scope.list_templates[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_templates[col.filters[0].term - 1]['label'];
-                    }
-                    if($scope.gridOptions1.columnDefs[3].filter['term'] == col.filters[0].term && $scope.pos2 != $scope.gridOptions1.columnDefs[3].filter['term']){
-                        $scope.pos2 = $scope.gridOptions1.columnDefs[3].filter['term'];
-                        $scope.url = $scope.list_urls[col.filters[0].term - 1]['label'] === '-- all --'? undefined: $scope.list_urls[col.filters[0].term - 1]['label'];
-                    }
-                    $scope.paginationOptions.pageNumber = 1;
-                    $scope.sendData('', $scope.paginationOptions);
-                }else{
-                    $scope.refresh()
-                }
-              };
-
-            $scope.refresh = function(){
-                $scope.gridOptions1.columnDefs[2]['filter']['term'] = '1';
-                $scope.gridOptions1.columnDefs[3]['filter']['term'] = '1';
-                $scope.search_in_phrase = null;
-                $scope.search_in_uk = null;
-                $scope.search_in_en = null;
-                $scope.template = null;
-                $scope.url = null;
-                $scope.sendData('', $scope.paginationOptions);
-            };
-
-
-            $scope.saveTranslation = function (row, col, lang, newval) {
-                $ok($scope.url_save_translations(), {row: row, col: col, lang: lang, val: newval}, function (resp) {
-                    $scope.saving = true;
-                }, function () {
-                }).finally(function () {
-                    $scope.saving = false;
-                });
-            };
-
-
-            $scope.closes = function(){
+            $scope.close = function(){
                 $scope.refresh();
                 $scope.myModal.close()
             };
@@ -94,7 +26,7 @@
                 if(isOpen){
                     modal.open(list);
                 }else{
-                    $scope.closes();
+                    $scope.close();
                 }
               };
 
@@ -104,126 +36,55 @@
                 $scope.showModal(true, my, list);
             };
 
-            $scope.create_list = function(new_list, old_list){
-                if(new_list.length === 0){
-                        for(var n=0;n< old_list.length;n++){
-                            var val = n+1;
-                            val.toString();
-                            new_list.push({
-                                'value': val.toString(),
-                                'label': old_list[n]['label']
-                            })
-                        }
-                    }
-            };
-
-            $scope.sendData = function (new_search_text, paginationOptions) {
+            $scope.sendData = function () {
                 $scope.loading = true;
                 $scope.isSelectedRows = false;
                 $scope.error = '';
                 var data = {};
-                data.template = $scope.template ? $scope.template : null;
-                data.url = $scope.url ? $scope.url : null;
-                data.page = $scope.paginationOptions.pageNumber;
-                data.pageSize = $scope.gridOptions1.paginationPageSize;
-                data.search_in_phrase = $scope.search_in_phrase ? $scope.search_in_phrase: null;
-                data.search_in_uk = $scope.search_in_uk ? $scope.search_in_uk: null;
-                data.search_in_en = $scope.search_in_en ? $scope.search_in_en: null;
-                data.sort_creation_time = $scope.sort_creation_time ? $scope.sort_creation_time : null;
-                data.sort_last_accessed_time = $scope.sort_last_accessed_time ? $scope.sort_last_accessed_time : null;
+                data.gr_data = $scope.all_grid_data;
                 $ok($scope.url_search_translations({}), data, function (resp) {
-                    $scope.translations = resp.translations;
-                    $scope.gridOptions1.totalItems = resp.total;
-                    $scope.list = [];
-                    for(var i=0;i< $scope.translations.length;i++){
-                        $scope.list.push({
-                            'Creation time' : $scope.translations[i].cr_tm,
-                            'Last accessed' : $scope.translations[i].ac_tm,
-                            'Template' : $scope.translations[i].template,
-                            'First url used' : $scope.translations[i].url,
-                            'Phrase': $scope.translations[i].name,
-                            'uk' : $scope.translations[i].uk,
-                            'en' : $scope.translations[i].en
-                        })
-                    }
-                    $scope.gridOptions1.data = $scope.list;
-                    $scope.templates = resp.templates;
-                    $scope.templates.unshift({label: '-- all --', value: undefined});
-                    $scope.urls = resp.urls;
-                    $scope.urls.unshift({label: '-- all --', value: undefined});
-                    $scope.create_list($scope.list_templates, $scope.templates);
-                    $scope.create_list($scope.list_urls, $scope.urls);
+                    $scope.datas = resp;
+                    $scope.applyGridExtarnals(resp);
                 }).finally(function () {
                     $scope.loading = false;
                     $scope.load_contr = true
                 });
             };
 
-             $scope.closeSort = function (){
-                 $scope.sort_creation_time = null;
-                 $scope.sort_last_accessed_time = null;
-                 $scope.sendData('',$scope.paginationOptions);
-             };
 
-             $scope.sortChanged = function ( grid, sortColumns) {
-                 if(sortColumns.length>1){
-                     if(sortColumns[0].sort){
-                         $scope.sort_creation_time = sortColumns[0].name == $scope.gridOptions1['columnDefs'][0]['field']? sortColumns[0].sort.direction: null;
-                         $scope.sort_last_accessed_time = sortColumns[0].name == $scope.gridOptions1['columnDefs'][1]['field']? sortColumns[0].sort.direction: null;
-                         $scope.sendData('', $scope.paginationOptions);
-                     }
-                     if(sortColumns[1].sort){
-                         $scope.sort_creation_time = sortColumns[1].name == $scope.gridOptions1['columnDefs'][0]['field']? sortColumns[1].sort.direction: null;
-                         $scope.sort_last_accessed_time = sortColumns[1].name == $scope.gridOptions1['columnDefs'][1]['field']? sortColumns[1].sort.direction: null;
-                         $scope.sendData('', $scope.paginationOptions);
-                     }
-                 }else if(sortColumns.length === 1){
-                     if(sortColumns[0].sort){
-                        $scope.sort_creation_time = sortColumns[0].name == $scope.gridOptions1['columnDefs'][0]['field']? sortColumns[0].sort.direction: null;
-                        $scope.sort_last_accessed_time = sortColumns[0].name == $scope.gridOptions1['columnDefs'][1]['field']? sortColumns[0].sort.direction: null;
-                        $scope.sendData('', $scope.paginationOptions);
-                     }
-                 }
-                if( sortColumns.length === 0){
-                    $scope.closeSort();
-                }
-              };
-             $scope.gridOptions1 = {
-                    paginationPageSizes: [25, 50, 75],
-                    paginationPageSize: 25,
+
+            $scope.gridOptions1 = {
+                    data: 'datas.grid_data',
+                    paginationPageSizes: [10, 25, 50, 75],
+                    paginationPageSize: $scope.paginationOptions.pageSize,
                     enableFiltering: true,
                     enableSorting: true,
                     useExternalPagination: true,
                     useExternalSorting: true,
                     useExternalFiltering: true,
                     columnDefs: [
-                      { field: 'Creation time',enableCellEdit: false, enableFiltering: false,enableSorting: true
+                      { name: 'cr_tm',enableCellEdit: false, enableFiltering: false,enableSorting: true, displayName: 'Creation time' },
+                      { name: 'ac_tm',enableSorting: true,enableCellEdit: false, enableFiltering: false, displayName: 'Last accessed' },
+                      { name: 'template', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'Template',
+                          filter: $scope.filterForSelect(uiGridConstants)
                       },
-                      { field: 'Last accessed',enableSorting: true,enableCellEdit: false, enableFiltering: false },
-                      { field: 'Template', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
-                          filter: {
-                            term: '1',
-                            type: uiGridConstants.filter.SELECT,
-                            selectOptions: $scope.list_templates },
-                          headerCellClass: $scope.Filtered
+                      { name: 'url', enableSorting: false,enableCellEdit: false,enableColumnMenu: false, displayName: 'Url',
+                          filter: $scope.filterForSelect(uiGridConstants)
                       },
-                      { field: 'First url used', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,
-                          filter: {
-                            term: '1',
-                            type: uiGridConstants.filter.SELECT,
-                            selectOptions: $scope.list_urls },
-                          headerCellClass: $scope.Filtered
-
+                      { name: 'name', enableSorting: false,enableCellEdit: false,enableColumnMenu: false, displayName: 'Phrase',
+                          filter: {type: uiGridConstants.filter.INPUT}
                       },
-                      { field: 'Phrase', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,
-                          filter: {
+                      { name: 'uk', enableSorting: false, enableCellEdit: true,enableColumnMenu: false,
+                          filter: {type: uiGridConstants.filter.INPUT}
+                      },
+                      { name: 'en', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,
+                          filter: {type: uiGridConstants.filter.INPUT}
+                      },
+                            // TODO SS by OZ: 1. why allow_html is not visible?. 2 Pls allow dot-delimitted keys fields format like `portal.name`
+                      { name: 'allow_html', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
                                 type: uiGridConstants.filter.INPUT}
                       },
-                      { field: 'uk', enableSorting: false, enableCellEdit: true,enableColumnMenu: false,
-                          filter: {
-                                type: uiGridConstants.filter.INPUT}
-                      },
-                      { field: 'en', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
+                      { name: 'portal.name', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
                                 type: uiGridConstants.filter.INPUT}
                       },
 // TODO SS by OZ: 1. why allow_html is not visible?. 2 Pls allow dot-delimitted keys fields format like `portal.name`
@@ -235,32 +96,9 @@
                       }
 
                     ],
-                    onRegisterApi: function(gridApi) {
-                      $scope.gridApi = gridApi;
-                      $scope.gridApi.core.on.sortChanged( $scope, $scope.sortChanged );
-                      $scope.sortChanged($scope.gridApi.grid, $scope.gridOptions1.columnDefs[0] );
-                      $scope.sortChanged($scope.gridApi.grid, $scope.gridOptions1.columnDefs[1] );
-                      gridApi.pagination.on.paginationChanged($scope, function (newPage, pageSize) {
-                        $scope.paginationOptions.pageNumber = newPage;
-                        $scope.paginationOptions.pageSize = pageSize;
-                        $scope.sendData('', $scope.paginationOptions);
-                      });
-                      gridApi.edit.on.afterCellEdit($scope, function(rowEntity, colDef, newValue, oldValue) {
-                        //Do your REST call here via $http.get or $http.post
-                        if(newValue === oldValue){
-                            console.log(rowEntity['Template']);
-                        }else{
-                            $scope.saveTranslation(rowEntity['Template'], rowEntity['Phrase'], colDef['name'], newValue);
-                        }
-                      });
-                      $scope.gridApi.selection.on.rowSelectionChanged($scope,function(row){
-                          $scope.list_select = $scope.gridApi.selection.getSelectedRows();
-                          $scope.isSelectedRows = $scope.gridApi.selection.getSelectedRows().length !== 0;
-                      });
-                    }
+                    onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions)}
                   };
-             $scope.delete = function(list) {
-
+             $scope.deleteItems = function(list) {
                  $ok($scope.url_delete_translations(), {objects:list}, function (resp) {
                      if (resp == 'True') {
                          $scope.showModal(false, $scope.myModal, list);
@@ -269,8 +107,6 @@
                          $scope.error = 'error delete'
                      }
                  });
-                 $scope.sendData('');
-
              };
         }])
         .factory('modal', ['$compile', '$rootScope', function ($compile, $rootScope) {
@@ -278,7 +114,7 @@
             var modal = {
               open: function(list) {
                 $rootScope.lists = list;
-                var html = "<div class='modal' ng-init='sendData()' ng-controller='translation_list' ng-style='modalStyle'>{{modalStyle}}<div class='modal-dialog'><div class='modal-content'><div class='modal-header'><h4>Do you want delete this rows?</h4></div><div class='modal-footer'><button id='buttonDelete' class='btn btn-warning' ng-click='delete(lists)'>Delete</button><button id='buttonClose' class='btn btn-primary' ng-click='closes()'>Close</button></div></div></div></div>";
+                var html = "<div class='modal' ng-init='sendData()' ng-controller='translation_list' ng-style='modalStyle'>{{modalStyle}}<div class='modal-dialog'><div class='modal-content'><div class='modal-header'><h4>Do you want delete this rows?</h4></div><div class='modal-footer'><button id='buttonDelete' class='btn btn-warning' ng-click='deleteItems(lists)'>Delete</button><button id='buttonClose' class='btn btn-primary' ng-click='close()'>Close</button></div></div></div></div>";
                 elm = angular.element(html);
                 angular.element(document.body).prepend(elm);
 
@@ -307,18 +143,14 @@
             display: none;
         }
     </style>
-    <div ng-init="sendData('', paginationOptions)" ng-controller="translation_list">
+    <div ng-init="sendData()" ng-controller="translation_list">
 
         <div style="clear: right"></div>
 
-        <div ng-if="!areAllEmpty(translations)">
+        <div>
             <div class="grid" id="grid1" ui-grid-pagination ui-grid-selection ui-grid-edit  ui-grid="gridOptions1" ></div>
         </div>
-        <a ng-show="load_contr && !areAllEmpty(translations)" class="btn btn-danger" ng-class="{'disabled': ( isSelectedRows === false )}"  style="text-align: center" ng-click="checkdelete(true)" >Delete selected rows</a>
-        <div ng-show="!loading && areAllEmpty(translations)" style="float: left; margin-right: 20px; padding-top: 4px">
-            <h4>No translations</h4>
-        </div>
-        <button ng-click="refresh()" class="btn btn-warning" ng-show="load_contr && areAllEmpty(translations)">Back</button>
+        <a ng-show="load_contr && !areAllEmpty(datas.grid_data)" class="btn btn-danger" ng-class="{'disabled': ( isSelectedRows === false )}"  style="text-align: center" ng-click="checkdelete(true)" >Delete selected rows</a>
     </div>
     {% endraw %}
 {% endblock portal_content %}

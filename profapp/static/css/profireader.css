@@ -25,8 +25,9 @@ body {
 TODO: OK by OZ:   this class `highlights` changed element (see js function highligh, its just add and remove this class).
 We have something similar in bootstrap? Can correct this class to look nicer?
 */
-#grid1 {
-  width: inherit;
+#grid1{
+  display: inline-block;
+  width: 100%;
   height: 500px;
 }
 
@@ -2150,6 +2151,7 @@ td{
 }
 
 .over-block{
-    width: 1155px;
+    padding-right: 30px;
+    width: inherit;
 }
 

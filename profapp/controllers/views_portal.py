@@ -459,12 +459,21 @@ def portals_partners(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def portals_partners_load(json, company_id):
+    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
+    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
+    search_text = json.get('gr_data')['search_text'] if json.get('gr_data') else None
     portal = db(Company, id=company_id).one().own_portal
     portals_partners = [port.portal.get_client_side_dict(fields='name, company_owner_id, id')
                         for port in MemberCompanyPortal.get_portals(
             company_id) if port]
+    params = {}
+    subquery = Company.subquery_company_partners(company_id=company_id, search_text=search_text, **params)
+    partners_g, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
     user_rights = list(g.user.user_rights_in_company(company_id))
-    return {'portal': portal.get_client_side_dict(fields='name') if portal else [],
+    grid_data = Company.getListGridDataPortalPartners(partners_g)
+    return {'grid_data':grid_data,
+            'total': subquery.count(),
+            'portal': portal.get_client_side_dict(fields='name') if portal else [],
             'portals_partners': portals_partners,
             'company_id': company_id,
             'user_rights': user_rights}
@@ -534,29 +543,32 @@ def publications_load(json, company_id):
     portal = db(Company, id=company_id).one().own_portal
     if not portal:
         return dict(portal_not_exist=True)
-    current_page = json.get('grid_data')['page'] or 1
-
-    params = {'search_text': json.get('grid_data')['search_text'], 'portal_id': portal.id}
-    params['status'] = json.get('grid_data')['status'] if json.get('grid_data')['status'] else None
-    params['company_id'] = json.get('company_id') if json.get('company_id') else None
-    params['sort_date'] = json.get('grid_data')['sort_date'] if json.get('grid_data')['sort_date'] else None
-
-    subquery = ArticlePortalDivision.subquery_portal_articles(**params)
-
-    if json.get('grid_data')['new_status']:
-        db(ArticlePortalDivision, id=json.get('article_id')).update({'status': json.get('grid_data')['new_status']})
+    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
+    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
+    params = {'portal_id': portal.id}
+    search_text = json.get('gr_data')['search_text'] if json.get('gr_data') else None
+    if json.get('gr_data'):
+        params['sort'] = {}
+        params['filter'] = {}
+        if json.get('gr_data')['sort']:
+            for n in json.get('gr_data')['sort']:
+                params['sort'][n] = json.get('gr_data')['sort'][n]
+        if json.get('gr_data')['filter']:
+            for b in json.get('gr_data')['filter']:
+                if json.get('gr_data')['filter'][b] != '-- all --':
+                    params['filter'][b] = json.get('gr_data')['filter'][b]
+    subquery = ArticlePortalDivision.subquery_portal_articles(search_text=search_text,**params)
+    # if json.get('grid_data')['new_status']:
+    #     db(ArticlePortalDivision, id=json.get('article_id')).update({'status': json.get('grid_data')['new_status']})
     articles, pages, current_page = pagination(subquery,
-                                               page=current_page, items_per_page=json.get('grid_data')['pageSize'])
-
+                                               page=page, items_per_page=pageSize)
     add_param = {'value': '1','label': '-- all --'}
-
     comp_grid = Article.list_for_grid_tables(ArticlePortalDivision.get_companies_which_send_article_to_portal(portal.id), add_param, True)
     statuses_grid = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
     grid_data = Article.getListGridDataPublication(articles)
-
+    grid_filters = {'publication_status': statuses_grid,'company': comp_grid}
     return {'grid_data': grid_data,
-            'companies': comp_grid,
-            'statuses': statuses_grid,
+            'grid_filters': grid_filters,
             'total': subquery.count()}
 
 

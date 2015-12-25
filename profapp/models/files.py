@@ -178,19 +178,11 @@ class File(Base, PRBase):
     @staticmethod
     def list(parent_id=None, file_manager_called_for='', name=None):
         show = lambda file: True
-
+        actions = {}
         default_actions = {}
         files = [file for file in db(File, parent_id=parent_id) if show(file)]
         # default_actions['choose'] = lambda file: None
         default_actions['download'] = lambda file: None if ((file.mime == 'directory') or (file.mime == 'root')) else True
-        actions = {act: default_actions[act] for act in default_actions}
-
-        actions['remove'] = lambda file: None if file.mime == "root" else True
-        actions['copy'] = lambda file: None if file.mime == "root" else True
-        actions['paste'] = lambda file: None if file == None else True
-        actions['cut'] = lambda file: None if file.mime == "root" else True
-        actions['properties'] = lambda file: None if file.mime == "root" else True
-
         if file_manager_called_for == 'file_browse_image':
             default_actions['choose'] = lambda file: False if None == re.search('^image/.*', file.mime) else True
             actions['choose'] = lambda file: False if None == re.search('^image/.*', file.mime) else True
@@ -200,6 +192,13 @@ class File(Base, PRBase):
         elif file_manager_called_for == 'file_browse_file':
             default_actions['choose'] = lambda file: True
             actions['choose'] = lambda file: True
+        actions = {act: default_actions[act] for act in default_actions}
+
+        actions['remove'] = lambda file: None if file.mime == "root" else True
+        actions['copy'] = lambda file: None if file.mime == "root" else True
+        actions['paste'] = lambda file: None if file == None else True
+        actions['cut'] = lambda file: None if file.mime == "root" else True
+        actions['properties'] = lambda file: None if file.mime == "root" else True
 
         search_files = File.search(name, parent_id, actions, file_manager_called_for)
         parent = File.get(parent_id)
@@ -289,7 +288,7 @@ class File(Base, PRBase):
 
     def url(self):
         server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', self.id)
-        return 'http://file' + server + '.profireader.com/' + self.id + '/'
+        return '//file' + server + '.profireader.com/' + self.id + '/'
 
     @staticmethod
     def get_index(file, lists):
@@ -401,6 +400,15 @@ class File(Base, PRBase):
         else:
             self.updates({'name': name})
             return True
+
+    @staticmethod
+    def auto_remove(name, folder_id):
+        file = db(File, name=name, parent_id=folder_id).first()
+        if file.mime == 'video/*':
+            YoutubeVideo.delfile(YoutubeVideo.get(file.id))
+        else:
+            FileContent.delfile(FileContent.get(file.id))
+        return 's'
 
     @staticmethod
     def remove(file_id):
