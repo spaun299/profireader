@@ -88,8 +88,8 @@
                     if ($scope.data.article.company_id)
                         return 'update version of article for company `%(data.article.company.name)s`';
                     if (!$scope.data.article.id)
-                        return 'update your version of article';
-                    return 'Create new article';
+                        return 'Create new article';
+                    return 'update your version of article';
 
 
                 }
@@ -153,7 +153,8 @@
                 return resp;
             };
 
-            $scope.tinymceImageOptions['height'] = '450px';
+            $scope.tinymceImageOptions['height'] = '500px';
+            $scope.tinymceImageOptions['body_class'] = 'article-content';
 
             var general_formats = {{ tinymce_format_groups()|tojson }};
 
@@ -206,17 +207,6 @@
                 return $scope._('Show this article just after `%(title)s`', obj);
 
             }
-            {#            $scope.saveData =function(data, tags){#}
-            {#                data['tags'] = tags;#}
-            {#                $ok($scope.url_submit_to_portal,#}
-            {#                        data,#}
-            {#                        function (resp) {#}
-            {#                            $scope.data = resp;#}
-            {#                            $scope.data_resp_portal = resp.portal;#}
-            {#                        }#}
-            {#                );#}
-            {#            };#}
-
         }]);
 
         /**
@@ -262,20 +252,8 @@
             $scope.disabled = undefined;
             $scope.searchEnabled = undefined;
             $scope.selected_portal_to_unpublish = '';
-            {#    $scope.url_get_tags = {{ raw_url_for('company.get_tags')|safe }};#}
             $scope.$$translate = {{ translates('SelectTagsCtrl')|safe }};
-            {#    $scope.$watch("data.selected_division", function(newValue, oldValue) {#}
-            {#        if ($scope.data && (newValue !== oldValue)){#}
-            {#            res = $http.post($scope.url_get_tags({'portal_division_id': $scope.data.selected_division}));#}
-            {#		    res.success(function(data, status, headers, config) {#}
-            {#                $scope.tagsObject.tags = [];#}
-            {#                $scope.availableTags = data.data.availableTags;#}
-            {#		    });#}
-            {#		    res.error(function(data, status, headers, config) {#}
-            {#			    alert( "failure message: " + JSON.stringify({data: data}));#}
-            {#		    });#}
-            {#        }#}
-            {#    });#}
+
 
             $scope.getData = function () {
                 $scope.loading = true;
@@ -321,7 +299,9 @@
             <div class="update_col1">
                 <!-- TODO: OK by OZ:   this block form should share same classes with layout to look MAXIMUM like in portal
                                         maybe layout selector is apporpriate here-->
-                {{ _('Article title') }} <span af-validation-answer="data_validation:title"></span>
+                {{ _('Article title') }}
+                <pr_help_tooltip>article_title</pr_help_tooltip> <span
+                    af-validation-answer="data_validation:title"></span>
                 <input style="width: 100%" type="text" ng-model="data.article.title">
                 {{ _('Short Description') }} <span af-validation-answer="data_validation:short"></span>
                 <textarea style="width: 100%" placeholder="{{_('short')}}" ng-model="data.article.short"></textarea>

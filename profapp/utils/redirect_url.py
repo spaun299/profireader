@@ -32,24 +32,24 @@ def url_page(endpoint=None, **kwargs):
     kwargs_new = request.view_args
 
 #    try:
-    from run import app
-    with app.app_context():
-        func = current_app.view_functions[ep]
-#    except:
-#        from run_front import app_front
-#        with app_front.app_context():
-#            func = current_app.view_functions[ep]
-
-#    print(func)
-    argspec = inspect.getargspec(func)
-    args = argspec.args
-    defaults = argspec.defaults or []
-
-    len_obligatory_args = len(args) - len(defaults)
-    obligatory_args = args[0:len_obligatory_args]
-
-    if not set(obligatory_args).issubset(set(kwargs.keys())):
-        raise WrongMandatoryParametersPassedToFunction
+#     from run import app
+#     with app.app_context():
+#         func = current_app.view_functions[ep]
+# #    except:
+# #        from run_front import app_front
+# #        with app_front.app_context():
+# #            func = current_app.view_functions[ep]
+#
+# #    print(func)
+#     argspec = inspect.getargspec(func)
+#     args = argspec.args
+#     defaults = argspec.defaults or []
+#
+#     len_obligatory_args = len(args) - len(defaults)
+#     obligatory_args = args[0:len_obligatory_args]
+#
+#     if not set(obligatory_args).issubset(set(kwargs.keys())):
+#         raise WrongMandatoryParametersPassedToFunction
 
     kwargs_new.update(kwargs)
 
@@ -57,3 +57,6 @@ def url_page(endpoint=None, **kwargs):
         kwargs_new.pop('search_text', None)
 
     return url_for(ep, **kwargs_new)
+
+
+

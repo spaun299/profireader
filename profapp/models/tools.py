@@ -97,14 +97,21 @@ class HtmlHelper():
                 'padding_size': {'values': ['medium', 'thin', 'thick'], 'add_classes': ['margin_placement_all']},
 
                 'padding_placement': {'values': ['none', 'left', 'right', 'top', 'bottom', 'all'],
-                                     # TODO: OZ by OZ: add inside border placement to place in each cell 'inside'
-                                     'add_classes': ['padding_size_thin'],
-                                     'remove_classes': [fn('padding_placement', 'all'), fn('padding_placement', 'none')],
-                                     'post_process': lambda x: remove_none_or_all(x, 'padding_placement')
-                                     }
+                                      # TODO: OZ by OZ: add inside border placement to place in each cell 'inside'
+                                      'add_classes': ['padding_size_thin'],
+                                      'remove_classes': [fn('padding_placement', 'all'),
+                                                         fn('padding_placement', 'none')],
+                                      'post_process': lambda x: remove_none_or_all(x, 'padding_placement')
+                                      }
 
             }
 
             return {group_label: get_group_formats(group_label, **merge(defaultFormatGroupOptions, group_properties))
                     for group_label, group_properties in
                     groups.items()}
+
+    @staticmethod
+    def quoteattr(s, preserveCR = False):
+        preserveCR = '&#13;' if preserveCR else '\n';
+        return ('' + s).replace('&', '&amp;').replace("'", '&apos;').replace('"', '&quot;') \
+            .replace('<', '&lt;').replace('>', '&gt;').replace("\r", preserveCR).replace("\n", preserveCR)

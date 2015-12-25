@@ -49,6 +49,23 @@ function getObjectsDifference(a, b, setval, notstrict) {
     return ret;
 }
 
+function quoteattr(s, preserveCR) {
+    preserveCR = preserveCR ? '&#13;' : '\n';
+    return ('' + s)/* Forces the conversion to string. */
+        .replace(/&/g, '&amp;')/* This MUST be the 1st replacement. */
+        .replace(/'/g, '&apos;')/* The 4 other predefined entities, required. */
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        /*
+         You may add other replacements here for HTML only
+         (but it's not necessary).
+         Or for XML, only if the named entities are defined in its DTD.
+         */
+        .replace(/\r\n/g, preserveCR)/* Must be before the next replacement. */
+        .replace(/[\r\n]/g, preserveCR);
+}
+
 
 angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip'])
     .factory('$ok', ['$http', function ($http) {
@@ -84,6 +101,18 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     return error('wrong response', -1);
                 }
             );
+        }
+    }])
+    .directive('prHelpTooltip', ['$compile', '$templateCache', '$controller', function ($compile, $templateCache, $controller) {
+        return {
+            restrict: 'E',
+            link: function (scope, element, attrs) {
+                element.html('<span uib-popover-html="\'' + quoteattr(scope.__('help tooltip ' + element.html())) + '\'" ' +
+                    'popover-placement="' + (attrs['placement'] ? attrs['placement'] : 'bottom') + '" ' +
+                    'popover-trigger="' + (attrs['trigger'] ? attrs['trigger'] : 'mouseenter') + '" ' +
+                    'class="' + (attrs['classes'] ? attrs['classes'] : 'glyphicon glyphicon-question-sign') + '"></span>');
+                $compile(element.contents())(scope);
+            }
         }
     }])
     .directive('prCropper', ['$compile', '$templateCache', '$controller', function ($compile, $templateCache, $controller) {
@@ -566,7 +595,72 @@ module.directive('ngEnter', function () {
     };
 });
 
-module.run(function ($rootScope, $ok, $sce, $modal) {
+
+function pr_dictionary(phrase, dict, allow_html, scope, $ok) {
+    allow_html = allow_html ? allow_html : '';
+    if (typeof phrase !== 'string') {
+        return '';
+    }
+
+    if (!scope.$$translate) {
+        scope.$$translate = {};
+    }
+
+    new Date;
+    var t = Date.now() / 1000;
+
+    //TODO OZ by OZ hasOwnProperty
+    var CtrlName = scope.controllerName ? scope.controllerName : 'None';
+    if (scope.$$translate[phrase] === undefined) {
+        scope.$$translate[phrase] = {'lang': phrase, 'time': t};
+        $ok('/tools/save_translate/', {
+            template: CtrlName,
+            phrase: phrase,
+            allow_html: allow_html,
+            url: window.location.href
+        }, function (resp) {
+
+        });
+    }
+
+    if ((t - scope.$$translate[phrase]['time']) > 86400) {
+        scope.$$translate[phrase]['time'] = t;
+        $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
+        });
+    }
+
+    if (scope.$$translate[phrase]['allow_html'] !== allow_html) {
+        scope.$$translate[phrase]['allow_html'] = allow_html;
+        $ok('/tools/change_allowed_html/', {
+            template: CtrlName,
+            phrase: phrase,
+            allow_html: allow_html
+        }, function (resp) {
+        });
+    }
+
+    try {
+        var ret = scope.$$translate[phrase]['lang'];
+        ret = ret.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
+            var indexes = g1.split('.');
+            var d = dict ? dict : scope;
+            for (var i in indexes) {
+                if (typeof d[indexes[i]] !== undefined) {
+                    d = d[indexes[i]];
+                }
+                else {
+                    return g1;
+                }
+            }
+            return d;
+        });
+        return ret;
+    } catch (a) {
+        return phrase
+    }
+}
+
+module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
     angular.extend($rootScope, {
         fileUrl: function (file_id, down, if_no_file) {
@@ -579,56 +673,11 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             }
             return $sce.trustAsHtml(full_text);
         },
+        __: function (phrase, dict) {
+            return $sce.trustAsHtml(pr_dictionary(phrase, dict, '*', this, $ok));
+        },
         _: function (phrase, dict) {
-            if (typeof phrase !== 'string') {
-                return '';
-            }
-            var scope = this;
-
-            if (!scope.$$translate) {
-                scope.$$translate = {};
-            }
-
-            new Date;
-            var t = Date.now() / 1000;
-
-            //TODO OZ by OZ hasOwnProperty
-            var CtrlName = this.controllerName ? this.controllerName : 'None';
-            if (scope.$$translate[phrase] === undefined) {
-                scope.$$translate[phrase] = {'lang': phrase, 'time': t};
-                $ok('/tools/save_translate/', {
-                    template: CtrlName,
-                    phrase: phrase,
-                    url: window.location.href
-                }, function (resp) {
-
-                });
-            }
-
-            if ((t - scope.$$translate[phrase]['time']) > 86400) {
-                scope.$$translate[phrase]['time'] = t;
-                $ok('/tools/update_last_accessed/', {template: CtrlName, phrase: phrase}, function (resp) {
-                });
-            }
-
-            try {
-                var ret = scope.$$translate[phrase]['lang'];
-                return ret.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
-                    var indexes = g1.split('.');
-                    var d = dict ? dict : scope;
-                    for (var i in indexes) {
-                        if (typeof d[indexes[i]] !== undefined) {
-                            d = d[indexes[i]];
-                        }
-                        else {
-                            return g1;
-                        }
-                    }
-                    return d;
-                });
-            } catch (a) {
-                return phrase
-            }
+            return pr_dictionary(phrase, dict, '', this, $ok);
         },
         paginationOptions: {
             pageNumber: 1,
@@ -762,7 +811,7 @@ module.run(function ($rootScope, $ok, $sce, $modal) {
             },
             //valid_elements: Config['article_html_valid_elements'],
             //valid_elements: 'a[class],img[class|width|height],p[class],table[class|width|height],th[class|width|height],tr[class],td[class|width|height],span[class],div[class],ul[class],ol[class],li[class]',
-            content_css: ["/static/css/article.css", "/static/front/bird/css/article.css"],
+            content_css: ["/static/front/css/bootstrap.css", "/static/css/article.css", "/static/front/bird/css/article.css"],
 
 
             //paste_auto_cleanup_on_paste : true,
