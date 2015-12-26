@@ -177,19 +177,11 @@ class File(Base, PRBase):
     @staticmethod
     def list(parent_id=None, file_manager_called_for='', name=None):
         show = lambda file: True
-
+        actions = {}
         default_actions = {}
         files = [file for file in db(File, parent_id=parent_id) if show(file)]
         # default_actions['choose'] = lambda file: None
         default_actions['download'] = lambda file: None if ((file.mime == 'directory') or (file.mime == 'root')) else True
-        actions = {act: default_actions[act] for act in default_actions}
-
-        actions['remove'] = lambda file: None if file.mime == "root" else True
-        actions['copy'] = lambda file: None if file.mime == "root" else True
-        actions['paste'] = lambda file: None if file == None else True
-        actions['cut'] = lambda file: None if file.mime == "root" else True
-        actions['properties'] = lambda file: None if file.mime == "root" else True
-
         if file_manager_called_for == 'file_browse_image':
             default_actions['choose'] = lambda file: False if None == re.search('^image/.*', file.mime) else True
             actions['choose'] = lambda file: False if None == re.search('^image/.*', file.mime) else True
@@ -199,6 +191,13 @@ class File(Base, PRBase):
         elif file_manager_called_for == 'file_browse_file':
             default_actions['choose'] = lambda file: True
             actions['choose'] = lambda file: True
+        actions = {act: default_actions[act] for act in default_actions}
+
+        actions['remove'] = lambda file: None if file.mime == "root" else True
+        actions['copy'] = lambda file: None if file.mime == "root" else True
+        actions['paste'] = lambda file: None if file == None else True
+        actions['cut'] = lambda file: None if file.mime == "root" else True
+        actions['properties'] = lambda file: None if file.mime == "root" else True
 
         search_files = File.search(name, parent_id, actions, file_manager_called_for)
         parent = File.get(parent_id)
@@ -229,7 +228,6 @@ class File(Base, PRBase):
                         'description': parent.description,
                         'actions': {action: actions[action](parent) for action in actions},
                         })
-
         return ret
 
     def get_thumbnails(self, size):
@@ -237,25 +235,31 @@ class File(Base, PRBase):
             str_size = '{height}x{width}'.format(height=str(size[0]), width=str(size[1]))
             if not self.get_thumbnail(size=str_size):
                 image_pil = Image.open(BytesIO(self.file_content.content))
-                resized = image_pil.resize(size)
-                bytes_file = BytesIO()
-                resized.save(bytes_file, self.mime.split('/')[-1].upper())
-                thumbnail = File(md_tm=self.md_tm, size=sys.getsizeof(bytes_file.getvalue()),
-                                 name=self.name + '_thumbnail_{str_size}'.format(
-                                     str_size=str_size),
-                                 parent_id=self.parent_id,
-                                 root_folder_id=self.root_folder_id,
-                                 mime=self.mime.split('/')[0]+'/thumbnail',
-                                 thumbnail_id=self.id)
-                FileContent(content=bytes_file.getvalue(), file=thumbnail)
-                self.thumbnail.append(thumbnail)
-                g.db.add(thumbnail)
-                g.db.flush()
+                try:
+                    resized = image_pil.resize(size)
+                    bytes_file = BytesIO()
+                    resized.save(bytes_file, self.mime.split('/')[-1].upper())
+                    thumbnail = File(md_tm=self.md_tm, size=sys.getsizeof(bytes_file.getvalue()),
+                                     name=self.name + '_thumbnail_{str_size}'.format(
+                                         str_size=str_size),
+                                     parent_id=self.parent_id,
+                                     root_folder_id=self.root_folder_id,
+                                     mime=self.mime.split('/')[0]+'/thumbnail',
+                                     thumbnail_id=self.id)
+                    FileContent(content=bytes_file.getvalue(), file=thumbnail)
+                    self.thumbnail.append(thumbnail)
+                    g.db.add(thumbnail)
+                    g.db.flush()
+                except:  # truncated png/gif
+                    File.remove(self.id)
+                # resized = image_pil.resize(size)
+
 
         return self
 
     def get_thumbnail_url(self, size='133x100'):
         thumbnail = self.get_thumbnail(size=size)
+
         return thumbnail.url() if thumbnail else self.url()
 
     def get_thumbnail(self, size=None, any=False):
@@ -288,7 +292,7 @@ class File(Base, PRBase):
 
     def url(self):
         server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', self.id)
-        return 'http://file' + server + '.profireader.com/' + self.id + '/'
+        return '//file' + server + '.profireader.com/' + self.id + '/'
 
     @staticmethod
     def get_index(file, lists):
@@ -399,6 +403,15 @@ class File(Base, PRBase):
         else:
             self.updates({'name': name})
             return True
+
+    @staticmethod
+    def auto_remove(name, folder_id):
+        file = db(File, name=name, parent_id=folder_id).first()
+        if file.mime == 'video/*':
+            YoutubeVideo.delfile(YoutubeVideo.get(file.id))
+        else:
+            FileContent.delfile(FileContent.get(file.id))
+        return 's'
 
     @staticmethod
     def remove(file_id):

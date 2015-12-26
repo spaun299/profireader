@@ -26,27 +26,30 @@ def show_mine():
 @article_bp.route('/list/', methods=['POST'])
 @ok
 def load_mine(json):
-    current_page = json.get('pages') if json.get('pages') else 1
-    chosen_company_id = json.get('chosen_company') if json.get('chosen_company') else 0
-    search_text = json.get('search_text') if json.get('search_text') else None
-    params = {'search_text': search_text, 'user_id': g.user_dict['id']}
-    article_status = json.get('chosen_status') if json.get('chosen_status') else None
-    if chosen_company_id:
-        params['company_id'] = chosen_company_id
-    if article_status and article_status != 'All':
-        params['status'] = article_status
-    date_sort = json.get('sort_date') if json.get('sort_date') else None
-    subquery = ArticleCompany.subquery_user_articles(sort=date_sort, **params)
+    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
+    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
+    search_text = json.get('gr_data')['search_text'] if json.get('gr_data') else None
+    params = {'user_id': g.user_dict['id']}
+    if json.get('gr_data'):
+        params['sort'] = {}
+        params['filter'] = {}
+        if json.get('gr_data')['sort']:
+            for n in json.get('gr_data')['sort']:
+                params['sort'][n] = json.get('gr_data')['sort'][n]
+        if json.get('gr_data')['filter']:
+            for b in json.get('gr_data')['filter']:
+                if json.get('gr_data')['filter'][b] != '-- all --':
+                    params['filter'][b] = json.get('gr_data')['filter'][b]
+    subquery = ArticleCompany.subquery_user_articles(search_text=search_text,**params)
     articles, pages, current_page = pagination(subquery,
-                                               page=current_page, items_per_page=json.get('pageSize'))
-    add_param = {'value': '1', 'label': 'All'}
+                                               page=page, items_per_page=pageSize)
+    add_param = {'value': '1', 'label': '-- all --'}
     statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
     company_list_for_grid = Article.list_for_grid_tables(ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
     articles_drid_data = Article.getListGridDataArticles(articles.all())
-
+    grid_filters = {'company': company_list_for_grid,'status': statuses}
     return {'grid_data': articles_drid_data,
-            'companies': company_list_for_grid,
-            'statuses': statuses,
+            'grid_filters': grid_filters,
             'total': subquery.count()}
 
 

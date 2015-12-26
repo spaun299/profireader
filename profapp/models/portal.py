@@ -325,6 +325,21 @@ class MemberCompanyPortal(Base, PRBase):
         """This method return all portals-partners current company"""
         return db(MemberCompanyPortal, company_id=company_id).all()
 
+    # @staticmethod
+    # def subquery_company_partners(company_id, search_text, **kwargs):
+    #     sub_query = db(MemberCompanyPortal, company_id=company_id)
+    #     if search_text:
+    #         sub_query = sub_query.join(MemberCompanyPortal.portal)
+    #         if 'portal' in search_text:
+    #             sub_query = sub_query.filter(Portal.name.ilike("%" + search_text['portal'] + "%"))
+    #         if 'company' in search_text:
+    #             sub_query = sub_query.join(MemberCompanyPortal.company)
+    #             sub_query = sub_query.filter(Company.name.ilike("%" + search_text['company'] + "%"))
+    #         if 'link' in search_text:
+    #             sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
+    #     return sub_query
+
+
 
 class ReaderUserPortalPlan(Base, PRBase):
     __tablename__ = 'reader_user_portal_plan'

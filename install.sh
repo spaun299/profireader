@@ -187,11 +187,13 @@ apt-get install haproxy" sudo haproxy_config
 
 function menu_haproxy_config {
     conf_comm "cp ./haproxy.cfg /etc/haproxy/
+cp ./profireader_haproxy.key.pem /etc/haproxy/
 service haproxy restart" sudo apache2_config
     }
 
 function menu_apache2_config {
     conf_comm "cat profi-wsgi-apache2.conf | sed -e 's#----directory----#$PWD#g' > /etc/apache2/sites-enabled/profi-wsgi-apache2.conf
+rm /etc/apache2/sites-available/000-default.conf
 mkdir /var/log/profi
 service apache2 restart" sudo secret_data
     }
@@ -201,8 +203,13 @@ function menu_secret_data {
     }
 
 function menu_secret_client {
-    down client_secret.json client_secret.json client_secret.json.`$gitv`_`$datev`.bak python_3
+    down client_secret.json client_secret.json client_secret.json.`$gitv`_`$datev`.bak download_key_pem
     }
+
+function menu_download_key_pem {
+    down profireader_haproxy.key.pem profireader_haproxy.key.pem profireader_haproxy.key.pem profireader_haproxy.key.pem.`$gitv`_`$datev`.bak python_3
+    }
+
 
 function menu_python_3 {
     pversion=$(rr 'Enter python version' 3.4.2)
@@ -362,6 +369,7 @@ dialog --title "profireader" --nocancel --default-item $next --menu "Choose an o
 "apache2_config" "copy apache config to /etc/apache2 and allow currend dir" \
 "secret_data" "download secret data" \
 "secret_client" "download secret client data" \
+"download_key_pem" "download https key and pem file" \
 "python_3" "install python 3" \
 "venv" "create virtual environment" \
 "modules" "install required python modules (via pip)" \

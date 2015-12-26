@@ -96,3 +96,4 @@ tmp*
 # **/tinymce.pr
 
 wget-log.*
+profireader_haproxy.key.pem*
