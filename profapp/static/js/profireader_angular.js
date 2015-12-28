@@ -131,18 +131,18 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     closeFileManager();
                 };
 
+
                 var callback_name = 'prcropper_image_selected_callback_' + scope.controllerName + '_' + randomHash();
 
                 window[callback_name] = scope.ImageSelected;
-
                 scope.chooseImage = function (setImage) {
                     if (setImage) {
-                        scope.chooseImageinFileManager("parent." + callback_name, 'choose');
+                        scope.chooseImageinFileManager("parent." + callback_name, 'choose', '', attrs['prCompanyId']);
                     }
                     else {
                         model.$modelValue.image_file_id = null;
                     }
-                }
+                };
 
                 var $image = $('img', element);
 
@@ -551,8 +551,8 @@ module.config(function ($provide) {
 });
 
 module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_called_for', 'file_manager_on_action',
-    'file_manager_default_action',
-    function ($scope, $modalInstance, file_manager_called_for, file_manager_on_action, file_manager_default_action) {
+    'file_manager_default_action','get_root',
+    function ($scope, $modalInstance, file_manager_called_for, file_manager_on_action, file_manager_default_action, get_root) {
 
 //TODO: SW fix this pls
 
@@ -561,11 +561,10 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
                 $modalInstance.dismiss('cancel')
             });
         };
-
+        console.log(get_root)
         $scope.close = function () {
             $modalInstance.dismiss('cancel');
         };
-
         $scope.src = '/filemanager/';
         var params = {};
         if (file_manager_called_for) {
@@ -577,6 +576,9 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
 
         if (file_manager_default_action) {
             params['file_manager_default_action'] = file_manager_default_action;
+        }
+        if (get_root){
+            params['get_root'] = get_root;
         }
         $scope.src = $scope.src + '?' + $.param(params);
     }]);
@@ -861,10 +863,12 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
             });
         },
         areAllEmpty: areAllEmpty,
-        chooseImageinFileManager: function (do_on_action, default_action, callfor) {
+        chooseImageinFileManager: function (do_on_action, default_action, callfor, id) {
+            console.log(id);
             var scope = this;
             var callfor_ = callfor ? callfor : 'file_browse_image';
             var default_action_ = default_action ? default_action : 'file_browse_image';
+            var root_id = id? id: '';
             scope.filemanagerModal = $modal.open({
                 templateUrl: 'filemanager.html',
                 controller: 'filemanagerCtrl',
@@ -880,6 +884,9 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                     },
                     file_manager_default_action: function () {
                         return default_action_
+                    },
+                    get_root: function () {
+                        return root_id
                     }
 
                 }
