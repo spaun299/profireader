@@ -690,18 +690,18 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                 type: uiGridConstants.filter.SELECT
             };
         },
-        update: function(col){
-                this.paginationOptions.pageNumber = 1;
-                this.all_grid_data['search_text'][col.field] = col.colDef.filter.search_text;
-                this.sendData();
+        update: function (col) {
+            this.paginationOptions.pageNumber = 1;
+            this.all_grid_data['search_text'][col.field] = col.colDef.filter.search_text;
+            this.sendData();
         },
-        refresh: function(col){
-            if(col !== undefined){
-                for(var i = 0;i < col.length;i++){
-                    if(col[i].filter && col[i].filter.type === 'select'){
+        refresh: function (col) {
+            if (col !== undefined) {
+                for (var i = 0; i < col.length; i++) {
+                    if (col[i].filter && col[i].filter.type === 'select') {
                         col[i].filter.term = '1'
-                    }else if(col[i].filter && col[i].filter.type === 'input'){
-                        col[i].filter.search_text= ''
+                    } else if (col[i].filter && col[i].filter.type === 'input') {
+                        col[i].filter.search_text = ''
                     }
                 }
                 this.all_grid_data.filter = {};
@@ -709,11 +709,11 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                 this.sendData()
             }
         },
-        getProperties: function(col){
+        getProperties: function (col) {
             var scope = this;
             scope.pos = {};
-            for(var i = 0;i < col.length;i++){
-                if(col[i].filter && col[i].filter.type){
+            for (var i = 0; i < col.length; i++) {
+                if (col[i].filter && col[i].filter.type) {
                     scope.pos[col[i].name] = '1'
                 }
             }
@@ -725,39 +725,64 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                 search_text: {}
             }
         },
-        applyGridExtarnals: function(resp){
+        applyGridExtarnals: function (resp) {
             var scope = this;
             var col = scope.gridOptions1.columnDefs;
             scope.gridOptions1.totalItems = resp.total;
-            for(var i = 0;i < col.length;i++) {
+            for (var i = 0; i < col.length; i++) {
                 if (col[i].filter && col[i].filter.type === 'select') {
                     scope.gridOptions1.columnDefs[i]['filter']['selectOptions'] = resp.grid_filters[col[i].name];
                 }
             }
-            for(var m=0;m< resp.grid_data.length;m++){
-                        if(resp.grid_data[m]['level'])
-                            resp.grid_data[m].$$treeLevel = 0
+            for (var m = 0; m < resp.grid_data.length; m++) {
+                if (resp.grid_data[m]['level'])
+                    resp.grid_data[m].$$treeLevel = 0
             }
-            if(scope.all_grid_data){
+            if (scope.all_grid_data) {
                 scope.all_grid_data['editItem'] = {};
             }
         },
         editableTemplate: '<div class = "ui_dropdown"><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',
         selectRowTemplate: '<div class="ui-grid-cell-contents">{{ COL_FIELD }}<i class="glyphicon glyphicon-collapse-down" style="float:right"></i></div>',
+        gridCallbacks: {
+            getFilterPageSort: function (grid) {
+                var ret = {
+                    paginationOptions: scope.paginationOptions,
+                    filter: {},
+                    sort: {},
+                    editItem: {},
+                    search_text: {}
+                }
+                $.each(grid.columns, function (ind, column) {
+                    if (column.sort && column.sort['direction'])
+                        ret['sort'][column.field] = column.sort['direction'];
+                    //if (column.filter)
+                    //    ret['filter'][column.field] = column.sort['direction'];
+                });
+                return ret;
+
+            }
+        },
         setGridExtarnals: function (gridApi, externalFunction, paginationOptions, refresh) {
             var scope = this;
             scope.pos = 1;
             scope.getProperties(scope.gridOptions1.columnDefs);
             scope.gridApi = gridApi;
             scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {
-                if (sortColumns.length === 0) {
-                    scope.all_grid_data['sort']={};
-                } else {
-                    for(var i = 0;i < sortColumns.length;i++){
-                        scope.all_grid_data['sort'][sortColumns[i].field] = sortColumns[0].sort.direction ;
-                    }
-                }
-                externalFunction()
+                debugger;
+                var data = scope.gridCallbacks.getFilterPageSort(grid);
+                data['editItem'] =  scope.gridCallbacks.getEditFilter(grid);
+                $ok(grid.options.remoteUrl, data, function (resp) {
+                    this.applyGridExtarnals(resp);
+                })
+                //if (sortColumns.length === 0) {
+                //    scope.all_grid_data['sort'] = {};
+                //} else {
+                //    for (var i = 0; i < sortColumns.length; i++) {
+                //        scope.all_grid_data['sort'][sortColumns[i].field] = sortColumns[0].sort.direction;
+                //    }
+                //}
+                //externalFunction()
             });
             gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
                 if (newValue !== oldValue) {
@@ -783,15 +808,15 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                     if (term !== undefined) {
                         if (term !== scope.pos[field] && term) {
                             scope.pos[field] = term;
-                            if(grid.columns[i].filter.selectOptions[term-1]['value'] !== '1')
+                            if (grid.columns[i].filter.selectOptions[term - 1]['value'] !== '1')
                                 paginationOptions.pageNumber = 1;
-                                if(grid.columns[i].filter.selectOptions[term-1]['id']){
-                                    scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term-1]['id'];
-                                    externalFunction()
-                                }else{
-                                    scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term-1]['label'];
-                                    externalFunction()
-                                }
+                            if (grid.columns[i].filter.selectOptions[term - 1]['id']) {
+                                scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term - 1]['id'];
+                                externalFunction()
+                            } else {
+                                scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term - 1]['label'];
+                                externalFunction()
+                            }
                         }
                         if (term === null) {
                             scope.refresh(scope.gridOptions1.columnDefs)
@@ -799,12 +824,24 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                     }
                 }
             });
-            if(scope.gridOptions1.enableRowSelection){
-               gridApi.selection.on.rowSelectionChanged(scope,function(row){
+            if (scope.gridOptions1.enableRowSelection) {
+                gridApi.selection.on.rowSelectionChanged(scope, function (row) {
                     scope.list_select = scope.gridApi.selection.getSelectedRows();
                     scope.isSelectedRows = scope.gridApi.selection.getSelectedRows().length !== 0;
                 });
             }
+
+        },
+        gridOptions: {
+            data: 'datas.grid_data',
+            paginationPageSizes: [10, 25, 50, 75, 100, 1000],
+            paginationPageSize: 50,
+            enableFiltering: true,
+            useExternalPagination: true,
+            useExternalSorting: true,
+            useExternalFiltering: true,
+            showTreeExpandNoChildren: false,
+            columnDefs: []
 
         },
 
