@@ -531,7 +531,11 @@ function file_choose(selectedfile) {
     var args = top.tinymce.activeEditor.windowManager.getParams();
     var win = (args.window);
     var input = (args.input);
-    win.document.getElementById(input).value = selectedfile['url'];
+    if(selectedfile['type']==='file_video'){
+        win.document.getElementById(input).value = "https://youtu.be/"+selectedfile['youtube_data']['id']+"?list="+selectedfile['youtube_data']['playlist_id'];
+    }else{
+        win.document.getElementById(input).value = selectedfile['url'];
+    }
     top.tinymce.activeEditor.windowManager.close();
 }
 
@@ -827,7 +831,6 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
         },
         areAllEmpty: areAllEmpty,
         chooseImageinFileManager: function (do_on_action, default_action, callfor, id) {
-            console.log(id);
             var scope = this;
             var callfor_ = callfor ? callfor : 'file_browse_image';
             var default_action_ = default_action ? default_action : 'file_browse_image';
