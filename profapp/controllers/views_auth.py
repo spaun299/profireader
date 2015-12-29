@@ -5,11 +5,12 @@ from ..constants.SOCIAL_NETWORKS import DB_FIELDS, SOC_NET_FIELDS, \
 from flask.ext.login import logout_user, current_user, login_required
 from urllib.parse import quote
 from ..models.users import User
+from ..controllers.request_wrapers import tos_required
 from ..forms.auth import LoginForm, RegistrationForm, ChangePasswordForm, \
     PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm
 from .errors import BadDataProvided
 from ..utils.email import send_email
-
+from flask import jsonify
 import re
 from authomatic.adapters import WerkzeugAdapter
 
@@ -255,6 +256,17 @@ def confirm(token):
     else:
         flash('The confirmation link is invalid or has expired.')
     return redirect(url_for('general.index'))
+
+
+@auth_bp.route('/tos', methods=['POST'])
+@login_required
+def tos():
+    tos_accept = 'accept' in request.form
+    if tos_accept:
+        g.user.tos = True
+        return jsonify(dict(tos=True))
+    else:
+        return jsonify(dict(tos=False))
 
 
 @auth_bp.route('/confirm')

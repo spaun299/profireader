@@ -7,7 +7,7 @@ from utils.db_utils import db
 from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDivision, \
     PortalDivisionSettingsCompanySubportal, PortalConfig
 from ..models.tag import Tag, TagPortal, TagPortalDivision
-from .request_wrapers import ok, check_rights
+from .request_wrapers import ok, check_rights, tos_required
 from ..models.articles import ArticlePortalDivision, ArticleCompany, Article
 from ..models.company import simple_permissions
 from ..models.rights import Right
@@ -20,6 +20,7 @@ from config import Config
 
 
 @portal_bp.route('/create/<string:company_id>/', methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def create(company_id):
@@ -164,6 +165,7 @@ def apply_company(json):
 
 
 @portal_bp.route('/profile/<string:portal_id>/', methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([])portal_id)
 def profile(portal_id):
@@ -200,6 +202,7 @@ def profile_load(json, portal_id):
 
 
 @portal_bp.route('/profile_edit/<string:portal_id>/', methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def profile_edit(portal_id):
@@ -440,6 +443,7 @@ def profile_edit_load(json, portal_id):
 
 
 @portal_bp.route('/portals_partners/<string:company_id>/', methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def portals_partners(company_id):
@@ -480,6 +484,7 @@ def portals_partners_load(json, company_id):
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def companies_partners(company_id):
@@ -516,6 +521,7 @@ def search_for_portal_to_join(json):
 
 
 @portal_bp.route('/publications/<string:company_id>/', methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def publications(company_id):
@@ -573,6 +579,7 @@ def publications_load(json, company_id):
 
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
+@tos_required
 @login_required
 def publication_details(article_id, company_id):
     return render_template('company/publication_details.html', company_id=company_id,

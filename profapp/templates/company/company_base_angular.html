@@ -18,7 +18,6 @@
 {#TODO: SS by OZ: add {% raw and remove this all stupid {{ '{{' }} %}#}
 <div ng-controller="CompanyMenuController" class="topbar-menu-links">
     <div ng-cloak ng-show="user.id">
-
         <a  class="navbar-brand" href="{{ url_for('company.profile', company_id = company_id) }}"><img
                 style="background-position: center; witdh: 150px; height: 30px; background-repeat: no-repeat;
                         background-size: contain;"
@@ -35,8 +34,8 @@
         <a ng-class="{'selected': selected_company_menu == 'publications'}" id="publications" href="{{ url_for('portal.publications', company_id = company_id) }}">{{ '{{' }}_('Publications'){{ '}}' }}</a>
         <a ng-class="{'selected': selected_company_menu == 'companies_partners'}" id="companies_partners" href="{{ url_for('portal.companies_partners', company_id = company_id) }}">{{ '{{' }}_('Members'){{ '}}' }}</a>
         <a ng-class="{'selected': selected_company_menu == 'companies_readers'}" id="companies_readers" href="{{ url_for('company.readers', company_id = company_id) }}">{{ '{{' }}_('Readers'){{ '}}' }}</a>
-    </div>
 
+    </div>
 </div>
 <script>
         if ({{ company.own_portal==None }}){

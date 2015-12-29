@@ -13,8 +13,8 @@
             this.currentPath = [];
             this.searchList = [];
             this.list = [];
-            this.root_id = root_id;
-            this.ancestors = [root_id];
+            self.root_id = root_id;
+            self.ancestors = [root_id];
             this.history = [];
             this.error = '';
             this.search_len = None;
