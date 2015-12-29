@@ -9,13 +9,15 @@
             $scope.path_profireader = 'http://profireader.com';
             $scope.orderProp = ['model.type', 'model.name'];
             $scope.query = '';
+            $scope.rootdirs = library;
+            $scope.last_visit_root = last_visit_root;
+            $scope.last_root_id = last_root_id;
             $scope.temp = new Item();
-            $scope.fileNavigator = new FileNavigator(_.keys(library)[0], file_manager_called_for);
+            $scope.fileNavigator = new FileNavigator($scope.last_root_id? $scope.last_root_id:$scope.rootdirs[0]['id'], file_manager_called_for);
             $scope.fileUploader = fileUploader;
             $scope.uploadFileList = [];
             $scope.viewTemplate = $cookies.viewTemplate || 'main-table.html';
             $scope.error = error;
-            $scope.rootdirs = library;
             $scope.file_manager_called_for = file_manager_called_for;
             $scope.file_manager_on_action = file_manager_on_action;
             $scope.file_manager_default_action = file_manager_default_action;
@@ -26,6 +28,7 @@
             $scope.timer = false;
             $scope.name = '';
             $scope.upload_file_id = '';
+            $scope.uploadingProgress = false;
 
             $scope.last_visit = document.referrer;
 
@@ -33,8 +36,10 @@
                 $scope.viewTemplate = $cookies.viewTemplate = name;
             };
 
+
             $scope.changeRoot = function (root_id, root_name) {
                 $scope.fileNavigator.setRoot(root_id);
+                $cookies.last_root = root_id;
                 $scope.root_name = root_name;
             };
 
@@ -48,7 +53,7 @@
                 if (item.isFolder()) {
                     return $scope.fileNavigator.folderClick(item);
                 }
-                if (item.isImage()) {
+                if (item.isImage() || item.model.type === 'file_video') {
                     if ($scope.file_manager_default_action === 'choose') {
                         try {
                             eval($scope.file_manager_on_action['choose'] + '(item.model);');
@@ -238,9 +243,12 @@
                 return defaultpermited
             };
 
+            $scope.showModal = function(){
+                $scope.hide = false;
+            };
+
             $scope.hideModal = function(){
-                console.log('hide')
-                $('#uploadfile').find('.modal').css("width", 5);
+                $scope.hide = true;
             };
 
             $scope.abort = function(){
@@ -254,7 +262,7 @@
             };
 
             $scope.uploading = function(list){
-                if(list.length>0){
+                if(list.length>0 && $scope.uploadingProgress === false){
                     $timeout(function () {
                             $scope.upl = true
                     }, 1000);
@@ -265,6 +273,7 @@
             };
 
             $scope.uploadUsingUpload = function () {
+                $scope.uploadingProgress = true;
                 var file = $scope.uploadFileList[0];
                 $scope.f = file;
                 var url = '/filemanager/send/' + $scope.fileNavigator.getCurrentFolder() + '/';
@@ -285,12 +294,17 @@
                     file.progress = Math.min(100, parseInt(100.0 *
                         evt.loaded / evt.total));
                 }).success(function (data) {
+                    $scope.hide = false;
+                    $scope.uploadingProgress = false;
                     $scope.f.progress = 0;
                     $scope.fileNavigator.refresh();
                     $('#uploadfile').find('input[type=file]').val('');
                     $('#uploadfile').modal('hide');
 
                 }).error(function (data) {
+                    $scope.hide = false;
+                    $scope.uploadingProgress =false;
+                    $scope.f.progress = 0;
                     var errorMsg =  $translate.instant('error_uploading_files');
                     $scope.auto_remove($scope.f.name, $scope.fileNavigator.getCurrentFolder());
                     $scope.temp.error = errorMsg;
@@ -329,7 +343,9 @@
                 if($scope.file_manager_default_action === actionname && (type !== 'parent' && type !== 'dir')){
                     style += 'font-weight: bold;color:black'
                 }
-                if(actionname === 'choose' && type !== 'img'){
+                if(($scope.file_manager_called_for === 'file_browse_media' && actionname === 'choose') && type !== 'file_video'){
+                    style = 'cursor: default;pointer-events: none;color: gainsboro;'
+                }else if(($scope.file_manager_called_for === 'file_browse_image' && actionname === 'choose') && type !== 'img'){
                     style = 'cursor: default;pointer-events: none;color: gainsboro;'
                 }
                 return style
@@ -365,7 +381,15 @@
 
             $scope.changeRoots = function () {
                 if (error == 'False') {
-                    $scope.changeRoot(_.keys($scope.rootdirs)[0], _.values($scope.rootdirs)[0]['name'])
+                    if($scope.last_visit_root && $scope.rootdirs){
+                        for(var n = 0;n < $scope.rootdirs.length;n++){
+                            if($scope.rootdirs[n]['name'] === $scope.last_visit_root){
+                                $scope.changeRoot($scope.rootdirs[n]['id'], $scope.rootdirs[n]['name']);
+                            }
+                        }
+                    }else{
+                        $scope.changeRoot($scope.rootdirs[0]['id'], $scope.rootdirs[0]['name'])
+                    }
                 } else {
                     $scope.changeRoot('', '')
                 }

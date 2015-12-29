@@ -212,6 +212,7 @@ class File(Base, PRBase):
                         'parent_id': file.parent_id, 'type': File.type(file),
                         'date': str(file.md_tm).split('.')[0],
                         'url': file.get_thumbnail_url(size=str_size),
+                        'youtube_data': {'id':file.youtube_video.video_id, 'playlist_id': file.youtube_video.playlist_id} if file.mime == 'video/*' else {},
                         'path_to': File.path(file),
                         'author_name': file.copyright_author_name,
                         'description': file.description,
@@ -269,11 +270,12 @@ class File(Base, PRBase):
         if self.mime == 'root' or self.mime == 'directory':
             return 'dir'
         elif self.mime == 'video/*':
+            print(self.youtube_video.playlist_id)
             return 'file_video'
         elif re.search('^image/.*', self.mime):
             return 'img'
         elif self.mime == 'application/pdf':
-            return 'pdf'
+            return 'fpdf'
         else:
             return 'file'
 

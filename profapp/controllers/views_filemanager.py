@@ -31,28 +31,40 @@ json_result = {"result": {"success": True, "error": None}}
 
 @filemanager_bp.route('/')
 def filemanager():
+    last_visit_root_n = ''
+    if 'last_root' in request.cookies:
+        last_root_id = request.cookies['last_root']
+    else:
+        last_root_id = ''
     # library = {g.user.personal_folder_file_id:
     # {'name': 'My personal files',
     # 'icon': current_user.gravatar(size=18)}}
-    library = {}
-
+    library = []
     for user_company in g.user.employer_assoc:
         # TODO VK by OZ: we need function that get all emploees with specific right
         # Company.get_emploees('can_read', status = 'active')
         # Company.get_emploees(['can_read', 'can_write'], status = ['active','banned'])
         # similar function User.get_emploers ...
         if user_company.status == 'active' and 'upload_files' in g.user.user_rights_in_company(user_company.company_id):
-            library[user_company.employer.journalist_folder_file_id] = {
-            'name': "%s files" % (user_company.employer.name,), 'icon': ''}
+            library.append({'id':user_company.employer.journalist_folder_file_id,
+            'name': "%s files" % (user_company.employer.name,), 'icon': ''})
+            if user_company.employer.journalist_folder_file_id == last_root_id:
+                last_visit_root_n = user_company.employer.name + " files"
+    library.sort(key=lambda k: k['name'])
     file_manager_called_for = request.args[
         'file_manager_called_for'] if 'file_manager_called_for' in request.args else ''
     file_manager_on_action = jsonmodule.loads(
         request.args['file_manager_on_action']) if 'file_manager_on_action' in request.args else {}
     file_manager_default_action = request.args[
         'file_manager_default_action'] if 'file_manager_default_action' in request.args else 'download'
-
+    get_root = request.args[
+        'get_root'] if 'get_root' in request.args else None
+    if get_root:
+        root = Company.get(get_root)
+        last_visit_root_n = root.name + " files"
+        last_root_id = root.journalist_folder_file_id
     err = True if len(library) == 0 else False
-    return render_template('filemanager.html', library=library, err=err,
+    return render_template('filemanager.html', library=library, err=err, last_visit_root=last_visit_root_n,last_root_id=last_root_id,
                            file_manager_called_for=file_manager_called_for,
                            file_manager_on_action=file_manager_on_action,
                            file_manager_default_action=file_manager_default_action)
