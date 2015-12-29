@@ -10,6 +10,7 @@
             this.requesting = false;
             this.fileList = [];
             this.search_text = '';
+            self.serch_folder = '';
             this.currentPath = [];
             this.searchList = [];
             this.list = [];
@@ -39,6 +40,8 @@
         FileNavigator.prototype.search = function(query, folder_id, success, error) {
             var self = this;
             var path = self.currentPath.join('/');
+            self.search_text = query;
+            self.serch_folder = folder_id;
             var data = {params: {
                 mode: "list",
                 search_text: query,
@@ -148,9 +151,13 @@
             if (item && item.isFolder()) {
                 self.currentPath = item.model.fullPath().split('/').splice(1);
                 //self.currentPath.push(item.model.name);
+                self.refresh(item.model.id, function () {
+                });
+            }else{
+                self.buildTree('/');
+                self.goTo(-1)
             }
-            self.refresh(item.model.id, function () {
-            });
+
         };
 
         FileNavigator.prototype.parent = function() {
@@ -159,7 +166,18 @@
 
         FileNavigator.prototype.upDir = function() {
             var self = this;
-            if (self.currentPath[0]) {
+            if((self.search_text.length>0 && self.currentPath[0]) && self.currentPath !== self.serch_folder){
+                if(self.ancestors.length > 2 || self.ancestors.indexOf(self.serch_folder) <= -1){
+                    self.search_text = self.ancestors.indexOf(self.serch_folder) <= -1 ? '': self.search_text;
+                    self.currentPath = self.currentPath.slice(0, -1);
+                    self.ancestors = self.ancestors.slice(0, -1);
+                    self.refresh()
+                }else{
+                    self.currentPath = self.currentPath.slice(0, -1);
+                    self.ancestors = self.ancestors.slice(0, -1);
+                    self.search(self.search_text, self.serch_folder);
+                }
+            }else if(self.currentPath[0]) {
                 self.currentPath = self.currentPath.slice(0, -1);
                 self.ancestors = self.ancestors.slice(0, -1);
                 self.refresh();
@@ -168,6 +186,8 @@
 
         FileNavigator.prototype.goTo = function(index) {
             var self = this;
+            $('.navbar-right').find('input[type=text]').val('');
+            self.search_text = '';
             self.currentPath = self.currentPath.slice(0, index + 1);
             self.ancestors = self.ancestors.slice(0, index + 2);
             self.refresh();
