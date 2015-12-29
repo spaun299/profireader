@@ -7,9 +7,11 @@ from flask.ext.login import current_user, login_required
 from utils.db_utils import db
 from ..constants.UNCATEGORIZED import AVATAR_SIZE, AVATAR_SMALL_SIZE
 from ..forms.user import EditProfileForm
+from ..controllers.request_wrapers import tos_required
 
 
 @user_bp.route('/profile/<user_id>')
+@tos_required
 @login_required
 def profile(user_id):
     user = g.db.query(User).filter(User.id == user_id).first()
@@ -20,6 +22,7 @@ def profile(user_id):
 
 # TODO (AA to AA): Here admin must have the possibility to change user profile
 @user_bp.route('/edit-profile/<user_id>', methods=['GET', 'POST'])
+@tos_required
 @login_required
 def edit_profile(user_id):
     if current_user.get_id() != user_id:
