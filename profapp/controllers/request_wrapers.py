@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import jsonify, request, g, abort
+from flask import jsonify, request, g, abort, redirect, url_for, flash
 from functools import reduce
 from sqlalchemy.orm import relationship, backref, make_transient, class_mapper
 import datetime
@@ -89,6 +89,14 @@ def need_we_column(name, arr, is_relationship=False):
             return False
 
 
+def tos_required(func):
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        if not g.user.tos:
+            flash('You have not accept licence and terms')
+            return redirect(url_for('general.index'))
+        return func(*args, **kwargs)
+    return decorated_view
 # def object_to_dict(obj, *args, prefix=''):
 #     ret = {}
 #

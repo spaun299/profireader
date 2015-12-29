@@ -3,7 +3,7 @@ from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivisi
 from profapp.models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
 from profapp.models.portal import PortalDivision
 from .blueprints_declaration import article_bp
-from .request_wrapers import ok
+from .request_wrapers import ok, tos_required
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
 from .pagination import pagination
 from config import Config
@@ -19,6 +19,7 @@ import time
 
 
 @article_bp.route('/list/', methods=['GET'])
+@tos_required
 def show_mine():
     return render_template('article/list.html')
 
@@ -56,6 +57,7 @@ def load_mine(json):
 @article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
 @article_bp.route('/updateatportal/<string:article_portal_division_id>/', methods=['GET'])
 @article_bp.route('/create/', methods=['GET'])
+@tos_required
 def article_show_form(article_company_id=None, article_portal_division_id=None):
     return render_template('article/form.html', article_portal_division_id=article_portal_division_id,
                            article_company_id=(article_company_id or article_portal_division_id))
@@ -150,6 +152,7 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
+@tos_required
 def details(article_id):
     return render_template('article/details.html',
                            article_id=article_id)

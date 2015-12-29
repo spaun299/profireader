@@ -4,7 +4,7 @@ from flask.ext.login import login_required, current_user
 from flask import render_template, request, url_for, g, redirect
 from ..models.company import Company, UserCompany, Right, RightHumnReadible
 from ..models.users import User
-from .request_wrapers import ok, check_rights
+from .request_wrapers import ok, check_rights, tos_required
 from ..constants.STATUS import STATUS
 from flask.ext.login import login_required
 from ..models.articles import Article
@@ -35,6 +35,7 @@ def search_to_submit_article(json):
 
 
 @company_bp.route('/', methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def show():
@@ -59,6 +60,7 @@ def load_companies(json):
 
 
 @company_bp.route('/materials/<string:company_id>/', methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def materials(company_id):
@@ -119,6 +121,7 @@ def materials_load(json, company_id):
 
 
 @company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def material_details(company_id, article_id):
@@ -223,6 +226,7 @@ def update_material_status(json, company_id, article_id):
 
 
 @company_bp.route('/profile/<string:company_id>/')
+@tos_required
 @login_required
 # @check_rights(simple_permissions(['manage_rights_company']))
 def profile(company_id):
@@ -242,6 +246,7 @@ def profile(company_id):
 
 
 @company_bp.route('/employees/<string:company_id>/')
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def employees(company_id):
@@ -294,6 +299,7 @@ def update_rights():
 
 @company_bp.route('/create/', methods=['GET'])
 @company_bp.route('/edit/<string:company_id>/', methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def update(company_id=None):
@@ -302,8 +308,6 @@ def update(company_id=None):
                            company_name=company.name if company else '',
                            company=company if company else {})
 
-
-# TODO: VK by OZ: remove company_* kwargs
 
 @company_bp.route('/create/', methods=['POST'])
 @company_bp.route('/edit/<string:company_id>/', methods=['POST'])
@@ -376,6 +380,7 @@ def load(json, company_id=None):
 
 
 @company_bp.route('/subscribe/<string:company_id>/')
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def subscribe(company_id):
@@ -469,6 +474,7 @@ def unsuspend(user_id, company_id):
 
 @company_bp.route('/suspended_employees/<string:company_id>',
                   methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def suspended_employees(company_id):
@@ -488,6 +494,7 @@ def load_suspended_employees(json, company_id):
 
 @company_bp.route('/readers/<string:company_id>/', methods=['GET'])
 @company_bp.route('/readers/<string:company_id>/<int:page>/', methods=['GET'])
+@tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def readers(company_id, page=1):

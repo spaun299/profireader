@@ -203,6 +203,7 @@ def load_user():
         user_dict['id'] = id
         user_dict['registered_tm'] = user.registered_tm
         user_dict['lang'] = user.lang
+        user_dict['tos'] = user.tos
         # name = user.user_name
 
 
