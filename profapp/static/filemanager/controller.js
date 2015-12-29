@@ -1,8 +1,8 @@
 (function (window, angular, $) {
     "use strict";
     angular.module('FileManagerApp').controller('FileManagerCtrl', ['$http',
-        '$scope', '$translate', '$cookies', '$timeout', 'fileManagerConfig', 'item', 'Upload', 'fileNavigator', 'fileUploader','$q',
-        function ($http, $scope, $translate, $cookies, $timeout, fileManagerConfig, Item, Upload, FileNavigator, fileUploader, $q) {
+        '$scope', '$translate', '$cookies', '$timeout', 'fileManagerConfig', 'item', 'Upload', 'fileNavigator', 'fileUploader','$q','$filter',
+        function ($http, $scope, $translate, $cookies, $timeout, fileManagerConfig, Item, Upload, FileNavigator, fileUploader, $q, $filter) {
 
             $scope.config = fileManagerConfig;
             $scope.appName = fileManagerConfig.appName;
@@ -61,14 +61,19 @@
                         catch (e) {
 
                         }
-                    } else {
+                    } else if(item.model.type !== 'file_video') {
                         try {
                             eval('item' + '.' + 'download' + '();');//$scope.file_manager_on_action[actionname] + '(item);');
-                        }
-                        catch (e) {
+                        }catch (e) {
 
                         }
                     }
+               }else if(item.model.type !== 'dir' && item.model.type !== 'parent'){
+                    try {
+                        eval('item' + '.' + 'download' + '();');//$scope.file_manager_on_action[actionname] + '(item);');
+                    }catch (e) {
+
+                        }
                 }
                 if (item.isEditable()) {
                     item.getContent();
@@ -96,7 +101,14 @@
             };
 
             $scope.search = function (query) {
-                $scope.fileNavigator.search(query, $scope.fileNavigator.getCurrentFolder());
+                if(query){
+                   $scope.fileNavigator.search(query, $scope.fileNavigator.getCurrentFolder());
+                }else{
+                    if($scope.fileNavigator.is_search){
+                       self.search_text = '';
+                       $scope.fileNavigator.refresh();
+                    }
+                }
             };
 
 
@@ -340,12 +352,15 @@
                 } else {
                     style = ''
                 }
-                if($scope.file_manager_default_action === actionname && (type !== 'parent' && type !== 'dir')){
+                if(($scope.file_manager_default_action === actionname && (type !== 'parent' && type !== 'dir')) && len > 2){
                     style += 'font-weight: bold;color:black'
                 }
                 if(($scope.file_manager_called_for === 'file_browse_media' && actionname === 'choose') && type !== 'file_video'){
                     style = 'cursor: default;pointer-events: none;color: gainsboro;'
                 }else if(($scope.file_manager_called_for === 'file_browse_image' && actionname === 'choose') && type !== 'img'){
+                    style = 'cursor: default;pointer-events: none;color: gainsboro;'
+                }
+                if(actionname === 'download' && type === 'file_video'){
                     style = 'cursor: default;pointer-events: none;color: gainsboro;'
                 }
                 return style
@@ -376,6 +391,20 @@
                     return false
                 } else {
                     return true
+                }
+            };
+
+            $scope.getTitle = function(name, id, limit){
+                if($scope.fileNavigator.search_text){
+                    var re = new RegExp($scope.fileNavigator.search_text, "gi");
+                    name = name.length <= limit ? name: $filter('limitTo')(name, limit) + '...';
+                    var result = name.match(re);
+                    var res =  name.replace(re, '<span style="color:red">' + result + '</span>');
+                    $('#highlightT_'+id).html(res);
+                    return name;
+                }else {
+                    name = name.length <= limit ? name: $filter('limitTo')(name, limit) + '...';
+                    return name
                 }
             };
 

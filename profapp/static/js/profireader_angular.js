@@ -565,7 +565,7 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
                 $modalInstance.dismiss('cancel')
             });
         };
-        console.log(get_root)
+
         $scope.close = function () {
             $modalInstance.dismiss('cancel');
         };
