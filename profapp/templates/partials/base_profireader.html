@@ -4,7 +4,7 @@
         $scope.user = {{ g.user_dict|tojson|safe }};
         $scope.tos = function () {
             var accepted = $scope.user.tos;
-            if (accepted==true){
+            if (accepted!=true){
                 $('#licence').modal('show');
                 return true}
         };
