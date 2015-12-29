@@ -834,7 +834,6 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
             var scope = this;
             var callfor_ = callfor ? callfor : 'file_browse_image';
             var default_action_ = default_action ? default_action : 'file_browse_image';
-            console.log(id+'ds')
             var root_id = id? id: '';
             scope.filemanagerModal = $modal.open({
                 templateUrl: 'filemanager.html',
