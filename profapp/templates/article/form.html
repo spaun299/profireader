@@ -51,8 +51,6 @@
             $scope.update_created_article = {{ raw_url_for('article.article_show_form')|safe }};
 
             {% if article_company_id %}
-{#                $scope.company_id = '{{ article_company_id }}'#}
-{#                console.log($scope.company_id)#}
                 $scope.save_article = '{{ url_for('article.load_form_create', article_company_id = article_company_id)|safe }}';
             {% else %}
                 $scope.save_article = '{{ url_for('article.load_form_create')|safe }}';
@@ -314,7 +312,7 @@
 
             <div class="update_col1">
                 {{ _('Select picture') }}
-                <div ng-model="data.image" pr-cropper="cropper" pr-company-id="{{ data.article.company_id }}"></div>
+                <div ng-model="data.image" pr-cropper="cropper"></div>
             </div>
 
 

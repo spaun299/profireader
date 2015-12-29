@@ -72,32 +72,19 @@ def portal_and_settings(portal):
 @front_bp.route('<int:page>/', methods=['GET'])
 def index(page=1):
     search_text, portal, _ = get_params()
-    referrer = request.referrer
-    if referrer:
-        referrer_parameters = referrer.split('?')[1].split('&')
-        search_text_referrer = ''
-        for param in referrer_parameters:
-            if param.split('=')[0] == 'search_text':
-                search_text_referrer = param.split('=')[1]
-                break
-        if search_text_referrer != search_text:
-            if search_text:
-                return redirect(url_for(request.endpoint, page=1, search_text=search_text))
-            else:
-                return redirect(url_for(request.endpoint, page=1))
 
     division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                       portal_division_type_id='index').one()
     order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
-    # page = page if session.get('original_search_text') == search_text else 1
+    page = page if session.get('original_search_text') == search_text else 1
     # portal.config.set_division_page_size(page_size_for_divisions={division.name: 1})
     items_per_page = portal.get_value_from_config(key=PortalConfig.PAGE_SIZE_PER_DIVISION,
                                                   division_name=division.name)
-    articles, pages, page = Search.search(ArticlePortalDivision().search_filter_default(division.id),
-                                          search_text=search_text, page=page,
-                                          order_by=order, pagination=True,
-                                          items_per_page=items_per_page)
-    # session['original_search_text'] = search_text
+    articles, pages, page = Search.search(
+        ArticlePortalDivision().search_filter_default(division.id),
+        search_text=search_text, page=page, order_by=order, pagination=True,
+        items_per_page=items_per_page)
+    session['original_search_text'] = search_text
 
     return render_template('front/bird/index.html',
                            articles=articles,
