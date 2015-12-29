@@ -28,6 +28,7 @@
             $scope.timer = false;
             $scope.name = '';
             $scope.upload_file_id = '';
+            $scope.uploadingProgress = false;
 
             $scope.last_visit = document.referrer;
 
@@ -38,7 +39,7 @@
 
             $scope.changeRoot = function (root_id, root_name) {
                 $scope.fileNavigator.setRoot(root_id);
-                $cookies.last_root = root_name;
+                $cookies.last_root = root_id;
                 $scope.root_name = root_name;
             };
 
@@ -52,7 +53,7 @@
                 if (item.isFolder()) {
                     return $scope.fileNavigator.folderClick(item);
                 }
-                if (item.isImage()) {
+                if (item.isImage() || item.model.type === 'file_video') {
                     if ($scope.file_manager_default_action === 'choose') {
                         try {
                             eval($scope.file_manager_on_action['choose'] + '(item.model);');
@@ -243,15 +244,11 @@
             };
 
             $scope.showModal = function(){
-                $scope.modStyle = '';
-                $scope.show = false;
                 $scope.hide = false;
             };
 
             $scope.hideModal = function(){
-                $scope.modStyle = 'margin: 0!important;position: absolute;bottom: 0; width: 200px;';
                 $scope.hide = true;
-                $scope.show = true;
             };
 
             $scope.abort = function(){
@@ -265,7 +262,7 @@
             };
 
             $scope.uploading = function(list){
-                if(list.length>0){
+                if(list.length>0 && $scope.uploadingProgress === false){
                     $timeout(function () {
                             $scope.upl = true
                     }, 1000);
@@ -276,6 +273,7 @@
             };
 
             $scope.uploadUsingUpload = function () {
+                $scope.uploadingProgress = true;
                 var file = $scope.uploadFileList[0];
                 $scope.f = file;
                 var url = '/filemanager/send/' + $scope.fileNavigator.getCurrentFolder() + '/';
@@ -296,12 +294,17 @@
                     file.progress = Math.min(100, parseInt(100.0 *
                         evt.loaded / evt.total));
                 }).success(function (data) {
+                    $scope.hide = false;
+                    $scope.uploadingProgress = false;
                     $scope.f.progress = 0;
                     $scope.fileNavigator.refresh();
                     $('#uploadfile').find('input[type=file]').val('');
                     $('#uploadfile').modal('hide');
 
                 }).error(function (data) {
+                    $scope.hide = false;
+                    $scope.uploadingProgress =false;
+                    $scope.f.progress = 0;
                     var errorMsg =  $translate.instant('error_uploading_files');
                     $scope.auto_remove($scope.f.name, $scope.fileNavigator.getCurrentFolder());
                     $scope.temp.error = errorMsg;
@@ -340,7 +343,9 @@
                 if($scope.file_manager_default_action === actionname && (type !== 'parent' && type !== 'dir')){
                     style += 'font-weight: bold;color:black'
                 }
-                if(actionname === 'choose' && type !== 'img'){
+                if(($scope.file_manager_called_for === 'file_browse_media' && actionname === 'choose') && type !== 'file_video'){
+                    style = 'cursor: default;pointer-events: none;color: gainsboro;'
+                }else if(($scope.file_manager_called_for === 'file_browse_image' && actionname === 'choose') && type !== 'img'){
                     style = 'cursor: default;pointer-events: none;color: gainsboro;'
                 }
                 return style

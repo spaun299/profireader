@@ -11,6 +11,7 @@
                 path: path || [],
                 path_to: model && model.path_to || '',
                 type: model && model.type || 'file',
+                youtube_data: model && model.youtube_data || {},
                 size: model && model.size || 0,
                 date: convertDate(model && model.date),
                 perms: new Chmod(model && model.rights),
