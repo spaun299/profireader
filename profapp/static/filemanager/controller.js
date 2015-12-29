@@ -55,11 +55,20 @@
                 }
                 if (item.isImage() || item.model.type === 'file_video') {
                     if ($scope.file_manager_default_action === 'choose') {
-                        try {
-                            eval($scope.file_manager_on_action['choose'] + '(item.model);');
-                        }
-                        catch (e) {
+                        if($scope.file_manager_called_for === 'file_browse_image' && item.isImage()){
+                            try {
+                                eval($scope.file_manager_on_action['choose'] + '(item.model);');
+                            }
+                            catch (e) {
 
+                            }
+                        }else if($scope.file_manager_called_for === 'file_browse_media' && item.model.type === 'file_video') {
+                            try {
+                                eval($scope.file_manager_on_action['choose'] + '(item.model);');
+                            }
+                            catch (e) {
+
+                            }
                         }
                     } else if(item.model.type !== 'file_video') {
                         try {
@@ -68,7 +77,7 @@
 
                         }
                     }
-               }else if(item.model.type !== 'dir' && item.model.type !== 'parent'){
+               }else if((item.model.type !== 'dir' && item.model.type !== 'parent') && $scope.file_manager_default_action !== 'choose'){
                     try {
                         eval('item' + '.' + 'download' + '();');//$scope.file_manager_on_action[actionname] + '(item);');
                     }catch (e) {

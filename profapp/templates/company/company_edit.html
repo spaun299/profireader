@@ -19,7 +19,7 @@
 
             $scope.url_back = {{ raw_url_for('company.show')|safe }};
             $scope.data = {};
-
+            $scope.company_id = '{{ company.id }}';
             $scope.cancel = function () {
                 window.location.href = $scope.url_back();
                 return false;
@@ -72,7 +72,7 @@
 
             <div class="update_col1" style="width: 400px;">
                 {{ _('Select picture') }}
-                <div ng-model="data.image" pr-cropper="cropper"></div>
+                <div ng-model="data.image" pr-cropper="cropper" pr-company-id="{{ company_id }}"></div>
             </div>
 
 

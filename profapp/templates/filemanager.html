@@ -56,6 +56,8 @@
     var file_manager_called_for = '{{ file_manager_called_for|safe }}';
     var file_manager_on_action = {{ file_manager_on_action|safe }};
     var file_manager_default_action = '{{ file_manager_default_action|safe }}';
+    var last_visit_root = '{{ last_visit_root|safe }}';
+    var last_root_id = '{{ last_root_id|safe }}';
 
 {#    console.log(file_manager_on_action);#}
 {#    var app = angular.module('FileUpload', ['ngFileUpload']);#}
@@ -64,6 +66,8 @@
 {#        $scope.submit = function () {#}
 {#            $scope.upload($scope.files);#}
 {#        };#}
+{##}
+{##}
 {#        // for multiple files:#}
 {#        $scope.upload = function (files) {#}
 {#            if (files && files.length) {#}
