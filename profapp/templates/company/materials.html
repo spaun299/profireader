@@ -18,25 +18,10 @@
             {% raw %}
             $scope.noData = 'No materials';
 
-            $scope.sendData = function () {
-                $scope.loading = true;
-                var data = {};
-                data.article_id = $scope.article_id ? $scope.article_id : null;
-                data.gr_data = $scope.all_grid_data;
-                $ok($scope.url_search_article({company_id: $scope.company_id}), data, function (resp) {
-                    $scope.datas = resp;
-                    $scope.applyGridExtarnals(resp);
-                }).finally(function () {
-                    $scope.loading = false;
-                    $scope.load_contr = true;
-                });
-            };
-
             $scope.sendData1 = function (grid_data) {
                 $scope.loading = true;
-
-                data.article_id = $scope.article_id ? $scope.article_id : null;
-                data.gr_data = $scope.all_grid_data;
+                //data.article_id = $scope.article_id ? $scope.article_id : null;
+                //data.gr_data = $scope.all_grid_data;
                 $ok($scope.url_search_article({company_id: $scope.company_id}), grid_data, function (resp) {
                     $scope.datas = resp;
                     $scope.applyGridExtarnals(resp);
@@ -54,7 +39,7 @@
                 remoteData: $scope.sendData1,
                 remoteUrl: $scope.url_search_article({company_id: $scope.company_id}),
                 onRegisterApi: function (gridApi) {
-                    $scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions)
+                    $scope.setGridExtarnals(gridApi)
                 },
                 columnDefs: [
                     {
@@ -100,7 +85,7 @@
     </script>
     {% include 'company/company_base_angular.html' %}
     {% raw %}
-    <div ng-init="sendData()" ng-controller="article_list">
+    <div ng-init="sendData1(all_grid_data)" ng-controller="article_list">
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
         <div ng-if="load_contr">
             <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>

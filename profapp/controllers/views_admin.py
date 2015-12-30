@@ -17,27 +17,25 @@ def translations():
 @admin_bp.route('/translations', methods=['POST'])
 @ok
 def translations_load(json):
-    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
-    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
+    page = json.get('paginationOptions')['pageNumber']
+    pageSize = json.get('paginationOptions')['pageSize']
     params = {}
-    if json.get('gr_data'):
-        params['sort'] = {}
-        params['filter'] = {}
-        params['search_text'] = {}
-        if json.get('gr_data')['sort']:
-            for n in json.get('gr_data')['sort']:
-                params['sort'][n] = json.get('gr_data')['sort'][n]
-        if json.get('gr_data')['filter']:
-            for b in json.get('gr_data')['filter']:
-                if json.get('gr_data')['filter'][b] != '-- all --':
-                    params['filter'][b] = json.get('gr_data')['filter'][b]
-        if json.get('gr_data')['search_text']:
-            for d in json.get('gr_data')['search_text']:
-                if json.get('gr_data')['search_text'][d] != '-- all --':
-                    params['search_text'][d] = json.get('gr_data')['search_text'][d]
-        if json.get('gr_data')['editItem']:
-            exist = db(TranslateTemplate, template=json.get('gr_data')['editItem']['template'], name=json.get('gr_data')['editItem']['name']).first()
-            TranslateTemplate.get(exist.id).attr({json.get('gr_data')['editItem']['col']: json.get('gr_data')['editItem']['newValue']}).save().get_client_side_dict()
+    params['sort'] = {}
+    params['filter'] = {}
+    params['search_text'] = {}
+    if json.get('sort'):
+        for n in json.get('sort'):
+            params['sort'][n] = json.get('sort')[n]
+    if json.get('filter'):
+        for b in json.get('filter'):
+            if json.get('filter')[b] != '-- all --':
+                params['filter'][b] = json.get('filter')[b]
+    if json.get('search_text'):
+        for d in json.get('search_text'):
+            params['search_text'][d] = json.get('search_text')[d]
+    if json.get('editItem'):
+        exist = db(TranslateTemplate, template=json.get('editItem')['template'], name=json.get('editItem')['name']).first()
+        TranslateTemplate.get(exist.id).attr({json.get('editItem')['col']: json.get('editItem')['newValue']}).save().get_client_side_dict()
     subquery = TranslateTemplate.subquery_search(template=json.get('template') or None,
                                                  url=json.get('url') or None,
                                                  **params)

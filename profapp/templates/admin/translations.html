@@ -6,7 +6,7 @@
 
 
     <script>
-        module.controller('translation_list', ['$scope', 'modal', '$ok', '$sce', 'uiGridConstants','$timeout', function ($scope, modal, $ok, $sce, uiGridConstants,$timeout) {
+        module.controller('translation_list', ['$scope', 'modal','modalEdit', '$ok', '$sce', 'uiGridConstants','$timeout', function ($scope, modal, modalEdit, $ok, $sce, uiGridConstants,$timeout) {
 
             $scope.url_search_translations = {{ raw_url_for('admin.translations_load')|safe }};
             $scope.url_save_translations = {{ raw_url_for('admin.translations_save')|safe }};
@@ -16,10 +16,18 @@
             $scope.noData = 'No translations';
             $scope.error = '';
             $scope.myModal = modal;
+            $scope.modalEdit = modalEdit;
+            $scope.allow_html_text = 'dsa';
 
             $scope.close = function(){
-                $scope.refresh();
-                $scope.myModal.close()
+                $scope.modalEdit.close();
+                $scope.myModal.close();
+            };
+
+            $scope.showModalForEdit = function(row, col){
+                $scope.allow_html_text = row.entity[col.field];
+                console.log(col.field)
+                $scope.modalEdit.open(row,row.entity[col.field], col.field)
             };
 
             $scope.showModal = function(isOpen,modal, list) {
@@ -34,6 +42,41 @@
                 var list = $scope.list_select;
                 my = $scope.myModal;
                 $scope.showModal(true, my, list);
+            };
+
+            $scope.saveTranslWithHtml = function(row, field, text){
+                console.log(row)
+                console.log(field)
+                console.log(text)
+                var grid_data = $scope.all_grid_data;
+                grid_data['editItem'] = {
+                    'name': row.entity.name,
+                    'newValue': text,
+                    'template': row.entity.template,
+                    'col': field
+                };
+                $ok($scope.url_search_translations({}), grid_data, function (resp) {
+                    $scope.datas = resp;
+                    $scope.applyGridExtarnals(resp);
+                }).finally(function () {
+                    $scope.close();
+                    location.reload();
+                    $scope.loading = false;
+                    $scope.load_contr = true
+                });
+            };
+
+            $scope.sendData1 = function (grid_data) {
+                $scope.loading = true;
+                $scope.isSelectedRows = false;
+                $scope.error = '';
+                $ok($scope.url_search_translations({}), grid_data, function (resp) {
+                    $scope.datas = resp;
+                    $scope.applyGridExtarnals(resp);
+                }).finally(function () {
+                    $scope.loading = false;
+                    $scope.load_contr = true
+                });
             };
 
             $scope.sendData = function () {
@@ -53,15 +96,12 @@
 
 
 
-            $scope.gridOptions1 = {
-                    data: 'datas.grid_data',
-                    paginationPageSizes: [10, 25, 50, 75],
-                    paginationPageSize: $scope.paginationOptions.pageSize,
-                    enableFiltering: true,
-                    enableSorting: true,
-                    useExternalPagination: true,
-                    useExternalSorting: true,
-                    useExternalFiltering: true,
+            $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+                    remoteData: $scope.sendData1,
+                    remoteUrl: $scope.url_search_translations({}),
+                    onRegisterApi: function (gridApi) {
+                        $scope.setGridExtarnals(gridApi)
+                    },
                     columnDefs: [
                       { name: 'cr_tm',enableCellEdit: false, enableFiltering: false,enableSorting: true, displayName: 'Creation time' },
                       { name: 'ac_tm',enableSorting: true,enableCellEdit: false, enableFiltering: false, displayName: 'Last accessed' },
@@ -74,30 +114,29 @@
                       { name: 'name', enableSorting: false,enableCellEdit: false,enableColumnMenu: false, displayName: 'Phrase',
                           filter: {type: uiGridConstants.filter.INPUT}
                       },
-                      { name: 'uk', enableSorting: false, enableCellEdit: true,enableColumnMenu: false,
+                      { name: 'uk', enableSorting: false, enableCellEdit: true,enableColumnMenu: false, cellTemplate: '<div ng-if="row.entity.allow_html !== \'*\'">{{row.entity.uk}}</div><div ng-if="row.entity.allow_html === \'*\'"><div ng-click="grid.appScope.showModalForEdit(row ,col)">{{row.entity.uk}}</div></div>',
                           filter: {type: uiGridConstants.filter.INPUT}
                       },
-                      { name: 'en', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,
+                      { name: 'en', enableSorting: false,enableCellEdit: true,enableColumnMenu: false,
                           filter: {type: uiGridConstants.filter.INPUT}
                       },
                             // TODO SS by OZ: 1. why allow_html is not visible?. 2 Pls allow dot-delimitted keys fields format like `portal.name`
-                      { name: 'allow_html', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
-                                type: uiGridConstants.filter.INPUT}
+                      { name: 'allow_html', enableSorting: false,enableCellEdit: false,enableColumnMenu: false, displayName: 'Allow HTML',
+                          filter: {type: uiGridConstants.filter.INPUT}
                       },
-                      { name: 'portal.name', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
-                                type: uiGridConstants.filter.INPUT}
-                      },
-// TODO SS by OZ: 1. why allow_html is not visible?. 2 Pls allow dot-delimitted keys fields format like `portal.name`
-                      { field: 'allow_html', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
-                                type: uiGridConstants.filter.INPUT}
-                      },
-                      { field: 'portal.name', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
-                                type: uiGridConstants.filter.INPUT}
+                      { name: 'portal.name', enableSorting: false,enableCellEdit: false,enableColumnMenu: false, displayName: 'Portal Name',
+                          filter: {type: uiGridConstants.filter.INPUT}
                       }
+// TODO SS by OZ: 1. why allow_html is not visible?. 2 Pls allow dot-delimitted keys fields format like `portal.name`
+                      //{ field: 'allow_html', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
+                      //          type: uiGridConstants.filter.INPUT}
+                      //},
+                      //{ field: 'portal.name', enableSorting: false,enableCellEdit: false,enableColumnMenu: false,                          filter: {
+                     //           type: uiGridConstants.filter.INPUT}
+                      //}
 
-                    ],
-                    onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions)}
-                  };
+                    ]
+                  });
              $scope.deleteItems = function(list) {
                  $ok($scope.url_delete_translations(), {objects:list}, function (resp) {
                      if (resp == 'True') {
@@ -114,7 +153,7 @@
             var modal = {
               open: function(list) {
                 $rootScope.lists = list;
-                var html = "<div class='modal' ng-init='sendData()' ng-controller='translation_list' ng-style='modalStyle'>{{modalStyle}}<div class='modal-dialog'><div class='modal-content'><div class='modal-header'><h4>Do you want delete this rows?</h4></div><div class='modal-footer'><button id='buttonDelete' class='btn btn-warning' ng-click='deleteItems(lists)'>Delete</button><button id='buttonClose' class='btn btn-primary' ng-click='close()'>Close</button></div></div></div></div>";
+                var html = "<div class='modal' ng-init='sendData1(all_grid_data)' ng-controller='translation_list' ng-style='modalStyle'>{{modalStyle}}<div class='modal-dialog'><div class='modal-content'><div class='modal-header'><h4>Do you want delete this rows?</h4></div><div class='modal-footer'><button id='buttonDelete' class='btn btn-warning' ng-click='deleteItems(lists)'>Delete</button><button id='buttonClose' class='btn btn-primary' ng-click='close()'>Close</button></div></div></div></div>";
                 elm = angular.element(html);
                 angular.element(document.body).prepend(elm);
 
@@ -133,6 +172,33 @@
               }
             };
             return modal;
+        }])
+        .factory('modalEdit', ['$compile', '$rootScope', function ($compile, $rootScope) {
+            var elm;
+            var modal = {
+              open: function(row,edit_text, field) {
+                  $rootScope.row = row;
+                  $rootScope.edit_text = edit_text;
+                  $rootScope.field = field;
+                  var html = "<div class='modal' ng-init='sendData1(all_grid_data)' ng-controller='translation_list' ng-style='modalStyle'>{{modalStyle}}<div class='modal-dialog'><div class='modal-content'><div class='modal-header'><h4>Edit translate with HTML tag!</h4></div><textarea class='modal-content' ui-tinymce=\"tinymceImageOptions\" ng-model = 'edit_text'></textarea><div class='modal-footer'><button id='buttonDelete' class='btn btn-warning' ng-click='saveTranslWithHtml(row, field, edit_text)'>Save</button><button id='buttonClose' class='btn btn-primary' ng-click='close()'>Close</button></div></div></div></div>";
+                  elm = angular.element(html);
+                  angular.element(document.body).prepend(elm);
+
+                  $rootScope.close = function() {
+                    modal.close();
+                  };
+
+                  $rootScope.modalStyle = {"display": "block"};
+
+                  $compile(elm)($rootScope);
+              },
+              close: function() {
+                if(elm) {
+                  elm.remove();
+                }
+              }
+            };
+            return modal;
         }]);
 
     {% endraw %}
@@ -143,7 +209,7 @@
             display: none;
         }
     </style>
-    <div ng-init="sendData()" ng-controller="translation_list">
+    <div ng-init="sendData1(all_grid_data)" ng-controller="translation_list">
 
         <div style="clear: right"></div>
 

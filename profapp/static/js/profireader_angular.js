@@ -685,11 +685,6 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
         _: function (phrase, dict) {
             return pr_dictionary(phrase, dict, '', this, $ok);
         },
-        paginationOptions: {
-            pageNumber: 1,
-            pageSize: 25,
-            sort: null
-        },
         filterForSelect: function (uiGridConstants) {
             return {
                 term: '1',
@@ -697,9 +692,11 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
             };
         },
         update: function(col){
-                this.paginationOptions.pageNumber = 1;
+                this.all_grid_data.paginationOptions.pageNumber = 1;
+                console.log(col.colDef)
                 this.all_grid_data['search_text'][col.field] = col.colDef.filter.search_text;
-                this.sendData();
+                console.log(this.all_grid_data)
+                this.sendData1(this.all_grid_data);
         },
         refresh: function(col){
             if(col !== undefined){
@@ -712,9 +709,16 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                 }
                 this.all_grid_data.filter = {};
                 this.all_grid_data['search_text'] = {};
-                this.sendData()
+                this.sendData1(this.all_grid_data)
             }
         },
+        all_grid_data : {
+                paginationOptions: {pageNumber: 1, pageSize: 25},
+                filter: {},
+                sort: {},
+                editItem: {},
+                search_text: {}
+            },
         getProperties: function(col){
             var scope = this;
             scope.pos = {};
@@ -722,13 +726,6 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                 if(col[i].filter && col[i].filter.type){
                     scope.pos[col[i].name] = '1'
                 }
-            }
-            scope.all_grid_data = {
-                paginationOptions: scope.paginationOptions,
-                filter: {},
-                sort: {},
-                editItem: {},
-                search_text: {}
             }
         },
         applyGridExtarnals: function(resp){
@@ -750,12 +747,18 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
         },
         editableTemplate: '<div class = "ui_dropdown"><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',
         selectRowTemplate: '<div class="ui-grid-cell-contents">{{ COL_FIELD }}<i class="glyphicon glyphicon-collapse-down" style="float:right"></i></div>',
-        setGridExtarnals: function (gridApi, externalFunction, paginationOptions, refresh) {
+        setGridExtarnals: function (gridApi) {
             var scope = this;
             scope.pos = 1;
             scope.getProperties(scope.gridOptions1.columnDefs);
             scope.gridApi = gridApi;
             scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {
+                //debugger;
+                //var data = scope.gridCallbacks.getFilterPageSort(grid);
+                //data['editItem'] =  scope.gridCallbacks.getEditFilter(grid);
+                //$ok(grid.options.remoteUrl, data, function (resp) {
+                //    this.applyGridExtarnals(resp);
+                //})
                 if (sortColumns.length === 0) {
                     scope.all_grid_data['sort']={};
                 } else {
@@ -763,7 +766,7 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                         scope.all_grid_data['sort'][sortColumns[i].field] = sortColumns[0].sort.direction ;
                     }
                 }
-                externalFunction()
+                scope.sendData1(scope.all_grid_data)
             });
             gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
                 if (newValue !== oldValue) {
@@ -773,13 +776,13 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                         'template': rowEntity.template,
                         'col': colDef.name
                     };
-                    externalFunction();
+                    scope.sendData1(scope.all_grid_data)
                 }
             });
             gridApi.pagination.on.paginationChanged(scope, function (newPage, pageSize) {
-                paginationOptions.pageNumber = newPage;
-                paginationOptions.pageSize = pageSize;
-                externalFunction()
+                scope.all_grid_data.paginationOptions.pageNumber = newPage;
+                scope.all_grid_data.paginationOptions.pageSize = pageSize;
+                scope.sendData1(scope.all_grid_data)
             });
             gridApi.core.on.filterChanged(scope, function () {
                 var grid = this.grid;
@@ -790,13 +793,13 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                         if (term !== scope.pos[field] && term) {
                             scope.pos[field] = term;
                             if(grid.columns[i].filter.selectOptions[term-1]['value'] !== '1')
-                                paginationOptions.pageNumber = 1;
+                                scope.all_grid_data.paginationOptions.pageNumber = 1;
                                 if(grid.columns[i].filter.selectOptions[term-1]['id']){
                                     scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term-1]['id'];
-                                    externalFunction()
+                                    scope.sendData1(scope.all_grid_data)
                                 }else{
                                     scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term-1]['label'];
-                                    externalFunction()
+                                    scope.sendData1(scope.all_grid_data)
                                 }
                         }
                         if (term === null) {
@@ -813,7 +816,17 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
             }
 
         },
-
+        gridOptions: {
+            data: 'datas.grid_data',
+            paginationPageSizes: [10, 25, 50, 75, 100, 1000],
+            paginationPageSize: 50,
+            enableFiltering: true,
+            useExternalPagination: true,
+            useExternalSorting: true,
+            useExternalFiltering: true,
+            showTreeExpandNoChildren: false,
+            columnDefs: []
+        },
         loadData: function (url, senddata, beforeload, afterload) {
             var scope = this;
             scope.loading = true;
