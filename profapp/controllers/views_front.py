@@ -80,10 +80,10 @@ def index(page=1):
     # portal.config.set_division_page_size(page_size_for_divisions={division.name: 1})
     items_per_page = portal.get_value_from_config(key=PortalConfig.PAGE_SIZE_PER_DIVISION,
                                                   division_name=division.name)
-    articles, pages, page = Search.search(ArticlePortalDivision().search_filter_default(division.id),
-                                          search_text=search_text, page=page,
-                                          order_by=order, pagination=True,
-                                          items_per_page=items_per_page)
+    articles, pages, page = Search.search(
+        ArticlePortalDivision().search_filter_default(division.id),
+        search_text=search_text, page=page, order_by=order, pagination=True,
+        items_per_page=items_per_page)
     session['original_search_text'] = search_text
 
     return render_template('front/bird/index.html',

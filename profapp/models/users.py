@@ -134,6 +134,7 @@ class User(Base, UserMixin, PRBase):
     yahoo_gender = Column(TABLE_TYPES['gender'])
     yahoo_link = Column(TABLE_TYPES['link'])
     yahoo_phone = Column(TABLE_TYPES['phone'])
+    tos = Column(TABLE_TYPES['boolean'], default=False)
     search_fields = {'profireader_name': {'relevance': lambda field='profireader_name': RELEVANCE.profireader_name},
                      'about_me': {'relevance': lambda field='about_me': RELEVANCE.about_me},
                      'profireader_email': {'relevance': lambda field='profireader_email': RELEVANCE.profireader_email}}
@@ -165,6 +166,7 @@ class User(Base, UserMixin, PRBase):
                  email_conf_tm=None,
                  pass_reset_key=None,
                  pass_reset_conf_tm=None,
+                 tos=None
                  ):
 
         self.employers = employers
@@ -176,7 +178,7 @@ class User(Base, UserMixin, PRBase):
         self.profireader_gender = PROFIREADER_ALL['gender']
         self.profireader_link = PROFIREADER_ALL['link']
         self.profireader_phone = PROFIREADER_ALL['phone']
-
+        self.tos = tos
         self.about_me = about_me
         self.location = location
         self.password = password
