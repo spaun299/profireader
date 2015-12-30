@@ -339,10 +339,12 @@ a.item-company {
     font-size: 18px !important;
     color: #999 !important;
     background-color: transparent;
+
 }
 
 .pager li.current-page > a {
     color: #336699 !important;
+
 }
 
 .pager li.previous,
@@ -350,6 +352,7 @@ a.item-company {
     /*background: #ccc;*/
     position: absolute;
     top: 7px;
+
 }
 
 .pager li.previous a,
@@ -361,6 +364,11 @@ a.item-company {
     width: 100%;
     height: 100%;
     background-color: transparent !important;
+    padding: 0px;
+    padding-left: 30px;
+    padding-right: 30px;
+    font-size: 16px !important;
+
 }
 
 .pager li.previous,
@@ -371,18 +379,24 @@ a.item-company {
 .pager li.previous:hover,
 .pager li.next:hover {
     background-position-y: bottom;
+    margin: 0 4px;
+
 }
 
 .pager li.previous {
     left: 20px;
     padding-left: 0px;
     background: url("../img/prev.png") top left no-repeat;
+    transition: all .2s;
+
+
 }
 
 .pager li.next {
     right: 20px;
     padding-right: 0px;
     background: url("../img/next.png") top right no-repeat;
+    transition: all .2s;
 }
 
 footer {
