@@ -13,7 +13,7 @@
             $scope.last_visit_root = last_visit_root;
             $scope.last_root_id = last_root_id;
             $scope.temp = new Item();
-            $scope.fileNavigator = new FileNavigator($scope.last_root_id? $scope.last_root_id:$scope.rootdirs[0]['id'], file_manager_called_for);
+            $scope.fileNavigator = new FileNavigator($scope.last_root_id? $scope.last_root_id:($scope.rootdirs[0]?$scope.rootdirs[0]['id']: ""), file_manager_called_for);
             $scope.fileUploader = fileUploader;
             $scope.uploadFileList = [];
             $scope.viewTemplate = $cookies.viewTemplate || 'main-table.html';

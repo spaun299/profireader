@@ -1,3 +1,12 @@
+<script>
+    function getColored(article){
+        text = article.short;
+        searchText = {{ search_text|tojson }};
+        coloredText = text.replace(searchText, '<span style="color:blue">'+searchText+'</span>');
+        console.log()
+        document.write(coloredText).html();
+    }
+</script>
 {% for article_id, article in articles.items() %}
     <div class="block-item list-elements">
         <div class="item-type article">
@@ -14,7 +23,9 @@
             {% endif %}
         </h2>
         <div class="item-short-content">
-            <p>{{ article['short']|safe }}</p>
+            <script type="text/javascript">
+                getColored({{ article|tojson }});
+            </script>
         </div>
         <div class="item-additional-info">
             <a href="{{ url_for('front.subportal', member_company_id = article['company']['id'], member_company_name = article['company']['name']) }}" class="item-company">{{ article['company']['name']|safe }}</a>
