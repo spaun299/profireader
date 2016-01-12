@@ -1,10 +1,33 @@
 <script>
+    var searchText = {{ search_text|tojson }};
+    var re = new RegExp(searchText, 'g');
     function getColored(article){
-        text = article.short;
-        searchText = {{ search_text|tojson }};
-        coloredText = text.replace(searchText, '<span style="color:blue">'+searchText+'</span>');
-        console.log()
-        document.write(coloredText).html();
+        var text = article.short;
+        var coloredText = text.replace(re, '<span style="color:#49c414">'+searchText+'</span>');
+        document.write(coloredText);
+    }
+    function getSearchBlock(article){
+        var text = article.short;
+        var index = text.indexOf(searchText);
+        var subString = '';
+        if(index<30){
+            if(index+30<text.length){
+                subString = text.substr(0, index+30) + '...'
+            }
+            else{
+                subString = text.substr(0, text.length)
+            }
+        }
+        else{
+            if(index+30<text.length){
+                subString = '...' + text.substr(index-30, index+30) + '...'
+            }
+            else{
+                subString = '...' + text.substr(index-30, text.length)
+            }
+        }
+        var coloredText = subString.replace(re, '<span style="color:#49c414">'+searchText+'</span>');
+        document.write(coloredText);
     }
 </script>
 {% for article_id, article in articles.items() %}
@@ -30,8 +53,11 @@
         <div class="item-additional-info">
             <a href="{{ url_for('front.subportal', member_company_id = article['company']['id'], member_company_name = article['company']['name']) }}" class="item-company">{{ article['company']['name']|safe }}</a>
             <div class="item-publication-date">{{ article['publishing_tm']|safe }}</div>
+            <div><br><script type="text/javascript">getSearchBlock({{ article|tojson }})</script></div>
         </div>
+
         <div class="bottom-hide"></div>
         <img {{ prImage(article['image_file_id']) }} class="block-item-img"/>
+
     </div>
 {% endfor %}
