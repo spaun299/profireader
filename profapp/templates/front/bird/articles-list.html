@@ -3,31 +3,36 @@
     var re = new RegExp(searchText, 'g');
     function getColored(article){
         var text = article.short;
-        var coloredText = text.replace(re, '<span style="color:#49c414">'+searchText+'</span>');
+        var coloredText = addColoredSpan(text);
         document.write(coloredText);
     }
+    function addColoredSpan(text){
+         return text.replace(re, '<span style="color:#49c414">'+searchText+'</span>');
+    }
     function getSearchBlock(article){
+        if(searchText){
         var text = article.short;
         var index = text.indexOf(searchText);
         var subString = '';
-        if(index<30){
-            if(index+30<text.length){
-                subString = text.substr(0, index+30) + '...'
+        if(index<45){
+            if(index+45<text.length){
+                subString = text.substring(0, index+45) + '...'
             }
             else{
-                subString = text.substr(0, text.length)
+                subString = text.substring(0, text.length)
             }
         }
         else{
-            if(index+30<text.length){
-                subString = '...' + text.substr(index-30, index+30) + '...'
+            if(index+45<text.length){
+                a = text.substring(index-45, index+45);
+                subString = '...' + text.substring(index-45, index+45) + '...';
             }
             else{
-                subString = '...' + text.substr(index-30, text.length)
+                subString = '...' + text.substring(index-45, text.length)
             }
         }
-        var coloredText = subString.replace(re, '<span style="color:#49c414">'+searchText+'</span>');
-        document.write(coloredText);
+        var coloredText = addColoredSpan(subString);
+        document.write(coloredText);}
     }
 </script>
 {% for article_id, article in articles.items() %}
