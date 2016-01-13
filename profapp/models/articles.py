@@ -146,7 +146,7 @@ class ArticlePortalDivision(Base, PRBase):
         self.portal_division_id = portal_division_id
         # self.portal_id = portal_id
 
-    def get_client_side_dict(self, fields='id|image_file_id|title|short|image_file_id|position|'
+    def get_client_side_dict(self, fields='id|image_file_id|title|short|long_stripped|image_file_id|position|'
                                           'keywords|cr_tm|md_tm|'
                                           'status|publishing_tm, '
                                           'company.id|name, division.id|name, portal.id|name',
@@ -193,11 +193,10 @@ class ArticlePortalDivision(Base, PRBase):
     @staticmethod
     def subquery_portal_articles(search_text=None, portal_id=None, **kwargs):
         sub_query = db(ArticlePortalDivision)
-        if 'filter' in kwargs.keys():
-             if 'publication_status' in kwargs['filter'].keys():
-                sub_query = db(ArticlePortalDivision, status= kwargs['filter']['publication_status'])
-             if 'company' in kwargs['filter'].keys():
-                sub_query = sub_query.join(ArticlePortalDivision.company).filter(Company.id == kwargs['filter']['company'])
+        if 'publication_status' in kwargs['filter'].keys():
+            sub_query = db(ArticlePortalDivision, status= kwargs['filter']['publication_status'])
+        if 'company' in kwargs['filter'].keys():
+            sub_query = sub_query.join(ArticlePortalDivision.company).filter(Company.id == kwargs['filter']['company'])
         sub_query = sub_query. \
             join(ArticlePortalDivision.division). \
             join(PortalDivision.portal). \
@@ -205,12 +204,10 @@ class ArticlePortalDivision(Base, PRBase):
         if search_text:
             if 'title' in search_text:
                 sub_query = sub_query.filter(ArticlePortalDivision.title.ilike("%" + search_text['title'] + "%"))
-        if 'sort' in kwargs.keys():
-            if 'date' in kwargs['sort'].keys():
-                sub_query = sub_query.order_by(ArticlePortalDivision.publishing_tm.asc()) if kwargs[
+        if 'date' in kwargs['sort'].keys():
+            sub_query = sub_query.order_by(ArticlePortalDivision.publishing_tm.asc()) if kwargs[
                                                                                               'sort']['date'] == 'asc' else sub_query.order_by(
                  ArticlePortalDivision.publishing_tm.desc())
-
         else:
             sub_query = sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
         return sub_query
@@ -318,19 +315,16 @@ class ArticleCompany(Base, PRBase):
             join(own_article,
                  and_(Article.id == own_article.article_id, own_article.company_id == None))
         article_filter = db(ArticleCompany, article_id=Article.id)
-        if search_text:
-            if 'title' in search_text:
-                article_filter = article_filter.filter(ArticleCompany.title.ilike(
+        if 'title' in search_text:
+            article_filter = article_filter.filter(ArticleCompany.title.ilike(
                     "%" + repr(search_text['title']).strip("'") + "%"))
-        if 'filter' in kwargs.keys():
-             if 'company' in kwargs['filter'].keys():
-                article_filter = article_filter.filter(ArticleCompany.company_id==kwargs['filter']['company'])
-             if 'status' in kwargs['filter'].keys():
-                article_filter = article_filter.filter(ArticleCompany.status==kwargs['filter']['status'])
-        if 'sort' in kwargs.keys():
-            if 'date' in kwargs['sort'].keys():
-                sub_query = sub_query.order_by(own_article.md_tm.asc()) if kwargs['sort']['date'] == 'asc' else sub_query.order_by(
-                own_article.md_tm.desc())
+        if 'company' in kwargs['filter'].keys():
+            article_filter = article_filter.filter(ArticleCompany.company_id==kwargs['filter']['company'])
+        if 'status' in kwargs['filter'].keys():
+            article_filter = article_filter.filter(ArticleCompany.status==kwargs['filter']['status'])
+        if 'date' in kwargs['sort'].keys():
+            sub_query = sub_query.order_by(own_article.md_tm.asc()) if kwargs['sort']['date'] == 'asc' else sub_query.order_by(
+            own_article.md_tm.desc())
         else:
             sub_query = sub_query.order_by(own_article.md_tm.desc())
         return sub_query.filter(article_filter.exists())

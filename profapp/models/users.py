@@ -448,20 +448,20 @@ class User(Base, UserMixin, PRBase):
 
     # TODO (AA to ???): file.upload(content=content).url() is wrong and should be corrected
     def avatar_update(self, passed_file):
-        content = passed_file.stream.read(-1)
-
-        file = File(
-            author_user_id=self.id,
-            name=passed_file.filename,
-            mime=passed_file.content_type)
-        self.profireader_avatar_url = file.upload(content=content).url()
-
+        if passed_file:
+            self.profireader_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
+            self.profireader_small_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
+        else:
+            list = [file for file in db(File, parent_id=self.system_folder_file_id)]
+            print(list)
+            for f in list:
+                File.remove(f.id)
         # TODO: this image should be cropped
-        file = File(
-            author_user_id=self.id,
-            name=passed_file.filename,
-            mime=passed_file.content_type)
-        self.profireader_small_avatar_url = file.upload(content=content).url()
+        # file = File(
+        #     author_user_id=self.id,
+        #     name=passed_file.filename,
+        #     mime=passed_file.content_type)
+
 
         return self
 

@@ -13,7 +13,7 @@
             $scope.last_visit_root = last_visit_root;
             $scope.last_root_id = last_root_id;
             $scope.temp = new Item();
-            $scope.fileNavigator = new FileNavigator($scope.last_root_id? $scope.last_root_id:$scope.rootdirs[0]['id'], file_manager_called_for);
+            $scope.fileNavigator = new FileNavigator($scope.last_root_id? $scope.last_root_id:($scope.rootdirs[0]?$scope.rootdirs[0]['id']: ""), file_manager_called_for);
             $scope.fileUploader = fileUploader;
             $scope.uploadFileList = [];
             $scope.viewTemplate = $cookies.viewTemplate || 'main-table.html';
@@ -408,7 +408,7 @@
                     var re = new RegExp($scope.fileNavigator.search_text, "gi");
                     name = name.length <= limit ? name: $filter('limitTo')(name, limit) + '...';
                     var result = name.match(re);
-                    var res =  name.replace(re, '<span style="color:red">' + result + '</span>');
+                    var res =  name.replace(re, '<span style="color:red">' + result[0] + '</span>');
                     $('#highlightT_'+id).html(res);
                     return name;
                 }else {

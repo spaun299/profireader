@@ -83,20 +83,20 @@ def materials_load(json, company_id):
     company = db(Company, id=company_id).one()
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
-    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
-    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
-    search_text = json.get('gr_data')['search_text'] if json.get('gr_data') else None
+    print(json)
+    page = json.get('paginationOptions')['pageNumber']
+    pageSize = json.get('paginationOptions')['pageSize']
+    search_text = json.get('search_text')
     params = {}
-    if json.get('gr_data'):
-        params['sort'] = {}
-        params['filter'] = {}
-        if json.get('gr_data')['sort']:
-            for n in json.get('gr_data')['sort']:
-                params['sort'][n] = json.get('gr_data')['sort'][n]
-        if json.get('gr_data')['filter']:
-            for b in json.get('gr_data')['filter']:
-                if json.get('gr_data')['filter'][b] != '-- all --':
-                    params['filter'][b] = json.get('gr_data')['filter'][b]
+    params['sort'] = {}
+    params['filter'] = {}
+    if json.get('sort'):
+        for n in json.get('sort'):
+            params['sort'][n] = json.get('sort')[n]
+    if json.get('filter'):
+        for b in json.get('filter'):
+            if json.get('filter')[b] != '-- all --':
+                params['filter'][b] = json.get('filter')[b]
     # if json.get('grid_data')['new_status']:
     #     ArticleCompany.update_article(
     #         company_id=company_id,
@@ -195,7 +195,7 @@ def delete_atricle_from_portal(json, article_portal_division_id):
         if json[article]['id'] == article_portal_division_id:
             del new_json[article]
     return new_json
-
+#file_author_user_id_fkey	FOREIGN KEY (author_user_id) REFERENCES "user"(id)
 
 @company_bp.route('/get_tags/<string:portal_division_id>', methods=['POST'])
 @login_required
