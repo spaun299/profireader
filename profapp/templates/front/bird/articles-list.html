@@ -1,18 +1,39 @@
 <script>
     var searchText = {{ search_text|tojson }};
     var re = new RegExp(searchText, 'g');
+    var indexFound = 0;
     function getColored(article){
         var text = article.short;
         var coloredText = addColoredSpan(text);
         document.write(coloredText);
     }
+    function findIndex(text){
+        var index = text.indexOf(searchText);
+        if(index>0){
+            indexFound = index;
+            return index
+        }
+        else{
+            indexFound = 0;
+            return false}
+    }
+    function foundText(article){
+        if(findIndex(article.title)){
+            return article.title
+        }
+        else if(findIndex(article.short)){
+            return article.short
+        }
+        else if(findIndex(article.long)){
+            return article.long
+        }
+    }
     function addColoredSpan(text){
          return text.replace(re, '<span style="color:#49c414">'+searchText+'</span>');
     }
     function getSearchBlock(article){
-        if(searchText){
-        var text = article.short;
-        var index = text.indexOf(searchText);
+        var text = foundText(article);
+        var index = indexFound;
         var subString = '';
         if(index<45){
             if(index+45<text.length){
@@ -24,7 +45,6 @@
         }
         else{
             if(index+45<text.length){
-                a = text.substring(index-45, index+45);
                 subString = '...' + text.substring(index-45, index+45) + '...';
             }
             else{
@@ -33,7 +53,7 @@
         }
         var coloredText = addColoredSpan(subString);
         document.write(coloredText);}
-    }
+
 </script>
 {% for article_id, article in articles.items() %}
     <div class="block-item list-elements">
