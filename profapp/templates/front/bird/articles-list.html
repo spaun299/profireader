@@ -1,3 +1,17 @@
+<script>
+    console.log('1111111');
+    getArticles = function(){
+        console.log('aasdasdasd');
+        for(i=0;i<100;i++){
+            console.log({{ articles | tojson }}[i])
+        }
+        return all_articles
+    };
+    getArticles()
+
+
+</script>
+
 {% for article_id, article in articles.items() %}
     <div class="block-item list-elements">
         <div class="item-type article">

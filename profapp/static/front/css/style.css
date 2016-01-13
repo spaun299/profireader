@@ -359,6 +359,7 @@ a.item-company {
 .pager li.next a,
 .pager li.previous span,
 .pager li.next span {
+    color: #999 !important;
     /*padding: 3px;*/
     display: block;
     width: 100%;
@@ -376,10 +377,22 @@ a.item-company {
     height: 24px;
 }
 
-.pager li.previous:hover,
+.pager li.previous:hover {
+    background-position-y: bottom;
+    margin-left: 6px;
+    -webkit-transition: all 0.2s linear;
+    -moz-transition: all 0.2s linear;
+    transition: all 0.2s linear;
+
+}
 .pager li.next:hover {
     background-position-y: bottom;
-    margin: 0 4px;
+    margin-right: 6px;
+    -webkit-transition: all 0.2s linear;
+    -moz-transition: all 0.2s linear;
+    transition: all 0.2s linear;
+    color: red!important;
+    /*transform: scale(0.9);*/
 
 }
 
@@ -388,8 +401,6 @@ a.item-company {
     padding-left: 0px;
     background: url("../img/prev.png") top left no-repeat;
     transition: all .2s;
-
-
 }
 
 .pager li.next {
@@ -397,6 +408,26 @@ a.item-company {
     padding-right: 0px;
     background: url("../img/next.png") top right no-repeat;
     transition: all .2s;
+}
+
+#back:hover{
+    color: #336699 !important;
+
+}
+#forward:hover {
+    color: #336699 !important;
+}
+
+#back {
+    padding-left: 30px;
+    transition: all .2s;
+
+}
+
+#forward {
+    padding-right: 30px;
+    transition: all .2s;
+
 }
 
 footer {

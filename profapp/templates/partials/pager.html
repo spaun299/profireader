@@ -1,8 +1,7 @@
 <ul class="pager">
     <li class="previous">
-        {% if current_page != 1 %}
-        <a href="{{ url_page(page=current_page - 1, search_text=search_text) }}">Назад</a>
-
+        {% if current_page >= 1 %}
+            <a id="back" href="{{ url_page(page=current_page - 1, search_text=search_text) }}">Назад</a>
         {% else %}
             &nbsp &nbsp &nbsp &nbsp &nbsp;
         {% endif %}
@@ -11,60 +10,42 @@
      <li>
         <a href="{{ url_page(page = 1, search_text = search_text) }}">1</a>
     {% if current_page - page_buttons > 2 %}
-
         <li>
-
-        <a href="{{ url_page(page=current_page-page_buttons - 1, search_text=search_text) }}"> &hellip; </a>
-
+            <a href="{{ url_page(page=current_page-page_buttons - 2, search_text=search_text) }}"> &hellip; </a>
         </li>
-
     {% endif %}
     </li>
 {% endif %}
     {% for button in range(page_buttons)|reverse %}
         {% if current_page - (button + 1)> 0 %}
-    <li>
-        <a href="{{ url_page(page=current_page - (button + 1), search_text=search_text)}}">{{ current_page - (button + 1) }}</a>
-    </li>
-
+        <li>
+            <a href="{{ url_page(page=current_page - (button + 1), search_text=search_text)}}">{{ current_page - (button + 1) }}</a>
+        </li>
         {% endif %}
-
     {% endfor %}
     <li class="current-page">
         <a href="{{ url_page(page=current_page, search_text=search_text) }}">{{ current_page }}</a>
     </li>
     {% for button in range(page_buttons) %}
         {% if current_page + (button + 1)< pages %}
-    <li>
-        <a href="{{ url_page(page=current_page + (button + 1), search_text=search_text) }}">{{ current_page + (button + 1) }}</a>
-    </li>
+        <li>
+            <a href="{{ url_page(page=current_page + (button + 1), search_text=search_text) }}">{{ current_page + (button + 1) }}</a>
+        </li>
         {% endif %}
-
     {% endfor %}
-
-
-
 {% if current_page < pages - 3 %}
-
     <li>
-
-    <a href="{{ url_page(page = pages - 2, search_text = search_text) }}"> &hellip; </a>
-
+        <a href="{{ url_page(page = pages - 3, search_text = search_text) }}"> &hellip; </a>
     </li>
-
 {% endif %}
-
-
-
     {% if current_page != pages %}
         <li>
             <a href="{{ url_page(page=pages, search_text=search_text) }}">{{ pages }}</a>
         </li>
     {% endif %}
-
     <li class="next">
-        {% if current_page != pages %}
-        <a href="{{ url_page(page=current_page + 1, search_text=search_text) }}">Вперед</a>
+        {% if current_page <= pages %}
+            <a id="forward" href="{{ url_page(page=current_page + 1, search_text=search_text) }}">Вперед</a>
         {% else %}
         {% endif %}
     </li>

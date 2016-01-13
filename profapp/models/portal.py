@@ -435,7 +435,7 @@ class PortalDivision(Base, PRBase):
     def init_on_load(self):
         if self.portal_division_type_id == 'company_subportal':
             self.settings = db(PortalDivisionSettingsCompanySubportal).filter_by(
-                portal_division_id=self.id).one()
+                portal_division_id=self.id).first()
 
     def get_client_side_dict(self, fields='id|name',
                              more_fields=None):
