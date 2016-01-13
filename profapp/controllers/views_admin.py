@@ -6,7 +6,7 @@ from ..models.translate import TranslateTemplate
 from config import Config
 from utils.db_utils import db
 from sqlalchemy.sql import expression
-
+import datetime
 
 @admin_bp.route('/translations', methods=['GET'])
 def translations():
@@ -35,7 +35,8 @@ def translations_load(json):
             params['search_text'][d] = json.get('search_text')[d]
     if json.get('editItem'):
         exist = db(TranslateTemplate, template=json.get('editItem')['template'], name=json.get('editItem')['name']).first()
-        TranslateTemplate.get(exist.id).attr({json.get('editItem')['col']: json.get('editItem')['newValue']}).save().get_client_side_dict()
+        i = datetime.datetime.now()
+        TranslateTemplate.get(exist.id).attr({json.get('editItem')['col']: json.get('editItem')['newValue'], 'md_tm':i}).save().get_client_side_dict()
     subquery = TranslateTemplate.subquery_search(template=json.get('template') or None,
                                                  url=json.get('url') or None,
                                                  **params)

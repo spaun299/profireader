@@ -195,7 +195,7 @@ def delete_atricle_from_portal(json, article_portal_division_id):
         if json[article]['id'] == article_portal_division_id:
             del new_json[article]
     return new_json
-
+#file_author_user_id_fkey	FOREIGN KEY (author_user_id) REFERENCES "user"(id)
 
 @company_bp.route('/get_tags/<string:portal_division_id>', methods=['POST'])
 @login_required
