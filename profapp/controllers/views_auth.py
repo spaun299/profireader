@@ -32,6 +32,7 @@ def login_signup_general(*soc_network_names):
         return redirect(redirect_url())
 
     response = make_response()
+    registred_via_soc = False
     try:
         result = g.authomatic.login(WerkzeugAdapter(request, response), soc_network_names[-1])
         if result:
@@ -62,6 +63,7 @@ def login_signup_general(*soc_network_names):
                             db_fields_profireader = DB_FIELDS['profireader']
                             for elem in SOC_NET_FIELDS_SHORT:
                                 setattr(user, db_fields_profireader[elem], getattr(result_user, elem))
+                        registred_via_soc = len(soc_network_names) > 1
                         user.profireader_avatar_url = user.avatar(size=AVATAR_SIZE)
                         user.profireader_small_avatar_url = user.avatar(size=AVATAR_SMALL_SIZE)
 
@@ -89,6 +91,9 @@ def login_signup_general(*soc_network_names):
                 # return redirect(url_for('general.index'))  # #  http://profireader.com/
                 # url = redirect_url()
                 # print(url)
+                if registred_via_soc:
+                    return redirect(url_for('help.help'))
+
                 return redirect(redirect_url())  # #  http://profireader.com/
             elif result.error:
                 redirect_path = '#/?msg={}'.format(quote(soc_network_names[-1] + ' login failed.'))
@@ -253,6 +258,7 @@ def confirm(token):
         return redirect(url_for('general.index'))
     if current_user.confirm(token):
         flash('You have confirmed your account. Thanks!')
+        return redirect(url_for('help.help'))
     else:
         flash('The confirmation link is invalid or has expired.')
     return redirect(url_for('general.index'))
