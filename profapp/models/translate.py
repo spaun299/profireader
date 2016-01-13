@@ -152,9 +152,9 @@ class TranslateTemplate(Base, PRBase):
         sub_query = db(TranslateTemplate)
         if 'filter' in kwargs:
             if 'url' in kwargs['filter']:
-                sub_query = sub_query.filter_by(url=kwargs['filter']['url'][0])
+                sub_query = sub_query.filter_by(url=kwargs['filter']['url'])
             if 'template' in kwargs['filter']:
-                sub_query = sub_query.filter_by(template=kwargs['filter']['template'][0])
+                sub_query = sub_query.filter_by(template=kwargs['filter']['template'])
         if 'search_text' in kwargs:
             if 'name' in kwargs['search_text']:
                 sub_query = sub_query.filter(TranslateTemplate.name.ilike("%" + kwargs['search_text']['name'] + "%"))
@@ -162,13 +162,12 @@ class TranslateTemplate(Base, PRBase):
                 sub_query = sub_query.filter(TranslateTemplate.uk.ilike("%" + kwargs['search_text']['uk'] + "%"))
             if 'en' in kwargs['search_text']:
                 sub_query = sub_query.filter(TranslateTemplate.en.ilike("%" + kwargs['search_text']['en'] + "%"))
-        if 'sort' in kwargs:
-            if 'cr_tm' in kwargs['sort']:
-                sub_query = sub_query.order_by(TranslateTemplate.cr_tm.asc()) if kwargs['sort']['cr_tm'] == 'asc' else sub_query.order_by(TranslateTemplate.cr_tm.desc())
-            if 'ac_tm' in kwargs['sort']:
-                sub_query = sub_query.order_by(TranslateTemplate.ac_tm.asc()) if kwargs['sort']['ac_tm'] == 'asc' else sub_query.order_by(TranslateTemplate.ac_tm.desc())
+        if 'cr_tm' in kwargs['sort']:
+            sub_query = sub_query.order_by(TranslateTemplate.cr_tm.asc()) if kwargs['sort']['cr_tm'] == 'asc' else sub_query.order_by(TranslateTemplate.cr_tm.desc())
+        elif 'ac_tm' in kwargs['sort']:
+            sub_query = sub_query.order_by(TranslateTemplate.ac_tm.asc()) if kwargs['sort']['ac_tm'] == 'asc' else sub_query.order_by(TranslateTemplate.ac_tm.desc())
         else:
-            sub_query = sub_query.order_by(TranslateTemplate.template)
+            sub_query = sub_query.order_by(TranslateTemplate.cr_tm.desc())
 
         return sub_query
 
@@ -197,7 +196,7 @@ class TranslateTemplate(Base, PRBase):
             id = s if is_dict else ''
             new_list.append({
                 'value': str(n),
-                'label': label,
+                'label': label[0],
                 'id': id
             })
             n += 1

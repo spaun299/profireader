@@ -38,7 +38,7 @@ def edit_profile(user_id):
 
     if request.method == 'GET':
         return render_template('general/user_edit_profile.html',  user=user, avatar_size=AVATAR_SIZE)
-
+    print(request.form)
     if 'avatar' in request.form.keys():
         if request.form['avatar'] == 'Upload Image':
             user = user_query.first()
