@@ -146,7 +146,7 @@ class ArticlePortalDivision(Base, PRBase):
         self.portal_division_id = portal_division_id
         # self.portal_id = portal_id
 
-    def get_client_side_dict(self, fields='id|image_file_id|title|short|image_file_id|position|'
+    def get_client_side_dict(self, fields='id|image_file_id|title|short|long_stripped|image_file_id|position|'
                                           'keywords|cr_tm|md_tm|'
                                           'status|publishing_tm, '
                                           'company.id|name, division.id|name, portal.id|name',
