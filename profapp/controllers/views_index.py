@@ -57,7 +57,7 @@ def index(page=1):
         join(PortalDivision).\
         join(Portal).\
         join(UserPortalReader).\
-        filter(UserPortalReader.user_id==g.user_dict['id']).\
+        filter(UserPortalReader.user_id == g.user_dict['id']).\
         order_by(ArticlePortalDivision.publishing_tm.desc()).\
         filter(text(' "publishing_tm" < clock_timestamp() '))
 
