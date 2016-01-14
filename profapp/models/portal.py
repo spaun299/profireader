@@ -547,4 +547,4 @@ class UserPortalReader(Base, PRBase):
     def get_portals_for_user():
         portals = db(Portal).filter(~(Portal.id.in_(db(UserPortalReader.portal_id, user_id=g.user_dict['id'])))).all()
         for portal in portals:
-            yield (portal.id, portal.name)
+            yield (portal.id, portal.name, )

@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship, backref
 from flask.ext.login import logout_user
 from flask import session, json
 from urllib import request as req
-
+from config import Config
 # from db_init import Base, g.db
 
 from ..constants.TABLE_TYPES import TABLE_TYPES
@@ -285,15 +285,27 @@ class User(Base, UserMixin, PRBase):
         g.db.commit()
 
     def avatar(self, size=100):
-        logged_via = REGISTERED_WITH[self.logged_in_via()]
+        logged_via = session.get('logged_in_via')
         if logged_via == 'facebook':
             avatar = json.load(req.urlopen(
-                url='//graph.facebook.com/{facebook_id}/picture?width={size}&height={size}&redirect=0'.
+                url='http://graph.facebook.com/{facebook_id}/picture?width={size}&height={size}&redirect=0'.
                     format(facebook_id=self.facebook_id, size=size)))
             if avatar['data'].get('is_silhouette'):
                 avatar = self.gravatar(size=size)
             else:
                 avatar = avatar['data'].get('url')
+        elif logged_via == 'google':
+            # avatar = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
+            print('https://www.googleapis.com/plus/v1/people/{google_id}?fields=image&key={key}'.format(
+                google_id=self.google_id, size=size, key=Config.GOOGLE_API_KEY_SIMPLE))
+
+            avatar = json.load(req.urlopen(url='https://www.googleapis.com/plus/v1/people/{google_id}?fields=image&key={key}'.format(
+                google_id=self.google_id, size=size, key=Config.GOOGLE_API_KEY_SIMPLE)))
+            if avatar['image'].get('isDefault'):
+                avatar = self.gravatar(size=size)
+            else:
+                avatar = avatar['image'].get('url')
+            print(avatar)
         else:
             avatar = self.gravatar(size=size)
 

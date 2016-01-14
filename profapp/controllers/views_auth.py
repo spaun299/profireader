@@ -33,6 +33,10 @@ def login_signup_general(*soc_network_names):
 
     response = make_response()
     registred_via_soc = False
+    logged_via_soc = list(filter(lambda x: x != 'profireader', soc_network_names))[0] \
+        if len(soc_network_names) > 1 else 'profireader'
+    session.update({'logged_in_via': logged_via_soc})
+
     try:
         result = g.authomatic.login(WerkzeugAdapter(request, response), soc_network_names[-1])
         if result:
