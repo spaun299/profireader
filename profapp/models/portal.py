@@ -524,6 +524,7 @@ class PortalConfig(Base, PRBase):
         dps = simplejson.dumps(dps)
         self.division_page_size = dps
 
+
 class UserPortalReader(Base, PRBase):
     __tablename__ = 'user_portal_reader'
     id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
@@ -541,3 +542,9 @@ class UserPortalReader(Base, PRBase):
         self.portal_id = portal_id
         self.status = status
         self.portal_plan_id = portal_plan_id or g.db(ReaderUserPortalPlan.id).filter_by(name='free').one()[0]
+
+    @staticmethod
+    def get_portals_for_user():
+        portals = db(Portal).filter(~(Portal.id.in_(db(UserPortalReader.portal_id, user_id=g.user_dict['id'])))).all()
+        for portal in portals:
+            yield (portal.id, portal.name)

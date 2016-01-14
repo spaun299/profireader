@@ -1,4 +1,4 @@
-from flask import render_template, jsonify, request, session, redirect, url_for, g
+from flask import render_template, jsonify, request, session, redirect, url_for, g, flash
 from .blueprints_declaration import general_bp
 from flask.ext.login import current_user, login_required
 from ..models.portal import Portal, UserPortalReader, ReaderUserPortalPlan, PortalDivision
@@ -50,8 +50,6 @@ def index(page=1):
                                add_head=head
                                )
 
-    # user_portal_reader = g.db.query(UserPortalReader).filter_by(user_id=g.user_dict['id']).all()
-
     sub_query = g.db.query(ArticlePortalDivision).\
         filter_by(status=ARTICLE_STATUS_IN_PORTAL.published).\
         join(PortalDivision).\
@@ -68,6 +66,7 @@ def index(page=1):
     for a in articles:
         ordered_articles[a.id] = dict(list(a.get_client_side_dict(more_fields='portal.host').items()) +
                                       list({'tags': a.tags}.items()))
+    portals = UserPortalReader.get_portals_for_user() if not ordered_articles else None
 
     portal_base_profireader = 'partials/portal_base_Profireader_auth_user.html'
     profireader_content = 'partials/reader/reader_content.html'
@@ -81,6 +80,7 @@ def index(page=1):
                            pages=pages,
                            current_page=page,
                            page_buttons=Config.PAGINATION_BUTTONS,
+                           portals=portals
                            # search_text=None,
                            )
 
@@ -110,5 +110,6 @@ def reader_subscribe(portal_id):
         )
         g.db.add(user_portal_reader)
         g.db.commit()
+        flash('You have successfully subscribed to this portal')
 
     return redirect(url_for('general.index'))

@@ -24,4 +24,16 @@
         <div class="bottom-hide"></div>
         <img src="/static/images/0.gif" class="block-item-img" style="background-image: url({{ fileUrl(article['image_file_id']) }})"/>
     </div>
+{% else %}
+    {{ _('Please, subscribe to any portal') }}
+<div class="dropdown">
+  <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" style="background-color: #4f4a4a">{{ _('Select portal') }}
+  <span class="caret"></span></button>
+  <ul class="dropdown-menu">
+      {% for portal in portals %}
+    <li><a href="{{ url_for('general.reader_subscribe', portal_id=portal[0]) }}">{{ portal[1] }}</a></li>
+          {% endfor %}
+  </ul>
+</div>
+    {{ __('Presentation text') }}
 {% endfor %}
