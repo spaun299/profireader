@@ -295,23 +295,14 @@ class User(Base, UserMixin, PRBase):
             else:
                 avatar = avatar['data'].get('url')
         elif logged_via == 'google':
-            # avatar = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
-            print('https://www.googleapis.com/plus/v1/people/{google_id}?fields=image&key={key}'.format(
-                google_id=self.google_id, size=size, key=Config.GOOGLE_API_KEY_SIMPLE))
-
             avatar = json.load(req.urlopen(url='https://www.googleapis.com/plus/v1/people/{google_id}?fields=image&key={key}'.format(
                 google_id=self.google_id, size=size, key=Config.GOOGLE_API_KEY_SIMPLE)))
             if avatar['image'].get('isDefault'):
                 avatar = self.gravatar(size=size)
             else:
                 avatar = avatar['image'].get('url')
-            print(avatar)
         else:
             avatar = self.gravatar(size=size)
-
-        # if logged_via == 'google':
-        #     avatar = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
-        #     avatar = avatar['data'].get('url')
         return avatar
 
     def gravatar(self, size=100, default='identicon', rating='g'):
