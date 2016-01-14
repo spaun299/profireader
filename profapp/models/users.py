@@ -295,8 +295,9 @@ class User(Base, UserMixin, PRBase):
             else:
                 avatar = avatar['data'].get('url')
         elif logged_via == 'google':
-            avatar = json.load(req.urlopen(url='https://www.googleapis.com/plus/v1/people/{google_id}?fields=image&key={key}'.format(
-                google_id=self.google_id, size=size, key=Config.GOOGLE_API_KEY_SIMPLE)))
+            avatar = json.load(
+                req.urlopen(url='https://www.googleapis.com/plus/v1/people/{google_id}?fields=image&key={key}'.format(
+                    google_id=self.google_id, size=size, key=Config.GOOGLE_API_KEY_SIMPLE)))
             if avatar['image'].get('isDefault'):
                 avatar = self.gravatar(size=size)
             else:
