@@ -325,10 +325,10 @@ class User(Base, UserMixin, PRBase):
             else:
                 self.profireader_avatar_url = self.gravatar(size=size)
                 self.profireader_small_avatar_url = self.gravatar(size=small_size)
-
         elif avatar_via == 'gravatar':
             self.profireader_avatar_url = url
             self.profireader_small_avatar_url = url_small
+
         return self
 
     def gravatar(self, size=100, default='identicon', rating='g'):
