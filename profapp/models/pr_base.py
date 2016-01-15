@@ -351,6 +351,10 @@ class PRBase:
         g.db.delete(self)
         g.db.commit()
 
+    def refreshSession(self):
+        g.db.refresh(self)
+        return self
+
     def save(self):
         g.db.add(self)
         g.db.flush()

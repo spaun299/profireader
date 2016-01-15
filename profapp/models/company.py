@@ -118,6 +118,7 @@ class Company(Base, PRBase):
         g.user.companies.append(self)
         self.youtube_playlists.append(YoutubePlaylist(name=self.name, company_owner=self))
         self.save()
+        print(self)
 
         return self
 
@@ -175,7 +176,7 @@ class Company(Base, PRBase):
                 filter(Company.name.ilike("%" + searchtext + "%")
                        ).all()]
 
-    def get_client_side_dict(self, fields='id,name,author_user_id,country,region,address,phone,phone2,email,short_description,logo_file_id,about,lat,lon,own_portal.id|host',
+    def get_client_side_dict(self, fields='id,name,author_user_id,country,region,address,phone,phone2,email,short_description,journalist_folder_file_id,logo_file_id,about,lat,lon,own_portal.id|host',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 

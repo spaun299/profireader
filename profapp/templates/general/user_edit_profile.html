@@ -9,9 +9,36 @@
 {% endblock portal_base %}
 
 {% block portal_content %}
+    <script>
+    module.controller('edit_user', ['$scope', '$modal', '$ok', '$af', function ($scope, $modal, $ok, $af) {
+
+
+            $scope.update_url = {{ raw_url_for('user.avatar_update')|safe }};
+
+
+            $scope.$af = $af;
+
+            $scope.data = {};
+            $scope.sendData = function(){
+                $scope.data['image'] = $('#fileToUpload')[0]['files'][0]
+                console.log($scope.data['image'])
+            };
+
+            $scope.afterLoad = function (resp, deff) {
+                console.log($scope)
+                deff(resp);
+                $scope.setImageUrl(resp['logo_file_id']);
+            };
+
+            $scope.setImageUrl = function (logo_file_id) {
+                $scope.logo_file_url = fileUrl(logo_file_id);
+            };
+
+        }])
+
+    </script>
 <div ng-controller="UserLoginController">
     <h1 class="nice-title">{{ '{{' }}_('Your Profile'){{ '}}' }}<span></span></h1>
-
 
     <div class="form info">
         {#<img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=256) }}"><br>#}
@@ -32,16 +59,23 @@
         {#<a>#}
         {#    <span ng-hide="mySwitch">[{{ '{{' }}_('use gravatar'){{ '}}' }}]</span>#}
         {#</a>#}
-        <div class="img-upload-form">
-            <form id="avatar" ng-show="mySwitch" ng-init="mySwitch=false" action="{{ request.path }}" method="post"
-              enctype="multipart/form-data">
-            {{ '{{' }}_('Select image to upload'){{ '}}' }}:
-            <input style="font-size: 12px;" type="file" name="avatar" id="fileToUpload">
-            <input type="submit" name="avatar" value="{{ '{{' }}_('Upload Image'){{ '}}' }}">
-        </form>
 
+        <div class="img-upload-form">
+{#            <form id="avatar" ng-show="mySwitch" ng-init="mySwitch=false" action="{{ request.path }}" method="post"#}
+{#              enctype="multipart/form-data">#}
+{#                {{ '{{' }}_('Select image to upload'){{ '}}' }}:#}
+{#                <input style="font-size: 12px;" type="file" name="avatar" id="fileToUpload">#}
+{#                <input type="submit" name="avatar" value="{{ '{{' }}_('Upload Image'){{ '}}' }}">#}
+{#            </form>#}
+            {% raw %}
+                <div class="update_col1" style="width: 250px;" ng-controller="edit_user">
+                    {{ _('Select picture') }}
+                    <div ng-model="data.image" pr-cropper-upload="true" pr-cropper="cropper"></div>
+                </div>
+            {% endraw %}
         </div>
-        <form action="{{ url_for('user.edit_profile', user_id=user.id) }}" onsubmit="return AjaxPost()" method="post">
+            <form action="{{ url_for('user.edit_profile', user_id=user.id) }}" onsubmit="return AjaxPost()" method="post">
+
             <div class="item"><span>{{ '{{' }}_('Your display name'){{ '}}' }}:</span><input type="text" placeholder="name" name="name"
                                                                     value="{{ user.profireader_name }}"></div>
             <div class="item"><span>{{ '{{' }}_('Your email'){{ '}}' }}:</span>{{ user.profireader_email }} <a
@@ -112,7 +146,7 @@
         });
 
         function AjaxPost() {
-            $.post({{ request.path }}, {
+            $.post('{{ request.path }}', {
                         'name': $("#name").val(),
                         'short': $("#short").val(),
                         'full': $("#full").val()

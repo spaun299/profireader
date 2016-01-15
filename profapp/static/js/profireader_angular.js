@@ -115,7 +115,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             }
         }
     }])
-    .directive('prCropper', ['$compile', '$templateCache', '$controller', function ($compile, $templateCache, $controller) {
+    .directive('prCropper', ['$compile', '$templateCache', '$controller', '$timeout', function ($compile, $templateCache, $controller, $timeout) {
         return {
             restrict: 'A',
             require: 'ngModel',
@@ -130,12 +130,16 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     model.$modelValue.image_file_id = item.id;
                     closeFileManager();
                 };
+
                 var callback_name = 'prcropper_image_selected_callback_' + scope.controllerName + '_' + randomHash();
 
                 window[callback_name] = scope.ImageSelected;
+
+
                 scope.chooseImage = function (setImage) {
                     if (setImage) {
                         scope.chooseImageinFileManager("parent." + callback_name, 'choose', '', attrs['prCompanyId']);
+                        model.$modelValue.uploaded = false;
                     }
                     else {
                         model.$modelValue.image_file_id = null;
@@ -143,6 +147,11 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 };
 
                 var $image = $('img', element);
+                var $inputImage = $('input', element);
+
+                var URL = window.URL || window.webkitURL;
+                var blobURL;
+
 
                 var options = {
                     crop: function (e) {
@@ -153,14 +162,53 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     }
                 };
 
-                var restartCropper = function (src) {
+                var uploadCropper = function () {
+                    var files = this.files;
+                    var file;
+                    var ff = $('input#inputImage').prop('files')[0];
+                    console.log(ff)
+                    if (files && files.length) {
+                        file = files[0];
+                        var fr = new FileReader();
+                        fr.readAsBinaryString(ff);
+                        var content = '';
+                        fr.onload = function(e) {
+                            content = fr.result;
+                            console.log(ff)
+                            if (/^image\/\w+$/.test(file.type)) {
+                                $inputImage.val('');
+
+                                blobURL = URL.createObjectURL(file);
+                                model.$modelValue.type = file.type;
+                                model.$modelValue.name = file.name;
+                                model.$modelValue.dataContent = content;
+                                model.$modelValue.uploaded = true;
+                                model.$modelValue.image_file_id = blobURL;
+
+                            }else {
+                                add_message('Please choose an image file.');
+                            }
+                        };
+
+                    }
+                }
+
+                var restartCropper = function () {
                     $image.cropper('destroy');
-                    if (model.$modelValue.image_file_id) {
-                        $image.attr('src', fileUrl(model.$modelValue.image_file_id));
+                    if (model.$modelValue.uploaded) {
+                        $image.attr('src', model.$modelValue.image_file_id);
                         $image.cropper(options);
+                        $image.cropper('replace', model.$modelValue.image_file_id);
+
                     }
                     else {
-                        $image.attr('src', model.$modelValue.no_image_url);
+                        if (model.$modelValue.image_file_id) {
+                            $image.attr('src', fileUrl(model.$modelValue.image_file_id));
+                            $image.cropper(options);
+                        }
+                        else {
+                            $image.attr('src', model.$modelValue.no_image_url);
+                        }
                     }
                 };
 
@@ -192,6 +240,8 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                         //}
                     }
                 });
+
+                $inputImage.change(uploadCropper);
                 //
                 //scope.$watch(attrs['ngModel'] + '.ratio', function () {
                 //    if (model.$modelValue && model.$modelValue.ratio) {
@@ -529,9 +579,9 @@ function file_choose(selectedfile) {
     var args = top.tinymce.activeEditor.windowManager.getParams();
     var win = (args.window);
     var input = (args.input);
-    if(selectedfile['type']==='file_video'){
-        win.document.getElementById(input).value = "https://youtu.be/"+selectedfile['youtube_data']['id']+"?list="+selectedfile['youtube_data']['playlist_id'];
-    }else{
+    if (selectedfile['type'] === 'file_video') {
+        win.document.getElementById(input).value = "https://youtu.be/" + selectedfile['youtube_data']['id'] + "?list=" + selectedfile['youtube_data']['playlist_id'];
+    } else {
         win.document.getElementById(input).value = selectedfile['url'];
     }
     top.tinymce.activeEditor.windowManager.close();
@@ -553,7 +603,7 @@ module.config(function ($provide) {
 });
 
 module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_called_for', 'file_manager_on_action',
-    'file_manager_default_action','get_root',
+    'file_manager_default_action', 'get_root',
     function ($scope, $modalInstance, file_manager_called_for, file_manager_on_action, file_manager_default_action, get_root) {
 
 //TODO: SW fix this pls
@@ -579,7 +629,7 @@ module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_
         if (file_manager_default_action) {
             params['file_manager_default_action'] = file_manager_default_action;
         }
-        if (get_root){
+        if (get_root) {
             params['get_root'] = get_root;
         }
         $scope.src = $scope.src + '?' + $.param(params);
@@ -689,18 +739,18 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                 type: uiGridConstants.filter.SELECT
             };
         },
-        searchItemGrid: function(col){
-                this.all_grid_data.paginationOptions.pageNumber = 1;
-                this.all_grid_data['search_text'][col.field] = col.colDef.filter.search_text;
-                this.sendData(this.all_grid_data);
+        searchItemGrid: function (col) {
+            this.all_grid_data.paginationOptions.pageNumber = 1;
+            this.all_grid_data['search_text'][col.field] = col.colDef.filter.search_text;
+            this.sendData(this.all_grid_data);
         },
-        refreshGrid: function(col){
-            if(col !== undefined){
-                for(var i = 0;i < col.length;i++){
-                    if(col[i].filter && col[i].filter.type === 'select'){
+        refreshGrid: function (col) {
+            if (col !== undefined) {
+                for (var i = 0; i < col.length; i++) {
+                    if (col[i].filter && col[i].filter.type === 'select') {
                         col[i].filter.term = '1'
-                    }else if(col[i].filter && col[i].filter.type === 'input'){
-                        col[i].filter.search_text= ''
+                    } else if (col[i].filter && col[i].filter.type === 'input') {
+                        col[i].filter.search_text = ''
                     }
                 }
                 this.all_grid_data.filter = {};
@@ -708,36 +758,36 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                 this.sendData(this.all_grid_data)
             }
         },
-        all_grid_data : {
-                paginationOptions: {pageNumber: 1, pageSize: 25},
-                filter: {},
-                sort: {},
-                editItem: {},
-                search_text: {}
-            },
-        getProperties: function(col){
+        all_grid_data: {
+            paginationOptions: {pageNumber: 1, pageSize: 25},
+            filter: {},
+            sort: {},
+            editItem: {},
+            search_text: {}
+        },
+        getProperties: function (col) {
             var scope = this;
             scope.pos = {};
-            for(var i = 0;i < col.length;i++){
-                if(col[i].filter && col[i].filter.type){
+            for (var i = 0; i < col.length; i++) {
+                if (col[i].filter && col[i].filter.type) {
                     scope.pos[col[i].name] = '1'
                 }
             }
         },
-        applyGridExtarnals: function(resp){
+        applyGridExtarnals: function (resp) {
             var scope = this;
             var col = scope.gridOptions1.columnDefs;
             scope.gridOptions1.totalItems = resp.total;
-            for(var i = 0;i < col.length;i++) {
+            for (var i = 0; i < col.length; i++) {
                 if (col[i].filter && col[i].filter.type === 'select') {
                     scope.gridOptions1.columnDefs[i]['filter']['selectOptions'] = resp.grid_filters[col[i].name];
                 }
             }
-            for(var m=0;m< resp.grid_data.length;m++){
-                        if(resp.grid_data[m]['level'])
-                            resp.grid_data[m].$$treeLevel = 0
+            for (var m = 0; m < resp.grid_data.length; m++) {
+                if (resp.grid_data[m]['level'])
+                    resp.grid_data[m].$$treeLevel = 0
             }
-            if(scope.all_grid_data){
+            if (scope.all_grid_data) {
                 scope.all_grid_data['editItem'] = {};
             }
         },
@@ -758,7 +808,7 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                 //    this.applyGridExtarnals(resp);
                 //})
                 if (sortColumns.length !== 0) {
-                    scope.all_grid_data['sort'][sortColumns[0].field] = sortColumns[0].sort.direction ;
+                    scope.all_grid_data['sort'][sortColumns[0].field] = sortColumns[0].sort.direction;
                 }
                 scope.sendData(scope.all_grid_data)
             });
@@ -787,15 +837,15 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                     if (term !== undefined) {
                         if (term !== scope.pos[field] && term) {
                             scope.pos[field] = term;
-                            if(grid.columns[i].filter.selectOptions[term-1]['value'] !== '1')
+                            if (grid.columns[i].filter.selectOptions[term - 1]['value'] !== '1')
                                 scope.all_grid_data.paginationOptions.pageNumber = 1;
-                                if(grid.columns[i].filter.selectOptions[term-1]['id']){
-                                    scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term-1]['id'];
-                                    scope.sendData(scope.all_grid_data)
-                                }else{
-                                    scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term-1]['label'];
-                                    scope.sendData(scope.all_grid_data)
-                                }
+                            if (grid.columns[i].filter.selectOptions[term - 1]['id']) {
+                                scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term - 1]['id'];
+                                scope.sendData(scope.all_grid_data)
+                            } else {
+                                scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term - 1]['label'];
+                                scope.sendData(scope.all_grid_data)
+                            }
                         }
                         if (term === null) {
                             scope.refreshGrid(scope.gridOptions1.columnDefs)
@@ -803,8 +853,8 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                     }
                 }
             });
-            if(scope.gridOptions1.enableRowSelection){
-               gridApi.selection.on.rowSelectionChanged(scope,function(row){
+            if (scope.gridOptions1.enableRowSelection) {
+                gridApi.selection.on.rowSelectionChanged(scope, function (row) {
                     scope.list_select = scope.gridApi.selection.getSelectedRows();
                     scope.isSelectedRows = scope.gridApi.selection.getSelectedRows().length !== 0;
                 });
@@ -837,11 +887,14 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
             });
         },
         areAllEmpty: areAllEmpty,
+        choseImageWithoutFilemanager: function (m) {
+            console.log(m)
+        },
         chooseImageinFileManager: function (do_on_action, default_action, callfor, id) {
             var scope = this;
             var callfor_ = callfor ? callfor : 'file_browse_image';
             var default_action_ = default_action ? default_action : 'file_browse_image';
-            var root_id = id? id: '';
+            var root_id = id ? id : '';
             scope.filemanagerModal = $modal.open({
                 templateUrl: 'filemanager.html',
                 controller: 'filemanagerCtrl',
@@ -861,7 +914,6 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
                     get_root: function () {
                         return root_id
                     }
-
                 }
             });
         },

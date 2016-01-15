@@ -25,7 +25,6 @@ from .views_file import crop_image
 from config import Config
 from ..models.pr_base import Search
 
-
 @company_bp.route('/search_to_submit_article/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions(Right[RIGHTS.SUBMIT_PUBLICATIONS()]))
@@ -303,8 +302,10 @@ def update_rights():
 @login_required
 # @check_rights(simple_permissions([]))
 def update(company_id=None):
+    user_companies = [user_comp for user_comp in current_user.employer_assoc]
+    user_have_comp = True if user_companies else False
     company = db(Company, id=company_id).first()
-    return render_template('company/company_edit.html', company_id=company_id,
+    return render_template('company/company_edit.html', company_id=company_id,user_comp=user_have_comp,
                            company_name=company.name if company else '',
                            company=company if company else {})
 
@@ -336,22 +337,37 @@ def load(json, company_id=None):
     else:
         company.attr(g.filter_json(json, 'about', 'address', 'country', 'email', 'name', 'phone',
                                    'phone2', 'region', 'short_description', 'lon', 'lat'))
-
         if action == 'validate':
             if company_id is not None:
                 company.detach()
             return company.validate(company_id is None)
         else:
-            img = json['image']
-            img_id = img.get('image_file_id')
-            if img_id:
-                company.logo_file_id = crop_image(img_id, img['coordinates'])
-            elif not img_id:
-                company.logo_file_id = None
+            if json['image']['uploaded']:
+                print(json)
+                list = [file for file in db(File, name='x.bmp', mime='image/bmp')]
+                for f in list:
+                    File.remove(f.id)
+                imgdataContent =json['image']['dataContent']
+                print(imgdataContent)
+                if company_id is None:
+                    company.setup_new_company()
+                company.save()
+                new_comp = Company.get(company.id)
+                print(bytes(imgdataContent, encoding = 'utf-8'))
+                file_id = File.uploadForCompany(imgdataContent,json['image']['name'], json['image']['type'], new_comp)
+                logo_id = crop_image(file_id, json['image']['coordinates'])
+                company.updates({'logo_file_id': logo_id})
+            else:
+                img = json['image']
+                img_id = img.get('image_file_id')
+                if img_id:
+                    company.logo_file_id = crop_image(img_id, img['coordinates'])
+                elif not img_id:
+                    company.logo_file_id = None
 
-            if company_id is None:
-                company.setup_new_company()
-            return company.save().get_client_side_dict()
+                # if company_id is None:
+                #     company.setup_new_company()
+                # return company.save().get_client_side_dict()
 
 
 # @company_bp.route('/confirm_create/', methods=['POST'])

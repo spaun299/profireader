@@ -232,39 +232,39 @@ def allowed_referrers(domain):
 
 
 def crop_image(image_id, coordinates):
-
     image_query = db(File, id=image_id).one()
-    if db(ImageCroped, original_image_id=image_id).count():
-        return update_croped_image(image_id, coordinates)
-    company_owner = db(Company).filter(or_(
-        Company.system_folder_file_id == image_query.root_folder_id,
-        Company.journalist_folder_file_id == image_query.root_folder_id)).one()
-    bytes_file = crop_with_coordinates(image_query, coordinates)
-    if bytes_file:
-        croped = File()
-        croped.md_tm = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        croped.size = sys.getsizeof(bytes_file.getvalue())
-        croped.name = image_query.name + '_cropped'
-        croped.parent_id = company_owner.system_folder_file_id
-        croped.root_folder_id = company_owner.system_folder_file_id
-        croped.mime = image_query.mime
-        fc = FileContent(content=bytes_file.getvalue(), file=croped)
-        copy_original_image_to_system_folder = \
-            File(parent_id=company_owner.system_folder_file_id, name=image_query.name+'_original',
-                 mime=image_query.mime, size=image_query.size, user_id=g.user.id,
-                 root_folder_id=company_owner.system_folder_file_id, author_user_id=g.user.id)
-        cfc = FileContent(content=image_query.file_content.content,
-                          file=copy_original_image_to_system_folder)
-        g.db.add_all([croped, fc, copy_original_image_to_system_folder, cfc])
-        g.db.flush()
-        ImageCroped(original_image_id=copy_original_image_to_system_folder.id,
-                    croped_image_id=croped.id,
-                    x=float(coordinates['x']), y=float(coordinates['y']),
-                    width=float(coordinates['width']),
-                    height=float(coordinates['height']), rotate=int(coordinates['rotate'])).save()
-        return croped.id
-    else:
-        return image_query.id
+    print(image_query.file_content.content)
+    # if db(ImageCroped, original_image_id=image_id).count():
+    #     return update_croped_image(image_id, coordinates)
+    # company_owner = db(Company).filter(or_(
+    #     Company.system_folder_file_id == image_query.root_folder_id,
+    #     Company.journalist_folder_file_id == image_query.root_folder_id)).one()
+    # bytes_file = crop_with_coordinates(image_query, coordinates)
+    # if bytes_file:
+    #     croped = File()
+    #     croped.md_tm = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    #     croped.size = sys.getsizeof(bytes_file.getvalue())
+    #     croped.name = image_query.name + '_cropped'
+    #     croped.parent_id = company_owner.system_folder_file_id
+    #     croped.root_folder_id = company_owner.system_folder_file_id
+    #     croped.mime = image_query.mime
+    #     fc = FileContent(content=bytes_file.getvalue(), file=croped)
+    #     copy_original_image_to_system_folder = \
+    #         File(parent_id=company_owner.system_folder_file_id, name=image_query.name+'_original',
+    #              mime=image_query.mime, size=image_query.size, user_id=g.user.id,
+    #              root_folder_id=company_owner.system_folder_file_id, author_user_id=g.user.id)
+    #     cfc = FileContent(content=image_query.file_content.content,
+    #                       file=copy_original_image_to_system_folder)
+    #     g.db.add_all([croped, fc, copy_original_image_to_system_folder, cfc])
+    #     g.db.flush()
+    #     ImageCroped(original_image_id=copy_original_image_to_system_folder.id,
+    #                 croped_image_id=croped.id,
+    #                 x=float(coordinates['x']), y=float(coordinates['y']),
+    #                 width=float(coordinates['width']),
+    #                 height=float(coordinates['height']), rotate=int(coordinates['rotate'])).save()
+    #     return croped.id
+    # else:
+    #     return image_query.id
 
 
 def update_croped_image(original_image_id, coordinates):

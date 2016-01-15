@@ -296,6 +296,7 @@
             $scope.uploadUsingUpload = function () {
                 $scope.uploadingProgress = true;
                 var file = $scope.uploadFileList[0];
+                console.log(file)
                 $scope.f = file;
                 var url = '/filemanager/send/' + $scope.fileNavigator.getCurrentFolder() + '/';
                 file.upload = Upload.upload({

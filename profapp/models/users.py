@@ -295,7 +295,7 @@ class User(Base, UserMixin, PRBase):
             else:
                 avatar = avatar['data'].get('url')
         else:
-            avatar = self.gravatar(size=size)
+            avatar = self.profireader_avatar_url#self.gravatar(size=size)
 
         # if logged_via == 'google':
         #     avatar = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
@@ -453,7 +453,8 @@ class User(Base, UserMixin, PRBase):
             self.profireader_small_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
         else:
             list = [file for file in db(File, parent_id=self.system_folder_file_id)]
-            print(list)
+            self.profireader_avatar_url = self.gravatar(size=100)
+            self.profireader_small_avatar_url = self.gravatar(size=100)
             for f in list:
                 File.remove(f.id)
         # TODO: this image should be cropped
