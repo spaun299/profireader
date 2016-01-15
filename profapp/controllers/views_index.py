@@ -40,6 +40,7 @@ from sqlalchemy import text
 @general_bp.route('')
 @general_bp.route('<int:page>/', methods=['GET'])
 def index(page=1):
+    current_user.avatar('facebook')
     if not current_user.is_authenticated():
         portal_base_profireader = 'partials/portal_base_Profireader.html'
         profireader_content = 'partials/Profireader_content.html'

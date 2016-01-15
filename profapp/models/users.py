@@ -7,7 +7,7 @@ from flask import session, json
 from urllib import request as req
 from config import Config
 # from db_init import Base, g.db
-
+from authomatic.providers import oauth2
 from ..constants.TABLE_TYPES import TABLE_TYPES
 from ..constants.SOCIAL_NETWORKS import SOCIAL_NETWORKS, SOC_NET_NONE
 from ..constants.USER_REGISTERED import REGISTERED_WITH_FLIPPED, \
@@ -284,27 +284,40 @@ class User(Base, UserMixin, PRBase):
         g.db.add(self)
         g.db.commit()
 
-    def avatar(self, size=100):
-        logged_via = session.get('logged_in_via')
-        if logged_via == 'facebook':
-            avatar = json.load(req.urlopen(
-                url='http://graph.facebook.com/{facebook_id}/picture?width={size}&height={size}&redirect=0'.
-                    format(facebook_id=self.facebook_id, size=size)))
+    def avatar(self, avatar_via, size=500, small_size=100, url=None):
+        avatar_urls = dict(facebook=lambda s: 'http://graph.facebook.com/{facebook_id}/picture?width={size}&'
+                                              'height={size}&redirect=0'.format(facebook_id=self.facebook_id, size=s),
+                           google=lambda s: 'https://www.googleapis.com/plus/v1/people/{google_id}?'
+                                            'fields=image&key={key}'.format(google_id=self.google_id,
+                                                                            size=s, key=Config.GOOGLE_API_KEY_SIMPLE),
+                           linkedin=url)
+        url = avatar_urls[avatar_via](size)
+        url_small = avatar_urls[avatar_via](small_size)
+        if avatar_via == 'facebook':
+            avatar = json.load(req.urlopen(url=url))
+            avatar_small = json.load(req.urlopen(url=url_small))
             if avatar['data'].get('is_silhouette'):
-                avatar = self.gravatar(size=size)
+                self.profireader_avatar_url = self.gravatar(size=size)
+                self.profireader_small_avatar_url = self.gravatar(size=small_size)
             else:
-                avatar = avatar['data'].get('url')
-        elif logged_via == 'google':
-            avatar = json.load(
-                req.urlopen(url='https://www.googleapis.com/plus/v1/people/{google_id}?fields=image&key={key}'.format(
-                    google_id=self.google_id, size=size, key=Config.GOOGLE_API_KEY_SIMPLE)))
+                self.profireader_avatar_url = avatar['data'].get('url')
+                self.profireader_small_avatar_url = avatar_small['data'].get('url')
+        elif avatar_via == 'google':
+            avatar = json.load(req.urlopen(url=url))
+            avatar_small = json.load(req.urlopen(url=url_small))
             if avatar['image'].get('isDefault'):
-                avatar = self.gravatar(size=size)
+                self.profireader_avatar_url = self.gravatar(size=size)
+                self.profireader_small_avatar_url = self.gravatar(size=small_size)
             else:
-                avatar = avatar['image'].get('url')
-        else:
-            avatar = self.gravatar(size=size)
-        return avatar
+                self.profireader_avatar_url = avatar['image'].get('url')
+                self.profireader_small_avatar_url = avatar_small['image'].get('url')
+        elif avatar_via == 'linkedin':
+            self.profireader_avatar_url = url
+            self.profireader_small_avatar_url = url
+        elif avatar_via == 'gravatar':
+            self.profireader_avatar_url = self.gravatar(size=size)
+            self.profireader_small_avatar_url = self.gravatar(size=small_size)
+        return self
 
     def gravatar(self, size=100, default='identicon', rating='g'):
         if request.is_secure:
