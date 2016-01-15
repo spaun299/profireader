@@ -291,7 +291,9 @@ class User(Base, UserMixin, PRBase):
                                             'fields=image&key={key}'.format(google_id=self.google_id,
                                                                             size=s, key=Config.GOOGLE_API_KEY_SIMPLE),
                            linkedin=lambda s, u=url: u if u else self.gravatar(size=s),
-                           gravatar=lambda s: self.gravatar(size=s))
+                           gravatar=lambda s: self.gravatar(size=s),
+                           microsoft=lambda _: 'https://apis.live.net/v5.0/{microsoft_id}/picture'.format(
+                               microsoft_id=self.microsoft_id))
         url = avatar_urls[avatar_via](size)
         url_small = avatar_urls[avatar_via](small_size)
         if avatar_via == 'facebook':
@@ -315,6 +317,15 @@ class User(Base, UserMixin, PRBase):
         elif avatar_via == 'linkedin':
             self.profireader_avatar_url = url
             self.profireader_small_avatar_url = url
+        elif avatar_via == 'microsoft':
+            avatar = req.urlopen(url=url)
+            if 'Default' not in avatar.url:
+                self.profireader_avatar_url = avatar.url
+                self.profireader_small_avatar_url = avatar.url
+            else:
+                self.profireader_avatar_url = self.gravatar(size=size)
+                self.profireader_small_avatar_url = self.gravatar(size=small_size)
+
         elif avatar_via == 'gravatar':
             self.profireader_avatar_url = url
             self.profireader_small_avatar_url = url_small
