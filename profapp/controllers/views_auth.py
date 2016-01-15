@@ -59,11 +59,10 @@ def login_signup_general(*soc_network_names):
                     registred_via_soc = len(soc_network_names) > 1
                     if ind:  # ToDo (AA): introduce field signup_via instead.
                         # Todo (AA): If signed_up not via profireader then...
-                        if not registred_via_soc:
-                            db_fields_profireader = DB_FIELDS['profireader']
-                            for elem in SOC_NET_FIELDS_SHORT:
-                                setattr(user, db_fields_profireader[elem], getattr(result_user, elem))
-                        user.avatar(logged_via_soc | 'gravatar',
+                        db_fields_profireader = DB_FIELDS['profireader']
+                        for elem in SOC_NET_FIELDS_SHORT:
+                            setattr(user, db_fields_profireader[elem], getattr(result_user, elem))
+                        user.avatar(logged_via_soc or 'gravatar',
                                     url=result_user.data.get('pictureUrl') if logged_via_soc == 'linkedin' else None,
                                     size=AVATAR_SIZE, small_size=AVATAR_SMALL_SIZE)
 
@@ -159,8 +158,7 @@ def signup():
             PROFIREADER_ALL=profireader_all,
             password=signup_form.password.data  # # pass is automatically hashed
         )
-        user.profireader_avatar_url = user.avatar(size=AVATAR_SIZE)
-        user.profireader_small_avatar_url = user.avatar(size=AVATAR_SMALL_SIZE)
+        user.avatar('gravatar', size=AVATAR_SIZE, small_size=AVATAR_SMALL_SIZE)
         # # user.password = signup_form.password.data  # pass is automatically hashed
 
         g.db.add(user)

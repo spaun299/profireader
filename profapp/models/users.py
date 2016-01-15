@@ -290,7 +290,8 @@ class User(Base, UserMixin, PRBase):
                            google=lambda s: 'https://www.googleapis.com/plus/v1/people/{google_id}?'
                                             'fields=image&key={key}'.format(google_id=self.google_id,
                                                                             size=s, key=Config.GOOGLE_API_KEY_SIMPLE),
-                           linkedin=url)
+                           linkedin=lambda s, u=url: u if u else self.gravatar(size=s),
+                           gravatar=lambda s: self.gravatar(size=s))
         url = avatar_urls[avatar_via](size)
         url_small = avatar_urls[avatar_via](small_size)
         if avatar_via == 'facebook':
@@ -315,8 +316,8 @@ class User(Base, UserMixin, PRBase):
             self.profireader_avatar_url = url
             self.profireader_small_avatar_url = url
         elif avatar_via == 'gravatar':
-            self.profireader_avatar_url = self.gravatar(size=size)
-            self.profireader_small_avatar_url = self.gravatar(size=small_size)
+            self.profireader_avatar_url = url
+            self.profireader_small_avatar_url = url_small
         return self
 
     def gravatar(self, size=100, default='identicon', rating='g'):
