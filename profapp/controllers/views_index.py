@@ -84,7 +84,6 @@ def index(page=1):
                            # search_text=None,
                            )
 
-
 @general_bp.route('subscribe/')
 def auth_before_subscribe_to_portal():
     portal_id = request.args.get('portal_id', None)
