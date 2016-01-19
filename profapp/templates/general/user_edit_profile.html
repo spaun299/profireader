@@ -21,11 +21,9 @@
             $scope.data = {};
             $scope.sendData = function(){
                 $scope.data['image'] = $('#fileToUpload')[0]['files'][0]
-                console.log($scope.data['image'])
             };
 
             $scope.afterLoad = function (resp, deff) {
-                console.log($scope)
                 deff(resp);
                 $scope.setImageUrl(resp['logo_file_id']);
             };
@@ -48,7 +46,6 @@
                 <a ng-click="mySwitch = !mySwitch">
                     <span ng-hide="mySwitch">[{{ '{{' }}_('upload picture'){{ '}}' }}]</span><span ng-show="mySwitch">[{{ '{{' }}_('hide'){{ '}}' }}]</span>
                 </a>
-
                 <form ng-hide="mySwitch" id="myform" method="post" style="display: inline;">
                     <input type="hidden" name="avatar" value="Use Gravatar"/><a onclick="document.getElementById('myform').submit();" style="border: none;">[{{ '{{' }}_('use gravatar'){{ '}}' }}]</a>
                 </form>
@@ -61,18 +58,12 @@
         {#</a>#}
 
         <div class="img-upload-form">
-{#            <form id="avatar" ng-show="mySwitch" ng-init="mySwitch=false" action="{{ request.path }}" method="post"#}
-{#              enctype="multipart/form-data">#}
-{#                {{ '{{' }}_('Select image to upload'){{ '}}' }}:#}
-{#                <input style="font-size: 12px;" type="file" name="avatar" id="fileToUpload">#}
-{#                <input type="submit" name="avatar" value="{{ '{{' }}_('Upload Image'){{ '}}' }}">#}
-{#            </form>#}
-            {% raw %}
-                <div class="update_col1" style="width: 250px;" ng-controller="edit_user">
-                    {{ _('Select picture') }}
-                    <div ng-model="data.image" pr-cropper-upload="true" pr-cropper="cropper"></div>
-                </div>
-            {% endraw %}
+            <form id="avatar" ng-show="mySwitch" ng-init="mySwitch=false" action="{{ request.path }}" method="post"
+              enctype="multipart/form-data">
+                {{ '{{' }}_('Select image to upload'){{ '}}' }}:
+                <input style="font-size: 12px;" type="file" name="avatar" id="fileToUpload" accept="image/*">
+                <input type="submit" name="avatar" value="{{ '{{' }}_('Upload Image'){{ '}}' }}">
+            </form>
         </div>
             <form action="{{ url_for('user.edit_profile', user_id=user.id) }}" onsubmit="return AjaxPost()" method="post">
 

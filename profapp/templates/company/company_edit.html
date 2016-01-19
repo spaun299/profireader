@@ -20,11 +20,14 @@
             $scope.url_back = {{ raw_url_for('company.show')|safe }};
             $scope.data = {};
             $scope.company_id = '{{ company.id }}';
+            $scope.user_have_company = '{{ user_comp }}'=== 'True'? true: null;
+
             $scope.cancel = function () {
                 window.location.href = $scope.url_back();
                 return false;
             };
             $scope.getData = function () {
+
                 return $scope.data;
             };
             $scope.$$translate = {{ translates('company_create')|safe }};

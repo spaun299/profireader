@@ -166,18 +166,15 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     var files = this.files;
                     var file;
                     var ff = $('input#inputImage').prop('files')[0];
-                    console.log(ff)
                     if (files && files.length) {
                         file = files[0];
                         var fr = new FileReader();
-                        fr.readAsBinaryString(ff);
+                        fr.readAsDataURL(ff);
                         var content = '';
                         fr.onload = function(e) {
                             content = fr.result;
-                            console.log(ff)
                             if (/^image\/\w+$/.test(file.type)) {
                                 $inputImage.val('');
-
                                 blobURL = URL.createObjectURL(file);
                                 model.$modelValue.type = file.type;
                                 model.$modelValue.name = file.name;

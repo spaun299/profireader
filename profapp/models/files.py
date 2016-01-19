@@ -477,17 +477,12 @@ class File(Base, PRBase):
 
     @staticmethod
     def uploadForCompany(content, name, type, company):
-        # old_file_position = content.tell()
-        # content.seek(0, os.SEEK_END)
-        # size = content.tell()
-        # content.seek(old_file_position, os.SEEK_SET)
+        size = len(content)
         file = File(parent_id=company.journalist_folder_file_id,
                             root_folder_id=company.journalist_folder_file_id,
                             name=name,
-                            # copyright_author_name=user.profireader_name,
-                            # author_user_id=user.id,
                             mime=type,
-                            size=0
+                            size=size
                             ).save()
         file_cont = FileContent(file=file, content=content)
         g.db.add(file, file_cont)
@@ -503,8 +498,6 @@ class File(Base, PRBase):
             file = File(parent_id=user.system_folder_file_id,
                             root_folder_id=user.system_folder_file_id,
                             name=self.filename,
-                            # copyright_author_name=user.profireader_name,
-                            # author_user_id=user.id,
                             mime=self.content_type,
                             size=size
                             ).save()
@@ -512,6 +505,7 @@ class File(Base, PRBase):
             g.db.add(file, file_cont)
             g.db.commit()
             return file
+
     @staticmethod
     def upload(name, data, parent, root, content):
         if data.get('chunkNumber') == '0':

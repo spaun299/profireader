@@ -25,23 +25,22 @@
                  <span class="docs-tooltip" data-toggle="tooltip"><span
                          class="glyphicon glyphicon-zoom-out"></span></span>
         </button>
-        <button class="btn btn-primary" type="button" value="{{ image_file_url }}"
+        <button ng-if="user_have_company" class="btn btn-primary" type="button" value="{{ image_file_url }}"
                 ng-click="chooseImage(true, avatar)">
                 <span class="docs-tooltip" data-toggle="tooltip" title="Chose image"><span
                         class="glyphicon glyphicon-folder-open"></span></span>
         </button>
-        <button class="btn btn-primary" type="button"
+        <label ng-if="!user_have_company" class="btn btn-primary" for="inputImage" title="Upload image file">
+            <input type="file" class="sr-only" id="inputImage" name="file" accept="image/*">
+            <span class="docs-tooltip" data-toggle="tooltip" title="Import image with Blob URLs" >
+              <span class="glyphicon glyphicon-upload" style="top:7px!important"></span>
+            </span>
+          </label>
+        <button  class="btn btn-primary" type="button"
                 ng-click="chooseImage(false)">
                 <span class="docs-tooltip" data-toggle="tooltip" title="Chose image"><span
                         class="glyphicon glyphicon-remove-circle"></span></span>
         </button>
-        <label class="btn btn-primary btn-upload" for="inputImage" title="Upload image file">
-            <input type="file" class="sr-only" id="inputImage" name="file" accept="image/*">
-            <span class="docs-tooltip" data-toggle="tooltip" title="Import image with Blob URLs">
-              <span class="glyphicon glyphicon-upload"></span>
-            </span>
-          </label>
-
     <input type="hidden" ng-model="data.article.image_file_id">
     </div>
     {% endraw %}
