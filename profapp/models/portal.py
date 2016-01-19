@@ -14,6 +14,7 @@ import itertools
 from sqlalchemy import orm
 import itertools
 from config import Config
+from .articles import ArticlePortalDivision
 import simplejson
 from .files import File
 from profapp.controllers.errors import BadDataProvided
@@ -340,15 +341,18 @@ class MemberCompanyPortal(Base, PRBase):
     #     return sub_query
 
 
-
 class ReaderUserPortalPlan(Base, PRBase):
     __tablename__ = 'reader_user_portal_plan'
     id = Column(TABLE_TYPES['id_profireader'], nullable=False, primary_key=True)
-    name = Column(TABLE_TYPES['name'], nullable=False)
+    name = Column(TABLE_TYPES['name'], nullable=False, default='free')
+    time = Column(TABLE_TYPES['bigint'], default=9999999)
+    price = Column(TABLE_TYPES['float'], default=0)
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, time=None, price=None):
         super(ReaderUserPortalPlan, self).__init__()
         self.name = name
+        self.time = time
+        self.price = price
 
 
 class PortalLayout(Base, PRBase):
@@ -484,6 +488,7 @@ class PortalDivisionType(Base, PRBase):
         """Return all divisions on profireader"""
         return db(PortalDivisionType).all()
 
+
 class PortalConfig(Base, PRBase):
     __tablename__ = 'portal_config'
     id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'), primary_key=True)
@@ -532,15 +537,20 @@ class UserPortalReader(Base, PRBase):
     portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
     status = Column(TABLE_TYPES['id_profireader'], default='active', nullable=False)
     portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('reader_user_portal_plan.id'))
+    start_tm = Column(TABLE_TYPES['timestamp'])
+    end_tm = Column(TABLE_TYPES['timestamp'])
 
     portal = relationship('Portal')
     user = relationship('User')
 
-    def __init__(self, user_id=None, portal_id=None, status='active', portal_plan_id=None):
+    def __init__(self, user_id=None, portal_id=None, status='active', portal_plan_id=None, start_tm=None,
+                 end_tm=None):
         super(UserPortalReader, self).__init__()
         self.user_id = user_id
         self.portal_id = portal_id
         self.status = status
+        self.start_tm = start_tm
+        self.end_tm = end_tm
         self.portal_plan_id = portal_plan_id or g.db(ReaderUserPortalPlan.id).filter_by(name='free').one()[0]
 
     @staticmethod
@@ -548,3 +558,22 @@ class UserPortalReader(Base, PRBase):
         portals = db(Portal).filter(~(Portal.id.in_(db(UserPortalReader.portal_id, user_id=g.user_dict['id'])))).all()
         for portal in portals:
             yield (portal.id, portal.name, )
+
+
+class FavoriteReaderArticle(Base, PRBase):
+    __tablename__ = 'favorite_reader_article'
+    id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
+    user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'))
+    article_portal_division_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('article_portal_division.id'))
+
+    def __init__(self, user_id=None, article_portal_division_id=None):
+        super(FavoriteReaderArticle, self).__init__()
+        self.user_id = user_id
+        self.article_portal_division_id = article_portal_division_id
+
+    def get_article_portal_division(self):
+        return db(ArticlePortalDivision, id=self.article_portal_division_id).one()
+
+    def get_portal_division(self):
+        return db(PortalDivision).filter(PortalDivision.id == db(ArticlePortalDivision,
+                                         id=self.article_portal_division_id).c.portal_division_id).one()

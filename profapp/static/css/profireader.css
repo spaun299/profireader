@@ -9,11 +9,12 @@ body {
     min-height: 100%;
 }
 .reader_base_navbar{
-    background-color: #404b55;
+    background-color: #464646;
     height: 50px;
     width: 610px;
     padding-left: 1%;
     margin-left: 200px;
+    margin-top: 5px;
     border-radius: 5px;
     text-align: center;
 }
