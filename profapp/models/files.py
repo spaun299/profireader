@@ -875,7 +875,7 @@ class YoutubeApi(GoogleAuthorize):
         except response_code as e:
             if e.code == 308:
                 db(YoutubeVideo, id=session['id']).update(
-                    {'size': int(e.headers.get('Range').split('-')[-1])+1})
+                    {'size': int(e.headers.get('Range').split('-')[-1]) + 1})
             return 'uploading'
 
 

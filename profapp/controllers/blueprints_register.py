@@ -12,10 +12,11 @@ from flask import Blueprint
 # front_bp = Blueprint('front', __name__)
 # file_bp = Blueprint('file', __name__)
 # exception_bp = Blueprint('exception', __name__)
+# help_bp = Blueprint('help', __name__)
 
 from .blueprints_declaration import *
 from . import views_index, views_user, views_filemanager, views_article, views_image_editor, \
-    views_company, views_portal, errors, views_file, views_admin, views_tools
+    views_company, views_portal, errors, views_file, views_admin, views_tools, views_help
 
 
 def register(app):
@@ -35,6 +36,7 @@ def register(app):
     app.register_blueprint(company_bp, url_prefix='/company')
     app.register_blueprint(portal_bp, url_prefix='/portal')
     app.register_blueprint(exception_bp, url_prefix='/exception')
+    app.register_blueprint(help_bp, url_prefix='/help')
 
     # app.register_blueprint(reader_bp, url_prefix='/')
 

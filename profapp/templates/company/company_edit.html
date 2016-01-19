@@ -41,31 +41,14 @@
 
             $scope.afterLoad = function (resp, deff) {
                 deff(resp);
-                $scope.setImageUrl(resp['logo_file_id']);
+                $scope.logo_file_url = fileUrl(resp['logo_file_id']);
             };
 
-            {#            ng-onsuccess="afterSave"#}
-            {#                      ng-onsubmit="getData"#}
-            {#                      ng-action="save_company_url"#}
-
-{#            $scope.ImageSelected = function (item) {#}
-{#                $scope.data.image.image_file_id = item.id;#}
-{#                closeFileManager();#}
-{#            }#}
-
-            $scope.setImageUrl = function (logo_file_id) {
-                $scope.logo_file_url = fileUrl(logo_file_id);
-            };
-
-{#            $scope.chooseImage = function () {#}
-{#                $scope.chooseImageinFileManager("parent.angularControllerFunction('company_create', 'ImageSelected')", 'choose');#}
-{#            }#}
 
         }])
     </script>
     {% raw %}
     <div ng-controller="company_create">
-        {{ load_company_url }}
         <div af
              af-after-save="afterSave"
              af-after-load="afterLoad"
