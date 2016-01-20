@@ -51,10 +51,7 @@ class Company(Base, PRBase):
     lat = Column(TABLE_TYPES['float'], nullable=False, default=49.8418907)
     lon = Column(TABLE_TYPES['float'], nullable=False, default=24.0316261)
 
-    portal_members = relationship('MemberCompanyPortal',
-                          # secondary='member_company_portal',
-                          # back_populates='member_companies'
-                          )
+    portal_members = relationship('MemberCompanyPortal')
 
     own_portal = relationship('Portal',
                               back_populates='own_company', uselist=False,

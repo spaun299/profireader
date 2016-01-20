@@ -14,7 +14,6 @@ import itertools
 from sqlalchemy import orm
 import itertools
 from config import Config
-from .articles import ArticlePortalDivision
 import simplejson
 from .files import File
 from profapp.controllers.errors import BadDataProvided
@@ -558,22 +557,3 @@ class UserPortalReader(Base, PRBase):
         portals = db(Portal).filter(~(Portal.id.in_(db(UserPortalReader.portal_id, user_id=g.user_dict['id'])))).all()
         for portal in portals:
             yield (portal.id, portal.name, )
-
-
-class FavoriteReaderArticle(Base, PRBase):
-    __tablename__ = 'favorite_reader_article'
-    id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
-    user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'))
-    article_portal_division_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('article_portal_division.id'))
-
-    def __init__(self, user_id=None, article_portal_division_id=None):
-        super(FavoriteReaderArticle, self).__init__()
-        self.user_id = user_id
-        self.article_portal_division_id = article_portal_division_id
-
-    def get_article_portal_division(self):
-        return db(ArticlePortalDivision, id=self.article_portal_division_id).one()
-
-    def get_portal_division(self):
-        return db(PortalDivision).filter(PortalDivision.id == db(ArticlePortalDivision,
-                                         id=self.article_portal_division_id).c.portal_division_id).one()

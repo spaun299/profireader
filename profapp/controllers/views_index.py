@@ -9,7 +9,7 @@ from .pagination import pagination
 from collections import OrderedDict
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 from sqlalchemy import text
-
+from utils.db_utils import db
 
 # def get_params(portal_id, **argv):
 #     portal = g.db.query(Portal).filter_by(id=portal_id).one()

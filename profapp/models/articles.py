@@ -52,6 +52,8 @@ class ArticlePortalDivision(Base, PRBase):
                            primaryjoin="ArticlePortalDivision.article_company_id == ArticleCompany.id",
                            secondaryjoin="ArticleCompany.company_id == Company.id",
                            viewonly=True, uselist=False)
+    users_subscribers = relationship('User',
+                                     secondary='favorite_reader_article', back_populates='favorite_articles')
 
     # portal_division_tags = relationship('TagPortalDivision',
     #                                     secondary='tag_portal_division_article',
@@ -59,6 +61,7 @@ class ArticlePortalDivision(Base, PRBase):
 
     # tag_assoc_ = relationship('TagPortalDivisionArticle',
     #                                 back_populates='article_portal_division_select')
+
     search_fields = {'title': {'relevance': lambda field='title': RELEVANCE.title},
                      'short': {'relevance': lambda field='short': RELEVANCE.short},
                      'long': {'relevance': lambda field='long': RELEVANCE.long},
@@ -716,3 +719,22 @@ class ArticleCompanyHistory(Base, PRBase):
         self.long = long
         self.article_company_id = article_company_id
         self.article_id = article_id
+
+
+class FavoriteReaderArticle(Base, PRBase):
+    __tablename__ = 'favorite_reader_article'
+    id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
+    user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'))
+    article_portal_division_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('article_portal_division.id'))
+
+    def __init__(self, user_id=None, article_portal_division_id=None):
+        super(FavoriteReaderArticle, self).__init__()
+        self.user_id = user_id
+        self.article_portal_division_id = article_portal_division_id
+
+    def get_article_portal_division(self):
+        return db(ArticlePortalDivision, id=self.article_portal_division_id).one()
+
+    def get_portal_division(self):
+        return db(PortalDivision).filter(PortalDivision.id == db(ArticlePortalDivision,
+                                         id=self.article_portal_division_id).c.portal_division_id).one()
