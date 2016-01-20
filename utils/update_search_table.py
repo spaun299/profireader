@@ -20,7 +20,9 @@ db_session = scoped_session(sessionmaker(autocommit=False,
                                          autoflush=False,
                                          bind=engine))
 
+
 def add_to_search(target=None):
+
     if hasattr(target, 'search_fields'):
         target_fields = ','.join(target.search_fields.keys())
         target_dict = target.get_client_side_dict(fields=target_fields + ',id')
@@ -72,6 +74,11 @@ if __name__ == '__main__':
     quantity = 0
     percent_to_str = ''
     percents = []
+    prompt = True if input(
+        "Are you sure? \n If you'l start this process, your database will be overwritten. "
+        "Yes|No") == ('yes' or 'Yes') else False
+    if not prompt:
+        exit('The script has been closed.')
     for cls in classes:
         if hasattr(cls, 'search_fields'):
             elem_count += db_session.query(cls).count()

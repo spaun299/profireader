@@ -8,6 +8,17 @@ body {
     background: #eee !important;
     min-height: 100%;
 }
+.reader_base_navbar{
+    background-color: #464646;
+    height: 50px;
+    width: 610px;
+    padding-left: 1%;
+    margin-left: 200px;
+    margin-top: 5px;
+    border-radius: 5px;
+    text-align: center;
+}
+
 
 .navbar {
     margin: 0;
@@ -1716,7 +1727,11 @@ form {
     opacity: .5;
     border-right: 1px rgba(0, 0, 0, 0.4) solid !important;
 }
-
+.top-menu li a.reader_button{
+    width: 196px;
+    height: 50px;
+    padding: 25px;
+}
 .top-menu .tooltip {
     display: none;
 }

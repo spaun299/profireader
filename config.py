@@ -61,6 +61,7 @@ class Config(object):
 # GOOGLE API
     GOOGLE_API_SECRET_KEY = secret_data.GOOGLE_API_SECRET_KEY
     GOOGLE_API_SECRET_JSON = secret_data.GOOGLE_API_SECRET_JSON
+    GOOGLE_API_KEY_SIMPLE = secret_data.GOOGLE_API_KEY_SIMPLE
     YOUTUBE_API = dict(SCOPE="https://www.googleapis.com/auth/youtube",
                        UPLOAD=dict(REDIRECT_URI="http://profireader.com/filemanager/uploader/",
                                    SEND_URI="https://www.googleapis.com/upload/youtube/v3/"
