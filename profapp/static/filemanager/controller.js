@@ -296,6 +296,7 @@
             $scope.uploadUsingUpload = function () {
                 $scope.uploadingProgress = true;
                 var file = $scope.uploadFileList[0];
+                console.log(file)
                 $scope.f = file;
                 var url = '/filemanager/send/' + $scope.fileNavigator.getCurrentFolder() + '/';
                 file.upload = Upload.upload({
@@ -408,7 +409,7 @@
                     var re = new RegExp($scope.fileNavigator.search_text, "gi");
                     name = name.length <= limit ? name: $filter('limitTo')(name, limit) + '...';
                     var result = name.match(re);
-                    var res =  name.replace(re, '<span style="color:red">' + result + '</span>');
+                    var res =  name.replace(re, '<span style="color:red">' + result[0] + '</span>');
                     $('#highlightT_'+id).html(res);
                     return name;
                 }else {

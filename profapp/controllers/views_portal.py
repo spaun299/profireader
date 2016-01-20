@@ -463,9 +463,9 @@ def portals_partners(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def portals_partners_load(json, company_id):
-    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
-    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
-    search_text = json.get('gr_data')['search_text'] if json.get('gr_data') else None
+    page = json.get('paginationOptions')['pageNumber'] if json.get('paginationOptions') else 1
+    pageSize = json.get('paginationOptions')['pageSize'] if json.get('paginationOptions') else 25
+    search_text = json.get('search_text') if json.get('search_text') else {}
     portal = db(Company, id=company_id).one().own_portal
     portals_partners = [port.portal.get_client_side_dict(fields='name, company_owner_id, id')
                         for port in MemberCompanyPortal.get_portals(
@@ -549,20 +549,19 @@ def publications_load(json, company_id):
     portal = db(Company, id=company_id).one().own_portal
     if not portal:
         return dict(portal_not_exist=True)
-    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
-    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
+    page = json.get('paginationOptions')['pageNumber']
+    pageSize = json.get('paginationOptions')['pageSize']
+    search_text = json.get('search_text')
     params = {'portal_id': portal.id}
-    search_text = json.get('gr_data')['search_text'] if json.get('gr_data') else None
-    if json.get('gr_data'):
-        params['sort'] = {}
-        params['filter'] = {}
-        if json.get('gr_data')['sort']:
-            for n in json.get('gr_data')['sort']:
-                params['sort'][n] = json.get('gr_data')['sort'][n]
-        if json.get('gr_data')['filter']:
-            for b in json.get('gr_data')['filter']:
-                if json.get('gr_data')['filter'][b] != '-- all --':
-                    params['filter'][b] = json.get('gr_data')['filter'][b]
+    params['sort'] = {}
+    params['filter'] = {}
+    if json.get('sort'):
+        for n in json.get('sort'):
+            params['sort'][n] = json.get('sort')[n]
+    if json.get('filter'):
+        for b in json.get('filter'):
+            if json.get('filter')[b] != '-- all --':
+                params['filter'][b] = json.get('filter')[b]
     subquery = ArticlePortalDivision.subquery_portal_articles(search_text=search_text,**params)
     # if json.get('grid_data')['new_status']:
     #     db(ArticlePortalDivision, id=json.get('article_id')).update({'status': json.get('grid_data')['new_status']})

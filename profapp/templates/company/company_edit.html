@@ -20,11 +20,14 @@
             $scope.url_back = {{ raw_url_for('company.show')|safe }};
             $scope.data = {};
             $scope.company_id = '{{ company.id }}';
+            $scope.user_have_company = '{{ user_comp }}'=== 'True'? true: null;
+
             $scope.cancel = function () {
                 window.location.href = $scope.url_back();
                 return false;
             };
             $scope.getData = function () {
+
                 return $scope.data;
             };
             $scope.$$translate = {{ translates('company_create')|safe }};
@@ -38,31 +41,14 @@
 
             $scope.afterLoad = function (resp, deff) {
                 deff(resp);
-                $scope.setImageUrl(resp['logo_file_id']);
+                $scope.logo_file_url = fileUrl(resp['logo_file_id']);
             };
 
-            {#            ng-onsuccess="afterSave"#}
-            {#                      ng-onsubmit="getData"#}
-            {#                      ng-action="save_company_url"#}
-
-{#            $scope.ImageSelected = function (item) {#}
-{#                $scope.data.image.image_file_id = item.id;#}
-{#                closeFileManager();#}
-{#            }#}
-
-            $scope.setImageUrl = function (logo_file_id) {
-                $scope.logo_file_url = fileUrl(logo_file_id);
-            };
-
-{#            $scope.chooseImage = function () {#}
-{#                $scope.chooseImageinFileManager("parent.angularControllerFunction('company_create', 'ImageSelected')", 'choose');#}
-{#            }#}
 
         }])
     </script>
     {% raw %}
     <div ng-controller="company_create">
-        {{ load_company_url }}
         <div af
              af-after-save="afterSave"
              af-after-load="afterLoad"
@@ -74,6 +60,7 @@
                 {{ _('Select picture') }}
                 <div ng-model="data.image" pr-cropper="cropper" pr-company-id="{{ company_id }}"></div>
             </div>
+
 
 
             <div style="width: 500px; margin-left: 450px; height: 250px">

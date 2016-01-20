@@ -17,7 +17,7 @@ from sqlalchemy import desc
 from io import BytesIO
 from .google import GoogleAuthorize,GoogleToken
 import sys
-
+import os
 class File(Base, PRBase):
     __tablename__ = 'file'
     id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
@@ -56,7 +56,7 @@ class File(Base, PRBase):
     def __init__(self, parent_id=None, name=None, mime='text/plain', size=0,
                  user_id=None, cr_tm=None, md_tm=None, ac_tm=None,
                  root_folder_id=None, youtube_id=None,
-                 company_id=None, author_user_id=None, image_croped=None, thumbnail_id=None):
+                 company_id=None, copyright_author_name=None, author_user_id=None, image_croped=None, thumbnail_id=None):
         super(File, self).__init__()
         self.parent_id = parent_id
         self.name = name
@@ -68,6 +68,7 @@ class File(Base, PRBase):
         self.md_tm = md_tm
         self.root_folder_id = root_folder_id
         self.ac_tm = ac_tm
+        self.copyright_author_name=copyright_author_name
         self.author_user_id = author_user_id
         self.company_id = company_id
         self.youtube_id = youtube_id
@@ -171,7 +172,7 @@ class File(Base, PRBase):
                     'description': file.description,
                     'actions': {action: actions[action](file) for action in actions}
                     }
-                                        for file in s)
+                                        for file in s if file.mime != 'image/thumbnail')
         return ret
 
     @staticmethod
@@ -274,7 +275,6 @@ class File(Base, PRBase):
         if self.mime == 'root' or self.mime == 'directory':
             return 'dir'
         elif self.mime == 'video/*':
-            print(self.youtube_video.playlist_id)
             return 'file_video'
         elif re.search('^image/.*', self.mime):
             return 'img'
@@ -474,6 +474,37 @@ class File(Base, PRBase):
             new_list.append(dir)
             File.save_files(files, dir.id, attr)
         return old_list, new_list
+
+    @staticmethod
+    def uploadForCompany(content, name, type, company):
+        size = len(content)
+        file = File(parent_id=company.journalist_folder_file_id,
+                            root_folder_id=company.journalist_folder_file_id,
+                            name=name,
+                            mime=type,
+                            size=size
+                            ).save()
+        file_cont = FileContent(file=file, content=content)
+        g.db.add(file, file_cont)
+        g.db.commit()
+        return file.id
+
+    def uploadWithoutChunk(self, user):
+        if self:
+            old_file_position = self.tell()
+            self.seek(0, os.SEEK_END)
+            size = self.tell()
+            self.seek(old_file_position, os.SEEK_SET)
+            file = File(parent_id=user.system_folder_file_id,
+                            root_folder_id=user.system_folder_file_id,
+                            name=self.filename,
+                            mime=self.content_type,
+                            size=size
+                            ).save()
+            file_cont = FileContent(file=file, content=self.stream.read(-1))
+            g.db.add(file, file_cont)
+            g.db.commit()
+            return file
 
     @staticmethod
     def upload(name, data, parent, root, content):
@@ -844,7 +875,7 @@ class YoutubeApi(GoogleAuthorize):
         except response_code as e:
             if e.code == 308:
                 db(YoutubeVideo, id=session['id']).update(
-                    {'size': int(e.headers.get('Range').split('-')[-1])+1})
+                    {'size': int(e.headers.get('Range').split('-')[-1]) + 1})
             return 'uploading'
 
 

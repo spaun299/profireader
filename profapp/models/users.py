@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship, backref
 from flask.ext.login import logout_user
 from flask import session, json
 from urllib import request as req
+import re
 
 # from db_init import Base, g.db
 
@@ -295,7 +296,7 @@ class User(Base, UserMixin, PRBase):
             else:
                 avatar = avatar['data'].get('url')
         else:
-            avatar = self.gravatar(size=size)
+            avatar = self.profireader_avatar_url#self.gravatar(size=size)
 
         # if logged_via == 'google':
         #     avatar = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
@@ -448,20 +449,23 @@ class User(Base, UserMixin, PRBase):
 
     # TODO (AA to ???): file.upload(content=content).url() is wrong and should be corrected
     def avatar_update(self, passed_file):
-        content = passed_file.stream.read(-1)
-
-        file = File(
-            author_user_id=self.id,
-            name=passed_file.filename,
-            mime=passed_file.content_type)
-        self.profireader_avatar_url = file.upload(content=content).url()
-
+        if passed_file:
+            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
+            self.profireader_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
+            self.profireader_small_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
+        else:
+            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
+            self.profireader_avatar_url = self.gravatar(size=100)
+            self.profireader_small_avatar_url = self.gravatar(size=100)
+        if list:
+            for f in list:
+                File.remove(f.id)
         # TODO: this image should be cropped
-        file = File(
-            author_user_id=self.id,
-            name=passed_file.filename,
-            mime=passed_file.content_type)
-        self.profireader_small_avatar_url = file.upload(content=content).url()
+        # file = File(
+        #     author_user_id=self.id,
+        #     name=passed_file.filename,
+        #     mime=passed_file.content_type)
+
 
         return self
 
