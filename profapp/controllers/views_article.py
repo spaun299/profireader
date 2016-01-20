@@ -188,3 +188,8 @@ def resubmit_to_company(json, article_company_id):
                         ARTICLE_STATUS_IN_COMPANY.declined)
     a.status = ARTICLE_STATUS_IN_COMPANY.submitted
     return {'article': a.save().get_client_side_dict()}
+
+
+@article_bp.route('/details_reader/<string:article_portal_division_id>')
+def details_reader(article_portal_division_id):
+    return render_template('article/reader_details.html')
