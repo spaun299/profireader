@@ -24,8 +24,8 @@
         else if(findIndex(article.short)){
             return article.short
         }
-        else if(findIndex(article.long)){
-            return article.long
+        else if(findIndex(article.long_stripped)){
+            return article.long_stripped
         }
     }
     function addColoredSpan(text){
@@ -34,25 +34,12 @@
     function getSearchBlock(article){
         var text = foundText(article);
         var index = indexFound;
-        var subString = '';
-        if(index<145){
-            if(index+145<text.length){
-                subString = text.substring(0, index+145) + '...'
-            }
-            else{
-                subString = text.substring(0, text.length)
-            }
-        }
-        else{
-            if(index+145<text.length){
-                subString = '...' + text.substring(index-145, index+145) + '...';
-            }
-            else{
-                subString = '...' + text.substring(index-145, text.length)
-            }
-        }
-        var coloredText = addColoredSpan(subString);
-        document.write(coloredText);}
+        var size = 45;
+        var coloredText = addColoredSpan((index>size?'...':'') +
+                    text.substring(Math.max(0,index-size), Math.min(index+size,text.length))
+                    + (index+size<text.length?'...':''));
+        document.write(coloredText);
+    }
 
 </script>
 {% for article_id, article in articles.items() %}
@@ -78,16 +65,7 @@
         <div class="item-additional-info">
             <a href="{{ url_for('front.subportal', member_company_id = article['company']['id'], member_company_name = article['company']['name']) }}" class="item-company">{{ article['company']['name']|safe }}</a>
             <div class="item-publication-date">{{ article['publishing_tm']|safe }}</div>
-
-
-
-
-            <div class="item-short-search">
-                <br><script type="text/javascript">getSearchBlock({{ article|tojson }})</script>
-            </div>
-
-
-
+            <div><br><script type="text/javascript">getSearchBlock({{ article|tojson }})</script></div>
         </div>
 
         <div class="bottom-hide"></div>
