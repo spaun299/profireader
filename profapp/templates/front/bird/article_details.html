@@ -1,6 +1,23 @@
 {% extends 'front/bird/layout.html' %}
 {% block content %}
-
+<script>
+var favorite = {{ favorite|tojson }};
+function add_delete_favorite(boolean){
+    var article_portal_division_id = {{ article['id']|tojson }};
+    console.log(article_portal_division_id);
+    $.ajax({
+        type: 'post',
+        url: '{{ url_for('front.add_delete_favorite') }}',
+        data: {'favorite': boolean, 'article_portal_division_id': article_portal_division_id },
+        success: function(){
+            var text = document.getElementById('favorite');
+            favorite = boolean;
+            text.innerHTML = favorite?'Delete from favorite':'Add to favorite'
+        }
+    })
+}
+function delete_from_favorite(){}
+</script>
     <div class="block-item full-block-info" style="height: auto;">
 
         {#        <img class="article-cover"#}
@@ -16,7 +33,9 @@
                     href="{{ url_for('front.subportal', member_company_id = article['company']['id'], member_company_name = article['company']['name']) }}">{{ article['company']['name']|safe }}</a>
             </div>
             <div class="item-publication-date">{{ article['publishing_tm']|safe }}</div>
-            <div class="item-comments">Коментарів 0</div>
+            <div class="item-favorite" id='favorite' onclick="favorite?add_delete_favorite(false):add_delete_favorite(true);">
+                <script>document.write(favorite?'Delete from favorite':'Add to favorite')</script></div>
+            <div class="item-comments">{{_('Comments')}} 0</div>
         </div>
         <div class="article-short">
             {{ article['short']|safe }}

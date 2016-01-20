@@ -548,6 +548,19 @@ footer .promo {
     background: transparent url("../img/article/icons/comment.png") no-repeat left center;
 }
 
+.block-item .item-additional-info-top .item-favorite {
+    position: relative;
+    /*display: inline-block;*/
+    right: 0;
+    /*position: relative;*/
+    display: inline-block;
+    /*float: right;*/
+    margin-left: 20px;
+    padding-left: 18px;
+}
+.block-item .item-additional-info-top .item-favorite:hover{
+
+}
 .block-item .item-additional-info .item-publication-date,
 .block-item .item-additional-info-top .item-publication-date {
     /*float: right;*/

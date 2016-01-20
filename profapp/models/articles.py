@@ -72,6 +72,12 @@ class ArticlePortalDivision(Base, PRBase):
                                     passive_deletes=True
                                     )
 
+    @staticmethod
+    def add_delete_favorite_user_article(article_portal_division_id, favorite):
+        a = g.user
+        article = db(ArticlePortalDivision, id=article_portal_division_id).one()
+        g.user.favorite_articles.append(article) if favorite else g.user.favorite_articles.remove(article)
+
     def search_filter_default(self, division_id, company_id=None):
         """ :param division_id: string with id from table portal_division,
                    optional company_id: string with id from table company. If provided

@@ -170,7 +170,6 @@ def search_for_company_to_submit(json):
         g.user_dict['id'], json['article_id'], json['search'])
     return companies
 
-
 @article_bp.route('/submit_to_company/<string:article_id>/', methods=['POST'])
 @ok
 def submit_to_company(json, article_id):
