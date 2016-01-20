@@ -24,7 +24,10 @@ from .pagination import pagination
 from .views_file import crop_image
 from config import Config
 from ..models.pr_base import Search
-
+import base64
+from PIL import Image
+from io import BytesIO
+import re
 
 @company_bp.route('/search_to_submit_article/', methods=['POST'])
 @login_required
@@ -83,20 +86,20 @@ def materials_load(json, company_id):
     company = db(Company, id=company_id).one()
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
-    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
-    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
-    search_text = json.get('gr_data')['search_text'] if json.get('gr_data') else None
+    print(json)
+    page = json.get('paginationOptions')['pageNumber']
+    pageSize = json.get('paginationOptions')['pageSize']
+    search_text = json.get('search_text')
     params = {}
-    if json.get('gr_data'):
-        params['sort'] = {}
-        params['filter'] = {}
-        if json.get('gr_data')['sort']:
-            for n in json.get('gr_data')['sort']:
-                params['sort'][n] = json.get('gr_data')['sort'][n]
-        if json.get('gr_data')['filter']:
-            for b in json.get('gr_data')['filter']:
-                if json.get('gr_data')['filter'][b] != '-- all --':
-                    params['filter'][b] = json.get('gr_data')['filter'][b]
+    params['sort'] = {}
+    params['filter'] = {}
+    if json.get('sort'):
+        for n in json.get('sort'):
+            params['sort'][n] = json.get('sort')[n]
+    if json.get('filter'):
+        for b in json.get('filter'):
+            if json.get('filter')[b] != '-- all --':
+                params['filter'][b] = json.get('filter')[b]
     # if json.get('grid_data')['new_status']:
     #     ArticleCompany.update_article(
     #         company_id=company_id,
@@ -195,7 +198,7 @@ def delete_atricle_from_portal(json, article_portal_division_id):
         if json[article]['id'] == article_portal_division_id:
             del new_json[article]
     return new_json
-
+#file_author_user_id_fkey	FOREIGN KEY (author_user_id) REFERENCES "user"(id)
 
 @company_bp.route('/get_tags/<string:portal_division_id>', methods=['POST'])
 @login_required
@@ -303,8 +306,10 @@ def update_rights():
 @login_required
 # @check_rights(simple_permissions([]))
 def update(company_id=None):
+    user_companies = [user_comp for user_comp in current_user.employer_assoc]
+    user_have_comp = True if len(user_companies)>0 else False
     company = db(Company, id=company_id).first()
-    return render_template('company/company_edit.html', company_id=company_id,
+    return render_template('company/company_edit.html', company_id=company_id,user_comp=user_have_comp,
                            company_name=company.name if company else '',
                            company=company if company else {})
 
@@ -336,22 +341,32 @@ def load(json, company_id=None):
     else:
         company.attr(g.filter_json(json, 'about', 'address', 'country', 'email', 'name', 'phone',
                                    'phone2', 'region', 'short_description', 'lon', 'lat'))
-
         if action == 'validate':
             if company_id is not None:
                 company.detach()
             return company.validate(company_id is None)
         else:
-            img = json['image']
-            img_id = img.get('image_file_id')
-            if img_id:
-                company.logo_file_id = crop_image(img_id, img['coordinates'])
-            elif not img_id:
-                company.logo_file_id = None
-
-            if company_id is None:
-                company.setup_new_company()
-            return company.save().get_client_side_dict()
+            if json['image']['uploaded']:
+                if company_id is None:
+                    company.setup_new_company()
+                company.save().get_client_side_dict()
+                imgdataContent =json['image']['dataContent']
+                image_data = re.sub('^data:image/.+;base64,', '', imgdataContent)
+                bb = base64.b64decode(image_data)
+                new_comp = db(Company, id=company.id).first()
+                file_id = File.uploadForCompany(bb,json['image']['name'], json['image']['type'], new_comp)
+                logo_id = crop_image(file_id, json['image']['coordinates'])
+                new_comp.updates({'logo_file_id': logo_id})
+            else:
+                img = json['image']
+                img_id = img.get('image_file_id')
+                if img_id:
+                    company.logo_file_id = crop_image(img_id, img['coordinates'])
+                elif not img_id:
+                    company.logo_file_id = None
+                if company_id is None:
+                    company.setup_new_company()
+                return company.save().get_client_side_dict()
 
 
 # @company_bp.route('/confirm_create/', methods=['POST'])

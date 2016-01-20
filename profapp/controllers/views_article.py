@@ -27,20 +27,19 @@ def show_mine():
 @article_bp.route('/list/', methods=['POST'])
 @ok
 def load_mine(json):
-    page = json.get('gr_data')['paginationOptions']['pageNumber'] if json.get('gr_data') else 1
-    pageSize = json.get('gr_data')['paginationOptions']['pageSize'] if json.get('gr_data') else 25
-    search_text = json.get('gr_data')['search_text'] if json.get('gr_data') else None
+    page = json.get('paginationOptions')['pageNumber']
+    pageSize = json.get('paginationOptions')['pageSize']
+    search_text = json.get('search_text')
     params = {'user_id': g.user_dict['id']}
-    if json.get('gr_data'):
-        params['sort'] = {}
-        params['filter'] = {}
-        if json.get('gr_data')['sort']:
-            for n in json.get('gr_data')['sort']:
-                params['sort'][n] = json.get('gr_data')['sort'][n]
-        if json.get('gr_data')['filter']:
-            for b in json.get('gr_data')['filter']:
-                if json.get('gr_data')['filter'][b] != '-- all --':
-                    params['filter'][b] = json.get('gr_data')['filter'][b]
+    params['sort'] = {}
+    params['filter'] = {}
+    if json.get('sort'):
+        for n in json.get('sort'):
+            params['sort'][n] = json.get('sort')[n]
+    if json.get('filter'):
+        for b in json.get('filter'):
+            if json.get('filter')[b] != '-- all --':
+                params['filter'][b] = json.get('filter')[b]
     subquery = ArticleCompany.subquery_user_articles(search_text=search_text,**params)
     articles, pages, current_page = pagination(subquery,
                                                page=page, items_per_page=pageSize)

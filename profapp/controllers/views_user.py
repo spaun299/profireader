@@ -8,7 +8,7 @@ from utils.db_utils import db
 from ..constants.UNCATEGORIZED import AVATAR_SIZE, AVATAR_SMALL_SIZE
 from ..forms.user import EditProfileForm
 from ..controllers.request_wrapers import tos_required
-
+from .request_wrapers import ok
 
 @user_bp.route('/profile/<user_id>')
 @tos_required
@@ -18,6 +18,13 @@ def profile(user_id):
     if not user:
         abort(404)
     return render_template('general/user_profile.html', user=user, avatar_size=AVATAR_SIZE)
+
+@user_bp.route('/avatar_update')
+@ok
+def avatar_update(json):
+    image = json.get('update_image')
+    user = json.get('user')
+    return user.avatar_update(image)
 
 
 # TODO (AA to AA): Here admin must have the possibility to change user profile
