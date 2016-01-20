@@ -180,15 +180,6 @@ def details(article_portal_division_id):
                            )
 
 
-@front_bp.route('add_to_favorite/', methods=['POST'])
-def add_delete_favorite():
-    favorite = json.loads(request.form.get('favorite'))
-    article_portal_division_id = request.form.get('article_portal_division_id')
-    print(favorite, article_portal_division_id, sep='\n')
-    ArticlePortalDivision.add_delete_favorite_user_article(article_portal_division_id, favorite)
-    return jsonify({'favorite': favorite})
-
-
 @front_bp.route('<string:division_name>/_c/<string:member_company_id>/<string:member_company_name>/')
 @front_bp.route('<string:division_name>/_c/<string:member_company_id>/<string:member_company_name>/<int:page>/')
 def subportal_division(division_name, member_company_id, member_company_name, page=1):

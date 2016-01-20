@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, request, g, make_response
+from flask import render_template, redirect, url_for, request, g, make_response, json, jsonify
 from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision
 from profapp.models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
 from profapp.models.portal import PortalDivision
@@ -192,4 +192,24 @@ def resubmit_to_company(json, article_company_id):
 
 @article_bp.route('/details_reader/<string:article_portal_division_id>')
 def details_reader(article_portal_division_id):
-    return render_template('article/reader_details.html')
+    article = ArticlePortalDivision.get(article_portal_division_id)
+    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+                                                       'publishing_tm, keywords, status, long, image_file_id,'
+                                                       'division.name, division.portal.id,'
+                                                       'company.name|id')
+    article_dict['tags'] = article.tags
+    favorite = article.check_favorite_status(user_id=g.user.id)
+
+    return render_template('article/reader_details.html',
+                           article=article_dict,
+                           favorite=favorite
+                           )
+
+
+@article_bp.route('add_to_favorite/', methods=['POST'])
+def add_delete_favorite():
+    favorite = json.loads(request.form.get('favorite'))
+    article_portal_division_id = request.form.get('article_portal_division_id')
+    print(favorite, article_portal_division_id, sep='\n')
+    ArticlePortalDivision.add_delete_favorite_user_article(article_portal_division_id, favorite)
+    return jsonify({'favorite': favorite})

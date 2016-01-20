@@ -72,6 +72,9 @@ class ArticlePortalDivision(Base, PRBase):
                                     passive_deletes=True
                                     )
 
+    def check_favorite_status(self, user_id):
+        return db(FavoriteReaderArticle, user_id=user_id, article_portal_division_id=self.id).count() > 0
+
     @staticmethod
     def add_delete_favorite_user_article(article_portal_division_id, favorite):
         a = g.user
