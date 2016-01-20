@@ -475,6 +475,19 @@ class File(Base, PRBase):
             File.save_files(files, dir.id, attr)
         return old_list, new_list
 
+    @staticmethod
+    def uploadForCompany(content, name, type, company):
+        size = len(content)
+        file = File(parent_id=company.journalist_folder_file_id,
+                            root_folder_id=company.journalist_folder_file_id,
+                            name=name,
+                            mime=type,
+                            size=size
+                            ).save()
+        file_cont = FileContent(file=file, content=content)
+        g.db.add(file, file_cont)
+        g.db.commit()
+        return file.id
 
     def uploadWithoutChunk(self, user):
         if self:
@@ -485,8 +498,6 @@ class File(Base, PRBase):
             file = File(parent_id=user.system_folder_file_id,
                             root_folder_id=user.system_folder_file_id,
                             name=self.filename,
-                            # copyright_author_name=user.profireader_name,
-                            # author_user_id=user.id,
                             mime=self.content_type,
                             size=size
                             ).save()
@@ -494,6 +505,7 @@ class File(Base, PRBase):
             g.db.add(file, file_cont)
             g.db.commit()
             return file
+
     @staticmethod
     def upload(name, data, parent, root, content):
         if data.get('chunkNumber') == '0':

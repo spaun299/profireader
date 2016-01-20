@@ -232,7 +232,6 @@ def allowed_referrers(domain):
 
 
 def crop_image(image_id, coordinates):
-
     image_query = db(File, id=image_id).one()
     if db(ImageCroped, original_image_id=image_id).count():
         return update_croped_image(image_id, coordinates)
