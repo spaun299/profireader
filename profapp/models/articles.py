@@ -23,6 +23,9 @@ from sqlalchemy import event
 from ..controllers import errors
 from ..constants.SEARCH import RELEVANCE
 
+class Article(Base, PRBase):
+
+
 
 class ArticlePortalDivision(Base, PRBase):
     __tablename__ = 'article_portal_division'
