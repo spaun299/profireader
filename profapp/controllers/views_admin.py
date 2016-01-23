@@ -63,7 +63,9 @@ def translations_save(json):
     exist = db(TranslateTemplate, template=json['row'], name=json['col']).first()
     return TranslateTemplate.get(exist.id).attr({json['lang']: json['val']}).save().get_client_side_dict()
 
-@admin_bp.route('/translations_delete', methods=['POST'])
+@admin_bp.route('/delete', methods=['POST'])
 @ok
 def delete(json):
     return TranslateTemplate.delete(json['objects'])
+
+
