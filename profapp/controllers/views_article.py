@@ -1,7 +1,8 @@
-from flask import render_template, redirect, url_for, request, g, make_response
-from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision
+from flask import render_template, redirect, url_for, request, g, make_response, json, jsonify, session
+from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision, ReaderArticlePortalDivision
 from profapp.models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
-from profapp.models.portal import PortalDivision
+from profapp.models.portal import PortalDivision, UserPortalReader, Portal
+
 from .blueprints_declaration import article_bp
 from .request_wrapers import ok, tos_required
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
@@ -13,8 +14,8 @@ from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
 from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
 from sqlalchemy.sql import expression
-from sqlalchemy import and_
-
+from sqlalchemy import text
+from collections import OrderedDict
 import time
 
 
@@ -170,7 +171,6 @@ def search_for_company_to_submit(json):
         g.user_dict['id'], json['article_id'], json['search'])
     return companies
 
-
 @article_bp.route('/submit_to_company/<string:article_id>/', methods=['POST'])
 @ok
 def submit_to_company(json, article_id):
@@ -189,3 +189,61 @@ def resubmit_to_company(json, article_company_id):
                         ARTICLE_STATUS_IN_COMPANY.declined)
     a.status = ARTICLE_STATUS_IN_COMPANY.submitted
     return {'article': a.save().get_client_side_dict()}
+
+
+@article_bp.route('/details_reader/<string:article_portal_division_id>')
+def details_reader(article_portal_division_id):
+
+    article = ArticlePortalDivision.get(article_portal_division_id)
+    article.add_recently_read_articles_to_session()
+    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+                                                       'publishing_tm, keywords, status, long, image_file_id,'
+                                                       'division.name, division.portal.id,'
+                                                       'company.name|id')
+    article_dict['tags'] = article.tags
+    ReaderArticlePortalDivision.add_to_table_if_not_exists(article_portal_division_id)
+    favorite = article.check_favorite_status(user_id=g.user.id)
+
+    return render_template('partials/reader/reader_details.html',
+                           article=article_dict,
+                           favorite=favorite
+                           )
+
+
+@article_bp.route('/list_reader')
+@article_bp.route('/list_reader/<int:page>/')
+def list_reader(page=1):
+    if not request.args.get('favorite'):
+        sub_query = db(ArticlePortalDivision, status=ARTICLE_STATUS_IN_PORTAL.published).\
+            join(PortalDivision).\
+            join(Portal).\
+            join(UserPortalReader).\
+            filter(UserPortalReader.user_id == g.user_dict['id']).\
+            order_by(ArticlePortalDivision.publishing_tm.desc()).\
+            filter(text(' "publishing_tm" < clock_timestamp() '))
+    else:
+        sub_query = ReaderArticlePortalDivision.subquery_favorite_articles()
+
+    articles, pages, page = pagination(query=sub_query, page=page)
+
+    ordered_articles = OrderedDict()
+    for a in articles:
+        ordered_articles[a.id] = dict(list(a.get_client_side_dict(more_fields='portal.host').items()) +
+                                      list({'tags': a.tags}.items()))
+    portals = UserPortalReader.get_portals_for_user() if not ordered_articles else None
+
+    return render_template('partials/reader/reader_base.html',
+                           articles=ordered_articles,
+                           pages=pages,
+                           current_page=page,
+                           page_buttons=Config.PAGINATION_BUTTONS,
+                           portals=portals
+                           )
+
+
+@article_bp.route('add_to_favorite/', methods=['POST'])
+def add_delete_favorite():
+    favorite = json.loads(request.form.get('favorite'))
+    article_portal_division_id = request.form.get('article_portal_division_id')
+    ReaderArticlePortalDivision.add_delete_favorite_user_article(article_portal_division_id, favorite)
+    return jsonify({'favorite': favorite})

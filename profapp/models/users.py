@@ -69,8 +69,6 @@ class User(Base, UserMixin, PRBase):
     # registered_via = Column(_T['REGISTERED_VIA'])
     # employers = relationship('Company', secondary='user_company',
     #                          backref=backref("employees", lazy='dynamic'))  # Correct
-    favorite_articles = relationship('ArticlePortalDivision',
-                                     secondary='favorite_reader_article', back_populates='users_subscribers')
 
     employers = relationship('Company', secondary='user_company', back_populates='employees')
     companies = relationship('Company', back_populates='user_owner')
