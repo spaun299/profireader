@@ -1,7 +1,8 @@
 from flask import render_template, redirect, url_for, request, g, make_response, json, jsonify, session
 from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision, ReaderArticlePortalDivision
 from profapp.models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
-from profapp.models.portal import PortalDivision
+from profapp.models.portal import PortalDivision, UserPortalReader, Portal
+
 from .blueprints_declaration import article_bp
 from .request_wrapers import ok, tos_required
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
@@ -13,8 +14,8 @@ from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
 from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
 from sqlalchemy.sql import expression
-from sqlalchemy import and_
-
+from sqlalchemy import text
+from collections import OrderedDict
 import time
 
 
@@ -194,10 +195,7 @@ def resubmit_to_company(json, article_company_id):
 def details_reader(article_portal_division_id):
 
     article = ArticlePortalDivision.get(article_portal_division_id)
-    print(session.get('recently_read_articles'))
-    if article.id not in (session.get('recently_read_articles') or []):
-        article.read_count += 1
-
+    article.add_recently_read_articles_to_session()
     article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
                                                        'publishing_tm, keywords, status, long, image_file_id,'
                                                        'division.name, division.portal.id,'
@@ -205,12 +203,41 @@ def details_reader(article_portal_division_id):
     article_dict['tags'] = article.tags
     ReaderArticlePortalDivision.add_to_table_if_not_exists(article_portal_division_id)
     favorite = article.check_favorite_status(user_id=g.user.id)
-    session['recently_read_articles'] = list(filter(bool,
-                                                    set((session.get('recently_read_articles') or []) + [article.id])))
 
-    return render_template('article/reader_details.html',
+    return render_template('partials/reader/reader_details.html',
                            article=article_dict,
                            favorite=favorite
+                           )
+
+
+@article_bp.route('/list_reader')
+@article_bp.route('/list_reader/<int:page>/')
+def list_reader(page=1):
+    if not request.args.get('favorite'):
+        sub_query = db(ArticlePortalDivision, status=ARTICLE_STATUS_IN_PORTAL.published).\
+            join(PortalDivision).\
+            join(Portal).\
+            join(UserPortalReader).\
+            filter(UserPortalReader.user_id == g.user_dict['id']).\
+            order_by(ArticlePortalDivision.publishing_tm.desc()).\
+            filter(text(' "publishing_tm" < clock_timestamp() '))
+    else:
+        sub_query = ReaderArticlePortalDivision.subquery_favorite_articles()
+
+    articles, pages, page = pagination(query=sub_query, page=page)
+
+    ordered_articles = OrderedDict()
+    for a in articles:
+        ordered_articles[a.id] = dict(list(a.get_client_side_dict(more_fields='portal.host').items()) +
+                                      list({'tags': a.tags}.items()))
+    portals = UserPortalReader.get_portals_for_user() if not ordered_articles else None
+
+    return render_template('partials/reader/reader_base.html',
+                           articles=ordered_articles,
+                           pages=pages,
+                           current_page=page,
+                           page_buttons=Config.PAGINATION_BUTTONS,
+                           portals=portals
                            )
 
 

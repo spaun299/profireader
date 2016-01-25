@@ -38,51 +38,15 @@ from utils.db_utils import db
 
 
 @general_bp.route('')
-@general_bp.route('<int:page>/', methods=['GET'])
-def index(page=1):
-    if not current_user.is_authenticated():
-        portal_base_profireader = 'partials/portal_base_Profireader.html'
-        profireader_content = 'partials/Profireader_content.html'
-        head = 'partials/empty_page.html'
-        return render_template('general/index.html',
-                               portal_base_profireader=portal_base_profireader,
-                               profireader_content=profireader_content,
-                               add_head=head
-                               )
+def index():
+    return render_template('general/index.html')
 
-    sub_query = g.db.query(ArticlePortalDivision).\
-        filter_by(status=ARTICLE_STATUS_IN_PORTAL.published).\
-        join(PortalDivision).\
-        join(Portal).\
-        join(UserPortalReader).\
-        filter(UserPortalReader.user_id == g.user_dict['id']).\
-        order_by(ArticlePortalDivision.publishing_tm.desc()).\
-        filter(text(' "publishing_tm" < clock_timestamp() '))
 
-    # search_text, portal, sub_query = get_params()
-    articles, pages, page = pagination(query=sub_query, page=page)
+@general_bp.route('portals_list/')
+def portals_list():
+    portals = [(id, name) for id, name in UserPortalReader.get_portals_for_user()]
+    return render_template('general/portals_list.html', portals=portals)
 
-    ordered_articles = OrderedDict()
-    for a in articles:
-        ordered_articles[a.id] = dict(list(a.get_client_side_dict(more_fields='portal.host').items()) +
-                                      list({'tags': a.tags}.items()))
-    portals = UserPortalReader.get_portals_for_user() if not ordered_articles else None
-
-    portal_base_profireader = 'partials/portal_base_Profireader_auth_user.html'
-    profireader_content = 'partials/reader/reader_content.html'
-    head = 'partials/reader/head.html'
-
-    return render_template('general/index.html',
-                           portal_base_profireader=portal_base_profireader,
-                           profireader_content=profireader_content,
-                           add_head=head,
-                           articles=ordered_articles,
-                           pages=pages,
-                           current_page=page,
-                           page_buttons=Config.PAGINATION_BUTTONS,
-                           portals=portals
-                           # search_text=None,
-                           )
 
 @general_bp.route('subscribe/')
 def auth_before_subscribe_to_portal():

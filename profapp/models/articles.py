@@ -15,7 +15,7 @@ from .pr_base import PRBase, Base, MLStripper, Search
 # from db_init import Base
 from utils.db_utils import db
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
-from flask import g
+from flask import g, session
 from sqlalchemy.sql import or_, and_
 from sqlalchemy.sql import expression
 import re
@@ -129,6 +129,12 @@ class ArticlePortalDivision(Base, PRBase):
             filter(TagPortalDivisionArticle.article_portal_division_id == self.id)
         tags = list(map(lambda x: x[0], query.all()))
         return tags
+
+    def add_recently_read_articles_to_session(self):
+        if self.id not in (session.get('recently_read_articles') or []):
+            self.read_count += 1
+        session['recently_read_articles'] = list(filter(bool,
+                                                        set((session.get('recently_read_articles') or []) + [self.id])))
 
     portal = relationship('Portal',
                           secondary='portal_division',
@@ -746,6 +752,12 @@ class ReaderArticlePortalDivision(Base, PRBase):
 
     def get_article_portal_division(self):
         return db(ArticlePortalDivision, id=self.article_portal_division_id).one()
+
+    @staticmethod
+    def subquery_favorite_articles():
+        return db(ArticlePortalDivision).filter(
+            ArticlePortalDivision.id == db(ReaderArticlePortalDivision,
+                                           user_id=g.user.id, favorite=True).subquery().c.article_portal_division_id)
 
     def get_portal_division(self):
         return db(PortalDivision).filter(PortalDivision.id == db(ArticlePortalDivision,
