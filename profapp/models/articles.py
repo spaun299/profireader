@@ -15,7 +15,7 @@ from .pr_base import PRBase, Base, MLStripper, Search
 # from db_init import Base
 from utils.db_utils import db
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
-from flask import g
+from flask import g, session
 from sqlalchemy.sql import or_, and_
 from sqlalchemy.sql import expression
 import re
@@ -42,7 +42,7 @@ class ArticlePortalDivision(Base, PRBase):
     md_tm = Column(TABLE_TYPES['timestamp'])
     publishing_tm = Column(TABLE_TYPES['timestamp'])
     position = Column(TABLE_TYPES['position'])
-
+    read_count = Column(TABLE_TYPES['int'], default=0)
     status = Column(TABLE_TYPES['id_profireader'], default=ARTICLE_STATUS_IN_PORTAL.published)
 
     division = relationship('PortalDivision',
@@ -53,8 +53,6 @@ class ArticlePortalDivision(Base, PRBase):
                            primaryjoin="ArticlePortalDivision.article_company_id == ArticleCompany.id",
                            secondaryjoin="ArticleCompany.company_id == Company.id",
                            viewonly=True, uselist=False)
-    users_subscribers = relationship('User',
-                                     secondary='favorite_reader_article', back_populates='favorite_articles')
 
     # portal_division_tags = relationship('TagPortalDivision',
     #                                     secondary='tag_portal_division_article',
@@ -72,6 +70,10 @@ class ArticlePortalDivision(Base, PRBase):
                                     cascade="save-update, merge, delete, delete-orphan",
                                     passive_deletes=True
                                     )
+
+    def check_favorite_status(self, user_id):
+        return db(ReaderArticlePortalDivision, user_id=user_id, article_portal_division_id=self.id,
+                  favorite=True).count() > 0
 
     def search_filter_default(self, division_id, company_id=None):
         """ :param division_id: string with id from table portal_division,
@@ -128,6 +130,12 @@ class ArticlePortalDivision(Base, PRBase):
             filter(TagPortalDivisionArticle.article_portal_division_id == self.id)
         tags = list(map(lambda x: x[0], query.all()))
         return tags
+
+    def add_recently_read_articles_to_session(self):
+        if self.id not in (session.get('recently_read_articles') or []):
+            self.read_count += 1
+        session['recently_read_articles'] = list(filter(bool,
+                                                        set((session.get('recently_read_articles') or []) + [self.id])))
 
     portal = relationship('Portal',
                           secondary='portal_division',
@@ -716,19 +724,41 @@ class ArticleCompanyHistory(Base, PRBase):
         self.article_id = article_id
 
 
-class FavoriteReaderArticle(Base, PRBase):
-    __tablename__ = 'favorite_reader_article'
+class ReaderArticlePortalDivision(Base, PRBase):
+    __tablename__ = 'reader_article_portal_division'
     id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
     user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'))
     article_portal_division_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('article_portal_division.id'))
+    favorite = Column(TABLE_TYPES['boolean'], default=False)
 
-    def __init__(self, user_id=None, article_portal_division_id=None):
-        super(FavoriteReaderArticle, self).__init__()
+    def __init__(self, user_id=None, article_portal_division_id=None, favorite=False):
+        super(ReaderArticlePortalDivision, self).__init__()
         self.user_id = user_id
         self.article_portal_division_id = article_portal_division_id
+        self.favorite = favorite
+
+    @staticmethod
+    def add_delete_favorite_user_article(article_portal_division_id, favorite):
+        article = db(ReaderArticlePortalDivision, article_portal_division_id=article_portal_division_id,
+                     user_id=g.user_id).one()
+        article.favorite = True if favorite else False
+
+    @staticmethod
+    def add_to_table_if_not_exists(article_portal_division_id):
+        if not db(ReaderArticlePortalDivision,
+                  user_id=g.user_id, article_portal_division_id=article_portal_division_id).count():
+            reader_add = ReaderArticlePortalDivision(user_id=g.user_id,
+                                                     article_portal_division_id=article_portal_division_id,
+                                                     favorite=False).save()
 
     def get_article_portal_division(self):
         return db(ArticlePortalDivision, id=self.article_portal_division_id).one()
+
+    @staticmethod
+    def subquery_favorite_articles():
+        return db(ArticlePortalDivision).filter(
+            ArticlePortalDivision.id == db(ReaderArticlePortalDivision,
+                                           user_id=g.user.id, favorite=True).subquery().c.article_portal_division_id)
 
     def get_portal_division(self):
         return db(PortalDivision).filter(PortalDivision.id == db(ArticlePortalDivision,
