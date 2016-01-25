@@ -1,5 +1,5 @@
-from flask import render_template, redirect, url_for, request, g, make_response, json, jsonify
-from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision
+from flask import render_template, redirect, url_for, request, g, make_response, json, jsonify, session
+from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision, ReaderArticlePortalDivision
 from profapp.models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
 from profapp.models.portal import PortalDivision
 from .blueprints_declaration import article_bp
@@ -192,13 +192,21 @@ def resubmit_to_company(json, article_company_id):
 
 @article_bp.route('/details_reader/<string:article_portal_division_id>')
 def details_reader(article_portal_division_id):
+
     article = ArticlePortalDivision.get(article_portal_division_id)
+    print(session.get('recently_read_articles'))
+    if article.id not in (session.get('recently_read_articles') or []):
+        article.read_count += 1
+
     article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
                                                        'publishing_tm, keywords, status, long, image_file_id,'
                                                        'division.name, division.portal.id,'
                                                        'company.name|id')
     article_dict['tags'] = article.tags
+    ReaderArticlePortalDivision.add_to_table_if_not_exists(article_portal_division_id)
     favorite = article.check_favorite_status(user_id=g.user.id)
+    session['recently_read_articles'] = list(filter(bool,
+                                                    set((session.get('recently_read_articles') or []) + [article.id])))
 
     return render_template('article/reader_details.html',
                            article=article_dict,
@@ -210,6 +218,5 @@ def details_reader(article_portal_division_id):
 def add_delete_favorite():
     favorite = json.loads(request.form.get('favorite'))
     article_portal_division_id = request.form.get('article_portal_division_id')
-    print(favorite, article_portal_division_id, sep='\n')
-    ArticlePortalDivision.add_delete_favorite_user_article(article_portal_division_id, favorite)
+    ReaderArticlePortalDivision.add_delete_favorite_user_article(article_portal_division_id, favorite)
     return jsonify({'favorite': favorite})
