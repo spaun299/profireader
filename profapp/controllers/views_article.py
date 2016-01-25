@@ -40,33 +40,33 @@ def load_mine(json):
         for b in json.get('filter'):
             if json.get('filter')[b] != '-- all --':
                 params['filter'][b] = json.get('filter')[b]
-    subquery = ArticleCompany.subquery_user_articles(search_text=search_text,**params)
+    subquery = ArticleCompany.subquery_user_articles(search_text=search_text, **params)
     articles, pages, current_page = pagination(subquery,
                                                page=page, items_per_page=pageSize)
     add_param = {'value': '1', 'label': '-- all --'}
     statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    company_list_for_grid = Article.list_for_grid_tables(ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
+    company_list_for_grid = Article.list_for_grid_tables(
+        ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
     articles_drid_data = Article.getListGridDataArticles(articles.all())
-    grid_filters = {'company': company_list_for_grid,'status': statuses}
+    grid_filters = {'company': company_list_for_grid, 'status': statuses}
     return {'grid_data': articles_drid_data,
             'grid_filters': grid_filters,
             'total': subquery.count()}
 
 
-@article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
-@article_bp.route('/updateatportal/<string:article_portal_division_id>/', methods=['GET'])
-@article_bp.route('/create/', methods=['GET'])
+@article_bp.route('/material_update/<string:material_id>/', methods=['GET'])
+@article_bp.route('/publication_update/<string:publication_id>/', methods=['GET'])
+@article_bp.route('/material_create/<string:company_id>/', methods=['GET'])
 @tos_required
-def article_show_form(article_company_id=None, article_portal_division_id=None):
-    return render_template('article/form.html', article_portal_division_id=article_portal_division_id,
-                           article_company_id=(article_company_id or article_portal_division_id))
+def article_show_form(material_id=None, publication_id=None, company_id=None):
+    return render_template('article/form.html', article_portal_division_id=material_id,
+                           company_id=company_id, publication_id=publication_id)
 
 
-@article_bp.route('/create/', methods=['POST'])
-@article_bp.route('/update_mine/<string:mine_version_article_company_id>/', methods=['POST'])
-@article_bp.route('/update/<string:article_company_id>/', methods=['POST'])
-@article_bp.route('/updateatportal/<string:article_portal_division_id>/', methods=['POST'])
-@ok
+@article_bp.route('/material_update/<string:material_id>/', methods=['POST'])
+@article_bp.route('/publication_update/<string:publication_id>/', methods=['POST'])
+@article_bp.route('/material_create/<string:company_id>/', methods=['POST'])
+@tos_required
 def load_form_create(json, article_company_id=None, mine_version_article_company_id=None,
                      article_portal_division_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
@@ -145,7 +145,8 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
             a = articleVersion.save()
             if article_portal_division_id:
-                articleVersion.insert_after(json['portal_division']['insert_after'], articleVersion.position_unique_filter())
+                articleVersion.insert_after(json['portal_division']['insert_after'],
+                                            articleVersion.position_unique_filter())
             return {'article': articleVersion.save().get_client_side_dict(more_fields='long'), 'image': json['image'],
                     'portal_division': portal_division_dict(articleVersion)}
 
@@ -167,7 +168,7 @@ def details_load(json, article_id):
 @ok
 def search_for_company_to_submit(json):
     companies = Article().search_for_company_to_submit(
-        g.user_dict['id'], json['article_id'], json['search'])
+            g.user_dict['id'], json['article_id'], json['search'])
     return companies
 
 

@@ -36,6 +36,10 @@ from utils.db_utils import db
 #                        ArticlePortalDivision.long_stripped.ilike("%" + search_text + "%")))
 #     return sub_query
 
+@general_bp.route('help/')
+def help():
+    return redirect(url_for('auth.login_signup_endpoint', login_signup='login'))
+
 
 @general_bp.route('')
 @general_bp.route('<int:page>/', methods=['GET'])

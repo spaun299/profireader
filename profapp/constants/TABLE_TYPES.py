@@ -33,6 +33,7 @@ TABLE_TYPES = {
     'link': String(100),  # user = User(website=u'www.example.com'),
     'email': String(100),
     'name': String(200),
+    'subtitle': String(1000),
     'string_30': String(30),
     'short_name': String(50),
     'title': String(100),
