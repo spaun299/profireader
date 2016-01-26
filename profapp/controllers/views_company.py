@@ -10,7 +10,7 @@ from flask.ext.login import login_required
 from ..models.articles import Article
 from ..models.portal import PortalDivision
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
-from ..models.portal import Portal, MemberCompanyPortal, UserPortalReader
+
 from ..models.articles import ArticleCompany, ArticlePortalDivision
 from utils.db_utils import db
 from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
@@ -63,101 +63,13 @@ def load_companies(json):
             'user_id': g.user_dict['id']}
 
 
-@company_bp.route('/materials/<string:company_id>/', methods=['GET'])
+@company_bp.route('/<string:company_id>/materials/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def materials(company_id):
     return render_template('company/materials.html', company=db(Company, id=company_id).one(),
                            angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js')
-
-
-@company_bp.route('/materials/<string:company_id>/', methods=['POST'])
-@login_required
-@ok
-def materials_load(json, company_id):
-    page = json.get('paginationOptions')['pageNumber']
-    pageSize = json.get('paginationOptions')['pageSize']
-    search_text = json.get('search_text')
-    params = {}
-    params['sort'] = {}
-    params['filter'] = {}
-    if json.get('sort'):
-        for n in json.get('sort'):
-            params['sort'][n] = json.get('sort')[n]
-    if json.get('filter'):
-        for b in json.get('filter'):
-            if json.get('filter')[b] != '-- all --':
-                params['filter'][b] = json.get('filter')[b]
-    # if json.get('grid_data')['new_status']:
-    #     ArticleCompany.update_article(
-    #         company_id=company_id,
-    #         article_id=json.get('article_id'),
-    #         **{'status': json.get('grid_data')['new_status']})
-    subquery = ArticleCompany.subquery_company_articles(search_text=search_text,
-                                                        company_id=company_id,
-                                                        **params)
-    articles, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
-
-    add_param = {'value': '1', 'label': '-- all --'}
-    statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id),
-                                             add_param, True)
-    gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
-    grid_data = Article.getListGridDataMaterials(articles)
-    grid_filters = {'portals': portals_g, 'material_status': statuses_g, 'publication_status': gr_publ_st}
-    return {'grid_data': grid_data,
-            'grid_filters': grid_filters,
-            'total': subquery.count()
-            }
-
-
-@company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['GET'])
-@tos_required
-@login_required
-# @check_rights(simple_permissions([]))
-def material_details(company_id, article_id):
-    return render_template('company/material_details.html',
-                           article_id=article_id,
-                           company=db(Company, id=company_id).one())
-
-
-@company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['POST'])
-@login_required
-@ok
-# @check_rights(simple_permissions([]))
-def load_material_details(json, company_id, article_id):
-    article = Article.get_one_article(article_id)
-    portals = {port.portal_id: port.portal.get_client_side_dict() for port in
-               MemberCompanyPortal.get_portals(company_id)}
-
-    joined_portals = {}
-    if article.portal_article:
-        joined_portals = {articles.division.portal.id: portals.pop(articles.division.portal.id)
-                          for articles in article.portal_article
-                          if articles.division.portal.id in portals}
-
-    article = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
-                                                  'company_id, status, long,'
-                                                  'editor_user_id, company.name|id,'
-                                                  'portal_article.id, portal_article.division.name, '
-                                                  'portal_article.division.portal.name,'
-                                                  'portal_article.status')
-
-    user_rights = list(g.user.user_rights_in_company(company_id))
-
-    return {'article': article,
-            'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(article['status']),
-            'portals': portals,
-            'company': Company.get(company_id).get_client_side_dict(fields='id, employees.id|profireader_name'),
-            'selected_portal': {},
-            'selected_division': {},
-            # 'user_rights': ['publish', 'unpublish', 'edit'],
-            # TODO: uncomment the string below and delete above
-            # TODO: when all works with rights are finished
-            'user_rights': user_rights,
-            'send_to_user': {},
-            'joined_portals': joined_portals}
 
 
 @company_bp.route('/<string:article_portal_division_id>/', methods=['POST'])
