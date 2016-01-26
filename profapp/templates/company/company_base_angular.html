@@ -18,31 +18,51 @@
 {#TODO: SS by OZ: add {% raw and remove this all stupid {{ '{{' }} %}#}
 <div ng-controller="CompanyMenuController" class="topbar-menu-links">
     <div ng-cloak ng-show="user.id">
-        <a  class="navbar-brand" href="{{ url_for('company.profile', company_id = company_id) }}"><img
-                style="background-position: center; witdh: 150px; height: 30px; background-repeat: no-repeat;
-                        background-size: contain;"
-                src="{{ company_logo }}"/></a> |
-        <a ng-class="{'selected': selected_company_menu == 'home'}" href="{{ url_for('company.profile', company_id = company_id) }}">{{ company.name }}</a> |
-        <a ng-class="{'selected': selected_company_menu == 'materials'}" href="{{ url_for('company.materials', company_id = company_id) }}">{{ '{{' }}_('Materials'){{ '}}' }}</a>
-        |
-        {{ '{{' }}_('Readers'){{ '}}' }} |
-        <a ng-class="{'selected': selected_company_menu == 'portals_partners'}" href="{{ url_for('portal.portals_partners', company_id = company_id) }}">{{ '{{' }}_('Portals'){{ '}}' }}</a>
-        |
-        {{ '{{' }}_('Comments'){{ '}}' }} |
-        <a ng-class="{'selected': selected_company_menu == 'companies_employees'}" href="{{ url_for('company.employees', company_id = company_id) }}">{{ '{{' }}_('Employees'){{ '}}' }}</a>
 
-        <a ng-class="{'selected': selected_company_menu == 'publications'}" id="publications" href="{{ url_for('portal.publications', company_id = company_id) }}">{{ '{{' }}_('Publications'){{ '}}' }}</a>
-        <a ng-class="{'selected': selected_company_menu == 'companies_partners'}" id="companies_partners" href="{{ url_for('portal.companies_partners', company_id = company_id) }}">{{ '{{' }}_('Members'){{ '}}' }}</a>
-        <a ng-class="{'selected': selected_company_menu == 'companies_readers'}" id="companies_readers" href="{{ url_for('company.readers', company_id = company_id) }}">{{ '{{' }}_('Readers'){{ '}}' }}</a>
+
+        <a style="float: right" class="navbar-brand" href="{{ url_for('company.profile', company_id = company_id) }}"><img
+                style="background-position: center; witdh: 300px; height: 60px; background-repeat: no-repeat;
+                        background-size: contain;"
+                src="{{ company_logo }}"/></a>
+        <a style="float: right" ng-class="{'selected': selected_company_menu == 'home'}"
+           href="{{ url_for('company.profile', company_id = company_id) }}">{{ company.name }}</a>
+
+
+        <a ng-class="{'selected': selected_company_menu == 'materials'}"
+           href="{{ url_for('company.materials', company_id = company_id) }}">{{ '{{' }}_('Materials'){{ '}}' }}</a>
+        <a ng-class="{'selected': selected_company_menu == 'companies_partners'}" id="companies_partners"
+           href="{{ url_for('portal.companies_partners', company_id = company_id) }}">{{ '{{' }}_('Membership'){{ '}}' }}</a>
+        <a ng-class="{'selected': selected_company_menu == 'companies_employees'}"
+           href="{{ url_for('company.employees', company_id = company_id) }}">{{ '{{' }}_('Employees'){{ '}}' }}</a>
+        <br/>
+
+
+        <a ng-class="{'selected': selected_company_menu == 'publications'}" id="publications"
+           href="{{ url_for('portal.publications', company_id = company_id) }}">{{ '{{' }}_('Publications'){{ '}}' }}</a>
+        <a ng-class="{'selected': selected_company_menu == 'comments'}" id="comments"
+           href="#">{{ '{{' }}_('Comments'){{ '}}' }}</a>
+        <a ng-class="{'selected': selected_company_menu == 'companies_readers'}" id="companies_readers"
+           href="{{ url_for('company.readers', company_id = company_id) }}">{{ '{{' }}_('Readers'){{ '}}' }}</a>
+        <a ng-class="{'selected': selected_company_menu == 'portals_partners'}"
+           href="{{ url_for('portal.portals_partners', company_id = company_id) }}">{{ '{{' }}_('Members'){{ '}}' }}</a>
+        <a ng-class="{'selected': selected_company_menu == 'statistics'}" id="statistics"
+           href="#">{{ '{{' }}_('Statistics'){{ '}}' }}</a>
+        <a ng-class="{'selected': selected_company_menu == 'portal_profile'}" id="portal_profile"
+           href="#">{{ '{{' }}_('Portal profile'){{ '}}' }}</a>
+
+
+
+
+
 
     </div>
 </div>
 <script>
-        if ({{ company.own_portal==None }}){
-            var ids = ['publications', 'companies_partners', 'companies_readers'];
-            for (var i=0; i < ids.length; i++){
-                var elem = document.getElementById(ids[i]).style.visibility = 'hidden';
-            }
-
+    if ({{ company.own_portal==None }}) {
+        var ids = ['publications', 'companies_partners', 'companies_readers'];
+        for (var i = 0; i < ids.length; i++) {
+            var elem = document.getElementById(ids[i]).style.visibility = 'hidden';
         }
+
+    }
 </script>
