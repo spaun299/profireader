@@ -41,35 +41,35 @@ def load_mine(json):
         for b in json.get('filter'):
             if json.get('filter')[b] != '-- all --':
                 params['filter'][b] = json.get('filter')[b]
-    subquery = ArticleCompany.subquery_user_articles(search_text=search_text,**params)
+    subquery = ArticleCompany.subquery_user_articles(search_text=search_text, **params)
     articles, pages, current_page = pagination(subquery,
                                                page=page, items_per_page=pageSize)
     add_param = {'value': '1', 'label': '-- all --'}
     statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    company_list_for_grid = Article.list_for_grid_tables(ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
+    company_list_for_grid = Article.list_for_grid_tables(
+            ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
     articles_drid_data = Article.getListGridDataArticles(articles.all())
-    grid_filters = {'company': company_list_for_grid,'status': statuses}
+    grid_filters = {'company': company_list_for_grid, 'status': statuses}
     return {'grid_data': articles_drid_data,
             'grid_filters': grid_filters,
             'total': subquery.count()}
 
 
-@article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
-@article_bp.route('/updateatportal/<string:article_portal_division_id>/', methods=['GET'])
-@article_bp.route('/create/', methods=['GET'])
+@article_bp.route('/material_create/<string:company_id>/', methods=['GET'])
+@article_bp.route('/material_update/<string:material_id>/', methods=['GET'])
+@article_bp.route('/publication_update/<string:publication_id>/', methods=['GET'])
 @tos_required
-def article_show_form(article_company_id=None, article_portal_division_id=None):
-    return render_template('article/form.html', article_portal_division_id=article_portal_division_id,
-                           article_company_id=(article_company_id or article_portal_division_id))
+def article_show_form(material_id=None, publication_id=None, company_id=None):
+    return render_template('article/form.html', material_id=material_id, company_id=company_id,
+                           publication_id=publication_id)
 
 
-@article_bp.route('/create/', methods=['POST'])
-@article_bp.route('/update_mine/<string:mine_version_article_company_id>/', methods=['POST'])
-@article_bp.route('/update/<string:article_company_id>/', methods=['POST'])
-@article_bp.route('/updateatportal/<string:article_portal_division_id>/', methods=['POST'])
+@article_bp.route('/material_update/<string:material_id>/', methods=['POST'])
+@article_bp.route('/publication_update/<string:publication_id>/', methods=['POST'])
+@article_bp.route('/material_create/<string:company_id>/', methods=['POST'])
+@tos_required
 @ok
-def load_form_create(json, article_company_id=None, mine_version_article_company_id=None,
-                     article_portal_division_id=None):
+def load_form_create(json, company_id=None, material_id=None, publication_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
 
     def portal_division_dict(article, tags=None):
@@ -86,25 +86,24 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
     available_tag_names = None
 
-    if article_company_id:  # companys version. always updating existing
-        articleVersion = ArticleCompany.get(article_company_id)
-    elif mine_version_article_company_id:  # updating personal version
-        articleVersion = ArticleCompany.get(mine_version_article_company_id)
-    elif article_portal_division_id:  # updating portal version
-        articleVersion = ArticlePortalDivision.get(article_portal_division_id)
+    if company_id:  # creating material version
+        articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
+    elif material_id:  # companys version. always updating existing
+        articleVersion = ArticleCompany.get(material_id)
+    elif publication_id:  # updating portal version
+        articleVersion = ArticlePortalDivision.get(publication_id)
         portal_division_id = articleVersion.portal_division_id
 
         article_tag_names = articleVersion.tags
         available_tags = PortalDivision.get(portal_division_id).portal_division_tags
         available_tag_names = list(map(lambda x: getattr(x, 'name', ''), available_tags))
 
-    else:  # creating personal version
-        articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
+
 
     if action == 'load':
         article_dict = articleVersion.get_client_side_dict(more_fields='long|company')
 
-        if article_portal_division_id:
+        if publication_id:
             article_dict = dict(list(article_dict.items()) + [('tags', article_tag_names)])
 
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
@@ -126,12 +125,12 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                 'image': image_dict,
                 'portal_division': portal_division_dict(articleVersion, available_tag_names)}
     else:
-        parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
+        parameters = g.filter_json(json, 'article.title|subtitle|short|long|keywords, image.*')
 
         articleVersion.attr(parameters['article'])
         if action == 'validate':
             articleVersion.detach()
-            return articleVersion.validate(article_company_id is None)
+            return articleVersion.validate(articleVersion.id is not None)
         else:
             image_id = parameters['image'].get('image_file_id')
             # TODO: VK by OZ: this code dont work if ArticlePortalDivision updated
@@ -145,8 +144,9 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                 articleVersion.manage_article_tags(tag_names)
 
             a = articleVersion.save()
-            if article_portal_division_id:
-                articleVersion.insert_after(json['portal_division']['insert_after'], articleVersion.position_unique_filter())
+            if publication_id:
+                articleVersion.insert_after(json['portal_division']['insert_after'],
+                                            articleVersion.position_unique_filter())
             return {'article': articleVersion.save().get_client_side_dict(more_fields='long'), 'image': json['image'],
                     'portal_division': portal_division_dict(articleVersion)}
 
@@ -168,8 +168,9 @@ def details_load(json, article_id):
 @ok
 def search_for_company_to_submit(json):
     companies = Article().search_for_company_to_submit(
-        g.user_dict['id'], json['article_id'], json['search'])
+            g.user_dict['id'], json['article_id'], json['search'])
     return companies
+
 
 @article_bp.route('/submit_to_company/<string:article_id>/', methods=['POST'])
 @ok
@@ -193,7 +194,6 @@ def resubmit_to_company(json, article_company_id):
 
 @article_bp.route('/details_reader/<string:article_portal_division_id>')
 def details_reader(article_portal_division_id):
-
     article = ArticlePortalDivision.get(article_portal_division_id)
     article.add_recently_read_articles_to_session()
     article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
@@ -214,12 +214,12 @@ def details_reader(article_portal_division_id):
 @article_bp.route('/list_reader/<int:page>/')
 def list_reader(page=1):
     if not request.args.get('favorite'):
-        sub_query = db(ArticlePortalDivision, status=ARTICLE_STATUS_IN_PORTAL.published).\
-            join(PortalDivision).\
-            join(Portal).\
-            join(UserPortalReader).\
-            filter(UserPortalReader.user_id == g.user_dict['id']).\
-            order_by(ArticlePortalDivision.publishing_tm.desc()).\
+        sub_query = db(ArticlePortalDivision, status=ARTICLE_STATUS_IN_PORTAL.published). \
+            join(PortalDivision). \
+            join(Portal). \
+            join(UserPortalReader). \
+            filter(UserPortalReader.user_id == g.user_dict['id']). \
+            order_by(ArticlePortalDivision.publishing_tm.desc()). \
             filter(text(' "publishing_tm" < clock_timestamp() '))
     else:
         sub_query = ReaderArticlePortalDivision.subquery_favorite_articles()

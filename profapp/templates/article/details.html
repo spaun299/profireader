@@ -7,7 +7,7 @@
 
     <script>
         module.controller('article_my_versions', ['$scope', '$ok', function ($scope, $ok) {
-            $scope.url_update = {{ raw_url_for('article.article_show_form')|safe }};
+            $scope.url_material_update = {{ raw_url_for('article.article_show_form')|safe }};
             $scope.url_search_for_company = {{ raw_url_for('article.search_for_company_to_submit')|safe }};
             $scope.url_submit = {{ raw_url_for('article.submit_to_company')|safe }};
             $scope.url_resubmit = {{ raw_url_for('article.resubmit_to_company')|safe }};
@@ -88,7 +88,7 @@
             {{ data.mine_version.short }}
             <h4>{{ _('Created at %(data.mine_version.cr_tm)s') }}</h4>
             <h4>{{ _('Last modified at %(data.mine_version.md_tm)s') }} [<a
-                    href="{{ url_update({article_company_id: data.mine_version.id}) }}">{{_('edit')}}</a>]</h4>
+                    href="{{ url_material_update({article_company_id: data.mine_version.id}) }}">{{_('edit')}}</a>]</h4>
 
             {{ _('submit my article to company') }} <input typeahead-on-select="onSelect($item, $model, $label)"
                                                            typeahead-template-url="typeaheadTemplate.html"

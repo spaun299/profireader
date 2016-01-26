@@ -67,3 +67,5 @@ def translations_save(json):
 @ok
 def delete(json):
     return TranslateTemplate.delete(json['objects'])
+
+

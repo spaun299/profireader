@@ -61,7 +61,8 @@
     {% endraw %}
     </script>
     {% raw %}
-    <div ng-init="sendData(all_grid_data)" ng-controller="article_list">
+    <h1 class="nice-title">{{ _('Sorry this page is not avaible in this version. If you have unattached article pls contact with administrator') }}<span></span></h1>
+    <div style="display: none" ng-init="sendData(all_grid_data)" ng-controller="article_list">
         <h1 class="nice-title">{{ _('Article list') }}<span></span></h1>
         <h1 class="nice-title" style="margin-left: 125px">{{ _('Create article') }}<span></span></h1>
         <a class="h1-btn icon icon-add" href="{{ url_create_article }}" title="{{ _('CREATE NEW ARTICLE') }}"><img src="../../static/front/img/ico/articles.png" /></a>

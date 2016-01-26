@@ -1,9 +1,10 @@
-{{ __('Index page text') }}
+{{ __('Index page text top') }}
 
 
+</br>
+<a href="{{ url_for('general.portals_list') }}">{{ _('Index page. Block for reader') }}</a></br>
 
-<a href="{{ url_for('general.portals_list') }}">{{ _('Subscribe to portal') }}</a></br>
+<a href="{{ url_for('general.index') }}">{{ _('Index page. Block for company') }}</a></br>
 
-<a href="{{ url_for('article.list_reader') }}" style="color: red; font-weight: bold">Reader Page. We need icon</a> </br>
 
 {{ __('Index page tos text') }}
