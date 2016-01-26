@@ -1,3 +1,6 @@
+ {% if pages is defined %}
+            {% if pages > 1 %}
+                <div class="col-md-9">
 <ul class="pager">
     <li class="previous">
         {% if current_page != 1 %}
@@ -40,3 +43,6 @@
         {% endif %}
     </li>
 </ul>
+</div>
+            {% endif %}
+        {% endif %}

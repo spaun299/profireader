@@ -11,30 +11,6 @@ from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 from sqlalchemy import text
 from utils.db_utils import db
 
-# def get_params(portal_id, **argv):
-#     portal = g.db.query(Portal).filter_by(id=portal_id).one()
-#     sub_query = Article.subquery_articles_at_portal(search_text='', portal_id=portal.id)
-#     return portal, sub_query
-
-
-# def subquery_articles_at_portal(search_text=None, **kwargs):
-#     portal_id = None
-#     if 'portal_id' in kwargs.keys():
-#         portal_id = kwargs['portal_id']
-#         kwargs.pop('portal_id', None)
-#
-#     sub_query = db(ArticlePortalDivision, status=ARTICLE_STATUS_IN_PORTAL.published, **kwargs). \
-#         order_by(ArticlePortalDivision.publishing_tm.desc()).filter(text(' "publishing_tm" < clock_timestamp() '))
-#
-#     if portal_id:
-#         sub_query = sub_query.join(PortalDivision).join(Portal).filter(Portal.id == portal_id)
-#
-#     if search_text:
-#         sub_query = sub_query. \
-#             filter(or_(ArticlePortalDivision.title.ilike("%" + search_text + "%"),
-#                        ArticlePortalDivision.short.ilike("%" + search_text + "%"),
-#                        ArticlePortalDivision.long_stripped.ilike("%" + search_text + "%")))
-#     return sub_query
 
 @general_bp.route('help/')
 def help():

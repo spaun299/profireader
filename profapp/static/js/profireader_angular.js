@@ -586,7 +586,7 @@ function file_choose(selectedfile) {
 
 // 'ui.select' uses "/static/js/select.js" included in index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
-module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView', 'ui.slider']);
+module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ajaxFormModule', 'profireaderdirectives', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView', 'ui.slider']);
 
 module.config(function ($provide) {
     $provide.decorator('$controller', function ($delegate) {
@@ -711,7 +711,7 @@ function pr_dictionary(phrase, dict, allow_html, scope, $ok) {
     }
 }
 
-module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
+module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
     angular.extend($rootScope, {
         fileUrl: function (file_id, down, if_no_file) {
@@ -892,7 +892,7 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize) {
             var callfor_ = callfor ? callfor : 'file_browse_image';
             var default_action_ = default_action ? default_action : 'file_browse_image';
             var root_id = id ? id : '';
-            scope.filemanagerModal = $modal.open({
+            scope.filemanagerModal = $uibModal.open({
                 templateUrl: 'filemanager.html',
                 controller: 'filemanagerCtrl',
                 size: 'filemanager-halfscreen',
