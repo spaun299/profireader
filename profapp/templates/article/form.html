@@ -2,25 +2,6 @@
 
 {% block title %}{{ _('Create article') }}{% endblock title %}
 
-{% block styles %}
-    {{ super() }}
-    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.css"> -->
-    <!-- ui-select files -->
-    <link rel="stylesheet" href="/static/css/select.css">
-
-    <!-- Select2 theme -->
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
-
-    <!--
-      Selectize theme
-      Less versions are available at https://github.com/brianreavis/selectize.js/tree/master/dist/less
-    -->
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.default.css">
-    <!-- <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.bootstrap2.css"> -->
-    <!-- <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.bootstrap3.css"> -->
-
-    <link rel="stylesheet" href="/static/css/andriy.css">
-{%- endblock styles %}
 
 {% block portal_content %}
     {#TODO: VH by OZ remove below line#}
@@ -28,25 +9,24 @@
     {{ scripts(names=['croper']) }}
 
     <script>
-        module.controller('article_edit', ['$scope', '$modal', '$af', '$ok', function ($scope, $modal, $af, $ok) {
-            $scope.$af = $af;
+        module.controller('article_edit', ['$scope', function ($scope) {
+
+            $scope.$$translate = {{ translates('article_edit')|safe }};
+            $scope.data = {};
 
             {% if company_id %}
                 $scope.save_article = '{{ url_for('article.load_form_create', company_id = company_id)|safe }}';
-                $scope.title ='Create new material';
+                $scope.title = 'Create new material';
             {% else %}
                 {% if material_id %}
                     $scope.save_article = '{{ url_for('article.load_form_create', material_id = material_id)|safe }}'
-                    $scope.title ='Update material';
+                    $scope.title = 'Update material';
                 {% else%}
                     $scope.save_article = '{{ url_for('article.load_form_create', publication_id = publication_id)|safe }}';
                     $scope.title = 'Update publication at portal `%(data.article.portal.name)s` in division `%(data.article.division.name)s`';
                 {% endif %}
             {% endif %}
 
-            $scope.data = {};
-
-            $scope.$$translate = {{ translates('article_edit')|safe }};
 
             $scope.amidSave = function (resp) {
                 if (!$scope.data.article.id && resp.article.id) {
@@ -163,9 +143,9 @@
         }]);
 
         {#            $scope.cleanUpHtml = function (data) {#}
-{#                data.long = cleanup_html(data.long);#}
-{#                return data;#}
-{#            };#}
+        {#                data.long = cleanup_html(data.long);#}
+        {#                return data;#}
+        {#            };#}
 
 
         /**
@@ -175,75 +155,75 @@
          * We want to perform a OR.
          */
         /* module.filter('propsFilter', function () {
-            return function (items, props) {
-                var out = [];
+         return function (items, props) {
+         var out = [];
 
-                if (angular.isArray(items)) {
-                    items.forEach(function (item) {
-                        var itemMatches = false;
+         if (angular.isArray(items)) {
+         items.forEach(function (item) {
+         var itemMatches = false;
 
-                        var keys = Object.keys(props);
-                        for (var i = 0; i < keys.length; i++) {
-                            var prop = keys[i];
-                            var text = props[prop].toLowerCase();
-                            if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
-                                itemMatches = true;
-                                break;
-                            }
-                        }
+         var keys = Object.keys(props);
+         for (var i = 0; i < keys.length; i++) {
+         var prop = keys[i];
+         var text = props[prop].toLowerCase();
+         if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+         itemMatches = true;
+         break;
+         }
+         }
 
-                        if (itemMatches) {
-                            out.push(item);
-                        }
-                    });
-                } else {
-                    // Let the output be the input untouched
-                    out = items;
-                }
+         if (itemMatches) {
+         out.push(item);
+         }
+         });
+         } else {
+         // Let the output be the input untouched
+         out = items;
+         }
 
-                return out;
-            };
-        });
-
-
-        module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function ($scope, $http, $ok) {
-
-            $scope.disabled = undefined;
-            $scope.searchEnabled = undefined;
-            $scope.selected_portal_to_unpublish = '';
-            $scope.$$translate = {{ translates('SelectTagsCtrl')|safe }};
+         return out;
+         };
+         });
 
 
-            $scope.getData = function () {
-                $scope.loading = true;
-            };
+         module.controller('SelectTagsCtrl', ['$scope', '$http', '$ok', function ($scope, $http, $ok) {
 
-            $scope.respData = function () {
-                $scope.loading = false;
-                return true;
-            };
+         $scope.disabled = undefined;
+         $scope.searchEnabled = undefined;
+         $scope.selected_portal_to_unpublish = '';
+         $scope.$$translate = {{ translates('SelectTagsCtrl')|safe }};
 
-            $scope.enable = function () {
-                $scope.disabled = false;
-            };
 
-            $scope.disable = function () {
-                $scope.disabled = true;
-            };
+         $scope.getData = function () {
+         $scope.loading = true;
+         };
 
-            $scope.enableSearch = function () {
-                $scope.searchEnabled = true;
-            };
+         $scope.respData = function () {
+         $scope.loading = false;
+         return true;
+         };
 
-            $scope.disableSearch = function () {
-                $scope.searchEnabled = false;
-            };
+         $scope.enable = function () {
+         $scope.disabled = false;
+         };
 
-            $scope.availableTags = [];
-            $scope.selectedTags = [];
+         $scope.disable = function () {
+         $scope.disabled = true;
+         };
 
-        }]);
-        */
+         $scope.enableSearch = function () {
+         $scope.searchEnabled = true;
+         };
+
+         $scope.disableSearch = function () {
+         $scope.searchEnabled = false;
+         };
+
+         $scope.availableTags = [];
+         $scope.selectedTags = [];
+
+         }]);
+         */
 
 
     </script>
