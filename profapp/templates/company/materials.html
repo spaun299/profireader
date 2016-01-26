@@ -14,7 +14,7 @@
             $scope.url_material_update = {{ raw_url_for('article.article_show_form')|safe }};
             $scope.url_publication_update = {{ raw_url_for('article.article_show_form')|safe }};
 
-            $scope.company_id = '{{ company_id }}';
+            $scope.company_id = '{{ company.id }}';
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}

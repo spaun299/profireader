@@ -10,6 +10,7 @@ from .pagination import pagination
 from config import Config
 from .views_file import crop_image, update_croped_image
 from ..models.files import ImageCroped
+from ..models.company import Company
 from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
 from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
@@ -60,8 +61,13 @@ def load_mine(json):
 @article_bp.route('/publication_update/<string:publication_id>/', methods=['GET'])
 @tos_required
 def article_show_form(material_id=None, publication_id=None, company_id=None):
-    return render_template('article/form.html', material_id=material_id, company_id=company_id,
-                           publication_id=publication_id)
+    company = Company.get(company_id if company_id else
+                                               (ArticlePortalDivision.get(publication_id).company.id
+                                                if publication_id
+                                                else ArticleCompany.get(material_id).company_id))
+    return render_template('article/form.html',
+                           material_id=material_id, company_id=company_id, publication_id=publication_id,
+                           company=company)
 
 
 @article_bp.route('/material_update/<string:material_id>/', methods=['POST'])
@@ -87,7 +93,7 @@ def load_form_create(json, company_id=None, material_id=None, publication_id=Non
     available_tag_names = None
 
     if company_id:  # creating material version
-        articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
+        articleVersion = ArticleCompany(company_id = company_id, editor=g.user, article=Article(author_user_id=g.user.id))
     elif material_id:  # companys version. always updating existing
         articleVersion = ArticleCompany.get(material_id)
     elif publication_id:  # updating portal version
@@ -97,8 +103,6 @@ def load_form_create(json, company_id=None, material_id=None, publication_id=Non
         article_tag_names = articleVersion.tags
         available_tags = PortalDivision.get(portal_division_id).portal_division_tags
         available_tag_names = list(map(lambda x: getattr(x, 'name', ''), available_tags))
-
-
 
     if action == 'load':
         article_dict = articleVersion.get_client_side_dict(more_fields='long|company')
