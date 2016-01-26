@@ -1,6 +1,7 @@
 {% extends "index_lazy_layout.html" %}
 
 {% block portal_content %}
+
     {% block company_base %}
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
@@ -13,7 +14,6 @@
             $scope.selectedUser_name = '';
             $scope.selectedUser = null;
             $scope.selectedUser_sending = false;
-            $scope.url_article_details = {{ raw_url_for('company.material_details')|safe }};
             $scope.url_update_status = {{ raw_url_for('company.update_material_status')|safe }};
             $scope.url_submit_to_portal = '{{ url_for('portal.submit_to_portal')|safe }}';
             $scope.url_send_article_to_user = '{{ url_for('company.send_article_to_user')|safe }}';
@@ -109,15 +109,6 @@
             $scope.cancel = function () {
                 return false;
             };
-
-            $scope.afterSave = function (resp) {
-                window.location.href =
-                        $scope.url_article_details({
-                            company_id: resp.company.id,
-                            article_id: resp.article.id
-                        })
-            };
-
 
             $scope.onSelect = function ($item, $model, $label) {
                 if (!$item || !$item.id) {
