@@ -99,6 +99,7 @@
 
                 var $parent = $scope['$parent'];
                 var ctrl = afModelCtrl[0];
+                $parent.$af = $af;
 
 
                 var params = {};
