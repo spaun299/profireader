@@ -13,7 +13,7 @@
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
 <script>
-    module.controller('CompanyProfile', ['$scope', '$modal','$ok', function ($scope, $modal, $ok) {
+    module.controller('CompanyProfile', ['$scope', function ($scope) {
         angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('home');
         $scope.user = {{ g.user_dict|tojson|safe }};
         $scope.$$translate = {{ translates('CompanyProfile')|safe }};

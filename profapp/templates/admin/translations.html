@@ -45,7 +45,7 @@
         });
 
 
-        module.controller('translation_list', ['$scope', '$modal', '$ok', '$sce', 'uiGridConstants', '$timeout', function ($scope, $modal, $ok, $sce, uiGridConstants, $timeout) {
+        module.controller('translation_list', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridConstants', '$timeout', function ($scope, $uibModal, $ok, $sce, uiGridConstants, $timeout) {
 
                     $scope.url_search_translations = {{ raw_url_for('admin.translations_load')|safe }};
                     $scope.url_save_translations = {{ raw_url_for('admin.translations_save')|safe }};
@@ -57,7 +57,7 @@
                     $scope.allow_html_text = 'dsa';
 
                     $scope.showModalForEditNew = function (row, col, text) {
-                        var modalInstance = $modal.open({
+                        var modalInstance = $uibModal.open({
                             templateUrl: 'translation_tinymce.html',
                             controller: 'translation_tinymce_controller',
                             resolve: {
@@ -73,7 +73,7 @@
 
                     $scope.showModalDelete = function () {
                         var list = $scope.list_select;
-                        var modalInstance = $modal.open({
+                        var modalInstance = $uibModal.open({
                             templateUrl: 'delete_translation.html',
                             controller: 'delete_translation_controller',
                             resolve: {

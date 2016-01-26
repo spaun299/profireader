@@ -1,6 +1,6 @@
 <script>
 
-    module.controller('UserLoginController', ['$scope', '$modal', '$ok', '$timeout', function ($scope, $modal, $ok, $timeout) {
+    module.controller('UserLoginController', ['$scope', '$uibModal', '$ok', '$timeout', function ($scope, $uibModal, $ok, $timeout) {
         $scope.user = {{ g.user_dict|tojson|safe }};
         $scope.tos = function () {
             var accepted = $scope.user.tos;
@@ -53,7 +53,6 @@
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
                         data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                    <span class="sr-only">{{ '{{' }}_('Toggle navigation'){{ '}}' }}</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
