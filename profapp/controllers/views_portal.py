@@ -24,15 +24,7 @@ from config import Config
 @login_required
 # @check_rights(simple_permissions([]))
 def create(company_id):
-    company = db(Company, id=company_id).one()
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
-
-    return render_template('portal/portal_create.html',
-                           company_id=company_id,
-                           company_logo=company_logo,
-                           company_name=company.name,
-                           company=company.get_client_side_dict())
+    return render_template('portal/portal_create.html', company=db(Company, id=company_id).one())
 
 
 # @portal_bp.route('/create/<string:company_id>/', methods=['POST'])
@@ -51,11 +43,9 @@ def create_save(json, create_or_update, company_id):
     types = {x.id: x.get_client_side_dict() for x in PortalDivisionType.get_division_types()}
     company = Company.get(company_id)
     member_companies = {company_id: company.get_client_side_dict()}
-    company_logo = company.logo_file_relationship.url() if company.logo_file_id else '/static/images/company_no_logo.png'
 
     if action == 'load':
-        ret = {'company_id': company_id,
-               'company_logo': company_logo,
+        ret = {'company': company.get_client_side_dict(),
                'portal_company_members': member_companies,
                'portal': {'company_owner_id': company_id, 'name': '', 'host': '',
                           'logo_file_id': company.logo_file_id,
@@ -169,18 +159,7 @@ def apply_company(json):
 @login_required
 # @check_rights(simple_permissions([])portal_id)
 def profile(portal_id):
-    portal = Portal.get(portal_id)
-    company = portal.own_company
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
-    return render_template('portal/portal_profile.html',
-                           company_id=company.id,
-                           company_logo=company_logo,
-                           company=company.get_client_side_dict(fields='name')
-                           )
-
-
-# TODO: VK by OZ: remove company_* kwargs
+    return render_template('portal/portal_profile.html', company=Portal.get(portal_id).own_company)
 
 
 @portal_bp.route('/profile/<string:portal_id>/', methods=['POST'])
@@ -206,20 +185,8 @@ def profile_load(json, portal_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def profile_edit(portal_id):
-    portal = db(Portal, id=portal_id).one()
-    company = portal.own_company
-    # company_id = portal.company_owner_id
+    return render_template('portal/portal_profile_edit.html', company=Portal.get(portal_id).own_company)
 
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
-    return render_template('portal/portal_profile_edit.html',
-                           company_id=company.id,
-                           company_logo=company_logo,
-                           company=company.get_client_side_dict()
-                           )
-
-
-# TODO: VK by OZ: remove company_* kwargs
 
 @portal_bp.route('/profile_edit/<string:portal_id>/', methods=['POST'])
 @login_required
@@ -385,7 +352,7 @@ def profile_edit_load(json, portal_id):
         for elem in keys:
             if elem not in json_new['bound_tags']:
                 delete_tag_portal_bound_list.append(
-                    curr_portal_bound_port_div_id_tag_name_object_dict[frozenset(elem.items())]
+                        curr_portal_bound_port_div_id_tag_name_object_dict[frozenset(elem.items())]
                 )
 
         add_tag_portal_notbound_list = []
@@ -399,7 +366,7 @@ def profile_edit_load(json, portal_id):
         for elem in curr_portal_notbound_tags:
             if elem not in json_new['notbound_tags']:
                 delete_tag_portal_notbound_list.append(
-                    curr_portal_notbound_tag_name_object_dict[elem.name]
+                        curr_portal_notbound_tag_name_object_dict[elem.name]
                 )
 
         g.db.add_all(add_tag_portal_bound_list + add_tag_portal_notbound_list)
@@ -413,7 +380,6 @@ def profile_edit_load(json, portal_id):
                 filter(TagPortal.id.in_([x.id for x in delete_tag_portal_notbound_list])). \
                 delete(synchronize_session=False)
         g.db.expire_all()
-
 
         # TODO (AA to AA): not to forget to delete unused tags... New tags well be added.
 
@@ -434,11 +400,8 @@ def profile_edit_load(json, portal_id):
     tags = set(tag_portal_division.tag for tag_portal_division in portal.portal_bound_tags_select)
     tags_dict = {tag.id: tag.name for tag in tags}
 
-    company = portal.own_company
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
+
     return {'portal': portal.get_client_side_dict('id, name, divisions, own_company, portal_bound_tags_select.*'),
-            'company_logo': company_logo,
             'tag': tags_dict}
 
 
@@ -447,16 +410,9 @@ def profile_edit_load(json, portal_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def portals_partners(company_id):
-    company = Company.get(company_id)
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template('company/portals_partners.html',
-                           company_id=company_id,
-                           company_logo=company_logo,
-                           company=company.get_client_side_dict())
+                           company=Company.get(company_id))
 
-
-# TODO: VK by OZ: remove company_* kwargs
 
 @portal_bp.route('/portals_partners/<string:company_id>/', methods=['POST'])
 @login_required
@@ -469,13 +425,13 @@ def portals_partners_load(json, company_id):
     portal = db(Company, id=company_id).one().own_portal
     portals_partners = [port.portal.get_client_side_dict(fields='name, company_owner_id, id')
                         for port in MemberCompanyPortal.get_portals(
-            company_id) if port]
+                company_id) if port]
     params = {}
     subquery = Company.subquery_company_partners(company_id=company_id, search_text=search_text, **params)
     partners_g, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
     user_rights = list(g.user.user_rights_in_company(company_id))
     grid_data = Company.getListGridDataPortalPartners(partners_g)
-    return {'grid_data':grid_data,
+    return {'grid_data': grid_data,
             'total': subquery.count(),
             'portal': portal.get_client_side_dict(fields='name') if portal else [],
             'portals_partners': portals_partners,
@@ -488,11 +444,7 @@ def portals_partners_load(json, company_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def companies_partners(company_id):
-    return render_template('company/companies_partners.html', company_id=company_id,
-                           company=Company.get(company_id).get_client_side_dict())
-
-
-# TODO: VK by OZ: remove company_* kwargs
+    return render_template('company/companies_partners.html', company=Company.get(company_id))
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['POST'])
@@ -516,7 +468,7 @@ def companies_partners_load(json, company_id):
 # @check_rights(simple_permissions([]))
 def search_for_portal_to_join(json):
     portals_partners = Portal.search_for_portal_to_join(
-        json['company_id'], json['search'])
+            json['company_id'], json['search'])
     return portals_partners
 
 
@@ -525,20 +477,9 @@ def search_for_portal_to_join(json):
 @login_required
 # @check_rights(simple_permissions([]))
 def publications(company_id):
-    company = db(Company, id=company_id).one()
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
-
     return render_template(
-        'portal/portal_publications.html',
-        company=company.get_client_side_dict(),
-        company_id=company_id,
-        angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js',
-        company_logo=company_logo
-    )
-
-
-# TODO: VK by OZ: remove company_* kwargs
+            'portal/portal_publications.html', company=Company.get(company_id),
+            angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js')
 
 
 @portal_bp.route('/publications/<string:company_id>/', methods=['POST'])
@@ -562,16 +503,17 @@ def publications_load(json, company_id):
         for b in json.get('filter'):
             if json.get('filter')[b] != '-- all --':
                 params['filter'][b] = json.get('filter')[b]
-    subquery = ArticlePortalDivision.subquery_portal_articles(search_text=search_text,**params)
+    subquery = ArticlePortalDivision.subquery_portal_articles(search_text=search_text, **params)
     # if json.get('grid_data')['new_status']:
     #     db(ArticlePortalDivision, id=json.get('article_id')).update({'status': json.get('grid_data')['new_status']})
     articles, pages, current_page = pagination(subquery,
                                                page=page, items_per_page=pageSize)
-    add_param = {'value': '1','label': '-- all --'}
-    comp_grid = Article.list_for_grid_tables(ArticlePortalDivision.get_companies_which_send_article_to_portal(portal.id), add_param, True)
+    add_param = {'value': '1', 'label': '-- all --'}
+    comp_grid = Article.list_for_grid_tables(
+            ArticlePortalDivision.get_companies_which_send_article_to_portal(portal.id), add_param, True)
     statuses_grid = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
     grid_data = Article.getListGridDataPublication(articles)
-    grid_filters = {'publication_status': statuses_grid,'company': comp_grid}
+    grid_filters = {'publication_status': statuses_grid, 'company': comp_grid}
     return {'grid_data': grid_data,
             'grid_filters': grid_filters,
             'total': subquery.count()}
@@ -644,8 +586,8 @@ def submit_to_portal(json):
     article.save()
     portal = article_portal.get_article_owner_portal(portal_division_id=portal_division_id)
     json['article'] = article_portal.get_client_side_dict(fields=
-        'id, title,short, cr_tm, md_tm, company_id, status, long,'
-        'editor_user_id, company.name|id,portal_article.id,'
-        'portal_article.division.name, portal_article.division.portal.name,portal_article.status')
+                                                          'id, title,short, cr_tm, md_tm, company_id, status, long,'
+                                                          'editor_user_id, company.name|id,portal_article.id,'
+                                                          'portal_article.division.name, portal_article.division.portal.name,portal_article.status')
     json.update({'portal': portal.name})
     return json
