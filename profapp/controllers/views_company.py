@@ -71,6 +71,45 @@ def materials(company_id):
     return render_template('company/materials.html', company=db(Company, id=company_id).one(),
                            angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js')
 
+@company_bp.route('/<string:company_id>/materials/', methods=['POST'])
+@ok
+def materials_load(json, company_id):
+    page = json.get('paginationOptions')['pageNumber']
+    pageSize = json.get('paginationOptions')['pageSize']
+    search_text = json.get('search_text')
+    params = {}
+    params['sort'] = {}
+    params['filter'] = {}
+    if json.get('sort'):
+        for n in json.get('sort'):
+            params['sort'][n] = json.get('sort')[n]
+    if json.get('filter'):
+        for b in json.get('filter'):
+            if json.get('filter')[b] != '-- all --':
+                params['filter'][b] = json.get('filter')[b]
+    # if json.get('grid_data')['new_status']:
+    #     ArticleCompany.update_article(
+    #         company_id=company_id,
+    #         article_id=json.get('article_id'),
+    #         **{'status': json.get('grid_data')['new_status']})
+    subquery = ArticleCompany.subquery_company_materials(search_text=search_text,
+                                                        company_id=company_id,
+                                                        **params)
+    materials, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
+
+    add_param = {'value': '1', 'label': '-- all --'}
+    statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
+    portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id),
+                                             add_param, True)
+    gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
+    grid_data = Article.getListGridDataMaterials(materials)
+    grid_filters = {'portals': portals_g, 'material_status': statuses_g, 'publication_status': gr_publ_st}
+    return {'grid_data': grid_data,
+            'grid_filters': grid_filters,
+            'total': subquery.count()
+            }
+
+
 
 @company_bp.route('/<string:article_portal_division_id>/', methods=['POST'])
 @login_required

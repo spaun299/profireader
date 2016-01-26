@@ -56,44 +56,6 @@ import time
 #             'total': subquery.count()}
 
 
-@article_bp.route('/<string:company_id>/materials/', methods=['POST'])
-@ok
-def materials_load(json, company_id):
-    page = json.get('paginationOptions')['pageNumber']
-    pageSize = json.get('paginationOptions')['pageSize']
-    search_text = json.get('search_text')
-    params = {}
-    params['sort'] = {}
-    params['filter'] = {}
-    if json.get('sort'):
-        for n in json.get('sort'):
-            params['sort'][n] = json.get('sort')[n]
-    if json.get('filter'):
-        for b in json.get('filter'):
-            if json.get('filter')[b] != '-- all --':
-                params['filter'][b] = json.get('filter')[b]
-    # if json.get('grid_data')['new_status']:
-    #     ArticleCompany.update_article(
-    #         company_id=company_id,
-    #         article_id=json.get('article_id'),
-    #         **{'status': json.get('grid_data')['new_status']})
-    subquery = ArticleCompany.subquery_company_articles(search_text=search_text,
-                                                        company_id=company_id,
-                                                        **params)
-    articles, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
-
-    add_param = {'value': '1', 'label': '-- all --'}
-    statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id),
-                                             add_param, True)
-    gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
-    grid_data = Article.getListGridDataMaterials(articles)
-    grid_filters = {'portals': portals_g, 'material_status': statuses_g, 'publication_status': gr_publ_st}
-    return {'grid_data': grid_data,
-            'grid_filters': grid_filters,
-            'total': subquery.count()
-            }
-
 @article_bp.route('/material_create/<string:company_id>/', methods=['GET'])
 @article_bp.route('/material_update/<string:material_id>/', methods=['GET'])
 @article_bp.route('/publication_update/<string:publication_id>/', methods=['GET'])
@@ -199,14 +161,14 @@ def material_details(material_id):
                            article_id=material_id,
                            company=Company.get(ArticleCompany.get(material_id).company.id))
 
+
 @article_bp.route('/material_details/<string:material_id>/', methods=['POST'])
 @ok
 # @check_rights(simple_permissions([]))
 def load_material_details(json, material_id):
-    article = Article.get_one_article(material_id)
-    company_id = ArticleCompany.get(material_id).company.id
+    article = ArticleCompany.get(material_id)
     portals = {port.portal_id: port.portal.get_client_side_dict() for port in
-               MemberCompanyPortal.get_portals(company_id)}
+               MemberCompanyPortal.get_portals(article.company_id)}
 
     joined_portals = {}
     if article.portal_article:
@@ -214,19 +176,17 @@ def load_material_details(json, material_id):
                           for articles in article.portal_article
                           if articles.division.portal.id in portals}
 
-    article = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
-                                                  'company_id, status, long,'
-                                                  'editor_user_id, company.name|id,'
-                                                  'portal_article.id, portal_article.division.name, '
-                                                  'portal_article.division.portal.name,'
-                                                  'portal_article.status')
+    user_rights = list(g.user.user_rights_in_company(article.company_id))
 
-    user_rights = list(g.user.user_rights_in_company(company_id))
-
-    return {'article': article,
-            'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(article['status']),
+    return {'article': article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+                                                           'company_id, long,'
+                                                           'editor_user_id, company.name|id,'
+                                                           'portal_article.id, portal_article.division.name, '
+                                                           'portal_article.division.portal.name,'
+                                                           'portal_article.status'),
+            # 'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_chage_status_to(article['status']),
             'portals': portals,
-            'company': Company.get(company_id).get_client_side_dict(fields='id, employees.id|profireader_name'),
+            'company': Company.get(article.company_id).get_client_side_dict(fields='id, employees.id|profireader_name'),
             'selected_portal': {},
             'selected_division': {},
             # 'user_rights': ['publish', 'unpublish', 'edit'],

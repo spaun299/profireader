@@ -278,6 +278,7 @@ class ArticleCompany(Base, PRBase):
                                   backref='company_article')
     search_fields = {'title': {'relevance': lambda field='title': RELEVANCE.title},
                      'short': {'relevance': lambda field='short': RELEVANCE.short},
+                     'subtitle': {'relevance': lambda field='subtitle': RELEVANCE.short},
                      'long': {'relevance': lambda field='long': RELEVANCE.long},
                      'keywords': {'relevance': lambda field='keywords': RELEVANCE.keywords}}
 
@@ -343,11 +344,11 @@ class ArticleCompany(Base, PRBase):
         return sub_query.filter(article_filter.exists())
 
     @staticmethod
-    def subquery_company_articles(search_text=None, company_id=None, **kwargs):
+    def subquery_company_materials(search_text=None, company_id=None, **kwargs):
         sub_query = db(ArticleCompany, company_id=company_id)
         if 'filter' in kwargs.keys():
-             if 'material_status' in kwargs['filter'].keys():
-                sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['filter']['material_status'])
+             # if 'material_status' in kwargs['filter'].keys():
+             #    sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['filter']['material_status'])
              if 'publication_status' in kwargs['filter'].keys() or 'portals' in kwargs['filter'].keys():
                 sub_query = sub_query.join(ArticlePortalDivision,
                                        ArticlePortalDivision.article_company_id == ArticleCompany.id)
@@ -587,11 +588,6 @@ class Article(Base, PRBase):
     #     return query
 
     @staticmethod
-    def get_one_article(article_id):
-        article = g.db.query(ArticleCompany).filter_by(id=article_id).one()
-        return article
-
-    @staticmethod
     def get_articles_submitted_to_company(company_id):
         articles = g.db.query(ArticleCompany).filter_by(company_id=company_id).all()
         return articles if articles else []
@@ -627,6 +623,7 @@ class Article(Base, PRBase):
             port = 'not sent' if len(article.portal_article) == 0 else ''
             grid_data.append({'date': article.md_tm,
                               'title': article.title,
+                              'author': article.editor.profireader_name,
                               'portals': port,
                               'publication_status': '',
                               'id': str(article.id),
