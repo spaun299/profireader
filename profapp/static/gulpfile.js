@@ -75,8 +75,13 @@ gulp.task('install_slider', function () {
         .pipe(gulp.dest(dst + 'angular-ui-slider/'));
 });
 
+gulp.task('install_bootstrap', function () {
+    return gulp.src([src + 'bootstrap/dist/**/*'])
+        .pipe(gulp.dest(dst + 'bootstrap/'));
+});
+
 
 gulp.task('default', ['clean', 'install_fileuploader', 'install_angular', 'install_angular_translate', 'install_angular_cookies', 
 'install_angular_ui_tinymce', 'install_tinymce', 'install_angular_bootstrap', 'install_angular_animate', 'install_cropper',
-'install_slider']);
+'install_slider','install_bootstrap']);
 
