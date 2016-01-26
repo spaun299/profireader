@@ -20,40 +20,40 @@ from collections import OrderedDict
 import time
 
 
-@article_bp.route('/list/', methods=['GET'])
-@tos_required
-def show_mine():
-    return render_template('article/list.html')
-
-
-@article_bp.route('/list/', methods=['POST'])
-@ok
-def load_mine(json):
-    page = json.get('paginationOptions')['pageNumber']
-    pageSize = json.get('paginationOptions')['pageSize']
-    search_text = json.get('search_text')
-    params = {'user_id': g.user_dict['id']}
-    params['sort'] = {}
-    params['filter'] = {}
-    if json.get('sort'):
-        for n in json.get('sort'):
-            params['sort'][n] = json.get('sort')[n]
-    if json.get('filter'):
-        for b in json.get('filter'):
-            if json.get('filter')[b] != '-- all --':
-                params['filter'][b] = json.get('filter')[b]
-    subquery = ArticleCompany.subquery_user_articles(search_text=search_text, **params)
-    articles, pages, current_page = pagination(subquery,
-                                               page=page, items_per_page=pageSize)
-    add_param = {'value': '1', 'label': '-- all --'}
-    statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    company_list_for_grid = Article.list_for_grid_tables(
-            ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
-    articles_drid_data = Article.getListGridDataArticles(articles.all())
-    grid_filters = {'company': company_list_for_grid, 'status': statuses}
-    return {'grid_data': articles_drid_data,
-            'grid_filters': grid_filters,
-            'total': subquery.count()}
+# @article_bp.route('/list/', methods=['GET'])
+# @tos_required
+# def show_mine():
+#     return render_template('article/list.html')
+#
+#
+# @article_bp.route('/list/', methods=['POST'])
+# @ok
+# def load_mine(json):
+#     page = json.get('paginationOptions')['pageNumber']
+#     pageSize = json.get('paginationOptions')['pageSize']
+#     search_text = json.get('search_text')
+#     params = {'user_id': g.user_dict['id']}
+#     params['sort'] = {}
+#     params['filter'] = {}
+#     if json.get('sort'):
+#         for n in json.get('sort'):
+#             params['sort'][n] = json.get('sort')[n]
+#     if json.get('filter'):
+#         for b in json.get('filter'):
+#             if json.get('filter')[b] != '-- all --':
+#                 params['filter'][b] = json.get('filter')[b]
+#     subquery = ArticleCompany.subquery_user_articles(search_text=search_text, **params)
+#     articles, pages, current_page = pagination(subquery,
+#                                                page=page, items_per_page=pageSize)
+#     add_param = {'value': '1', 'label': '-- all --'}
+#     statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
+#     company_list_for_grid = Article.list_for_grid_tables(
+#             ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
+#     articles_drid_data = Article.getListGridDataArticles(articles.all())
+#     grid_filters = {'company': company_list_for_grid, 'status': statuses}
+#     return {'grid_data': articles_drid_data,
+#             'grid_filters': grid_filters,
+#             'total': subquery.count()}
 
 
 @article_bp.route('/<string:company_id>/materials/', methods=['POST'])
@@ -166,8 +166,8 @@ def load_form_create(json, company_id=None, material_id=None, publication_id=Non
                 'portal_division': portal_division_dict(articleVersion, available_tag_names)}
     else:
         parameters = g.filter_json(json, 'article.title|subtitle|short|long|keywords, image.*')
-
         articleVersion.attr(parameters['article'])
+
         if action == 'validate':
             articleVersion.detach()
             return articleVersion.validate(articleVersion.id is not None)
@@ -183,7 +183,7 @@ def load_form_create(json, company_id=None, material_id=None, publication_id=Non
                 tag_names = json['article']['tags']
                 articleVersion.manage_article_tags(tag_names)
 
-            a = articleVersion.save()
+            articleVersion.save()
             if publication_id:
                 articleVersion.insert_after(json['portal_division']['insert_after'],
                                             articleVersion.position_unique_filter())
