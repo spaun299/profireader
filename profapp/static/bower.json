@@ -3,12 +3,11 @@
   "version": "1.0.1",
   "homepage": "https://github.com/kakabomba/profireader",
   "dependencies": {
-    "angular-xeditable": "~0.1.8",
-    "angular-bootstrap": "0.14.2",
+    "angular-bootstrap": "1.1.0",
     "angular-ui-tinymce": "0.0.10",
-    "angular-animate": "~1.3.18",
+    "angular-animate": "~1.4.0",
+    "angular-ui-grid": "3.0.7",
     "cropper": "~0.10.1",
-    "filemanager": "git@github.com:kakabomba/angular-server-driven-filemanager.git#ids",
     "angular-ui-slider": "git@github.com:angular-ui/ui-slider.git#v0.1.3"
   }
 }
