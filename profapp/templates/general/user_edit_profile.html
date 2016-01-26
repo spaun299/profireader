@@ -10,13 +10,10 @@
 
 {% block portal_content %}
     <script>
-    module.controller('edit_user', ['$scope', '$modal', '$ok', '$af', function ($scope, $modal, $ok, $af) {
+    module.controller('edit_user', ['$scope', function ($scope) {
 
 
             $scope.update_url = {{ raw_url_for('user.avatar_update')|safe }};
-
-
-            $scope.$af = $af;
 
             $scope.data = {};
             $scope.sendData = function(){
