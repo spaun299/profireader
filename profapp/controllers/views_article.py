@@ -314,7 +314,7 @@ def list_reader(page=1):
 
     ordered_articles = OrderedDict()
     for a in articles:
-        ordered_articles[a.id] = dict(list(a.get_client_side_dict(more_fields='portal.host').items()) +
+        ordered_articles[a.id] = dict(list(a.get_client_side_dict(more_fields='read_count,portal.host').items()) +
                                       list({'tags': a.tags}.items()))
     portals = UserPortalReader.get_portals_for_user() if not ordered_articles else None
 
