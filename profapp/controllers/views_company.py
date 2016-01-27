@@ -86,7 +86,6 @@ def materials_load(json, company_id):
     company = db(Company, id=company_id).one()
     company_logo = company.logo_file_relationship.url() \
         if company.logo_file_id else '/static/images/company_no_logo.png'
-    print(json)
     page = json.get('paginationOptions')['pageNumber']
     pageSize = json.get('paginationOptions')['pageSize']
     search_text = json.get('search_text')
@@ -308,6 +307,7 @@ def update_rights():
 def update(company_id=None):
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     user_have_comp = True if len(user_companies)>0 else False
+    user_have_comp = False
     company = db(Company, id=company_id).first()
     return render_template('company/company_edit.html', company_id=company_id,user_comp=user_have_comp,
                            company_name=company.name if company else '',
@@ -321,6 +321,7 @@ def update(company_id=None):
 def load(json, company_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
     company = Company() if company_id is None else Company.get(company_id)
+    print(action)
     if action == 'load':
         company_dict = company.get_client_side_dict()
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,

@@ -36,7 +36,16 @@ We have something similar in bootstrap? Can correct this class to look nicer?
     padding-left: 10px;
     margin-bottom: 1px;
 }
-
+.dataPickerForGrid{
+    float:left
+}
+.fieldFromTo{
+    clear:both;
+    text-align:right;
+}
+.dataPickerForGrid label{
+    float:left;
+}
 .form-control{
     float: none!important;
 }

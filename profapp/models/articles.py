@@ -22,6 +22,7 @@ import re
 from sqlalchemy import event
 from ..controllers import errors
 from ..constants.SEARCH import RELEVANCE
+from datetime import datetime
 
 
 class ArticlePortalDivision(Base, PRBase):
@@ -333,6 +334,10 @@ class ArticleCompany(Base, PRBase):
     def subquery_company_articles(search_text=None, company_id=None, **kwargs):
         sub_query = db(ArticleCompany, company_id=company_id)
         if 'filter' in kwargs.keys():
+             if 'multiselect' in kwargs['filter'].keys():
+                 if 'material_status' in kwargs['filter']['multiselect'].keys():
+                     sub_query = db(ArticleCompany, company_id=company_id)
+                     sub_query = sub_query.filter(or_(ArticleCompany.status == v for v in kwargs['filter']['multiselect']['material_status']))
              if 'material_status' in kwargs['filter'].keys():
                 sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['filter']['material_status'])
              if 'publication_status' in kwargs['filter'].keys() or 'portals' in kwargs['filter'].keys():
@@ -344,14 +349,17 @@ class ArticleCompany(Base, PRBase):
                     sub_query = sub_query.join(PortalDivision,
                                            PortalDivision.id == ArticlePortalDivision.portal_division_id). \
                     filter(PortalDivision.portal_id == kwargs['filter']['portals'])
+             if 'date' in kwargs['filter'].keys():
+                 fromm = datetime.utcfromtimestamp(kwargs['filter']['date']['from']/1000)
+                 to = datetime.utcfromtimestamp(kwargs['filter']['date']['to']/1000)
+                 sub_query = sub_query.filter(ArticleCompany.md_tm.between(fromm, to))
         if search_text:
             if 'title' in search_text:
                 sub_query = sub_query.filter(ArticleCompany.title.ilike("%" + search_text['title'] + "%"))
-        if 'sort' in kwargs.keys():
-            if 'date' in kwargs['sort'].keys():
-                sub_query = sub_query.order_by(ArticleCompany.md_tm.asc()) if kwargs[
+        if 'date' in kwargs['sort'].keys():
+            sub_query = sub_query.order_by(ArticleCompany.md_tm.asc()) if kwargs[
                                                                               'sort']['date'] == 'asc' else sub_query.order_by(
-                ArticleCompany.md_tm.desc())
+            ArticleCompany.md_tm.desc())
 
         else:
             sub_query = sub_query.order_by(expression.desc(ArticleCompany.md_tm))

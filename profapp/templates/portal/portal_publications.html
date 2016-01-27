@@ -31,31 +31,23 @@
             };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
-                    remoteData: $scope.sendData,
-                    remoteUrl: $scope.url_search_article({company_id: $scope.own_company_id}),
                     onRegisterApi: function (gridApi) {
                         $scope.setGridExtarnals(gridApi)
                     },
                     columnDefs: [
-                      { name: 'title', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
-                          displayName: 'Title',
-                          width: '35%', cellTemplate: '<div class="link" title="{{ row.entity.title }}"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.own_company_id,article_id:row.entity.id})}}" ng-bind="row.entity.title"></a></div>',
-                          filter: {type: uiGridConstants.filter.INPUT}
+                      { name: 'title', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'Title', width: '35%',
+                          type: 'link',
+                          href: 'url_details({company_id:grid.appScope.own_company_id,article_id:row.entity.id})',
+                          classes: 'link',
+                          filter: {type:'input'}
                       },
-                      { name: 'date',enableCellEdit: false, enableFiltering: false, displayName: 'Date' },
-                      { name: 'company', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
-                          displayName: 'Company',
-                          filter: $scope.filterForSelect(uiGridConstants)
+                      { name: 'date',enableCellEdit: false, displayName: 'Date', filter: {type:'date_range'}, filters: 2 },
+                      { name: 'company', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'Company',
+                          filter: {type:'select'}
                       },
-                      { name: 'publication_status', enableSorting: false, //editableCellTemplate: $scope.editableTemplate,
-                          //editDropdownValueLabel: 'value',
-                          //cellTemplate: $scope.selectRowTemplate,
-                          displayName: 'Publication Status',
-                          enableCellEdit: false,
-                          enableColumnMenu: false,
-                          filter: $scope.filterForSelect(uiGridConstants)
+                      { name: 'publication_status', enableSorting: false,displayName: 'Publication Status', enableCellEdit: false, enableColumnMenu: false,
+                          filter: {type:'select'}
                       }
-
                     ]
                   });
 
@@ -66,11 +58,9 @@
     </script>
     {% include 'company/company_base_angular.html' %}
     {% raw %}
-    <div ng-init="sendData(all_grid_data)" ng-controller="article_list">
+    <div ng-controller="article_list">
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
-        <div ng-if="load_contr">
-            <div class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1" ></div>
-        </div>
+        <div class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1" ></div>
     </div>
     {% endraw %}
 

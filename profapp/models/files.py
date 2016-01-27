@@ -502,6 +502,7 @@ class File(Base, PRBase):
                             size=size
                             ).save()
             file_cont = FileContent(file=file, content=self.stream.read(-1))
+            print(str(file_cont.content))
             g.db.add(file, file_cont)
             g.db.commit()
             return file
