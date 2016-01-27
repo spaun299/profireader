@@ -1,15 +1,9 @@
-from flask import render_template, jsonify, request, session, redirect, url_for, g, flash
+from flask import render_template, request, session, redirect, url_for, g, flash
 from .blueprints_declaration import general_bp
-from flask.ext.login import current_user, login_required
-from ..models.portal import Portal, UserPortalReader, ReaderUserPortalPlan, PortalDivision
-from ..models.articles import Article, ArticlePortalDivision
-from config import Config
+from flask.ext.login import login_required
+from ..models.portal import Portal, UserPortalReader, ReaderUserPortalPlan
 from profapp.controllers.errors import BadDataProvided
-from .pagination import pagination
-from collections import OrderedDict
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
-from sqlalchemy import text
-from utils.db_utils import db
+from utils.email import SendEmail
 
 
 @general_bp.route('help/')
@@ -56,3 +50,9 @@ def reader_subscribe(portal_id):
         flash('You have successfully subscribed to this portal')
 
     return redirect(url_for('general.index'))
+
+
+@general_bp.route('/send_email_create_portal')
+@login_required
+def send_email_create_portal():
+    return render_template('general/send_email_create_portal.html')
