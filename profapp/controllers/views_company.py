@@ -77,6 +77,16 @@ def materials_load(json, company_id):
     page = json.get('paginationOptions')['pageNumber']
     pageSize = json.get('paginationOptions')['pageSize']
     search_text = json.get('search_text')
+
+
+    # subquery = ArticleCompany.grid_subquery(json.get('filter'), json.get('sort'),
+    #                                    filter = {'publication_status': {'type': 'input', 'join': (ArticlePortalDivision,
+    #                                    ArticlePortalDivision.article_company_id == ArticleCompany.id)}})
+    # if json.get('grid_data')['new_status']:
+    #     ArticleCompany.update_article(
+    #         company_id=company_id,
+    #         article_id=json.get('article_id'),
+    #         **{'status': json.get('grid_data')['new_status']})
     params = {}
     params['sort'] = {}
     params['filter'] = {}
@@ -87,11 +97,6 @@ def materials_load(json, company_id):
         for b in json.get('filter'):
             if json.get('filter')[b] != '-- all --':
                 params['filter'][b] = json.get('filter')[b]
-    # if json.get('grid_data')['new_status']:
-    #     ArticleCompany.update_article(
-    #         company_id=company_id,
-    #         article_id=json.get('article_id'),
-    #         **{'status': json.get('grid_data')['new_status']})
     subquery = ArticleCompany.subquery_company_materials(search_text=search_text,
                                                         company_id=company_id,
                                                         **params)

@@ -19,14 +19,6 @@ def profile(user_id):
         abort(404)
     return render_template('general/user_profile.html', user=user, avatar_size=AVATAR_SIZE)
 
-@user_bp.route('/avatar_update')
-@ok
-def avatar_update(json):
-    image = json.get('update_image')
-    user = json.get('user')
-    return user.avatar_update(image)
-
-
 # TODO (AA to AA): Here admin must have the possibility to change user profile
 @user_bp.route('/edit-profile/<user_id>', methods=['GET', 'POST'])
 @tos_required

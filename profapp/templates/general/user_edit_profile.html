@@ -13,12 +13,9 @@
     module.controller('edit_user', ['$scope', function ($scope) {
 
 
-            $scope.update_url = {{ raw_url_for('user.avatar_update')|safe }};
+{#            $scope.update_url = {{ raw_url_for('user.avatar_update')|safe }};#}
 
             $scope.data = {};
-            $scope.sendData = function(){
-                $scope.data['image'] = $('#fileToUpload')[0]['files'][0]
-            };
 
             $scope.afterLoad = function (resp, deff) {
                 deff(resp);

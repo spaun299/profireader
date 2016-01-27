@@ -482,6 +482,7 @@ class User(Base, UserMixin, PRBase):
         if passed_file:
             list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
             self.profireader_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
+            print(passed_file)
             self.profireader_small_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
         else:
             list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
