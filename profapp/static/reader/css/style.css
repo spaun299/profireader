@@ -525,7 +525,17 @@ footer .promo {
     margin-bottom: 15px;
     text-align: center;
 }
-
+.block-item .item-additional-info-top .item-favorite {
+    position: relative;
+    /*display: inline-block;*/
+    right: 0;
+    /*position: relative;*/
+    display: inline-block;
+    /*float: right;*/
+    margin-top: -27px;
+    margin-left: 200px;
+    padding-left: 18px;
+}
 .block-item .item-additional-info .item-company,
 .block-item .item-additional-info-top .item-company {
     /*float: left;*/

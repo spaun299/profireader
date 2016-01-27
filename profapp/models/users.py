@@ -5,10 +5,11 @@ from sqlalchemy.orm import relationship, backref
 from flask.ext.login import logout_user
 from flask import session, json
 from urllib import request as req
+from config import Config
 import re
 
 # from db_init import Base, g.db
-
+from authomatic.providers import oauth2
 from ..constants.TABLE_TYPES import TABLE_TYPES
 from ..constants.SOCIAL_NETWORKS import SOCIAL_NETWORKS, SOC_NET_NONE
 from ..constants.USER_REGISTERED import REGISTERED_WITH_FLIPPED, \
@@ -285,23 +286,52 @@ class User(Base, UserMixin, PRBase):
         g.db.add(self)
         g.db.commit()
 
-    def avatar(self, size=100):
-        logged_via = REGISTERED_WITH[self.logged_in_via()]
-        if logged_via == 'facebook':
-            avatar = json.load(req.urlopen(
-                url='//graph.facebook.com/{facebook_id}/picture?width={size}&height={size}&redirect=0'.
-                    format(facebook_id=self.facebook_id, size=size)))
+    def avatar(self, avatar_via, size=500, small_size=100, url=None):
+        avatar_urls = dict(facebook=lambda s: 'http://graph.facebook.com/{facebook_id}/picture?width={size}&'
+                                              'height={size}&redirect=0'.format(facebook_id=self.facebook_id, size=s),
+                           google=lambda s: 'https://www.googleapis.com/plus/v1/people/{google_id}?'
+                                            'fields=image&key={key}'.format(google_id=self.google_id,
+                                                                            size=s, key=Config.GOOGLE_API_KEY_SIMPLE),
+                           linkedin=lambda s, u=url: u if u else self.gravatar(size=s),
+                           gravatar=lambda s: self.gravatar(size=s),
+                           microsoft=lambda _: 'https://apis.live.net/v5.0/{microsoft_id}/picture'.format(
+                               microsoft_id=self.microsoft_id))
+        url = avatar_urls[avatar_via](size)
+        url_small = avatar_urls[avatar_via](small_size)
+        if avatar_via == 'facebook':
+            avatar = json.load(req.urlopen(url=url))
+            avatar_small = json.load(req.urlopen(url=url_small))
             if avatar['data'].get('is_silhouette'):
-                avatar = self.gravatar(size=size)
+                self.profireader_avatar_url = self.gravatar(size=size)
+                self.profireader_small_avatar_url = self.gravatar(size=small_size)
             else:
-                avatar = avatar['data'].get('url')
-        else:
-            avatar = self.profireader_avatar_url#self.gravatar(size=size)
+                self.profireader_avatar_url = avatar['data'].get('url')
+                self.profireader_small_avatar_url = avatar_small['data'].get('url')
+        elif avatar_via == 'google':
+            avatar = json.load(req.urlopen(url=url))
+            avatar_small = json.load(req.urlopen(url=url_small))
+            if avatar['image'].get('isDefault'):
+                self.profireader_avatar_url = self.gravatar(size=size)
+                self.profireader_small_avatar_url = self.gravatar(size=small_size)
+            else:
+                self.profireader_avatar_url = avatar['image'].get('url')
+                self.profireader_small_avatar_url = avatar_small['image'].get('url')
+        elif avatar_via == 'linkedin':
+            self.profireader_avatar_url = url
+            self.profireader_small_avatar_url = url
+        elif avatar_via == 'microsoft':
+            avatar = req.urlopen(url=url)
+            if 'Default' not in avatar.url:
+                self.profireader_avatar_url = avatar.url
+                self.profireader_small_avatar_url = avatar.url
+            else:
+                self.profireader_avatar_url = self.gravatar(size=size)
+                self.profireader_small_avatar_url = self.gravatar(size=small_size)
+        elif avatar_via == 'gravatar':
+            self.profireader_avatar_url = url
+            self.profireader_small_avatar_url = url_small
 
-        # if logged_via == 'google':
-        #     avatar = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
-        #     avatar = avatar['data'].get('url')
-        return avatar
+        return self
 
     def gravatar(self, size=100, default='identicon', rating='g'):
         if request.is_secure:

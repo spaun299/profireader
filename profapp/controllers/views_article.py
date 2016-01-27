@@ -1,7 +1,8 @@
-from flask import render_template, redirect, url_for, request, g, make_response
-from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision
+from flask import render_template, redirect, url_for, request, g, make_response, json, jsonify, session
+from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision, ReaderArticlePortalDivision
 from profapp.models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
-from profapp.models.portal import PortalDivision
+from profapp.models.portal import PortalDivision, UserPortalReader, Portal, MemberCompanyPortal
+
 from .blueprints_declaration import article_bp
 from .request_wrapers import ok, tos_required
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
@@ -9,66 +10,70 @@ from .pagination import pagination
 from config import Config
 from .views_file import crop_image, update_croped_image
 from ..models.files import ImageCroped
+from ..models.company import Company
 from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
 from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
 from sqlalchemy.sql import expression
-from sqlalchemy import and_
-
+from sqlalchemy import text
+from collections import OrderedDict
 import time
 
 
-@article_bp.route('/list/', methods=['GET'])
+# @article_bp.route('/list/', methods=['GET'])
+# @tos_required
+# def show_mine():
+#     return render_template('article/list.html')
+#
+#
+# @article_bp.route('/list/', methods=['POST'])
+# @ok
+# def load_mine(json):
+#     page = json.get('paginationOptions')['pageNumber']
+#     pageSize = json.get('paginationOptions')['pageSize']
+#     search_text = json.get('search_text')
+#     params = {'user_id': g.user_dict['id']}
+#     params['sort'] = {}
+#     params['filter'] = {}
+#     if json.get('sort'):
+#         for n in json.get('sort'):
+#             params['sort'][n] = json.get('sort')[n]
+#     if json.get('filter'):
+#         for b in json.get('filter'):
+#             if json.get('filter')[b] != '-- all --':
+#                 params['filter'][b] = json.get('filter')[b]
+#     subquery = ArticleCompany.subquery_user_articles(search_text=search_text, **params)
+#     articles, pages, current_page = pagination(subquery,
+#                                                page=page, items_per_page=pageSize)
+#     add_param = {'value': '1', 'label': '-- all --'}
+#     statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
+#     company_list_for_grid = Article.list_for_grid_tables(
+#             ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
+#     articles_drid_data = Article.getListGridDataArticles(articles.all())
+#     grid_filters = {'company': company_list_for_grid, 'status': statuses}
+#     return {'grid_data': articles_drid_data,
+#             'grid_filters': grid_filters,
+#             'total': subquery.count()}
+
+
+@article_bp.route('/material_create/<string:company_id>/', methods=['GET'])
+@article_bp.route('/material_update/<string:material_id>/', methods=['GET'])
+@article_bp.route('/publication_update/<string:publication_id>/', methods=['GET'])
 @tos_required
-def show_mine():
-    return render_template('article/list.html')
+def article_show_form(material_id=None, publication_id=None, company_id=None):
+    company = Company.get(company_id if company_id else (
+        ArticlePortalDivision.get(publication_id) if publication_id else ArticleCompany.get(material_id)).company.id)
+    return render_template('article/form.html',
+                           material_id=material_id, company_id=company_id, publication_id=publication_id,
+                           company=company)
 
 
-@article_bp.route('/list/', methods=['POST'])
-@ok
-def load_mine(json):
-    page = json.get('paginationOptions')['pageNumber']
-    pageSize = json.get('paginationOptions')['pageSize']
-    search_text = json.get('search_text')
-    params = {'user_id': g.user_dict['id']}
-    params['sort'] = {}
-    params['filter'] = {}
-    if json.get('sort'):
-        for n in json.get('sort'):
-            params['sort'][n] = json.get('sort')[n]
-    if json.get('filter'):
-        for b in json.get('filter'):
-            if json.get('filter')[b] != '-- all --':
-                params['filter'][b] = json.get('filter')[b]
-    subquery = ArticleCompany.subquery_user_articles(search_text=search_text,**params)
-    articles, pages, current_page = pagination(subquery,
-                                               page=page, items_per_page=pageSize)
-    add_param = {'value': '1', 'label': '-- all --'}
-    statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    company_list_for_grid = Article.list_for_grid_tables(ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
-    articles_drid_data = Article.getListGridDataArticles(articles.all())
-    grid_filters = {'company': company_list_for_grid,'status': statuses}
-    return {'grid_data': articles_drid_data,
-            'grid_filters': grid_filters,
-            'total': subquery.count()}
-
-
-@article_bp.route('/update/<string:article_company_id>/', methods=['GET'])
-@article_bp.route('/updateatportal/<string:article_portal_division_id>/', methods=['GET'])
-@article_bp.route('/create/', methods=['GET'])
+@article_bp.route('/material_update/<string:material_id>/', methods=['POST'])
+@article_bp.route('/publication_update/<string:publication_id>/', methods=['POST'])
+@article_bp.route('/material_create/company/<string:company_id>/', methods=['POST'])
 @tos_required
-def article_show_form(article_company_id=None, article_portal_division_id=None):
-    return render_template('article/form.html', article_portal_division_id=article_portal_division_id,
-                           article_company_id=(article_company_id or article_portal_division_id))
-
-
-@article_bp.route('/create/', methods=['POST'])
-@article_bp.route('/update_mine/<string:mine_version_article_company_id>/', methods=['POST'])
-@article_bp.route('/update/<string:article_company_id>/', methods=['POST'])
-@article_bp.route('/updateatportal/<string:article_portal_division_id>/', methods=['POST'])
 @ok
-def load_form_create(json, article_company_id=None, mine_version_article_company_id=None,
-                     article_portal_division_id=None):
+def load_form_create(json, company_id=None, material_id=None, publication_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
 
     def portal_division_dict(article, tags=None):
@@ -85,25 +90,22 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
 
     available_tag_names = None
 
-    if article_company_id:  # companys version. always updating existing
-        articleVersion = ArticleCompany.get(article_company_id)
-    elif mine_version_article_company_id:  # updating personal version
-        articleVersion = ArticleCompany.get(mine_version_article_company_id)
-    elif article_portal_division_id:  # updating portal version
-        articleVersion = ArticlePortalDivision.get(article_portal_division_id)
+    if company_id:  # creating material version
+        articleVersion = ArticleCompany(company_id=company_id, editor=g.user, article=Article(author_user_id=g.user.id))
+    elif material_id:  # companys version. always updating existing
+        articleVersion = ArticleCompany.get(material_id)
+    elif publication_id:  # updating portal version
+        articleVersion = ArticlePortalDivision.get(publication_id)
         portal_division_id = articleVersion.portal_division_id
 
         article_tag_names = articleVersion.tags
         available_tags = PortalDivision.get(portal_division_id).portal_division_tags
         available_tag_names = list(map(lambda x: getattr(x, 'name', ''), available_tags))
 
-    else:  # creating personal version
-        articleVersion = ArticleCompany(editor=g.user, article=Article(author_user_id=g.user.id))
-
     if action == 'load':
         article_dict = articleVersion.get_client_side_dict(more_fields='long|company')
 
-        if article_portal_division_id:
+        if publication_id:
             article_dict = dict(list(article_dict.items()) + [('tags', article_tag_names)])
 
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
@@ -125,12 +127,12 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                 'image': image_dict,
                 'portal_division': portal_division_dict(articleVersion, available_tag_names)}
     else:
-        parameters = g.filter_json(json, 'article.title|short|long|keywords, image.*')
-
+        parameters = g.filter_json(json, 'article.title|subtitle|short|long|keywords, image.*')
         articleVersion.attr(parameters['article'])
+
         if action == 'validate':
             articleVersion.detach()
-            return articleVersion.validate(article_company_id is None)
+            return articleVersion.validate(articleVersion.id is not None)
         else:
             image_id = parameters['image'].get('image_file_id')
             # TODO: VK by OZ: this code dont work if ArticlePortalDivision updated
@@ -143,11 +145,56 @@ def load_form_create(json, article_company_id=None, mine_version_article_company
                 tag_names = json['article']['tags']
                 articleVersion.manage_article_tags(tag_names)
 
-            a = articleVersion.save()
-            if article_portal_division_id:
-                articleVersion.insert_after(json['portal_division']['insert_after'], articleVersion.position_unique_filter())
+            articleVersion.save()
+            if publication_id:
+                articleVersion.insert_after(json['portal_division']['insert_after'],
+                                            articleVersion.position_unique_filter())
             return {'article': articleVersion.save().get_client_side_dict(more_fields='long'), 'image': json['image'],
                     'portal_division': portal_division_dict(articleVersion)}
+
+
+@article_bp.route('/material_details/<string:material_id>/', methods=['GET'])
+@tos_required
+# @check_rights(simple_permissions([]))
+def material_details(material_id):
+    return render_template('company/material_details.html',
+                           article_id=material_id,
+                           company=Company.get(ArticleCompany.get(material_id).company.id))
+
+
+@article_bp.route('/material_details/<string:material_id>/', methods=['POST'])
+@ok
+# @check_rights(simple_permissions([]))
+def load_material_details(json, material_id):
+    article = ArticleCompany.get(material_id)
+    portals = {port.portal_id: port.portal.get_client_side_dict() for port in
+               MemberCompanyPortal.get_portals(article.company_id)}
+
+    joined_portals = {}
+    if article.portal_article:
+        joined_portals = {articles.division.portal.id: portals.pop(articles.division.portal.id)
+                          for articles in article.portal_article
+                          if articles.division.portal.id in portals}
+
+    user_rights = list(g.user.user_rights_in_company(article.company_id))
+
+    return {'article': article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+                                                           'company_id, long,'
+                                                           'editor_user_id, company.name|id,'
+                                                           'portal_article.id, portal_article.division.name, '
+                                                           'portal_article.division.portal.name,'
+                                                           'portal_article.status'),
+            # 'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_chage_status_to(article['status']),
+            'portals': portals,
+            'company': Company.get(article.company_id).get_client_side_dict(fields='id, employees.id|profireader_name'),
+            'selected_portal': {},
+            'selected_division': {},
+            # 'user_rights': ['publish', 'unpublish', 'edit'],
+            # TODO: uncomment the string below and delete above
+            # TODO: when all works with rights are finished
+            'user_rights': user_rights,
+            'send_to_user': {},
+            'joined_portals': joined_portals}
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
@@ -167,7 +214,7 @@ def details_load(json, article_id):
 @ok
 def search_for_company_to_submit(json):
     companies = Article().search_for_company_to_submit(
-        g.user_dict['id'], json['article_id'], json['search'])
+            g.user_dict['id'], json['article_id'], json['search'])
     return companies
 
 
@@ -189,3 +236,60 @@ def resubmit_to_company(json, article_company_id):
                         ARTICLE_STATUS_IN_COMPANY.declined)
     a.status = ARTICLE_STATUS_IN_COMPANY.submitted
     return {'article': a.save().get_client_side_dict()}
+
+
+@article_bp.route('/details_reader/<string:article_portal_division_id>')
+def details_reader(article_portal_division_id):
+    article = ArticlePortalDivision.get(article_portal_division_id)
+    article.add_recently_read_articles_to_session()
+    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+                                                       'publishing_tm, keywords, status, long, image_file_id,'
+                                                       'division.name, division.portal.id,'
+                                                       'company.name|id')
+    article_dict['tags'] = article.tags
+    ReaderArticlePortalDivision.add_to_table_if_not_exists(article_portal_division_id)
+    favorite = article.check_favorite_status(user_id=g.user.id)
+
+    return render_template('partials/reader/reader_details.html',
+                           article=article_dict,
+                           favorite=favorite
+                           )
+
+
+@article_bp.route('/list_reader')
+@article_bp.route('/list_reader/<int:page>/')
+def list_reader(page=1):
+    if not request.args.get('favorite'):
+        sub_query = db(ArticlePortalDivision, status=ARTICLE_STATUS_IN_PORTAL.published). \
+            join(PortalDivision). \
+            join(Portal). \
+            join(UserPortalReader). \
+            filter(UserPortalReader.user_id == g.user_dict['id']). \
+            order_by(ArticlePortalDivision.publishing_tm.desc()). \
+            filter(text(' "publishing_tm" < clock_timestamp() '))
+    else:
+        sub_query = ReaderArticlePortalDivision.subquery_favorite_articles()
+
+    articles, pages, page = pagination(query=sub_query, page=page)
+
+    ordered_articles = OrderedDict()
+    for a in articles:
+        ordered_articles[a.id] = dict(list(a.get_client_side_dict(more_fields='read_count,portal.host').items()) +
+                                      list({'tags': a.tags}.items()))
+    portals = UserPortalReader.get_portals_for_user() if not ordered_articles else None
+
+    return render_template('partials/reader/reader_base.html',
+                           articles=ordered_articles,
+                           pages=pages,
+                           current_page=page,
+                           page_buttons=Config.PAGINATION_BUTTONS,
+                           portals=portals
+                           )
+
+
+@article_bp.route('add_to_favorite/', methods=['POST'])
+def add_delete_favorite():
+    favorite = json.loads(request.form.get('favorite'))
+    article_portal_division_id = request.form.get('article_portal_division_id')
+    ReaderArticlePortalDivision.add_delete_favorite_user_article(article_portal_division_id, favorite)
+    return jsonify({'favorite': favorite})

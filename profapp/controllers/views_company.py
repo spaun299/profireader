@@ -10,7 +10,7 @@ from flask.ext.login import login_required
 from ..models.articles import Article
 from ..models.portal import PortalDivision
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
-from ..models.portal import Portal, MemberCompanyPortal, UserPortalReader
+
 from ..models.articles import ArticleCompany, ArticlePortalDivision
 from utils.db_utils import db
 from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
@@ -28,6 +28,7 @@ import base64
 from PIL import Image
 from io import BytesIO
 import re
+
 
 @company_bp.route('/search_to_submit_article/', methods=['POST'])
 @login_required
@@ -62,33 +63,30 @@ def load_companies(json):
             'user_id': g.user_dict['id']}
 
 
-@company_bp.route('/materials/<string:company_id>/', methods=['GET'])
+@company_bp.route('/<string:company_id>/materials/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def materials(company_id):
-    company = db(Company, id=company_id).one()
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
-    return render_template(
-        'company/materials.html',
-        company=company,
-        company_id=company_id,
-        angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js',
-        company_logo=company_logo
-    )
+    return render_template('company/materials.html', company=db(Company, id=company_id).one(),
+                           angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js')
 
-
-@company_bp.route('/materials/<string:company_id>/', methods=['POST'])
-@login_required
+@company_bp.route('/<string:company_id>/materials/', methods=['POST'])
 @ok
 def materials_load(json, company_id):
-    company = db(Company, id=company_id).one()
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
     page = json.get('paginationOptions')['pageNumber']
     pageSize = json.get('paginationOptions')['pageSize']
     search_text = json.get('search_text')
+
+
+    # subquery = ArticleCompany.grid_subquery(json.get('filter'), json.get('sort'),
+    #                                    filter = {'publication_status': {'type': 'input', 'join': (ArticlePortalDivision,
+    #                                    ArticlePortalDivision.article_company_id == ArticleCompany.id)}})
+    # if json.get('grid_data')['new_status']:
+    #     ArticleCompany.update_article(
+    #         company_id=company_id,
+    #         article_id=json.get('article_id'),
+    #         **{'status': json.get('grid_data')['new_status']})
     params = {}
     params['sort'] = {}
     params['filter'] = {}
@@ -99,90 +97,23 @@ def materials_load(json, company_id):
         for b in json.get('filter'):
             if json.get('filter')[b] != '-- all --':
                 params['filter'][b] = json.get('filter')[b]
-    # if json.get('grid_data')['new_status']:
-    #     ArticleCompany.update_article(
-    #         company_id=company_id,
-    #         article_id=json.get('article_id'),
-    #         **{'status': json.get('grid_data')['new_status']})
-    subquery = ArticleCompany.subquery_company_articles(search_text=search_text,
+    subquery = ArticleCompany.subquery_company_materials(search_text=search_text,
                                                         company_id=company_id,
                                                         **params)
-    articles, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
+    materials, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
 
     add_param = {'value': '1', 'label': '-- all --'}
     statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
     portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id),
                                              add_param, True)
     gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
-    grid_data = Article.getListGridDataMaterials(articles)
-    grid_filters = {'portals': portals_g,'material_status': statuses_g, 'publication_status': gr_publ_st}
+    grid_data = Article.getListGridDataMaterials(materials)
+    grid_filters = {'portals': portals_g, 'material_status': statuses_g, 'publication_status': gr_publ_st}
     return {'grid_data': grid_data,
             'grid_filters': grid_filters,
             'total': subquery.count()
             }
 
-
-@company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['GET'])
-@tos_required
-@login_required
-# @check_rights(simple_permissions([]))
-def material_details(company_id, article_id):
-    company = db(Company, id=company_id).one()
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
-    return render_template('company/material_details.html',
-                           company_id=company_id,
-                           article_id=article_id,
-                           company_logo=company_logo,
-                           company_name=company.name,
-                           company=company)
-
-
-# TODO: VK by OZ: remove company_* kwargs
-
-
-
-@company_bp.route('/material_details/<string:company_id>/<string:article_id>/', methods=['POST'])
-@login_required
-@ok
-# @check_rights(simple_permissions([]))
-def load_material_details(json, company_id, article_id):
-    article = Article.get_one_article(article_id)
-    portals = {port.portal_id: port.portal.get_client_side_dict() for port in
-               MemberCompanyPortal.get_portals(company_id)}
-
-    joined_portals = {}
-    if article.portal_article:
-        joined_portals = {articles.division.portal.id: portals.pop(articles.division.portal.id)
-                          for articles in article.portal_article
-                          if articles.division.portal.id in portals}
-
-    article = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
-                                                  'company_id, status, long,'
-                                                  'editor_user_id, company.name|id,'
-                                                  'portal_article.id, portal_article.division.name, '
-                                                  'portal_article.division.portal.name,'
-                                                  'portal_article.status')
-
-    user_rights = list(g.user.user_rights_in_company(company_id))
-
-    company = db(Company, id=company_id).one()
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
-
-    return {'article': article,
-            'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(article['status']),
-            'portals': portals,
-            'company': Company.get(company_id).get_client_side_dict(fields='id, employees.id|profireader_name'),
-            'selected_portal': {},
-            'selected_division': {},
-            # 'user_rights': ['publish', 'unpublish', 'edit'],
-            # TODO: uncomment the string below and delete above
-            # TODO: when all works with rights are finished
-            'user_rights': user_rights,
-            'send_to_user': {},
-            'joined_portals': joined_portals,
-            'company_logo': company_logo}
 
 
 @company_bp.route('/<string:article_portal_division_id>/', methods=['POST'])
@@ -197,7 +128,9 @@ def delete_atricle_from_portal(json, article_portal_division_id):
         if json[article]['id'] == article_portal_division_id:
             del new_json[article]
     return new_json
-#file_author_user_id_fkey	FOREIGN KEY (author_user_id) REFERENCES "user"(id)
+
+
+# file_author_user_id_fkey	FOREIGN KEY (author_user_id) REFERENCES "user"(id)
 
 @company_bp.route('/get_tags/<string:portal_division_id>', methods=['POST'])
 @login_required
@@ -218,9 +151,9 @@ def update_material_status(json, company_id, article_id):
     allowed_statuses = ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(json['new_status'])
 
     ArticleCompany.update_article(
-        company_id=company_id,
-        article_id=article_id,
-        **{'status': json['new_status']})
+            company_id=company_id,
+            article_id=article_id,
+            **{'status': json['new_status']})
 
     return {'article_new_status': json['new_status'],
             'allowed_statuses': allowed_statuses,
@@ -232,19 +165,10 @@ def update_material_status(json, company_id, article_id):
 @login_required
 # @check_rights(simple_permissions(['manage_rights_company']))
 def profile(company_id):
-    company = db(Company, id=company_id).one()
     user_rights = list(g.user.user_rights_in_company(company_id))
-    # company_logo = File.get(company.logo_file).url() \
-    #     if company.logo_file else '/static/images/company_no_logo.png'
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
     return render_template('company/company_profile.html',
-                           company=company,
-                           user_rights=user_rights,
-                           company_logo=company_logo,
-                           company_id=company_id,
-                           company_name=company.name
-                           )
+                           company=db(Company, id=company_id).one(),
+                           user_rights=user_rights)
 
 
 @company_bp.route('/employees/<string:company_id>/')
@@ -265,21 +189,13 @@ def employees(company_id):
 
     user_id = current_user.get_id()
     curr_user = {user_id: company_user_rights[user_id]}
-    current_company = db(Company, id=company_id).one()
-
-    company_logo = current_company.logo_file_relationship.url() \
-        if current_company.logo_file_id else '/static/images/company_no_logo.png'
 
     return render_template('company/company_employees.html',
-                           company=current_company,
-                           company_id=company_id,
+                           company=db(Company, id=company_id).one(),
                            company_user_rights=company_user_rights,
                            curr_user=curr_user,
                            Right=Right,
-                           RightHumnReadible=RightHumnReadible,
-                           company_logo=company_logo,
-                           company_name=current_company.name
-                           )
+                           RightHumnReadible=RightHumnReadible)
 
 
 @company_bp.route('/update_rights', methods=['POST'])
@@ -306,10 +222,9 @@ def update_rights():
 # @check_rights(simple_permissions([]))
 def update(company_id=None):
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
-    user_have_comp = True if len(user_companies)>0 else False
-    user_have_comp = False
+    user_have_comp = True if len(user_companies) > 0 else False
     company = db(Company, id=company_id).first()
-    return render_template('company/company_edit.html', company_id=company_id,user_comp=user_have_comp,
+    return render_template('company/company_edit.html', company_id=company_id, user_comp=user_have_comp,
                            company_name=company.name if company else '',
                            company=company if company else {})
 
@@ -321,7 +236,6 @@ def update(company_id=None):
 def load(json, company_id=None):
     action = g.req('action', allowed=['load', 'validate', 'save'])
     company = Company() if company_id is None else Company.get(company_id)
-    print(action)
     if action == 'load':
         company_dict = company.get_client_side_dict()
         image_dict = {'ratio': Config.IMAGE_EDITOR_RATIO, 'coordinates': None,
@@ -351,11 +265,11 @@ def load(json, company_id=None):
                 if company_id is None:
                     company.setup_new_company()
                 company.save().get_client_side_dict()
-                imgdataContent =json['image']['dataContent']
+                imgdataContent = json['image']['dataContent']
                 image_data = re.sub('^data:image/.+;base64,', '', imgdataContent)
                 bb = base64.b64decode(image_data)
                 new_comp = db(Company, id=company.id).first()
-                file_id = File.uploadForCompany(bb,json['image']['name'], json['image']['type'], new_comp)
+                file_id = File.uploadForCompany(bb, json['image']['name'], json['image']['type'], new_comp)
                 logo_id = crop_image(file_id, json['image']['coordinates'])
                 new_comp.updates({'logo_file_id': logo_id})
             else:
@@ -515,10 +429,6 @@ def load_suspended_employees(json, company_id):
 # @check_rights(simple_permissions([]))
 def readers(company_id, page=1):
     company = Company.get(company_id)
-    company_dict = company.get_client_side_dict('name')
-    company_logo = company.logo_file_relationship.url() \
-        if company.logo_file_id else '/static/images/company_no_logo.png'
-
     company_readers, pages, page = pagination(query=company.readers_query, page=page)
 
     reader_fields = ('id', 'email', 'nickname', 'first_name', 'last_name')
@@ -526,8 +436,6 @@ def readers(company_id, page=1):
 
     return render_template('company/company_readers.html',
                            company=company,
-                           company_id=company_id,
-                           company_logo=company_logo,
                            companyReaders=company_readers_list_dict,
                            pages=pages,
                            current_page=page,

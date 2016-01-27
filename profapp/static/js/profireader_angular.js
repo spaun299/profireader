@@ -148,7 +148,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
 
                 var $image = $('img', element);
                 var $inputImage = $('input', element);
-                console.log($inputImage)
 
                 var URL = window.URL || window.webkitURL;
                 var blobURL;
@@ -167,7 +166,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     var files = this.files;
                     var file;
                     var ff = $('input#inputImage').prop('files')[0];
-                    console.log(ff)
                     if (files && files.length) {
                         file = files[0];
                         var fr = new FileReader();
@@ -587,7 +585,7 @@ function file_choose(selectedfile) {
 
 // 'ui.select' uses "/static/js/select.js" included in index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
-module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select', 'ajaxFormModule', 'profireaderdirectives', 'xeditable', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView', 'ui.slider']);
+module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ajaxFormModule', 'profireaderdirectives', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView', 'ui.slider']);
 
 module.config(function ($provide) {
     $provide.decorator('$controller', function ($delegate) {
@@ -1008,7 +1006,7 @@ function pr_dictionary(phrase, dict, allow_html, scope, $ok) {
     }
 }
 
-module.run(function ($rootScope, $ok, $sce, $modal, $sanitize, $timeout) {
+module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
     angular.extend($rootScope, {
         fileUrl: function (file_id, down, if_no_file) {
@@ -1094,10 +1092,10 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize, $timeout) {
                             '<button class="btn btn-group" ng-click="grid.appScope.filterForGridRange(col)" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined || col.filters[1].term === null || col.filters[1].term === \'\' || col.filters[0].term === null || col.filters[0].term === \'\'">Filter</button> <button class="btn btn-group" ng-click="grid.appScope.refreshGrid(col)">Refresh</button>'
                     }
                 }
-                if(col[i].type === 'link'){
+                if(col[i].type === 'link') {
                     var link = 'grid.appScope.'+col[i].href;
                     scope.hideGridLinkIf = col[i].hideIf;
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+col[i].classes+'" title="{{ COL_FIELD }}"><a ng-if="grid.appScope.hideGridLinkIf !== COL_FIELD" href="{{'+link+'}}" ng-bind="COL_FIELD "></a><div ng-if="grid.appScope.hideGridLinkIf === COL_FIELD">{{ COL_FIELD }}</div></div>'
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+col[i].classes+'" title="{{ COL_FIELD }}"><a ng-if="grid.appScope.hideGridLinkIf !== COL_FIELD" href="{{'+link+'}}" ng-bind="COL_FIELD"></a><div ng-if="grid.appScope.hideGridLinkIf === COL_FIELD">{{ COL_FIELD }}</div></div>'
                 }else if(col[i].type === 'img'){
                     scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+col[i].classes+'" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
                 }else if(col[i].type === 'editable'){
@@ -1117,7 +1115,6 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize, $timeout) {
             var col = scope.gridOptions1.columnDefs;
             scope.gridOptions1.totalItems = resp.total;
             if(resp.page){
-                console.log(resp.page)
                 scope.gridOptions1.pageNumber = resp.page;
                 scope.gridOptions1.paginationCurrentPage = resp.page;
             }
@@ -1196,7 +1193,7 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize, $timeout) {
                             to = new Date(grid.columns[i].filters[1].term).getTime();
                             var error = from - to > 0;
                             scope.all_grid_data['filter'][field] = {'from':from, 'to':to};
-                            error ? alert('You push wrong date!!'): scope.sendData(scope.all_grid_data)
+                            error ? add_message('You push wrong date', 'danger', 3000): scope.sendData(scope.all_grid_data)
                         }
                     }
                     if (term !== undefined) {
@@ -1230,12 +1227,16 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize, $timeout) {
             data: 'datas.grid_data',
             paginationPageSizes: [1 ,10, 25, 50, 75, 100, 1000],
             paginationPageSize: 50,
+            enableColumnMenu: false,
             enableFiltering: true,
             enableCellEdit: false,
             useExternalPagination: true,
             useExternalSorting: true,
             useExternalFiltering: true,
+            enableColumnMenus: false,
             showTreeExpandNoChildren: false,
+            groupingShowGroupingMenus: false,
+            groupingShowAggregationMenus: false,
             columnDefs: []
         },
         all_grid_data: {
@@ -1266,7 +1267,7 @@ module.run(function ($rootScope, $ok, $sce, $modal, $sanitize, $timeout) {
             var callfor_ = callfor ? callfor : 'file_browse_image';
             var default_action_ = default_action ? default_action : 'file_browse_image';
             var root_id = id ? id : '';
-            scope.filemanagerModal = $modal.open({
+            scope.filemanagerModal = $uibModal.open({
                 templateUrl: 'filemanager.html',
                 controller: 'filemanagerCtrl',
                 size: 'filemanager-halfscreen',

@@ -1,17 +1,22 @@
 {% extends "index_lazy_layout.html" %}
 
-{% block title %}Profireader - Articles{% endblock title %}
+{% block title %}{{ _('Materials at %(company_name)s', {'company_name': company.name}) }}{% endblock title %}
 
 {% block portal_content %}
 
     <script>
-        module.controller('article_list', ['$scope', '$ok', '$timeout', function ($scope, $ok, $timeout) {
-            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
-            $scope.url_details = {{ raw_url_for('company.material_details')|safe }};
-            $scope.url_search_article = {{ raw_url_for('company.materials_load')|safe }};
-            $scope.url_edit_article_portal = {{ raw_url_for('article.article_show_form')|safe }};
+        module.controller('article_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
 
-            $scope.company_id = '{{ company_id }}';
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
+
+            $scope.url_search_article = {{ raw_url_for('company.materials_load')|safe }};
+
+            $scope.url_material_details = {{ raw_url_for('article.material_details')|safe }};
+            $scope.url_material_create = {{ raw_url_for('article.article_show_form')|safe }};
+            $scope.url_material_update = {{ raw_url_for('article.article_show_form')|safe }};
+            $scope.url_publication_update = {{ raw_url_for('article.article_show_form')|safe }};
+
+            $scope.company_id = '{{ company.id }}';
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
@@ -21,7 +26,7 @@
                 $scope.loading = true;
                 $ok($scope.url_search_article({company_id: $scope.company_id}), grid_data, function (resp) {
                     $scope.datas = resp;
-                    $scope.applyGridExtarnals($scope.datas);
+                    $scope.applyGridExtarnals(resp);
                 }).finally(function () {
                     $scope.loading = false;
                     $scope.load_contr = true;
@@ -34,31 +39,31 @@
                 },
                 columnDefs: [
                     {
-                        name: 'title', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, displayName: 'Title', width: '35%',
+                        name: 'title', displayName: 'Title', width: '35%',enableSorting: false,
                         type: 'link',
-                        href: 'url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})',
-                        classes: 'link',
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
+                        filter: {type: 'input'}
+                    },{
+                        name: 'author',enableSorting: false,
+                        displayName: 'Author',
                         filter: {type:'input'}
                     },{
-                        name: 'date', enableCellEdit: false, groupingShowAggregationMenu: false,
+                        name: 'date',enableColumnMenu: true,
                         displayName: 'Date',
-                        groupingShowGroupingMenu: false,
-                        filter: {type:'date_range'},
+                        filter:{type:'date_range'}
                     },{
-                        name: 'portals', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, displayName: 'Portals',
+                        name: 'portals', displayName: 'Portals',enableSorting: false,
                         type: 'link',
                         href: 'url_edit_article_portal({article_portal_division_id: row.entity.id})',
                         hideIf: 'not sent',
                         classes: 'link',
                         filter: {type:'select'}
                     },{
-                        name: 'publication_status', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
-                        displayName: 'Publication status',
-                        filter: {type:'select'}
+                        name: 'publication_status',enableSorting: false,
+                        filter: {type: 'select'}
                     },{
-                        name: 'material_status', enableSorting: false, displayName: 'Material status', enableCellEdit: false,
-                        enableColumnMenu: false,
-                        filter: {type:'multi_select'}
+                        name: 'publication_visibility', displayName: 'Publication visibility',enableSorting: false,
+                        filter: {type: 'select'}
                     }
                 ]
             });
@@ -69,6 +74,7 @@
     {% include 'company/company_base_angular.html' %}
     {% raw %}
     <div ng-controller="article_list">
+        <a href="{{ url_material_create({company_id: company_id}) }}">{{ _('Create new material') }}</a>
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
         <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
     </div>

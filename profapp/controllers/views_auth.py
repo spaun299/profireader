@@ -13,13 +13,11 @@ from ..utils.email import send_email
 from flask import jsonify
 import re
 from authomatic.adapters import WerkzeugAdapter
-
 from flask import redirect, make_response
 from flask.ext.login import login_user
 from ..constants.SOCIAL_NETWORKS import SOC_NET_NONE
 from ..constants.UNCATEGORIZED import AVATAR_SIZE, AVATAR_SMALL_SIZE
 from ..utils.redirect_url import redirect_url
-
 # def _session_saver():
 #    session.modified = True
 
@@ -33,6 +31,9 @@ def login_signup_general(*soc_network_names):
 
     response = make_response()
     registred_via_soc = False
+    logged_via_soc = list(filter(lambda x: x != 'profireader', soc_network_names))[0] \
+        if len(soc_network_names) > 1 else 'profireader'
+
     try:
         result = g.authomatic.login(WerkzeugAdapter(request, response), soc_network_names[-1])
         if result:
@@ -44,7 +45,6 @@ def login_signup_general(*soc_network_names):
                           "Please confirm email first or choose another way of authentication.")
                     # redirect(url_for('auth.login_signup_endpoint') + '?login_signup=login')
                     redirect(redirect_url())
-
                 db_fields = DB_FIELDS[soc_network_names[-1]]
                 # user = g.db.query(User).filter(getattr(User, db_fields['id']) == result_user.id).first()
                 user = g.db.query(User).filter(getattr(User, db_fields['email']) == result_user.email).first()
@@ -56,16 +56,15 @@ def login_signup_general(*soc_network_names):
                         user = User()
                     for elem in SOC_NET_FIELDS:
                         setattr(user, db_fields[elem], getattr(result_user, elem))
-
+                    registred_via_soc = len(soc_network_names) > 1
                     if ind:  # ToDo (AA): introduce field signup_via instead.
                         # Todo (AA): If signed_up not via profireader then...
-                        if soc_network_names[0] == 'profireader':
-                            db_fields_profireader = DB_FIELDS['profireader']
-                            for elem in SOC_NET_FIELDS_SHORT:
-                                setattr(user, db_fields_profireader[elem], getattr(result_user, elem))
-                        registred_via_soc = len(soc_network_names) > 1
-                        user.profireader_avatar_url = user.avatar(size=AVATAR_SIZE)
-                        user.profireader_small_avatar_url = user.avatar(size=AVATAR_SMALL_SIZE)
+                        db_fields_profireader = DB_FIELDS['profireader']
+                        for elem in SOC_NET_FIELDS_SHORT:
+                            setattr(user, db_fields_profireader[elem], getattr(result_user, elem))
+                        user.avatar(logged_via_soc or 'gravatar',
+                                    url=result_user.data.get('pictureUrl') if logged_via_soc == 'linkedin' else None,
+                                    size=AVATAR_SIZE, small_size=AVATAR_SMALL_SIZE)
 
                     g.db.add(user)
                     user.confirmed = True
@@ -78,7 +77,6 @@ def login_signup_general(*soc_network_names):
                     return redirect(url_for('general.index'))
 
                 login_user(user)
-                # session['logged_via'] = soc_network_names
                 flash('You have successfully logged in.')
 
                 # session['user_id'] = user.id assignment
@@ -159,8 +157,7 @@ def signup():
             PROFIREADER_ALL=profireader_all,
             password=signup_form.password.data  # # pass is automatically hashed
         )
-        user.profireader_avatar_url = user.avatar(size=AVATAR_SIZE)
-        user.profireader_small_avatar_url = user.avatar(size=AVATAR_SMALL_SIZE)
+        user.avatar('gravatar', size=AVATAR_SIZE, small_size=AVATAR_SMALL_SIZE)
         # # user.password = signup_form.password.data  # pass is automatically hashed
 
         g.db.add(user)

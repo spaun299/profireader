@@ -8,7 +8,7 @@
 
 
     <script>
-        module.controller('article_list', ['$scope', '$ok', '$sce', 'uiGridConstants','uiGridGroupingConstants', function ($scope, $ok, $sce, uiGridConstants, uiGridGroupingConstants) {
+        module.controller('article_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('publications');
             $scope.url_details = {{ raw_url_for('portal.publication_details')|safe }};
             $scope.url_search_article = {{ raw_url_for('portal.publications_load')|safe }};
@@ -21,6 +21,7 @@
 
             $scope.sendData = function (data) {
                 $scope.loading = true;
+                console.log($scope.own_company_id)
                 $ok($scope.url_search_article({company_id: $scope.own_company_id}), data, function (resp) {
                     $scope.datas = resp;
                     $scope.applyGridExtarnals(resp);
