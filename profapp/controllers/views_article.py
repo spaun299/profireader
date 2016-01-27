@@ -158,7 +158,7 @@ def load_form_create(json, company_id=None, material_id=None, publication_id=Non
 # @check_rights(simple_permissions([]))
 def material_details(material_id):
     return render_template('company/material_details.html',
-                           article_id=material_id,
+                           article=ArticleCompany.get(material_id).get_client_side_dict(more_fields='company|long'),
                            company=Company.get(ArticleCompany.get(material_id).company.id))
 
 
@@ -195,6 +195,8 @@ def load_material_details(json, material_id):
             'user_rights': user_rights,
             'send_to_user': {},
             'joined_portals': joined_portals}
+
+
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
