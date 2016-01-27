@@ -94,7 +94,7 @@ class Search(Base):
                       'fields': all_fields}
             ** kwargs optional
             **kwargs: -search_text = string text for search,
-                      -pagination = boolean, default False
+                      -pagination = boolean, default True
                       , if True this func return n numbers elements which produce in pagination
                       -page = integer current page for pagination,
                       -items_per_page = integer items per page for pagination
@@ -125,7 +125,7 @@ class Search(Base):
         page -= 1
         search_params = []
         order_by_to_str = {1: 'relevance', 2: 'position', 3: 'md_tm'}
-        pagination = kwargs.get('pagination') or False
+        pagination = kwargs.get('pagination') or True
         desc_asc = kwargs.get('desc_asc') or 'desc'
         pages = None
         search_text = kwargs.get('search_text') or ''
@@ -236,8 +236,9 @@ class Search(Base):
                 arg['class'].id == subquery_search.c.index).subquery())
         objects = collections.OrderedDict()
         to_order = {}
-        ord_by = 'text' if type(kwargs.get('order_by')) in (str, list, tuple) \
-            else order_by_to_str[kwargs['order_by']]
+        _order_by = kwargs.get('order_by') or Search.ORDER_MD_TM
+        ord_by = 'text' if type(_order_by) in (str, list, tuple) \
+            else order_by_to_str[_order_by]
         for search in join_search:
             for cls in db(search).all():
                 objects[cls.index] = {'id': cls.index, 'table_name': cls.table_name,
@@ -574,6 +575,7 @@ class PRBase:
         event.listen(cls, 'after_insert', cls.add_to_search)
         event.listen(cls, 'after_update', cls.update_search_table)
         event.listen(cls, 'after_delete', cls.delete_from_search)
+
 
 #
 #
