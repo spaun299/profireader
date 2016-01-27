@@ -39,7 +39,7 @@ def get_division_for_subportal(portal_id, member_company_id):
 
 
 def get_params(**argv):
-    search_text = request.args.get('search_text') if request.args.get('search_text') else ''
+    search_text = request.args.get('search_text') or ''
     app = current_app._get_current_object()
     portal = g.db().query(Portal).filter_by(host=request.host).one()
 
