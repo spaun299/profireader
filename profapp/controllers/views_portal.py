@@ -13,6 +13,7 @@ from ..models.company import simple_permissions
 from ..models.rights import Right
 from profapp.models.rights import RIGHTS
 from ..controllers import errors
+from ..models.pr_base import PRBase
 import copy
 from .pagination import pagination
 from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
@@ -490,26 +491,14 @@ def publications(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def publications_load(json, company_id):
-    print(company_id)
     portal = db(Company, id=company_id).one().own_portal
     if not portal:
         return dict(portal_not_exist=True)
     page = json.get('paginationOptions')['pageNumber']
     pageSize = json.get('paginationOptions')['pageSize']
     search_text = json.get('search_text')
-    params = {'portal_id': portal.id}
-    params['sort'] = {}
-    params['filter'] = {}
-    if json.get('sort'):
-        for n in json.get('sort'):
-            params['sort'][n] = json.get('sort')[n]
-    if json.get('filter'):
-        for b in json.get('filter'):
-            if json.get('filter')[b] != '-- all --':
-                params['filter'][b] = json.get('filter')[b]
+    params = PRBase.getParamsGrid(json.get('filter'),  json.get('sort'), portal_id=portal.id)
     subquery = ArticlePortalDivision.subquery_portal_articles(search_text=search_text, **params)
-    # if json.get('grid_data')['new_status']:
-    #     db(ArticlePortalDivision, id=json.get('article_id')).update({'status': json.get('grid_data')['new_status']})
     articles, pages, current_page = pagination(subquery,
                                                page=page, items_per_page=pageSize)
     add_param = {'value': '1', 'label': '-- all --'}

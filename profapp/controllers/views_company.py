@@ -23,7 +23,7 @@ from flask import session
 from .pagination import pagination
 from .views_file import crop_image
 from config import Config
-from ..models.pr_base import Search
+from ..models.pr_base import Search, PRBase
 import base64
 from PIL import Image
 from io import BytesIO
@@ -76,32 +76,10 @@ def materials(company_id):
 def materials_load(json, company_id):
     page = json.get('paginationOptions')['pageNumber']
     pageSize = json.get('paginationOptions')['pageSize']
-    search_text = json.get('search_text')
 
+    subquery = ArticleCompany.subquery_company_materials(company_id, json.get('filter'), json.get('sort'))
 
-    # subquery = ArticleCompany.grid_subquery(json.get('filter'), json.get('sort'),
-    #                                    filter = {'publication_status': {'type': 'input', 'join': (ArticlePortalDivision,
-    #                                    ArticlePortalDivision.article_company_id == ArticleCompany.id)}})
-    # if json.get('grid_data')['new_status']:
-    #     ArticleCompany.update_article(
-    #         company_id=company_id,
-    #         article_id=json.get('article_id'),
-    #         **{'status': json.get('grid_data')['new_status']})
-    params = {}
-    params['sort'] = {}
-    params['filter'] = {}
-    if json.get('sort'):
-        for n in json.get('sort'):
-            params['sort'][n] = json.get('sort')[n]
-    if json.get('filter'):
-        for b in json.get('filter'):
-            if json.get('filter')[b] != '-- all --':
-                params['filter'][b] = json.get('filter')[b]
-    subquery = ArticleCompany.subquery_company_materials(search_text=search_text,
-                                                        company_id=company_id,
-                                                        **params)
     materials, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
-
     add_param = {'value': '1', 'label': '-- all --'}
     statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
     portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id),

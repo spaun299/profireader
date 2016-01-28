@@ -344,42 +344,48 @@ class ArticleCompany(Base, PRBase):
             sub_query = sub_query.order_by(own_article.md_tm.desc())
         return sub_query.filter(article_filter.exists())
 
+    # @staticmethod
+    # def subquery_company_materials(company_id = None, **kwargs):
+    #     sub_query = db(ArticleCompany, company_id=company_id)
+    #     if 'filter' in kwargs.keys():
+    #          if 'publication_status' in kwargs['filter'].keys() or 'portals' in kwargs['filter'].keys():
+    #             sub_query = sub_query.join(ArticlePortalDivision,
+    #                                    ArticlePortalDivision.article_company_id == ArticleCompany.id)
+    #             if 'publication_status' in kwargs['filter'].keys():
+    #                 sub_query = sub_query.filter(ArticlePortalDivision.status == kwargs['filter']['publication_status'])
+    #             if 'portals' in kwargs['filter'].keys():
+    #                 sub_query = sub_query.join(PortalDivision,
+    #                                        PortalDivision.id == ArticlePortalDivision.portal_division_id).filter(PortalDivision.portal_id == kwargs['filter']['portals'])
+    #     return sub_query
+
     @staticmethod
-    def subquery_company_materials(search_text=None, company_id=None, **kwargs):
+    def subquery_company_materials(company_id = None, filters = None, sorts=None):
         sub_query = db(ArticleCompany, company_id=company_id)
-        if 'filter' in kwargs.keys():
-
-             # if 'material_status' in kwargs['filter'].keys():
-             #    sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['filter']['material_status'])
-             if 'multiselect' in kwargs['filter'].keys():
-                 if 'material_status' in kwargs['filter']['multiselect'].keys():
-                     sub_query = db(ArticleCompany, company_id=company_id)
-                     sub_query = sub_query.filter(or_(ArticleCompany.status == v for v in kwargs['filter']['multiselect']['material_status']))
-             if 'material_status' in kwargs['filter'].keys():
-                sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['filter']['material_status'])
-             if 'publication_status' in kwargs['filter'].keys() or 'portals' in kwargs['filter'].keys():
-                sub_query = sub_query.join(ArticlePortalDivision,
+        params = ArticleCompany.getParamsGrid(filters, sorts)
+        filters = []; sorts = []
+        if 'publication_status' in params['filter'].keys() or 'portals' in params['filter'].keys():
+            sub_query = sub_query.join(ArticlePortalDivision,
                                        ArticlePortalDivision.article_company_id == ArticleCompany.id)
-                if 'publication_status' in kwargs['filter'].keys():
-                    sub_query = sub_query.filter(ArticlePortalDivision.status == kwargs['filter']['publication_status'])
-                if 'portals' in kwargs['filter'].keys():
-                    sub_query = sub_query.join(PortalDivision,
-                                           PortalDivision.id == ArticlePortalDivision.portal_division_id). \
-                    filter(PortalDivision.portal_id == kwargs['filter']['portals'])
-             if 'date' in kwargs['filter'].keys():
-                 fromm = datetime.utcfromtimestamp(kwargs['filter']['date']['from']/1000)
-                 to = datetime.utcfromtimestamp(kwargs['filter']['date']['to']/1000)
-                 sub_query = sub_query.filter(ArticleCompany.md_tm.between(fromm, to))
-        if search_text:
-            if 'title' in search_text:
-                sub_query = sub_query.filter(ArticleCompany.title.ilike("%" + search_text['title'] + "%"))
-        if 'date' in kwargs['sort'].keys():
-            sub_query = sub_query.order_by(ArticleCompany.md_tm.asc()) if kwargs[
-                                                                              'sort']['date'] == 'asc' else sub_query.order_by(
-            ArticleCompany.md_tm.desc())
-
+            if 'publication_status' in params['filter'].keys():
+                filters.append({'type': 'select', 'value': params['filter']['publication_status'], 'field': ArticlePortalDivision.status})
+            if 'portals' in params['filter'].keys():
+                sub_query = sub_query.join(PortalDivision,
+                                           PortalDivision.id == ArticlePortalDivision.portal_division_id).join(Portal,
+                                           Portal.id == PortalDivision.portal_id)
+                filters.append({'type': 'multiselect', 'value': params['filter']['portals'], 'field': Portal.name})
+        if 'md_tm' in params['filter'].keys():
+            filters.append({'type': 'date_range', 'value': params['filter']['md_tm'], 'field': ArticleCompany.md_tm})
+        if 'title' in params['filter'].keys():
+            filters.append({'type': 'text', 'value': params['filter']['title'], 'field': ArticleCompany.title})
+        if 'author' in params['filter'].keys():
+            sub_query = sub_query.join(User,
+                                       User.id == ArticleCompany.editor_user_id)
+            filters.append({'type': 'text', 'value': params['filter']['author'], 'field': User.profireader_name})
+        if 'md_tm' in params['sort'].keys():
+            sorts.append({'type': 'date', 'value': params['sort']['md_tm'], 'field': ArticleCompany.md_tm})
         else:
-            sub_query = sub_query.order_by(expression.desc(ArticleCompany.md_tm))
+            sorts.append({'type': 'date', 'value': 'desc', 'field': ArticleCompany.md_tm})
+        sub_query = ArticleCompany.subquery_grid(sub_query, filters , sorts)
         return sub_query
 
         # self.portal_devision_id = portal_devision_id
@@ -632,7 +638,7 @@ class Article(Base, PRBase):
             # for s in art_stats:
             #     allowed_statuses.append({'id': s, 'value': s})
             port = 'not sent' if len(article.portal_article) == 0 else ''
-            grid_data.append({'date': article.md_tm,
+            grid_data.append({'md_tm': article.md_tm,
                               'title': article.title,
                               'author': article.editor.profireader_name,
                               'portals': port,
@@ -642,7 +648,7 @@ class Article(Base, PRBase):
             if article.portal_article:
                 i = 0
                 for portal in article.portal_article:
-                    grid_data.append({'date': '',
+                    grid_data.append({'md_tm': '',
                                       'title': '',
                                       'portals': portal.portal.name,
                                       'publication_status': portal.status,
