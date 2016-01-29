@@ -26,13 +26,13 @@ class Config(object):
     DEBUG = False
     TESTING = False
 
-    MAIL_SERVER = 'smtp.googlemail.com'
-    MAIL_PORT = 587
+    MAIL_SERVER = 'smtp.gmail.com:587'
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or \
                     secret_data.MAIL_USERNAME
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or \
                     secret_data.MAIL_PASSWORD
+    MAIL_GMAIL = 'profireader.service@gmail.com'
     PROFIREADER_MAIL_SUBJECT_PREFIX = '[Profireader]'
     PROFIREADER_MAIL_SENDER = 'Profireader Admin ' \
                               '<profireader.service@gmail.com>'
