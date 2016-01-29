@@ -62,12 +62,12 @@
             $scope.joinToPortal = function () {
                 $ok($scope.url_join(), {company_id: $scope.data.company_id, portal_id: $scope.selectedPortal.id}, function (resp) {
                     $scope.data['portals_partners'] = resp['portals_partners'];
-                    $scope.all_grid_data['getPageOfId'] = $scope.selectedPortal.id;
+                    $scope.all_grid_data['paginationOptions']['page_for_id'] = $scope.selectedPortal.id;
                     $scope.sendData($scope.all_grid_data);
                     $scope.selectedPortal = null;
                     $scope.selectedPortal_name = null;
                 }).finally(function () {
-                    delete $scope.all_grid_data['getPageOfId'];
+                    delete $scope.all_grid_data['paginationOptions']['page_for_id'];
                     $scope.selectedPortal_sending = false;
                 });
             };

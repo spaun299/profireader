@@ -47,8 +47,7 @@
                         name: 'author'
                         ,enableSorting: false
                         ,displayName: 'Author'
-                        ,enableFiltering: false
-                        //,filter: {type:'input'}
+                        ,filter: {type:'input'}
                     },{
                         name: 'md_tm',enableColumnMenu: true,
                         displayName: 'Date',
@@ -59,7 +58,7 @@
                         href: 'url_edit_article_portal({article_portal_division_id: row.entity.id})',
                         hideIf: 'not sent',
                         classes: 'link',
-                        filter: {type:'select'}
+                        filter: {type:'multi_select'}
                     },{
                         name: 'publication_status',enableSorting: false,
                         filter: {type: 'select'}

@@ -23,7 +23,7 @@ def translations_load(json):
         exist = db(TranslateTemplate, template=json.get('editItem')['template'], name=json.get('editItem')['name']).first()
         i = datetime.datetime.now()
         TranslateTemplate.get(exist.id).attr({json.get('editItem')['col']: json.get('editItem')['newValue'], 'md_tm':i}).save().get_client_side_dict()
-    subquery = TranslateTemplate.subquery_search(json.get('filter'), json.get('sort'))
+    subquery = TranslateTemplate.subquery_search(json.get('filter'), json.get('sort') , json.get('editItem'))
     translations, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
     add_param = {'value': '1','label': '-- all --'}
     templates = db(TranslateTemplate.template).group_by(TranslateTemplate.template) \
