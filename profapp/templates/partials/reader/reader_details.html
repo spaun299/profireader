@@ -9,7 +9,6 @@
 var favorite = {{ favorite|tojson }};
 function add_delete_favorite(boolean){
     var article_portal_division_id = {{ article['id']|tojson }};
-    console.log(article_portal_division_id);
     $.ajax({
         type: 'post',
         url: '{{ url_for('article.add_delete_favorite') }}',

@@ -3,6 +3,8 @@ from email.mime.text import MIMEText
 import sys
 import traceback
 from config import Config
+from functools import wraps
+from flask import jsonify
 
 
 class SendEmail:
@@ -19,7 +21,6 @@ class SendEmail:
             filename_, line_, func_, text_ = tb_info[-1]
             message = 'An error occurred on File "{file}" line {line}\n {assert_message}'.format(
                 line=line_, assert_message=exception.args, file=filename_)
-            print(message)
             text = message
         msg = MIMEText(text)
         msg['Subject'] = subject
@@ -30,3 +31,21 @@ class SendEmail:
         server.login(self.username, self.password)
         server.sendmail(self.username, send_to, msg.as_string())
         server.quit()
+
+    @staticmethod
+    def send_email_decorator(**params):
+        def decorator(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                print(kwargs)
+                print(args)
+                params.update(kwargs)
+                SendEmail().send_email(**params)
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+
+@SendEmail.send_email_decorator(subject='Profireader', text='Text', send_to=('spaun1002@gmail.com', ))
+def email_send(subject=None, text=None, send_to=()):
+    return jsonify(dict(message='Email was successfully sent'))

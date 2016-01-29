@@ -3,7 +3,7 @@ from .blueprints_declaration import general_bp
 from flask.ext.login import login_required
 from ..models.portal import Portal, UserPortalReader, ReaderUserPortalPlan
 from profapp.controllers.errors import BadDataProvided
-from utils.email import SendEmail
+from utils.email import email_send
 
 
 @general_bp.route('help/')
@@ -52,7 +52,12 @@ def reader_subscribe(portal_id):
     return redirect(url_for('general.index'))
 
 
-@general_bp.route('/send_email_create_portal')
+@general_bp.route('send_email_create_portal/')
 @login_required
 def send_email_create_portal():
     return render_template('general/send_email_create_portal.html')
+
+
+@general_bp.route('send_email', methods=['POST'])
+def send_email():
+    return email_send(**{name: str(val) for name, val in request.form.items()})

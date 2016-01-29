@@ -23,7 +23,6 @@ from utils.email import SendEmail
 #    session.modified = True
 
 EMAIL_REGEX = re.compile(r'[^@]+@[^@]+\.[^@]+')
-email_send = SendEmail()
 
 
 def login_signup_general(*soc_network_names):
