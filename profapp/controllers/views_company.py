@@ -9,7 +9,7 @@ from ..constants.STATUS import STATUS
 from flask.ext.login import login_required
 from ..models.articles import Article
 from ..models.portal import PortalDivision
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
+from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 
 from ..models.articles import ArticleCompany, ArticlePortalDivision
 from utils.db_utils import db
@@ -103,7 +103,8 @@ def materials_load(json, company_id):
     materials, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
 
     add_param = {'value': '1', 'label': '-- all --'}
-    statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
+    statuses_g = []
+    # Article.list_for_grid_tables(ArticleCompany.STATUSES.keys(), add_param, False)
     portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id),
                                              add_param, True)
     gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
@@ -148,7 +149,8 @@ def get_tags(json, portal_division_id):
 # @check_rights(simple_permissions([]))
 @ok
 def update_material_status(json, company_id, article_id):
-    allowed_statuses = ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(json['new_status'])
+    allowed_statuses = ArticleCompany.STATUSES.keys()
+    # ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(json['new_status'])
 
     ArticleCompany.update_article(
             company_id=company_id,

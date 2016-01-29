@@ -14,7 +14,7 @@
             $scope.selectedUser = null;
             $scope.selectedUser_sending = false;
             $scope.url_update_material = {{ raw_url_for('article.article_show_form')|safe }};
-            $scope.url_update_status = {{ raw_url_for('company.update_material_status')|safe }};
+{#            $scope.url_update_status = {{ raw_url_for('company.update_material_status')|safe }};#}
             $scope.url_submit_to_portal = '{{ url_for('portal.submit_to_portal')|safe }}';
             $scope.url_send_article_to_user = '{{ url_for('company.send_article_to_user')|safe }}';
             $scope.url_send_article_user = {{ raw_url_for('company.send_article_to_user')|safe }};
@@ -43,6 +43,7 @@
             {#                        }#}
             {#                );#}
             {#            };#}
+
             $scope.saveData = function (data) {
                 $ok($scope.url_submit_to_portal,
                         data,
@@ -54,17 +55,17 @@
             };
 
 
-            $scope.changeStatus = function (new_status) {
-                url_send_request = $scope.url_update_status({
-                    'company_id': $scope.data.article.company_id,
-                    'article_id': $scope.data.article.id
-                });
-                $ok(url_send_request, {new_status: new_status}, function (resp) {
-                    $scope.data.article.status = resp.article_new_status;
-                    $scope.data.allowed_statuses = resp.allowed_statuses;
-                    $scope.change_status_to = $scope.data.allowed_statuses[0];
-                });
-            };
+{#            $scope.changeStatus = function (new_status) {#}
+{#                url_send_request = $scope.url_update_status({#}
+{#                    'company_id': $scope.data.article.company_id,#}
+{#                    'article_id': $scope.data.article.id#}
+{#                });#}
+{#                $ok(url_send_request, {new_status: new_status}, function (resp) {#}
+{#                    $scope.data.article.status = resp.article_new_status;#}
+{#                    $scope.data.allowed_statuses = resp.allowed_statuses;#}
+{#                    $scope.change_status_to = $scope.data.allowed_statuses[0];#}
+{#                });#}
+{#            };#}
 
             $scope.loadArticle = function () {
                 $ok('', {}, function (resp) {
@@ -165,6 +166,52 @@
                 });
             };
 
+            $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+                onRegisterApi: function (gridApi) {
+                    $scope.setGridExtarnals(gridApi)
+                },
+                columnDefs: [
+                    {
+                        name: 'title', displayName: 'Title', width: '20%',enableSorting: false,
+                        type: 'link',
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
+                        filter: {type: 'input'}
+                    },
+                        {
+                        name: 'portal', displayName: 'Portal', width: '20%',enableSorting: false,
+                        type: 'link',
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
+                        filter: {type: 'input'}
+                    },   {
+                        name: 'division', displayName: 'division', width: '20%',enableSorting: false,
+                        type: 'link',
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
+                        filter: {type: 'input'}
+                    },
+                    {
+                        name: 'publisher',enableSorting: false,
+                        displayName: 'Author',
+                        filter: {type:'input'}
+                    },{
+                        name: 'publishing_tm',enableColumnMenu: true,
+                        displayName: 'publishing date',
+                        filter:{type:'date_range'}
+                    },{
+                        name: 'read_count', displayName: 'read count',enableSorting: false,
+                        filter: {type:'select'}
+                    },{
+                        name: 'like_count', displayName: 'like count',enableSorting: false,
+                        filter: {type:'select'}
+                    },{
+                        name: 'fav_count', displayName: 'fav count',enableSorting: false,
+                        filter: {type:'select'}
+                    },{
+                        name: 'comm_count', displayName: 'ccomm count',enableSorting: false,
+                        filter: {type:'select'}
+                    }
+                ]
+            });
+
         }]);
     </script>
 
@@ -184,6 +231,8 @@
             <button ng-click="updateMaterial(data.article.id)">{{ _('Update material') }}</button>
             <hr/>
             <h2>{{ _('Material is published at following portals') }}</h2>
+
+            <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
 
             <div ng-if="myRights('publish')">
                 <div ng-if="!data_resp_portal.portal">

@@ -14,7 +14,7 @@ from utils.db_utils import db
 from .pr_base import PRBase, Base, MLStripper, Search
 # from db_init import Base
 from utils.db_utils import db
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
+from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 from flask import g, session
 from sqlalchemy.sql import or_, and_
 from sqlalchemy.sql import expression
@@ -263,6 +263,10 @@ class ArticleCompany(Base, PRBase):
 
     cr_tm = Column(TABLE_TYPES['timestamp'])
     md_tm = Column(TABLE_TYPES['timestamp'])
+
+    status = Column(TABLE_TYPES['status'])
+    STATUSES = {'NORMAL': 'NORMAL', 'EDITING': 'EDITING', 'FINISHED': 'FINISHED', 'DELETED': 'DELETED', 'APPROVED': 'APPROVED'}
+
     image_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'), nullable=False)
     keywords = Column(TABLE_TYPES['keywords'], nullable=False)
     # TODO: OZ by OZ: we need keywords in ArticleCompany ??
@@ -317,10 +321,10 @@ class ArticleCompany(Base, PRBase):
                 companies.append(comp.company.get_client_side_dict(fields='id, name'))
         return [dict(comp) for comp in set([tuple(c.items()) for c in companies])]
 
-    def clone_for_company(self, company_id):
-        return self.detach().attr({'company_id': company_id,
-                                   'status': ARTICLE_STATUS_IN_COMPANY.
-                                  submitted})
+    # def clone_for_company(self, company_id):
+    #     return self.detach().attr({'company_id': company_id,
+    #                                'status': ARTICLE_STATUS_IN_COMPANY.
+    #                               submitted})
 
     @staticmethod
     def subquery_user_articles(search_text=None, user_id=None, **kwargs):
