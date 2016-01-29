@@ -37,8 +37,6 @@ class SendEmail:
         def decorator(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
-                print(kwargs)
-                print(args)
                 params.update(kwargs)
                 SendEmail().send_email(**params)
                 return func(*args, **kwargs)
