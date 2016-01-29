@@ -114,7 +114,7 @@ class Search(Base):
                        {'class': ArticlePortalDivision,
                         'filter' and_(ArticlePortalDivision.portal_division_id == division.id,
                                       ArticlePortalDivision.status ==
-                                      ARTICLE_STATUS_IN_PORTAL.published)},
+                                      ArticlePortalDivision.STATUSES['PUBLISHED'])},
                         order_by = ('name', 'title', ). Because class Company does not have 'title'
                         field, and class ArticlePortalDivision does not have 'name' field.
                       -desc_asc = sort by desc or asc default = desc,
@@ -291,6 +291,37 @@ class MLStripper(HTMLParser):
         if data is '':
             data = html
         return data
+
+class Grid:
+    @staticmethod
+    def filter_for_status(statuses):
+        return [{'value': status, 'label': status} for status in statuses.keys()]
+
+    def page_options(client_json):
+        return  {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize'], 'for_id': client_json['page_for_id']}
+
+    @staticmethod
+    def subquery_grid(query, filters, sorts):
+        for filter in filters:
+            if filter['type'] == 'text':
+                query = query.filter(filter['field'].ilike("%" + filter['value'] + "%"))
+            elif filter['type'] == 'select':
+                query = query.filter(filter['field'] == filter['value'])
+            elif filter['type'] == 'date_range':
+                print(filter['value']['to'])
+                fromm = datetime.datetime.utcfromtimestamp((filter['value']['from']+1)/1000)
+                to = datetime.datetime.utcfromtimestamp((filter['value']['to']+86399999)/1000)
+                print(fromm,to, filter['field'])
+                query = query.filter(filter['field'].between(fromm, to))
+            elif filter['type'] == 'range':
+                query = query.filter(filter['field'].between(filter['value']['from'], filter['value']['to']))
+            elif filter['type'] == 'multiselect':
+                query = query.filter(or_(filter['field'] == v for v in filter['value']))
+        for sort in sorts:
+            if sort['type'] == 'date':
+                query = query.order_by(sort['field'].asc()) if sort['value'] == 'asc' else query.order_by(
+                    sort['field'].desc())
+        return query
 
 
 class PRBase:
@@ -522,6 +553,7 @@ class PRBase:
     #     if len(ret['errors'].keys()):
     #         raise errors.ValidationException(ret)
 
+
     @staticmethod
     def add_to_search(mapper=None, connection=None, target=None):
 
@@ -576,7 +608,7 @@ class PRBase:
         event.listen(cls, 'after_update', cls.update_search_table)
         event.listen(cls, 'after_delete', cls.delete_from_search)
 
-#
+
 #
 #
 #

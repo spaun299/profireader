@@ -4,12 +4,12 @@ from flask.ext.login import login_required, current_user
 from flask import render_template, request, url_for, g, redirect
 from ..models.company import Company, UserCompany, Right, RightHumnReadible
 from ..models.users import User
+from ..models.translate import TranslateTemplate
 from .request_wrapers import ok, check_rights, tos_required
 from ..constants.STATUS import STATUS
 from flask.ext.login import login_required
 from ..models.articles import Article
 from ..models.portal import PortalDivision
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
 
 from ..models.articles import ArticleCompany, ArticlePortalDivision
 from utils.db_utils import db
@@ -23,7 +23,7 @@ from flask import session
 from .pagination import pagination
 from .views_file import crop_image
 from config import Config
-from ..models.pr_base import Search
+from ..models.pr_base import Search, PRBase, Grid
 import base64
 from PIL import Image
 from io import BytesIO
@@ -72,6 +72,28 @@ def materials(company_id):
                            angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js')
 
 
+@company_bp.route('/<string:company_id>/materials/', methods=['POST'])
+@ok
+def materials_load(json, company_id):
+    subquery = ArticleCompany.subquery_company_materials(company_id, json.get('filter'), json.get('sort'))
+
+    materials, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
+
+    grid_filters = {
+        'portals': [{'value': portal, 'label': portal} for portal_id, portal in
+                    ArticlePortalDivision.get_portals_where_company_send_article(company_id).items()],
+        'material_status': Grid.filter_for_status(ArticleCompany.STATUSES),
+        'publication_status': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+        'publication_visibility': Grid.filter_for_status(ArticlePortalDivision.VISIBILITIES)
+    }
+
+    return {'grid_data': Article.getListGridDataMaterials(materials),
+            'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
+                             (k, v) in grid_filters.items()},
+            'total': count
+            }
+
+
 @company_bp.route('/<string:article_portal_division_id>/', methods=['POST'])
 @login_required
 @ok
@@ -104,7 +126,8 @@ def get_tags(json, portal_division_id):
 # @check_rights(simple_permissions([]))
 @ok
 def update_material_status(json, company_id, article_id):
-    allowed_statuses = ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(json['new_status'])
+    allowed_statuses = ArticleCompany.STATUSES.keys()
+    # ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(json['new_status'])
 
     ArticleCompany.update_article(
             company_id=company_id,
