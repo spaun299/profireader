@@ -1036,9 +1036,9 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
         _: function (phrase, dict) {
             return pr_dictionary(phrase, dict, '', this, $ok);
         },
-        searchItemGrid: function (col ,text) {
+        searchItemGrid: function (col) {
             this.all_grid_data.paginationOptions.pageNumber = 1;
-            this.all_grid_data['filter'][col.field] = text;
+            this.all_grid_data['filter'][col.field] = col.filter.text;
             this.sendData(this.all_grid_data);
         },
         filterForGridRange: function(col){
@@ -1049,14 +1049,13 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
         },
         refreshGrid: function (col) {
             if (col !== undefined) {
-                this.all_grid_data.filter = {};
-                if (col.filter && col.filter.type === 'select') {
-                        col.filter.term = '1'
-                }else if (col.filters && col.filter.type === 'date_range'){
-                        col.filters[0] = '';
-                        col.filters[1] = '';
+                if (col.filters && col.filter.type === 'date_range'){
+                    col.filters[0] = '';
+                    col.filters[1] = '';
+                }else if(col.filter.type === 'input'){
+                    col.filter.text = '';
+                    delete this.all_grid_data['filter'][col.field]
                 }
-                $('.ui-grid-filter-container' ).find('input').val('');
                 this.sendData(this.all_grid_data)
             }
         },
@@ -1077,8 +1076,8 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
                     }
                     if(col[i].filter.type === 'input'){
                         scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container">' +
-                            '<input type="text" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}" ng-enter="grid.appScope.searchItemGrid(col, colFilter.term)" ng-model="colFilter.term"  aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}">' +
-                            '<div role="button" class="ui-grid-filter-button" ng-click="grid.appScope.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="colFilter.term === undefined || colFilter.term === null || colFilter.term === \'\'" ng-show="colFilter.term !== undefined && colFilter.term !== null && colFilter.term !== \'\'">' +
+                            '<input type="text" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}" ng-enter="grid.appScope.searchItemGrid(col)" ng-model="col.filter.text"  aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}">' +
+                            '<div role="button" class="ui-grid-filter-button" ng-click="grid.appScope.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filter.text === undefined || col.filter.text === null || col.filter.text === \'\'" ng-show="col.filter.text !== undefined && col.filter.text !== null && col.filter.text !== \'\'">' +
                             '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter">&nbsp;</i></div>'
                     }else if(col[i].filter.type === 'date_range'){
                         scope.gridOptions1.columnDefs[i].filters = [{}, {}];
@@ -1185,7 +1184,6 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
 
             });
             gridApi.core.on.filterChanged(scope, function () {
-                'use strict'
                 var grid = this.grid;
                 var at_least_one_filter_changed = false;
                 for (var i = 0; i < grid.columns.length; i++) {
@@ -1197,21 +1195,21 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
                     if(type === 'date_range') {
                         if(grid.columns[i].filters[0].term && grid.columns[i].filters[1].term){
                             at_least_one_filter_changed = true;
+                            var offset = new Date().getTimezoneOffset();
                             var from = new Date(grid.columns[i].filters[0].term).getTime();
                             var to = new Date(grid.columns[i].filters[1].term).getTime();
-                            var error = from - to > 0;
-                            scope.all_grid_data['filter'][field] = {'from':from, 'to':to};
-                            error ? add_message('You push wrong date', 'danger', 3000): scope.sendData(scope.all_grid_data)
+                            var error = from - to >= 0;
+                            scope.all_grid_data['filter'][field] = {'from':from-(offset*60000), 'to':to-(offset*60000)};
                         }
                     }else if (term !== undefined) {
                         if (term !== scope.all_grid_data['filter'][field]) {
                             at_least_one_filter_changed = true;
-                            scope.all_grid_data['filter'][field] = term;
+                            term != null?scope.all_grid_data['filter'][field] = term: delete scope.all_grid_data['filter'][field]
                         }
                     }
                 }
                 if (at_least_one_filter_changed) {
-                    scope.sendData(scope.all_grid_data)
+                    error ? add_message('You push wrong date', 'danger', 3000):scope.sendData(scope.all_grid_data)
                 }
             });
             if (scope.gridOptions1.enableRowSelection) {

@@ -584,8 +584,10 @@ class PRBase:
             elif filter['type'] == 'select':
                 query = query.filter(filter['field'] == filter['value'])
             elif filter['type'] == 'date_range':
-                fromm = datetime.datetime.utcfromtimestamp(filter['value']['from']/1000)
-                to = datetime.datetime.utcfromtimestamp(filter['value']['to']/1000)
+                print(filter['value']['to'])
+                fromm = datetime.datetime.utcfromtimestamp((filter['value']['from']+1)/1000)
+                to = datetime.datetime.utcfromtimestamp((filter['value']['to']+86399999)/1000)
+                print(fromm,to, filter['field'])
                 query = query.filter(filter['field'].between(fromm, to))
             elif filter['type'] == 'range':
                 query = query.filter(filter['field'].between(filter['value']['from'], filter['value']['to']))
@@ -607,7 +609,6 @@ class PRBase:
                 params['sort'][n] = sorts[n]
         if filters:
             for b in filters:
-                if filters[b] != '-- all --':
                     params['filter'][b] = filters[b]
         if kwargs:
             params['filter'].update(kwargs)

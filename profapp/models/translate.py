@@ -148,31 +148,30 @@ class TranslateTemplate(Base, PRBase):
         return True if list else False
 
     @staticmethod
-    def subquery_search(filters=None, sorts=None):
+    def subquery_search(filters=None, sorts=None, edit=None):
         sub_query = db(TranslateTemplate)
-        params = TranslateTemplate.getParamsGrid(filters, sorts)
-        filters = []; sorts = []
-        if 'url' in params['filter']:
-            filters.append({'type': 'select', 'value': params['filter']['url'], 'field': TranslateTemplate.url})
-        if 'template' in params['filter']:
-            filters.append({'type': 'select', 'value': params['filter']['template'], 'field': TranslateTemplate.template})
-        if 'name' in params['filter']:
-            filters.append({'type': 'text', 'value': params['filter']['name'], 'field': TranslateTemplate.name})
-        if 'uk' in params['filter']:
-            filters.append({'type': 'text', 'value': params['filter']['uk'], 'field': TranslateTemplate.uk})
-        if 'en' in params['filter']:
-            filters.append({'type': 'text', 'value': params['filter']['en'], 'field': TranslateTemplate.en})
-        if 'portal.name' in params['filter']:
+        list_filters = []; list_sorts = []
+        if 'url' in filters:
+            list_filters.append({'type': 'select', 'value': filters['url'], 'field': TranslateTemplate.url})
+        if 'template' in filters:
+            list_filters.append({'type': 'select', 'value': filters['template'], 'field': TranslateTemplate.template})
+        if 'name' in filters:
+            list_filters.append({'type': 'text', 'value': filters['name'], 'field': TranslateTemplate.name})
+        if 'uk' in filters:
+            list_filters.append({'type': 'text', 'value': filters['uk'], 'field': TranslateTemplate.uk})
+        if 'en' in filters:
+            list_filters.append({'type': 'text', 'value': filters['en'], 'field': TranslateTemplate.en})
+        if 'portal.name' in filters:
             sub_query = sub_query.join(Portal,
                                        Portal.id == TranslateTemplate.portal_id)
-            filters.append({'type': 'text', 'value': params['filter']['portal.name'], 'field': Portal.name})
-        if 'cr_tm' in params['sort']:
-            sorts.append({'type': 'date', 'value': params['sort']['cr_tm'], 'field': TranslateTemplate.cr_tm})
-        elif 'ac_tm' in params['sort']:
-            sorts.append({'type': 'date', 'value': params['sort']['ac_tm'], 'field': TranslateTemplate.ac_tm})
+            list_filters.append({'type': 'text', 'value': filters['portal.name'], 'field': Portal.name})
+        if 'cr_tm' in sorts:
+            list_sorts.append({'type': 'date', 'value': sorts['cr_tm'], 'field': TranslateTemplate.cr_tm})
+        elif 'ac_tm' in sorts:
+            list_sorts.append({'type': 'date', 'value': sorts['ac_tm'], 'field': TranslateTemplate.ac_tm})
         else:
-            sorts.append({'type': 'date', 'value': 'desc', 'field': TranslateTemplate.cr_tm})
-        sub_query = TranslateTemplate.subquery_grid(sub_query, filters , sorts)
+            list_sorts.append({'type': 'date', 'value': 'desc', 'field': TranslateTemplate.cr_tm})
+        sub_query = TranslateTemplate.subquery_grid(sub_query, list_filters, list_sorts)
         return sub_query
 
     def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url|allow_html, portal.id|name',

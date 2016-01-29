@@ -360,31 +360,30 @@ class ArticleCompany(Base, PRBase):
     @staticmethod
     def subquery_company_materials(company_id = None, filters = None, sorts=None):
         sub_query = db(ArticleCompany, company_id=company_id)
-        params = ArticleCompany.getParamsGrid(filters, sorts)
-        filters = []; sorts = []
-        if 'publication_status' in params['filter'].keys() or 'portals' in params['filter'].keys():
+        list_filters = []; list_sorts = []
+        if 'publication_status' in filters or 'portals' in filters:
             sub_query = sub_query.join(ArticlePortalDivision,
                                        ArticlePortalDivision.article_company_id == ArticleCompany.id)
-            if 'publication_status' in params['filter'].keys():
-                filters.append({'type': 'select', 'value': params['filter']['publication_status'], 'field': ArticlePortalDivision.status})
-            if 'portals' in params['filter'].keys():
+            if 'publication_status' in filters:
+                list_filters.append({'type': 'select', 'value': filters['publication_status'], 'field': ArticlePortalDivision.status})
+            if 'portals' in filters:
                 sub_query = sub_query.join(PortalDivision,
                                            PortalDivision.id == ArticlePortalDivision.portal_division_id).join(Portal,
                                            Portal.id == PortalDivision.portal_id)
-                filters.append({'type': 'select', 'value': params['filter']['portals'], 'field': Portal.name})
-        if 'md_tm' in params['filter'].keys():
-            filters.append({'type': 'date_range', 'value': params['filter']['md_tm'], 'field': ArticleCompany.md_tm})
-        if 'title' in params['filter'].keys():
-            filters.append({'type': 'text', 'value': params['filter']['title'], 'field': ArticleCompany.title})
-        if 'author' in params['filter'].keys():
+                list_filters.append({'type': 'multiselect', 'value': filters['portals'], 'field': Portal.name})
+        if 'md_tm' in filters:
+            list_filters.append({'type': 'date_range', 'value': filters['md_tm'], 'field': ArticleCompany.md_tm})
+        if 'title' in filters:
+            list_filters.append({'type': 'text', 'value': filters['title'], 'field': ArticleCompany.title})
+        if 'author' in filters:
             sub_query = sub_query.join(User,
                                        User.id == ArticleCompany.editor_user_id)
-            filters.append({'type': 'text', 'value': params['filter']['author'], 'field': User.profireader_name})
-        if 'md_tm' in params['sort'].keys():
-            sorts.append({'type': 'date', 'value': params['sort']['md_tm'], 'field': ArticleCompany.md_tm})
+            list_filters.append({'type': 'text', 'value': filters['author'], 'field': User.profireader_name})
+        if 'md_tm' in sorts.keys():
+            list_sorts.append({'type': 'date', 'value': sorts['md_tm'], 'field': ArticleCompany.md_tm})
         else:
-            sorts.append({'type': 'date', 'value': 'desc', 'field': ArticleCompany.md_tm})
-        sub_query = ArticleCompany.subquery_grid(sub_query, filters , sorts)
+            list_sorts.append({'type': 'date', 'value': 'desc', 'field': ArticleCompany.md_tm})
+        sub_query = ArticleCompany.subquery_grid(sub_query, list_filters, list_sorts)
         return sub_query
 
         # self.portal_devision_id = portal_devision_id
