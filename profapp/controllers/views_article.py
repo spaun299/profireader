@@ -5,7 +5,6 @@ from profapp.models.portal import PortalDivision, UserPortalReader, Portal, Memb
 from ..models.pr_base import Search
 from .blueprints_declaration import article_bp
 from .request_wrapers import ok, tos_required
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_COMPANY, ARTICLE_STATUS_IN_PORTAL
 from .pagination import pagination
 from config import Config
 from .views_file import crop_image, update_croped_image
@@ -158,7 +157,7 @@ def load_form_create(json, company_id=None, material_id=None, publication_id=Non
 # @check_rights(simple_permissions([]))
 def material_details(material_id):
     return render_template('company/material_details.html',
-                           article_id=material_id,
+                           article=ArticleCompany.get(material_id).get_client_side_dict(more_fields='company|long'),
                            company=Company.get(ArticleCompany.get(material_id).company.id))
 
 
@@ -197,6 +196,8 @@ def load_material_details(json, material_id):
             'joined_portals': joined_portals}
 
 
+
+
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
 @tos_required
 def details(article_id):
@@ -210,32 +211,32 @@ def details_load(json, article_id):
     return Article.get(article_id).get_client_side_dict()
 
 
-@article_bp.route('/search_for_company_to_submit/', methods=['POST'])
-@ok
-def search_for_company_to_submit(json):
-    companies = Article().search_for_company_to_submit(
-            g.user_dict['id'], json['article_id'], json['search'])
-    return companies
+# @article_bp.route('/search_for_company_to_submit/', methods=['POST'])
+# @ok
+# def search_for_company_to_submit(json):
+#     companies = Article().search_for_company_to_submit(
+#             g.user_dict['id'], json['article_id'], json['search'])
+#     return companies
 
 
-@article_bp.route('/submit_to_company/<string:article_id>/', methods=['POST'])
-@ok
-def submit_to_company(json, article_id):
-    a = Article.get(article_id)
-    a.mine_version.clone_for_company(json['company_id']).save()
-    return {'article': a.get(article_id).get_client_side_dict(),
-            'company_id': json['company_id']}
+# @article_bp.route('/submit_to_company/<string:article_id>/', methods=['POST'])
+# @ok
+# def submit_to_company(json, article_id):
+#     a = Article.get(article_id)
+#     a.mine_version.clone_for_company(json['company_id']).save()
+#     return {'article': a.get(article_id).get_client_side_dict(),
+#             'company_id': json['company_id']}
 
 
-@article_bp.route('/resubmit_to_company/<string:article_company_id>/', methods=['POST'])
-@ok
-def resubmit_to_company(json, article_company_id):
-    a = ArticleCompany.get(article_company_id)
-    if not a.status == ARTICLE_STATUS_IN_COMPANY.declined:
-        raise Exception('article should have %s to be resubmited' %
-                        ARTICLE_STATUS_IN_COMPANY.declined)
-    a.status = ARTICLE_STATUS_IN_COMPANY.submitted
-    return {'article': a.save().get_client_side_dict()}
+# @article_bp.route('/resubmit_to_company/<string:article_company_id>/', methods=['POST'])
+# @ok
+# def resubmit_to_company(json, article_company_id):
+#     a = ArticleCompany.get(article_company_id)
+#     if not a.status == ARTICLE_STATUS_IN_COMPANY.declined:
+#         raise Exception('article should have %s to be resubmited' %
+#                         ARTICLE_STATUS_IN_COMPANY.declined)
+#     a.status = ARTICLE_STATUS_IN_COMPANY.submitted
+#     return {'article': a.save().get_client_side_dict()}
 
 
 @article_bp.route('/details_reader/<string:article_portal_division_id>')
@@ -267,7 +268,7 @@ def list_reader(page=1):
                                                                   db(UserPortalReader, user_id=g.user.id).subquery().
                                                                   c.portal_id).subquery().c.id,
                                                               ArticlePortalDivision.status ==
-                                                              ARTICLE_STATUS_IN_PORTAL.published),
+                                                              ArticlePortalDivision.STATUSES['PUBLISHED']),
                                                'tags': True, 'return_fields': 'default_dict'}, page=page)
     else:
         articles, pages, page = Search.search({'class': ArticlePortalDivision,
