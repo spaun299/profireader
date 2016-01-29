@@ -429,10 +429,12 @@ class PortalDivision(Base, PRBase):
     #         #     portal_division_id=self.id).one()
 
     def search_filter(self):
+        from .articles import ArticlePortalDivision
+
         return and_(ArticlePortalDivision.portal_division_id.in_(
             db(PortalDivision.id, portal_id=portal.id)),
             ArticlePortalDivision.status ==
-            ARTICLE_STATUS_IN_PORTAL.published)
+            ArticlePortalDivision.STATUSES['PUBLISHED'])
 
     @orm.reconstructor
     def init_on_load(self):

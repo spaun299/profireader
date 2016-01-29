@@ -14,7 +14,6 @@ from utils.db_utils import db
 from .pr_base import PRBase, Base, MLStripper, Search
 # from db_init import Base
 from utils.db_utils import db
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 from flask import g, session
 from sqlalchemy.sql import or_, and_
 from sqlalchemy.sql import expression
@@ -44,7 +43,12 @@ class ArticlePortalDivision(Base, PRBase):
     publishing_tm = Column(TABLE_TYPES['timestamp'])
     position = Column(TABLE_TYPES['position'])
     read_count = Column(TABLE_TYPES['int'], default=0)
-    status = Column(TABLE_TYPES['id_profireader'], default=ARTICLE_STATUS_IN_PORTAL.published)
+
+    status = Column(TABLE_TYPES['status'], default='NOT_PUBLISHED')
+    STATUSES = {'NOT_PUBLISHED': 'NOT_PUBLISHED', 'PUBLISHED': 'PUBLISHED', 'DELETED': 'DELETED'}
+
+    visibility = Column(TABLE_TYPES['status'], default='REGISTERED')
+    VISIBILITIES = {'OPEN': 'OPEN', 'REGISTERED': 'REGISTERED', 'PAYED': 'PAYED', 'CONFIDENTIAL': 'CONFIDENTIAL'}
 
     division = relationship('PortalDivision',
                             backref=backref('article_portal_division', cascade="save-update, merge, delete"),
@@ -87,22 +91,22 @@ class ArticlePortalDivision(Base, PRBase):
         if division_type == 'index':
             filter = {'class': ArticlePortalDivision,
                       'filter': and_(ArticlePortalDivision.portal_division_id.in_(db(
-                                     PortalDivision.id, portal_id=division.portal_id).filter(
-                          PortalDivision.portal_division_type_id != 'events'
-                      )), ArticlePortalDivision.status == ARTICLE_STATUS_IN_PORTAL.published),
+                              PortalDivision.id, portal_id=division.portal_id).filter(
+                              PortalDivision.portal_division_type_id != 'events'
+                      )), ArticlePortalDivision.status == ArticlePortalDivision.STATUSES['PUBLISHED']),
                       'return_fields': 'default_dict', 'tags': True}
         elif division_type == 'news':
             if not company_id:
                 filter = {'class': ArticlePortalDivision,
                           'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
                                          ArticlePortalDivision.status ==
-                                         ARTICLE_STATUS_IN_PORTAL.published),
+                                         ArticlePortalDivision.STATUSES['PUBLISHED']),
                           'return_fields': 'default_dict', 'tags': True}
             else:
                 filter = {'class': ArticlePortalDivision,
                           'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
                                          ArticlePortalDivision.status ==
-                                         ARTICLE_STATUS_IN_PORTAL.published,
+                                         ArticlePortalDivision.STATUSES['PUBLISHED'],
                                          db(ArticleCompany, company_id=company_id,
                                             id=ArticlePortalDivision.article_company_id).exists()),
                           'return_fields': 'default_dict', 'tags': True}
@@ -111,13 +115,13 @@ class ArticlePortalDivision(Base, PRBase):
                 filter = {'class': ArticlePortalDivision,
                           'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
                                          ArticlePortalDivision.status ==
-                                         ARTICLE_STATUS_IN_PORTAL.published),
+                                         ArticlePortalDivision.STATUSES['PUBLISHED']),
                           'return_fields': 'default_dict', 'tags': True}
             else:
                 filter = {'class': ArticlePortalDivision,
                           'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
                                          ArticlePortalDivision.status ==
-                                         ARTICLE_STATUS_IN_PORTAL.published,
+                                         ArticlePortalDivision.STATUSES['PUBLISHED'],
                                          db(ArticleCompany, company_id=company_id,
                                             id=ArticlePortalDivision.article_company_id).exists()),
                           'return_fields': 'default_dict', 'tags': True}
@@ -146,7 +150,7 @@ class ArticlePortalDivision(Base, PRBase):
                           uselist=False)
 
     def __init__(self, article_company_id=None, title=None, short=None, keywords=None, position=None,
-                 long=None, status=None, portal_division_id=None, image_file_id=None, subtitle = None):
+                 long=None, status=None, portal_division_id=None, image_file_id=None, subtitle=None):
         self.article_company_id = article_company_id
         self.title = title
         self.subtitle = subtitle
@@ -206,7 +210,7 @@ class ArticlePortalDivision(Base, PRBase):
     def subquery_portal_articles(search_text=None, portal_id=None, **kwargs):
         sub_query = db(ArticlePortalDivision)
         if 'publication_status' in kwargs['filter'].keys():
-            sub_query = db(ArticlePortalDivision, status= kwargs['filter']['publication_status'])
+            sub_query = db(ArticlePortalDivision, status=kwargs['filter']['publication_status'])
         if 'company' in kwargs['filter'].keys():
             sub_query = sub_query.join(ArticlePortalDivision.company).filter(Company.id == kwargs['filter']['company'])
         sub_query = sub_query. \
@@ -218,8 +222,9 @@ class ArticlePortalDivision(Base, PRBase):
                 sub_query = sub_query.filter(ArticlePortalDivision.title.ilike("%" + search_text['title'] + "%"))
         if 'date' in kwargs['sort'].keys():
             sub_query = sub_query.order_by(ArticlePortalDivision.publishing_tm.asc()) if kwargs[
-                                                                                              'sort']['date'] == 'asc' else sub_query.order_by(
-                 ArticlePortalDivision.publishing_tm.desc())
+                                                                                             'sort'][
+                                                                                             'date'] == 'asc' else sub_query.order_by(
+                    ArticlePortalDivision.publishing_tm.desc())
         else:
             sub_query = sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
         return sub_query
@@ -264,8 +269,9 @@ class ArticleCompany(Base, PRBase):
     cr_tm = Column(TABLE_TYPES['timestamp'])
     md_tm = Column(TABLE_TYPES['timestamp'])
 
-    status = Column(TABLE_TYPES['status'])
-    STATUSES = {'NORMAL': 'NORMAL', 'EDITING': 'EDITING', 'FINISHED': 'FINISHED', 'DELETED': 'DELETED', 'APPROVED': 'APPROVED'}
+    status = Column(TABLE_TYPES['status'], default='NORMAL')
+    STATUSES = {'NORMAL': 'NORMAL', 'EDITING': 'EDITING', 'FINISHED': 'FINISHED', 'DELETED': 'DELETED',
+                'APPROVED': 'APPROVED'}
 
     image_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'), nullable=False)
     keywords = Column(TABLE_TYPES['keywords'], nullable=False)
@@ -311,7 +317,7 @@ class ArticleCompany(Base, PRBase):
             for comp in article.submitted_versions:
                 companies[comp.company.id] = comp.company.name
                 # companies.append(comp.company.get_client_side_dict(fields='id, name'))
-        return companies #all, [dict(comp) for comp in set([tuple(c.items()) for c in companies])]
+        return companies  # all, [dict(comp) for comp in set([tuple(c.items()) for c in companies])]
 
     @staticmethod
     def get_companies_for_article(article_id):
@@ -337,52 +343,61 @@ class ArticleCompany(Base, PRBase):
             article_filter = article_filter.filter(ArticleCompany.title.ilike(
                     "%" + repr(search_text['title']).strip("'") + "%"))
         if 'company' in kwargs['filter'].keys():
-            article_filter = article_filter.filter(ArticleCompany.company_id==kwargs['filter']['company'])
+            article_filter = article_filter.filter(ArticleCompany.company_id == kwargs['filter']['company'])
         if 'status' in kwargs['filter'].keys():
-            article_filter = article_filter.filter(ArticleCompany.status==kwargs['filter']['status'])
+            article_filter = article_filter.filter(ArticleCompany.status == kwargs['filter']['status'])
         if 'date' in kwargs['sort'].keys():
-            sub_query = sub_query.order_by(own_article.md_tm.asc()) if kwargs['sort']['date'] == 'asc' else sub_query.order_by(
-            own_article.md_tm.desc())
+            sub_query = sub_query.order_by(own_article.md_tm.asc()) if kwargs['sort'][
+                                                                           'date'] == 'asc' else sub_query.order_by(
+                    own_article.md_tm.desc())
         else:
             sub_query = sub_query.order_by(own_article.md_tm.desc())
         return sub_query.filter(article_filter.exists())
 
+    # @staticmethod
+    # def subquery_company_materials(company_id = None, **kwargs):
+    #     sub_query = db(ArticleCompany, company_id=company_id)
+    #     if 'filter' in kwargs.keys():
+    #          if 'publication_status' in kwargs['filter'].keys() or 'portals' in kwargs['filter'].keys():
+    #             sub_query = sub_query.join(ArticlePortalDivision,
+    #                                    ArticlePortalDivision.article_company_id == ArticleCompany.id)
+    #             if 'publication_status' in kwargs['filter'].keys():
+    #                 sub_query = sub_query.filter(ArticlePortalDivision.status == kwargs['filter']['publication_status'])
+    #             if 'portals' in kwargs['filter'].keys():
+    #                 sub_query = sub_query.join(PortalDivision,
+    #                                        PortalDivision.id == ArticlePortalDivision.portal_division_id).filter(PortalDivision.portal_id == kwargs['filter']['portals'])
+    #     return sub_query
+
     @staticmethod
-    def subquery_company_materials(search_text=None, company_id=None, **kwargs):
+    def subquery_company_materials(company_id=None, filters=None, sorts=None):
         sub_query = db(ArticleCompany, company_id=company_id)
-        if 'filter' in kwargs.keys():
-
-             # if 'material_status' in kwargs['filter'].keys():
-             #    sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['filter']['material_status'])
-             if 'multiselect' in kwargs['filter'].keys():
-                 if 'material_status' in kwargs['filter']['multiselect'].keys():
-                     sub_query = db(ArticleCompany, company_id=company_id)
-                     sub_query = sub_query.filter(or_(ArticleCompany.status == v for v in kwargs['filter']['multiselect']['material_status']))
-             if 'material_status' in kwargs['filter'].keys():
-                sub_query = db(ArticleCompany, company_id=company_id, status=kwargs['filter']['material_status'])
-             if 'publication_status' in kwargs['filter'].keys() or 'portals' in kwargs['filter'].keys():
-                sub_query = sub_query.join(ArticlePortalDivision,
+        params = ArticleCompany.getParamsGrid(filters, sorts)
+        filters = [];
+        sorts = []
+        if 'publication_status' in params['filter'].keys() or 'portals' in params['filter'].keys():
+            sub_query = sub_query.join(ArticlePortalDivision,
                                        ArticlePortalDivision.article_company_id == ArticleCompany.id)
-                if 'publication_status' in kwargs['filter'].keys():
-                    sub_query = sub_query.filter(ArticlePortalDivision.status == kwargs['filter']['publication_status'])
-                if 'portals' in kwargs['filter'].keys():
-                    sub_query = sub_query.join(PortalDivision,
-                                           PortalDivision.id == ArticlePortalDivision.portal_division_id). \
-                    filter(PortalDivision.portal_id == kwargs['filter']['portals'])
-             if 'date' in kwargs['filter'].keys():
-                 fromm = datetime.utcfromtimestamp(kwargs['filter']['date']['from']/1000)
-                 to = datetime.utcfromtimestamp(kwargs['filter']['date']['to']/1000)
-                 sub_query = sub_query.filter(ArticleCompany.md_tm.between(fromm, to))
-        if search_text:
-            if 'title' in search_text:
-                sub_query = sub_query.filter(ArticleCompany.title.ilike("%" + search_text['title'] + "%"))
-        if 'date' in kwargs['sort'].keys():
-            sub_query = sub_query.order_by(ArticleCompany.md_tm.asc()) if kwargs[
-                                                                              'sort']['date'] == 'asc' else sub_query.order_by(
-            ArticleCompany.md_tm.desc())
-
+            if 'publication_status' in params['filter'].keys():
+                filters.append({'type': 'select', 'value': params['filter']['publication_status'],
+                                'field': ArticlePortalDivision.status})
+            if 'portals' in params['filter'].keys():
+                sub_query = sub_query.join(PortalDivision,
+                                           PortalDivision.id == ArticlePortalDivision.portal_division_id).join(Portal,
+                                                                                                               Portal.id == PortalDivision.portal_id)
+                filters.append({'type': 'select', 'value': params['filter']['portals'], 'field': Portal.name})
+        if 'md_tm' in params['filter'].keys():
+            filters.append({'type': 'date_range', 'value': params['filter']['md_tm'], 'field': ArticleCompany.md_tm})
+        if 'title' in params['filter'].keys():
+            filters.append({'type': 'text', 'value': params['filter']['title'], 'field': ArticleCompany.title})
+        if 'author' in params['filter'].keys():
+            sub_query = sub_query.join(User,
+                                       User.id == ArticleCompany.editor_user_id)
+            filters.append({'type': 'text', 'value': params['filter']['author'], 'field': User.profireader_name})
+        if 'md_tm' in params['sort'].keys():
+            sorts.append({'type': 'date', 'value': params['sort']['md_tm'], 'field': ArticleCompany.md_tm})
         else:
-            sub_query = sub_query.order_by(expression.desc(ArticleCompany.md_tm))
+            sorts.append({'type': 'date', 'value': 'desc', 'field': ArticleCompany.md_tm})
+        sub_query = ArticleCompany.subquery_grid(sub_query, filters, sorts)
         return sub_query
 
         # self.portal_devision_id = portal_devision_id
@@ -407,11 +422,11 @@ class ArticleCompany(Base, PRBase):
 
         article_portal_division = \
             ArticlePortalDivision(
-                title=self.title, subtitle=self.subtitle,
-                short=self.short, long=self.long,
-                portal_division_id=portal_division_id,
-                article_company_id=self.id,
-                keywords=self.keywords,
+                    title=self.title, subtitle=self.subtitle,
+                    short=self.short, long=self.long,
+                    portal_division_id=portal_division_id,
+                    article_company_id=self.id,
+                    keywords=self.keywords,
             )
 
         # TODO (AA to AA): old  tag_portal_division_article should be deleted.
@@ -448,7 +463,7 @@ class ArticleCompany(Base, PRBase):
         long_text = self.long
         for old_image_id in filesintext:
             long_text = long_text.replace('://file001.profireader.com/%s/' % (old_image_id,),
-                                          '://file001.profireader.com/%s/' % ( filesintext[old_image_id],))
+                                          '://file001.profireader.com/%s/' % (filesintext[old_image_id],))
 
         article_portal_division.long = long_text
 
@@ -511,7 +526,7 @@ class Article(Base, PRBase):
                                                                                      filter_by(company_id=Company.id,
                                                                                                article_id=article_id).
                                                                                      exists()).filter(
-            Company.name.ilike("%" + searchtext + "%")).all()]
+                Company.name.ilike("%" + searchtext + "%")).all()]
 
     @staticmethod
     def save_edited_version(user_id, article_company_id, **kwargs):
@@ -529,12 +544,12 @@ class Article(Base, PRBase):
     #         sub_query = db(ArticlePortalDivision).order_by('publishing_tm').filter(text(
     #             ' "publishing_tm" < clock_timestamp() ')).filter_by(
     #             portal_division_id=portal_division_id,
-    #             status=ARTICLE_STATUS_IN_PORTAL.published)
+    #             status=ArticlePortalDivision.STATUSES['PUBLISHED'])
     #     else:
     #         sub_query = db(ArticlePortalDivision).order_by('publishing_tm').filter(text(
     #             ' "publishing_tm" < clock_timestamp() ')).filter_by(
     #             portal_division_id=portal_division_id,
-    #             status=ARTICLE_STATUS_IN_PORTAL.published).filter(
+    #             status=ArticlePortalDivision.STATUSES['PUBLISHED']).filter(
     #             or_(
     #                 ArticlePortalDivision.title.ilike("%" + search_text + "%"),
     #                 ArticlePortalDivision.short.ilike("%" + search_text + "%"),
@@ -560,9 +575,9 @@ class Article(Base, PRBase):
         # for a in test:
         #     print(a.text)
 
-        sub_query = db(ArticlePortalDivision, status=ARTICLE_STATUS_IN_PORTAL.published, **kwargs). \
+        sub_query = db(ArticlePortalDivision, status=ArticlePortalDivision.STATUSES['PUBLISHED'], **kwargs). \
             order_by(ArticlePortalDivision.publishing_tm.desc()).filter(
-            text(' "publishing_tm" < clock_timestamp() '))
+                text(' "publishing_tm" < clock_timestamp() '))
 
         if portal_id:
             sub_query = sub_query.join(PortalDivision).join(Portal).filter(Portal.id == portal_id)
@@ -582,12 +597,12 @@ class Article(Base, PRBase):
     #         query = g.db.query(ArticlePortalDivision).order_by('publishing_tm').filter(text(
     #             ' "publishing_tm" < clock_timestamp() ')).filter_by(
     #             portal_division_id=portal_division_id,
-    #             status=ARTICLE_STATUS_IN_PORTAL.published)
+    #             status=ArticlePortalDivision.STATUSES['PUBLISHED'])
     #     else:
     #         query = g.db.query(ArticlePortalDivision).order_by('publishing_tm').filter(text(
     #             ' "publishing_tm" < clock_timestamp() ')).filter_by(
     #             portal_division_id=portal_division_id,
-    #             status=ARTICLE_STATUS_IN_PORTAL.published).filter(
+    #             status=ArticlePortalDivision.STATUSES['PUBLISHED']).filter(
     #             or_(
     #                 ArticlePortalDivision.title.ilike("%" + search_text + "%"),
     #                 ArticlePortalDivision.short.ilike("%" + search_text + "%"),
@@ -630,12 +645,8 @@ class Article(Base, PRBase):
     def getListGridDataMaterials(articles):
         grid_data = []
         for article in articles:
-            # allowed_statuses = []
-            # art_stats = ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(article.status)
-            # for s in art_stats:
-            #     allowed_statuses.append({'id': s, 'value': s})
             port = 'not sent' if len(article.portal_article) == 0 else ''
-            grid_data.append({'date': article.md_tm,
+            grid_data.append({'md_tm': article.md_tm,
                               'title': article.title,
                               'author': article.editor.profireader_name,
                               'portals': port,
@@ -645,7 +656,7 @@ class Article(Base, PRBase):
             if article.portal_article:
                 i = 0
                 for portal in article.portal_article:
-                    grid_data.append({'date': '',
+                    grid_data.append({'md_tm': '',
                                       'title': '',
                                       'portals': portal.portal.name,
                                       'publication_status': portal.status,
@@ -665,7 +676,7 @@ class Article(Base, PRBase):
         grid_data = []
         for article in publications:
             allowed_statuses = []
-            art_stats = ARTICLE_STATUS_IN_PORTAL.can_user_change_status_to(article['status'])
+            art_stats = []
             for s in art_stats:
                 allowed_statuses.append({'id': s, 'value': s})
             port = article['company']['name'] if article['company']['name'] else 'Not sent to any company yet'
@@ -697,7 +708,7 @@ class Article(Base, PRBase):
                 i = 0
                 for child in companies_for_article:
                     st = article_dict['submitted_versions'][i]['status'] if len(
-                        article_dict['submitted_versions']) > 0 else 'Not sent'
+                            article_dict['submitted_versions']) > 0 else 'Not sent'
                     articles_drid_data.append({'date': '',
                                                'title': '',
                                                'company': child['name'],
@@ -768,9 +779,10 @@ class ReaderArticlePortalDivision(Base, PRBase):
     @staticmethod
     def subquery_favorite_articles():
         return db(ArticlePortalDivision).filter(
-            ArticlePortalDivision.id == db(ReaderArticlePortalDivision,
-                                           user_id=g.user.id, favorite=True).subquery().c.article_portal_division_id)
+                ArticlePortalDivision.id == db(ReaderArticlePortalDivision,
+                                               user_id=g.user.id,
+                                               favorite=True).subquery().c.article_portal_division_id)
 
     def get_portal_division(self):
         return db(PortalDivision).filter(PortalDivision.id == db(ArticlePortalDivision,
-                                         id=self.article_portal_division_id).c.portal_division_id).one()
+                                                                 id=self.article_portal_division_id).c.portal_division_id).one()

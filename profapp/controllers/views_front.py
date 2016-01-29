@@ -16,7 +16,6 @@ import os
 from flask import send_from_directory, jsonify, json
 import collections
 from sqlalchemy import and_
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 from .request_wrapers import ok
 from ..utils.email import send_email
 from flask.ext.login import current_user

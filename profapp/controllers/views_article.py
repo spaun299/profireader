@@ -5,7 +5,6 @@ from profapp.models.portal import PortalDivision, UserPortalReader, Portal, Memb
 from ..models.pr_base import Search
 from .blueprints_declaration import article_bp
 from .request_wrapers import ok, tos_required
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 from .pagination import pagination
 from config import Config
 from .views_file import crop_image, update_croped_image
@@ -269,7 +268,7 @@ def list_reader(page=1):
                                                                   db(UserPortalReader, user_id=g.user.id).subquery().
                                                                   c.portal_id).subquery().c.id,
                                                               ArticlePortalDivision.status ==
-                                                              ARTICLE_STATUS_IN_PORTAL.published),
+                                                              ArticlePortalDivision.STATUSES['PUBLISHED']),
                                                'tags': True, 'return_fields': 'default_dict'}, page=page)
     else:
         articles, pages, page = Search.search({'class': ArticlePortalDivision,
