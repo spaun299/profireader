@@ -8,7 +8,7 @@ from utils.email import email_send
 
 @general_bp.route('help/')
 def help():
-    return redirect(url_for('auth.login_signup_endpoint', login_signup='login'))
+    return render_template('help.html')
 
 
 @general_bp.route('')
