@@ -114,7 +114,7 @@ class Search(Base):
                        {'class': ArticlePortalDivision,
                         'filter' and_(ArticlePortalDivision.portal_division_id == division.id,
                                       ArticlePortalDivision.status ==
-                                      ARTICLE_STATUS_IN_PORTAL.published)},
+                                      ArticlePortalDivision.STATUSES['PUBLISHED'])},
                         order_by = ('name', 'title', ). Because class Company does not have 'title'
                         field, and class ArticlePortalDivision does not have 'name' field.
                       -desc_asc = sort by desc or asc default = desc,
@@ -291,6 +291,14 @@ class MLStripper(HTMLParser):
         if data is '':
             data = html
         return data
+
+class Grid:
+    @staticmethod
+    def filter_for_status(statuses):
+        return [{'value': status, 'label': status} for status in statuses.keys()]
+
+    def page_options(client_json):
+        return  {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize']}
 
 
 class PRBase:
@@ -521,6 +529,7 @@ class PRBase:
     #     ret = target.validate('delete')
     #     if len(ret['errors'].keys()):
     #         raise errors.ValidationException(ret)
+
 
     @staticmethod
     def add_to_search(mapper=None, connection=None, target=None):

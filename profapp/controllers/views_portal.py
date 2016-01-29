@@ -13,10 +13,9 @@ from ..models.company import simple_permissions
 from ..models.rights import Right
 from profapp.models.rights import RIGHTS
 from ..controllers import errors
-from ..models.pr_base import PRBase
+from ..models.pr_base import PRBase,Grid
 import copy
 from .pagination import pagination
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 from config import Config
 
 
@@ -504,7 +503,7 @@ def publications_load(json, company_id):
     add_param = {'value': '1', 'label': '-- all --'}
     comp_grid = Article.list_for_grid_tables(
             ArticlePortalDivision.get_companies_which_send_article_to_portal(portal.id), add_param, True)
-    statuses_grid = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
+    statuses_grid = Grid.filter_for_status(ArticlePortalDivision.STATUSES)
     grid_data = Article.getListGridDataPublication(articles)
     grid_filters = {'publication_status': statuses_grid, 'company': comp_grid}
     return {'grid_data': grid_data,
@@ -525,10 +524,10 @@ def publication_details(article_id, company_id):
 @ok
 def publication_details_load(json, article_id, company_id):
     article = db(ArticlePortalDivision, id=article_id).one().get_client_side_dict()
-    allowed_statuses = ARTICLE_STATUS_IN_PORTAL.can_user_change_status_to(article['status'])
-    new_status = ARTICLE_STATUS_IN_PORTAL.published \
-        if article['status'] != ARTICLE_STATUS_IN_PORTAL.published \
-        else ARTICLE_STATUS_IN_PORTAL.declined
+    allowed_statuses = ArticlePortalDivision.STATUSES.keys()
+    new_status = ArticlePortalDivision.STATUSES['PUBLISHED'] \
+        if article['status'] != ArticlePortalDivision.STATUSES['PUBLISHED'] \
+        else ArticlePortalDivision.STATUSES['NOT_PUBLISHED']
     return {'article': article,
             'user_rights': list(g.user.user_rights_in_company(company_id)),
             'new_status': new_status,
@@ -541,12 +540,12 @@ def publication_details_load(json, article_id, company_id):
 def update_article_portal(json, article_id):
     db(ArticlePortalDivision, id=article_id).update({'status': json.get('new_status')})
     article = db(ArticlePortalDivision, id=article_id).one().get_client_side_dict()
-    allowed_statuses = ARTICLE_STATUS_IN_PORTAL.can_user_change_status_to(article['status'])
+    allowed_statuses = ArticlePortalDivision.STATUSES.keys()
     json['allowed_statuses'] = allowed_statuses
     json['article']['status'] = json.get('new_status')
-    json['new_status'] = ARTICLE_STATUS_IN_PORTAL.published \
-        if json.get('new_status') != ARTICLE_STATUS_IN_PORTAL.published \
-        else ARTICLE_STATUS_IN_PORTAL.declined
+    json['new_status'] = ArticlePortalDivision.STATUSES['PUBLISHED'] \
+        if json.get('new_status') != ArticlePortalDivision.STATUSES['PUBLISHED'] \
+        else ArticlePortalDivision.STATUSES['NOT_PUBLISHED']
     return json
 
 

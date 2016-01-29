@@ -7,7 +7,6 @@ from config import Config
 from profapp.controllers.errors import BadDataProvided
 from .pagination import pagination
 from collections import OrderedDict
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 from sqlalchemy import text
 from utils.db_utils import db
 
