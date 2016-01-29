@@ -44,9 +44,11 @@
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
                         filter: {type: 'input'}
                     },{
-                        name: 'author',enableSorting: false,
-                        displayName: 'Author',
-                        filter: {type:'input'}
+                        name: 'author'
+                        ,enableSorting: false
+                        ,displayName: 'Author'
+                        ,enableFiltering: false
+                        //,filter: {type:'input'}
                     },{
                         name: 'md_tm',enableColumnMenu: true,
                         displayName: 'Date',
@@ -57,7 +59,7 @@
                         href: 'url_edit_article_portal({article_portal_division_id: row.entity.id})',
                         hideIf: 'not sent',
                         classes: 'link',
-                        filter: {type:'multi_select'}
+                        filter: {type:'select'}
                     },{
                         name: 'publication_status',enableSorting: false,
                         filter: {type: 'select'}

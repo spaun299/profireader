@@ -1135,9 +1135,6 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
                     }else if(col[i].filter.type === 'multi_select'){
                         scope.gridOptions1.columnDefs[i]['filter']['selectOptions'] = resp.grid_filters[col[i].name];
                         scope.listsForMS = resp.grid_filters[col[i].name].slice(1);
-                        //if(!scope.all_grid_data['filter'][col[i].name]){
-                        //    scope.all_grid_data['filter'][col[i].name] = [];
-                        //}
                     }
                 }
             }
@@ -1188,38 +1185,33 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
 
             });
             gridApi.core.on.filterChanged(scope, function () {
+                'use strict'
                 var grid = this.grid;
+                var at_least_one_filter_changed = false;
                 for (var i = 0; i < grid.columns.length; i++) {
-                    term = grid.columns[i].filter.term;
-                    type = grid.columns[i].filter.type;
-                    field = grid.columns[i].name;
-                    if(type === 'date_range'){
+
+                    var term = grid.columns[i].filter.term;
+                    var type = grid.columns[i].filter.type;
+                    var field = grid.columns[i].name;
+
+                    if(type === 'date_range') {
                         if(grid.columns[i].filters[0].term && grid.columns[i].filters[1].term){
-                            from = new Date(grid.columns[i].filters[0].term).getTime();
-                            to = new Date(grid.columns[i].filters[1].term).getTime();
+                            at_least_one_filter_changed = true;
+                            var from = new Date(grid.columns[i].filters[0].term).getTime();
+                            var to = new Date(grid.columns[i].filters[1].term).getTime();
                             var error = from - to > 0;
                             scope.all_grid_data['filter'][field] = {'from':from, 'to':to};
                             error ? add_message('You push wrong date', 'danger', 3000): scope.sendData(scope.all_grid_data)
                         }
-                    }
-                    if (term !== undefined) {
-                        if (term !== scope.pos[field] && term) {
-                            scope.pos[field] = term;
-                            if (grid.columns[i].filter.selectOptions[term - 1]['value'] !== '1')
-                                scope.all_grid_data.paginationOptions.pageNumber = 1;
-                            if (grid.columns[i].filter.selectOptions[term - 1]['id']) {
-                                scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term - 1]['id'];
-                                scope.sendData(scope.all_grid_data)
-                            }else if(term !== '1') {
-                                scope.all_grid_data['filter'][field] = grid.columns[i].filter.selectOptions[term - 1]['label'];
-                                scope.sendData(scope.all_grid_data)
-                            }
-                        }
-                        if (term === null && term !== scope.pos[field]) {
-                            scope.pos[field] = term;
-                            scope.refreshGrid(scope.gridOptions1.columnDefs)
+                    }else if (term !== undefined) {
+                        if (term !== scope.all_grid_data['filter'][field]) {
+                            at_least_one_filter_changed = true;
+                            scope.all_grid_data['filter'][field] = term;
                         }
                     }
+                }
+                if (at_least_one_filter_changed) {
+                    scope.sendData(scope.all_grid_data)
                 }
             });
             if (scope.gridOptions1.enableRowSelection) {

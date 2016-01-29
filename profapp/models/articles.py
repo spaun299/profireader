@@ -372,7 +372,7 @@ class ArticleCompany(Base, PRBase):
                 sub_query = sub_query.join(PortalDivision,
                                            PortalDivision.id == ArticlePortalDivision.portal_division_id).join(Portal,
                                            Portal.id == PortalDivision.portal_id)
-                filters.append({'type': 'multiselect', 'value': params['filter']['portals'], 'field': Portal.name})
+                filters.append({'type': 'select', 'value': params['filter']['portals'], 'field': Portal.name})
         if 'md_tm' in params['filter'].keys():
             filters.append({'type': 'date_range', 'value': params['filter']['md_tm'], 'field': ArticleCompany.md_tm})
         if 'title' in params['filter'].keys():
@@ -633,10 +633,6 @@ class Article(Base, PRBase):
     def getListGridDataMaterials(articles):
         grid_data = []
         for article in articles:
-            # allowed_statuses = []
-            # art_stats = ARTICLE_STATUS_IN_COMPANY.can_user_change_status_to(article.status)
-            # for s in art_stats:
-            #     allowed_statuses.append({'id': s, 'value': s})
             port = 'not sent' if len(article.portal_article) == 0 else ''
             grid_data.append({'md_tm': article.md_tm,
                               'title': article.title,

@@ -4,6 +4,7 @@ from flask.ext.login import login_required, current_user
 from flask import render_template, request, url_for, g, redirect
 from ..models.company import Company, UserCompany, Right, RightHumnReadible
 from ..models.users import User
+from ..models.translate import TranslateTemplate
 from .request_wrapers import ok, check_rights, tos_required
 from ..constants.STATUS import STATUS
 from flask.ext.login import login_required
@@ -80,15 +81,13 @@ def materials_load(json, company_id):
     subquery = ArticleCompany.subquery_company_materials(company_id, json.get('filter'), json.get('sort'))
 
     materials, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
-    add_param = {'value': '1', 'label': '-- all --'}
-    statuses_g = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-    portals_g = Article.list_for_grid_tables(ArticlePortalDivision.get_portals_where_company_send_article(company_id),
-                                             add_param, True)
-    gr_publ_st = Article.list_for_grid_tables(ARTICLE_STATUS_IN_PORTAL.all, add_param, False)
-    grid_data = Article.getListGridDataMaterials(materials)
-    grid_filters = {'portals': portals_g, 'material_status': statuses_g, 'publication_status': gr_publ_st}
-    return {'grid_data': grid_data,
-            'grid_filters': grid_filters,
+    grid_filters = {
+        'portals': [{'value': portal, 'label': portal} for portal_id, portal in ArticlePortalDivision.get_portals_where_company_send_article(company_id).items()],
+        'material_status': [{'value': status, 'label': status} for status in ARTICLE_STATUS_IN_COMPANY.all],
+        'publication_status': [{'value': status, 'label': status} for status in ARTICLE_STATUS_IN_PORTAL.all]
+    }
+    return {'grid_data': Article.getListGridDataMaterials(materials),
+            'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('','__-- all --')}] + v for (k,v) in grid_filters.items()},
             'total': subquery.count()
             }
 

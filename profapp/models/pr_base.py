@@ -580,7 +580,6 @@ class PRBase:
         for filter in filters:
             if filter['type'] == 'text':
                 query = query.filter(filter['field'].ilike("%" + filter['value'] + "%"))
-                print(filter['field'], filter['value'])
             elif filter['type'] == 'select':
                 query = query.filter(filter['field'] == filter['value'])
             elif filter['type'] == 'date_range':
