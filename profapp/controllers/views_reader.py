@@ -90,11 +90,12 @@ def reader_subscribe(portal_id):
 
     user_portal_reader = g.db.query(UserPortalReader).filter_by(user_id=user_dict['id'], portal_id=portal_id).count()
     if not user_portal_reader:
-        free_plan = g.db.query(ReaderUserPortalPlan.id, ReaderUserPortalPlan.time).filter_by(name='free').one()
+        free_plan = g.db.query(ReaderUserPortalPlan.id, ReaderUserPortalPlan.time,
+                               ReaderUserPortalPlan.amount).filter_by(name='free').one()
         start_tm = datetime.datetime.utcnow()
         end_tm = datetime.datetime.fromtimestamp(start_tm.timestamp()+free_plan[1])
         user_portal_reader = UserPortalReader(user_dict['id'], portal_id, status='active', portal_plan_id=free_plan[0],
-                                              start_tm=start_tm, end_tm=end_tm)
+                                              start_tm=start_tm, end_tm=end_tm, amount=free_plan[2])
         g.db.add(user_portal_reader)
         g.db.commit()
         flash('You have successfully subscribed to this portal')

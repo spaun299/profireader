@@ -17,6 +17,7 @@ from config import Config
 import simplejson
 from .files import File
 from profapp.controllers.errors import BadDataProvided
+import datetime
 
 
 class Portal(Base, PRBase):
@@ -346,12 +347,14 @@ class ReaderUserPortalPlan(Base, PRBase):
     name = Column(TABLE_TYPES['name'], nullable=False, default='free')
     time = Column(TABLE_TYPES['bigint'], default=9999999)
     price = Column(TABLE_TYPES['float'], default=0)
+    amount = Column(TABLE_TYPES['int'], default=9999999)
 
-    def __init__(self, name=None, time=None, price=None):
+    def __init__(self, name=None, time=None, price=None, amount=None):
         super(ReaderUserPortalPlan, self).__init__()
         self.name = name
         self.time = time
         self.price = price
+        self.amount = amount
 
 
 class PortalLayout(Base, PRBase):
@@ -540,18 +543,20 @@ class UserPortalReader(Base, PRBase):
     portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('reader_user_portal_plan.id'))
     start_tm = Column(TABLE_TYPES['timestamp'])
     end_tm = Column(TABLE_TYPES['timestamp'])
+    amount = Column(TABLE_TYPES['int'], default=99999)
 
     portal = relationship('Portal')
     user = relationship('User')
 
     def __init__(self, user_id=None, portal_id=None, status='active', portal_plan_id=None, start_tm=None,
-                 end_tm=None):
+                 end_tm=None, amount=None):
         super(UserPortalReader, self).__init__()
         self.user_id = user_id
         self.portal_id = portal_id
         self.status = status
         self.start_tm = start_tm
         self.end_tm = end_tm
+        self.amount = amount
         self.portal_plan_id = portal_plan_id or g.db(ReaderUserPortalPlan.id).filter_by(name='free').one()[0]
 
     @staticmethod
@@ -563,7 +568,8 @@ class UserPortalReader(Base, PRBase):
     @staticmethod
     def get_portals_and_plan_info_for_user(user_id):
         for upr in db(UserPortalReader, user_id=user_id).all():
-            yield dict(portal_id=upr.portal_id, status=upr.status, start_tm=upr.start_tm, end_tm=upr.end_tm,
+            yield dict(portal_id=upr.portal_id, status=upr.status, start_tm=upr.start_tm,
+                       end_tm=upr.end_tm if upr.end_tm > datetime.datetime.utcnow() else 'Expired at '+upr.end_tm,
                        plan_id=upr.portal_plan_id,
                        plan_name=db(ReaderUserPortalPlan.name, id=upr.portal_plan_id).one()[0],
                        portal_name=upr.portal.name, portal_host=upr.portal.host,
