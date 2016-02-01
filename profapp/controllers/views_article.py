@@ -16,7 +16,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
 from sqlalchemy.sql import expression, and_
 from sqlalchemy import text
-from collections import OrderedDict
 import time
 
 
@@ -171,7 +170,12 @@ def material_details_load(json, material_id):
     return {'material': article.get_client_side_dict(more_fields='long'),
             'company': Company.get(article.company_id).get_client_side_dict(),
             'rights_user_in_company': list(g.user.user_rights_in_company(article.company_id)),
-            'portals': PRBase.get_ordered_dict(Company.get(article.company_id).get_portals_where_company_is_member())
+            'portals': {
+                'grid_data': [p.get_client_side_dict() for p in
+                              Company.get(article.company_id).get_portals_where_company_is_member()],
+                'grid_filters': {},
+                'total': 2
+            }
             # 'user_rights': ['publish', 'unpublish', 'edit'],
             # TODO: uncomment the string below and delete above
             # TODO: when all works with rights are finished
@@ -179,36 +183,37 @@ def material_details_load(json, material_id):
             # 'joined_portals': joined_portals
             }
 
-@article_bp.route('/material_details_publications/<string:material_id>/', methods=['POST'])
-@ok
-def material_portals_load(json, material_id):
-    article = ArticleCompany.get(material_id)
 
-
-    joined_portals = {}
-    if article.portal_article:
-        joined_portals = {articles.division.portal.id: portals.pop(articles.division.portal.id)
-                          for articles in article.portal_article
-                          if articles.division.portal.id in portals}
-
-    user_rights = list(g.user.user_rights_in_company(article.company_id))
-
-    return {'article': article.get_client_side_dict(more_fields='long'),
-            'company': Company.get(article.company_id).get_client_side_dict(),
-            'publications': {
-                'portals': portals,
-                'statuses': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
-                'visibilities': Grid.filter_for_status(ArticlePortalDivision.VISIBILITIES)
-            }
-            # 'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_chage_status_to(article['status']),
-
-
-            # 'user_rights': ['publish', 'unpublish', 'edit'],
-            # TODO: uncomment the string below and delete above
-            # TODO: when all works with rights are finished
-            # 'user_rights': user_rights,
-            # 'joined_portals': joined_portals
-            }
+# @article_bp.route('/material_details_publications/<string:material_id>/', methods=['POST'])
+# @ok
+# def material_portals_load(json, material_id):
+# article = ArticleCompany.get(material_id)
+#
+#
+# joined_portals = {}
+# if article.portal_article:
+#     joined_portals = {articles.division.portal.id: portals.pop(articles.division.portal.id)
+#                       for articles in article.portal_article
+#                       if articles.division.portal.id in portals}
+#
+# user_rights = list(g.user.user_rights_in_company(article.company_id))
+#
+# return {'article': article.get_client_side_dict(more_fields='long'),
+#         'company': Company.get(article.company_id).get_client_side_dict(),
+#         'publications': {
+#             'portals': portals,
+#             'statuses': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+#             'visibilities': Grid.filter_for_status(ArticlePortalDivision.VISIBILITIES)
+#         }
+#         # 'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_chage_status_to(article['status']),
+#
+#
+#         # 'user_rights': ['publish', 'unpublish', 'edit'],
+#         # TODO: uncomment the string below and delete above
+#         # TODO: when all works with rights are finished
+#         # 'user_rights': user_rights,
+#         # 'joined_portals': joined_portals
+#         }
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])

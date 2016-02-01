@@ -65,7 +65,7 @@ def edit_profile(user_id):
         user_fields['about_me'] = request.form['about_me']
 
         user_query.update(user_fields)
-        flash('You have successfully updated you profile.')
+        flash('You have successfully updated your profile.')
 
     #return redirect(url_for('user.profile', user_id=user_id, avatar_size=2*AVATAR_SIZE))
     return render_template('general/user_edit_profile.html',  user=user, avatar_size=AVATAR_SIZE)
