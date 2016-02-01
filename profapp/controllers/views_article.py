@@ -253,6 +253,7 @@ def details_load(json, article_id):
 
 
 @article_bp.route('/details_reader/<string:article_portal_division_id>')
+@tos_required
 def details_reader(article_portal_division_id):
     article = ArticlePortalDivision.get(article_portal_division_id)
     article.add_recently_read_articles_to_session()
@@ -272,8 +273,11 @@ def details_reader(article_portal_division_id):
 
 @article_bp.route('/list_reader')
 @article_bp.route('/list_reader/<int:page>/')
+@tos_required
 def list_reader(page=1):
-    if not request.args.get('favorite'):
+    search_text = request.args.get('search_text') or ''
+    favorite = 'favorite' in request.args
+    if not favorite:
         articles, pages, page = Search.search({'class': ArticlePortalDivision,
                                                'filter': and_(ArticlePortalDivision.portal_division_id ==
                                                               db(PortalDivision).filter(
@@ -290,7 +294,8 @@ def list_reader(page=1):
                                                                                          user_id=g.user.id,
                                                                                          favorite=True).subquery().c.
                                                           article_portal_division_id),
-                                               'tags': True, 'return_fields': 'default_dict'}, page=page)
+                                               'tags': True, 'return_fields': 'default_dict'}, page=page,
+                                              search_text=search_text)
     portals = UserPortalReader.get_portals_for_user() if not articles else None
 
     return render_template('partials/reader/reader_base.html',
@@ -298,7 +303,8 @@ def list_reader(page=1):
                            pages=pages,
                            current_page=page,
                            page_buttons=Config.PAGINATION_BUTTONS,
-                           portals=portals
+                           portals=portals,
+                           favorite=favorite
                            )
 
 

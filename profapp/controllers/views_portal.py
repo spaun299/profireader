@@ -426,7 +426,7 @@ def portals_partners_load(json, company_id):
                                 company_id=company_id).one() if portal_id else None
     portal = db(Company, id=company_id).one().own_portal
     portals_partners = [port.get_client_side_dict(fields='name, company_owner_id,id')
-                                 for port in Company.get(json['company_id']).get_portals_where_company_is_member()] 
+                                 for port in Company.get(json['company_id']).get_portals_where_company_is_member()]
     params = {}
     subquery = Company.subquery_company_partners(company_id=company_id, search_text=search_text, **params)
     partners_g, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize,
