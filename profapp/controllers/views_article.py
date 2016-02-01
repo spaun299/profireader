@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, request, g, make_response,
 from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision, ReaderArticlePortalDivision
 from profapp.models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
 from profapp.models.portal import PortalDivision, UserPortalReader, Portal, MemberCompanyPortal
-from ..models.pr_base import Search
+from ..models.pr_base import Search, PRBase, Grid
 from .blueprints_declaration import article_bp
 from .request_wrapers import ok, tos_required
 from .pagination import pagination
@@ -10,6 +10,7 @@ from config import Config
 from .views_file import crop_image, update_croped_image
 from ..models.files import ImageCroped
 from ..models.company import Company
+
 from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
 from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
@@ -164,10 +165,25 @@ def material_details(material_id):
 @article_bp.route('/material_details/<string:material_id>/', methods=['POST'])
 @ok
 # @check_rights(simple_permissions([]))
-def load_material_details(json, material_id):
+def material_details_load(json, material_id):
     article = ArticleCompany.get(material_id)
-    portals = {port.portal_id: port.portal.get_client_side_dict() for port in
-               MemberCompanyPortal.get_portals(article.company_id)}
+
+    return {'material': article.get_client_side_dict(more_fields='long'),
+            'company': Company.get(article.company_id).get_client_side_dict(),
+            'rights_user_in_company': list(g.user.user_rights_in_company(article.company_id)),
+            'portals': PRBase.get_ordered_dict(Company.get(article.company_id).get_portals_where_company_is_member())
+            # 'user_rights': ['publish', 'unpublish', 'edit'],
+            # TODO: uncomment the string below and delete above
+            # TODO: when all works with rights are finished
+            # 'user_rights': user_rights,
+            # 'joined_portals': joined_portals
+            }
+
+@article_bp.route('/material_details_publications/<string:material_id>/', methods=['POST'])
+@ok
+def material_portals_load(json, material_id):
+    article = ArticleCompany.get(material_id)
+
 
     joined_portals = {}
     if article.portal_article:
@@ -177,25 +193,22 @@ def load_material_details(json, material_id):
 
     user_rights = list(g.user.user_rights_in_company(article.company_id))
 
-    return {'article': article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
-                                                           'company_id, long,'
-                                                           'editor_user_id, company.name|id,'
-                                                           'portal_article.id, portal_article.division.name, '
-                                                           'portal_article.division.portal.name,'
-                                                           'portal_article.status'),
+    return {'article': article.get_client_side_dict(more_fields='long'),
+            'company': Company.get(article.company_id).get_client_side_dict(),
+            'publications': {
+                'portals': portals,
+                'statuses': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+                'visibilities': Grid.filter_for_status(ArticlePortalDivision.VISIBILITIES)
+            }
             # 'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_chage_status_to(article['status']),
-            'portals': portals,
-            'company': Company.get(article.company_id).get_client_side_dict(fields='id, employees.id|profireader_name'),
-            'selected_portal': {},
-            'selected_division': {},
+
+
             # 'user_rights': ['publish', 'unpublish', 'edit'],
             # TODO: uncomment the string below and delete above
             # TODO: when all works with rights are finished
-            'user_rights': user_rights,
-            'send_to_user': {},
-            'joined_portals': joined_portals}
-
-
+            # 'user_rights': user_rights,
+            # 'joined_portals': joined_portals
+            }
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
@@ -264,9 +277,10 @@ def list_reader(page=1):
         articles, pages, page = Search.search({'class': ArticlePortalDivision,
                                                'filter': and_(ArticlePortalDivision.portal_division_id ==
                                                               db(PortalDivision).filter(
-                                                                  PortalDivision.portal_id ==
-                                                                  db(UserPortalReader, user_id=g.user.id).subquery().
-                                                                  c.portal_id).subquery().c.id,
+                                                                      PortalDivision.portal_id ==
+                                                                      db(UserPortalReader,
+                                                                         user_id=g.user.id).subquery().
+                                                                      c.portal_id).subquery().c.id,
                                                               ArticlePortalDivision.status ==
                                                               ArticlePortalDivision.STATUSES['PUBLISHED']),
                                                'tags': True, 'return_fields': 'default_dict'}, page=page)

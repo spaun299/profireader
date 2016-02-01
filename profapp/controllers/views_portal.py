@@ -13,7 +13,7 @@ from ..models.company import simple_permissions
 from ..models.rights import Right
 from profapp.models.rights import RIGHTS
 from ..controllers import errors
-from ..models.pr_base import PRBase,Grid
+from ..models.pr_base import PRBase, Grid
 import copy
 from .pagination import pagination
 from config import Config
@@ -149,8 +149,8 @@ def create_save(json, create_or_update, company_id):
 def apply_company(json):
     MemberCompanyPortal.apply_company_to_portal(company_id=json['company_id'],
                                                 portal_id=json['portal_id'])
-    return {'portals_partners': [portal.portal.get_client_side_dict(fields='name, company_owner_id,id')
-                                 for portal in MemberCompanyPortal.get_portals(json['company_id'])],
+    return {'portals_partners': [port.get_client_side_dict(fields='name, company_owner_id,id')
+                                 for port in Company.get(json['company_id']).get_portals_where_company_is_member()],
             'company_id': json['company_id']}
 
 
@@ -400,7 +400,6 @@ def profile_edit_load(json, portal_id):
     tags = set(tag_portal_division.tag for tag_portal_division in portal.portal_bound_tags_select)
     tags_dict = {tag.id: tag.name for tag in tags}
 
-
     return {'portal': portal.get_client_side_dict('id, name, divisions, own_company, portal_bound_tags_select.*'),
             'tag': tags_dict}
 
@@ -423,18 +422,19 @@ def portals_partners_load(json, company_id):
     pageSize = json.get('paginationOptions')['pageSize'] if json.get('paginationOptions') else 25
     search_text = json.get('search_text')
     portal_id = json.get('getPageOfId') if json.get('getPageOfId') else None
-    subquery_member_portal = db(MemberCompanyPortal, portal_id=portal_id, company_id=company_id).one() if portal_id else None
+    subquery_member_portal = db(MemberCompanyPortal, portal_id=portal_id,
+                                company_id=company_id).one() if portal_id else None
     portal = db(Company, id=company_id).one().own_portal
-    portals_partners = [port.portal.get_client_side_dict(fields='name, company_owner_id, id')
-                        for port in MemberCompanyPortal.get_portals(
-                company_id) if port]
+    portals_partners = [port.get_client_side_dict(fields='name, company_owner_id,id')
+                                 for port in Company.get(json['company_id']).get_portals_where_company_is_member()] 
     params = {}
     subquery = Company.subquery_company_partners(company_id=company_id, search_text=search_text, **params)
-    partners_g, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize,object=subquery_member_portal)
+    partners_g, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize,
+                                                 object=subquery_member_portal)
     user_rights = list(g.user.user_rights_in_company(company_id))
     grid_data = Company.getListGridDataPortalPartners(partners_g)
-    return {'page' :current_page,
-            'grid_data':grid_data,
+    return {'page': current_page,
+            'grid_data': grid_data,
             'total': subquery.count(),
             'portal': portal.get_client_side_dict(fields='name') if portal else [],
             'portals_partners': portals_partners,
@@ -496,7 +496,7 @@ def publications_load(json, company_id):
     page = json.get('paginationOptions')['pageNumber']
     pageSize = json.get('paginationOptions')['pageSize']
     search_text = json.get('search_text')
-    params = PRBase.getParamsGrid(json.get('filter'),  json.get('sort'), portal_id=portal.id)
+    params = PRBase.getParamsGrid(json.get('filter'), json.get('sort'), portal_id=portal.id)
     subquery = ArticlePortalDivision.subquery_portal_articles(search_text=search_text, **params)
     articles, pages, current_page = pagination(subquery,
                                                page=page, items_per_page=pageSize)
