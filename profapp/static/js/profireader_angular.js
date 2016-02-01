@@ -120,6 +120,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             restrict: 'A',
             require: 'ngModel',
             link: function (scope, element, attrs, model) {
+                console.log('das')
 
                 element.html($templateCache.get('cropper.html'));
 
