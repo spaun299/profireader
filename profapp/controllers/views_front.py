@@ -13,13 +13,12 @@ from config import Config
 from .pagination import pagination
 from sqlalchemy import Column, ForeignKey, text
 import os
-from flask import send_from_directory
+from flask import send_from_directory, jsonify, json
 import collections
 from sqlalchemy import and_
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 from .request_wrapers import ok
 from ..utils.email import send_email
-
+from flask.ext.login import current_user
 
 def get_division_for_subportal(portal_id, member_company_id):
     q = g.db().query(PortalDivisionSettingsCompanySubportal). \
@@ -39,7 +38,7 @@ def get_division_for_subportal(portal_id, member_company_id):
 
 
 def get_params(**argv):
-    search_text = request.args.get('search_text') if request.args.get('search_text') else ''
+    search_text = request.args.get('search_text') or ''
     app = current_app._get_current_object()
     portal = g.db().query(Portal).filter_by(host=request.host).one()
 
@@ -166,6 +165,7 @@ def details(article_portal_division_id):
              ArticlePortalDivision.portal_division_id.in_(
                  db(PortalDivision.id).filter(PortalDivision.portal_id == article.division.portal_id))
              )).order_by(ArticlePortalDivision.cr_tm.desc()).limit(5).all()
+    favorite = False
 
     return render_template('front/bird/article_details.html',
                            portal=portal_and_settings(portal),
@@ -174,7 +174,8 @@ def details(article_portal_division_id):
                                a.id: a.get_client_side_dict(fields='id, title, publishing_tm, company.name|id')
                                for a
                                in related_articles},
-                           article=article_dict
+                           article=article_dict,
+                           favorite=favorite
                            )
 
 

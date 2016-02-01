@@ -1,7 +1,6 @@
-<div class="reader_base_navbar">
-    <ul class="top-menu">
-        <li><a class="reader_button" href="{{ url_for('general.index') }}">News</a></li>
-        <li><a class="reader_button" href="{{ url_for('general.index') }}">Favorite</a></li>
-        <li><a class="reader_button" href="{{ url_for('general.index') }}">Subscriptions</a></li>
-    </ul>
-</div>
+{% extends "index_layout_new.html" %}
+{% block title %}{{ _('Profireader reader list') }}{% endblock title %}
+
+{% block portal_content %}
+    {% include 'partials/reader/reader_content.html' %}
+{% endblock portal_content %}

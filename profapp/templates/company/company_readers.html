@@ -33,7 +33,7 @@ th, td {
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
 <script>
-    module.controller('CompanyReaders', ['$scope', '$modal','$ok', function ($scope, $modal, $ok) {
+    module.controller('CompanyReaders', ['$scope', function ($scope) {
         angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_readers');
         $scope.$$translate = {{ translates('CompanyReaders')|safe }};
     }]);

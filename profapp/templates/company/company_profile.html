@@ -13,7 +13,7 @@
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
 <script>
-    module.controller('CompanyProfile', ['$scope', '$modal','$ok', function ($scope, $modal, $ok) {
+    module.controller('CompanyProfile', ['$scope', function ($scope) {
         angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('home');
         $scope.user = {{ g.user_dict|tojson|safe }};
         $scope.$$translate = {{ translates('CompanyProfile')|safe }};
@@ -28,7 +28,8 @@
 
     <br />
 
-    <img src="{{ company_logo }}" height="200" width="200" vspace="10">
+    <img pr-no-image="/static/images/company_no_logo.png" pr-image="'{{ company.logo_file_relationship.id }}'"
+            height="200" width="200" vspace="10">
 
     {% if 'manage_rights_company' in user_rights and not company.own_portal %}
         <a href="{{ url_for('portal.create', company_id=company.id) }}">{{ '{{' }}_('Create Portal'){{ '}}' }}</a>

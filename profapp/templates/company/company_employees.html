@@ -21,7 +21,7 @@
    }
     </style>
 <script>
-    module.controller('CompanyEmployees', ['$scope', '$modal','$ok', function ($scope, $modal, $ok) {
+    module.controller('CompanyEmployees', ['$scope', function ($scope) {
         angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_employees')
         $scope.user = {{ g.user_dict|tojson|safe }};
         $scope.$$translate = {{ translates('CompanyEmployees')|safe }};

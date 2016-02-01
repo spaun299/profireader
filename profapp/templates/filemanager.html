@@ -25,64 +25,61 @@
     {##}
 
 
-
-<!-- Comment if you need to use raw source code -->
-{#  <link rel="stylesheet" href="dist/angular-filemanager.css">#}
-{#  <script src="dist/angular-filemanager.min.js"></script>#}
+    <!-- Comment if you need to use raw source code -->
+    {#  <link rel="stylesheet" href="dist/angular-filemanager.css">#}
+    {#  <script src="dist/angular-filemanager.min.js"></script>#}
     <script src="/static/filemanager/app.js"></script>
-  <script src="/static/filemanager/config.js"></script>
-  <script src="/static/filemanager/chmod.js"></script>
-  <script src="/static/filemanager/item.js"></script>
-  <script src="/static/filemanager/filenavigator.js"></script>
-  <script src="/static/filemanager/fileuploader.js"></script>
-  <script src="/static/filemanager/translations.js"></script>
-  <script src="/static/filemanager/controller.js"></script>
-  <script src="/static/filemanager/selector-controller.js"></script>
+    <script src="/static/filemanager/config.js"></script>
+    <script src="/static/filemanager/chmod.js"></script>
+    <script src="/static/filemanager/item.js"></script>
+    <script src="/static/filemanager/filenavigator.js"></script>
+    <script src="/static/filemanager/fileuploader.js"></script>
+    <script src="/static/filemanager/translations.js"></script>
+    <script src="/static/filemanager/controller.js"></script>
+    <script src="/static/filemanager/selector-controller.js"></script>
     <script src="/static/filemanager/angular-filemanager.min.js"></script>
-  <link rel="stylesheet" href="/static/filemanager/angular-filemanager.css">
+    <link rel="stylesheet" href="/static/filemanager/angular-filemanager.css">
     <script src="/static/js/underscore-min.js"></script>
     <script src="/static/file_uploader/dist/ng-file-upload.js"></script>
     <!--<script src="/static/fileuploader/ng-file-upload.min.js"></script>-->
     <script src="/static/js/profireader_angular.js"></script>
 
 
-<script>
+    <script>
 
 
+        var library = {{ library|safe }};
+        var error = '{{ err }}';
+        var file_manager_called_for = '{{ file_manager_called_for|safe }}';
+        var file_manager_on_action = {{ file_manager_on_action|safe }};
+        var file_manager_default_action = '{{ file_manager_default_action|safe }}';
+        var last_visit_root = '{{ last_visit_root|safe }}';
+        var last_root_id = '{{ last_root_id|safe }}';
 
+        {#    console.log(file_manager_on_action);#}
+        {#    var app = angular.module('FileUpload', ['ngFileUpload']);#}
+        {#    angular.module('FileManagerApp').controller('MyCtrl', ['$scope', 'Upload', function ($scope, Upload) {#}
+        {#        // upload later on form submit or something similar#}
+        {#        $scope.submit = function () {#}
+        {#            $scope.upload($scope.files);#}
+        {#        };#}
+        {##}
+        {##}
+        {#        // for multiple files:#}
+        {#        $scope.upload = function (files) {#}
+        {#            if (files && files.length) {#}
+        {#                for (var i = 0; i < files.length; i++) {#}
+        {#                    Upload.upload({#}
+        {#                                url: '/filemanager/upload/',#}
+        {#                                file: files[i]#}
+        {#                            }#}
+        {#                    );#}
+        {#                }#}
+        {#            }#}
+        {#        }#}
+        {#    }]);#}
 
-    var library = {{ library|safe }};
-    var error = '{{ err }}';
-    var file_manager_called_for = '{{ file_manager_called_for|safe }}';
-    var file_manager_on_action = {{ file_manager_on_action|safe }};
-    var file_manager_default_action = '{{ file_manager_default_action|safe }}';
-    var last_visit_root = '{{ last_visit_root|safe }}';
-    var last_root_id = '{{ last_root_id|safe }}';
-
-{#    console.log(file_manager_on_action);#}
-{#    var app = angular.module('FileUpload', ['ngFileUpload']);#}
-{#    angular.module('FileManagerApp').controller('MyCtrl', ['$scope', 'Upload', function ($scope, Upload) {#}
-{#        // upload later on form submit or something similar#}
-{#        $scope.submit = function () {#}
-{#            $scope.upload($scope.files);#}
-{#        };#}
-{##}
-{##}
-{#        // for multiple files:#}
-{#        $scope.upload = function (files) {#}
-{#            if (files && files.length) {#}
-{#                for (var i = 0; i < files.length; i++) {#}
-{#                    Upload.upload({#}
-{#                                url: '/filemanager/upload/',#}
-{#                                file: files[i]#}
-{#                            }#}
-{#                    );#}
-{#                }#}
-{#            }#}
-{#        }#}
-{#    }]);#}
-
-</script>
+    </script>
 
 <body ng-app="FileManagerApp">
 <angular-filemanager></angular-filemanager>

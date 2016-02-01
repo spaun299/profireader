@@ -69,8 +69,6 @@ class User(Base, UserMixin, PRBase):
     # registered_via = Column(_T['REGISTERED_VIA'])
     # employers = relationship('Company', secondary='user_company',
     #                          backref=backref("employees", lazy='dynamic'))  # Correct
-    favorite_articles = relationship('ArticlePortalDivision',
-                                     secondary='favorite_reader_article', back_populates='users_subscribers')
 
     employers = relationship('Company', secondary='user_company', back_populates='employees')
     companies = relationship('Company', back_populates='user_owner')
@@ -484,6 +482,7 @@ class User(Base, UserMixin, PRBase):
         if passed_file:
             list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
             self.profireader_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
+            print(passed_file)
             self.profireader_small_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
         else:
             list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
