@@ -1134,7 +1134,6 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
             }
         },
         applyGridExtarnals: function (resp) {
-            console.log(resp);
             var scope = this;
             var col = scope.gridOptions1.columnDefs;
             scope.gridOptions1.totalItems = resp.total;
@@ -1171,7 +1170,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
             scope.all_grid_data.paginationOptions.pageSize = $rootScope.gridOptions.paginationPageSize;
             scope.getPropertiesForGrid(scope.gridOptions1.columnDefs);
             if(!scope.load_contr){
-                scope.sendData(scope.all_grid_data, 'init')
+                scope.gridOptions1.gridInit(scope.all_grid_data)
             }
             scope.gridApi = gridApi;
             scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {
@@ -1197,7 +1196,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
                 scope.all_grid_data.paginationOptions.pageNumber = newPage;
                 scope.all_grid_data.paginationOptions.pageSize = pageSize;
                 $timeout(function(){
-                   scope.sendData(scope.all_grid_data, 'page')
+                   scope.sendData(scope.all_grid_data)
                 }, 500)
 
             });
@@ -1238,7 +1237,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
             }
         },
         gridOptions: {
-            data: 'datas.grid_data',
+            data: 'initGridData.grid_data',
             paginationPageSizes: [1 ,10, 25, 50, 75, 100, 1000],
             paginationPageSize: 50,
             enableColumnMenu: false,
