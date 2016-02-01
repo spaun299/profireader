@@ -17,16 +17,15 @@ def pagination(query, page=1, items_per_page=Config.ITEMS_PER_PAGE, for_id = Non
     count = query_for_all.count()
 
     pages = math.ceil(count/items_per_page)
-
-    if for_id and tuple(query_for_all).index(for_id) > -1:
-        page = math.ceil(tuple(query_for_all).index(for_id)+1/items_per_page)-1
-        print(page)
+    #
+    # if for_id and tuple(query_for_all).index(for_id) > -1:
+    #     page = math.ceil(tuple(query_for_all).index(for_id)+1/items_per_page)-1
+    #     print(page)
 
     if items_per_page:
         query = query.limit(items_per_page)
 
     if page > 0:
-        print(page)
         query = query.offset((page-1)*items_per_page) if int(page) in range(1, int(pages)+1) else \
             query.offset(pages*items_per_page)
 

@@ -298,7 +298,7 @@ class Grid:
         return [{'value': status, 'label': status} for status in statuses.keys()]
 
     def page_options(client_json):
-        return  {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize'], 'for_id': client_json['page_for_id']}
+        return  {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize']}
 
     @staticmethod
     def subquery_grid(query, filters, sorts):
@@ -308,10 +308,8 @@ class Grid:
             elif filter['type'] == 'select':
                 query = query.filter(filter['field'] == filter['value'])
             elif filter['type'] == 'date_range':
-                print(filter['value']['to'])
                 fromm = datetime.datetime.utcfromtimestamp((filter['value']['from']+1)/1000)
                 to = datetime.datetime.utcfromtimestamp((filter['value']['to']+86399999)/1000)
-                print(fromm,to, filter['field'])
                 query = query.filter(filter['field'].between(fromm, to))
             elif filter['type'] == 'range':
                 query = query.filter(filter['field'].between(filter['value']['from'], filter['value']['to']))

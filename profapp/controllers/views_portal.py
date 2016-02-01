@@ -430,7 +430,7 @@ def portals_partners_load(json, company_id):
                 company_id) if port]
     params = {}
     subquery = Company.subquery_company_partners(company_id=company_id, search_text=search_text, **params)
-    partners_g, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize,object=subquery_member_portal)
+    partners_g, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
     user_rights = list(g.user.user_rights_in_company(company_id))
     grid_data = Company.getListGridDataPortalPartners(partners_g)
     return {'page' :current_page,
