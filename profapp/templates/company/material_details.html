@@ -7,7 +7,7 @@
     {% endblock company_base %}
     <script>
 
-        module.controller('material_details', ['$scope', '$ok', function ($scope, $ok) {
+        module.controller('material_details', ['$scope', '$ok', '$timeout', function ($scope, $ok, $timeout) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
             $scope.url_search_for_user = {{ raw_url_for('company.search_for_user')|safe }};
             $scope.selectedUser_name = '';
@@ -70,9 +70,14 @@
             $scope.loadMaterialDetails = function () {
                 $ok('', {}, function (resp) {
                     $scope.data = resp;
-                    $scope.applyGridExtarnals(resp.portals);
+                    $scope.initGridData = resp.portals
+                    $scope.applyGridExtarnals($scope.initGridData);
                     {#                    $scope.change_status_to = $scope.data.allowed_statuses[0];#}
-                });
+                }).finally(function () {
+                                            $scope.loading = false;
+                                            $scope.load_contr = true
+                                        });
+
             };
 
             $scope.loadPublications = function () {
@@ -110,6 +115,7 @@
             };
 
             $scope.myRights = function () {
+                return false;
                 for (var i = 0; i < arguments.length; i++) {
                     if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {
                         return false;
@@ -174,50 +180,44 @@
                 });
             };
 
-{#            $scope.sendData = function (data) {#}
-{#                $scope.loading = true;#}
-{#                $scope.error = '';#}
-{#                $ok($scope.url_search_article, data, function (resp) {#}
-{#                    $scope.datas = resp;#}
-{#                    $scope.applyGridExtarnals(resp);#}
-{#                }).finally(function () {#}
-{#                    $scope.loading = false;#}
-{#                    $scope.load_contr = true#}
-{#                });#}
-{#            };#}
-
+            {#            $scope.sendData = function (data) {#}
+            {#                $scope.loading = true;#}
+            {#                $scope.error = '';#}
+            {#                $ok($scope.url_search_article, data, function (resp) {#}
+            {#                    $scope.datas = resp;#}
+            {#                    $scope.applyGridExtarnals(resp);#}
+            {#                }).finally(function () {#}
+            {#                    $scope.loading = false;#}
+            {#                    $scope.load_contr = true#}
+            {#                });#}
+            {#            };#}
 
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+                gridInit: $scope.loadMaterialDetails,
                 onRegisterApi: function (gridApi) {
                     $scope.setGridExtarnals(gridApi)
                 },
                 columnDefs: [
                     {
-                        name: 'portal', displayName: 'Portal', width: '20%', enableSorting: false,
+                        name: 'company_owner_id', displayName: 'Portal', width: '20%', enableSorting: false,
                         type: 'link',
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
                         filter: {type: 'input'}
                     }
                     , {
-                        name: 'division', displayName: 'division', width: '20%', enableSorting: false,
+                        name: 'divisions', displayName: 'division', width: '20%', enableSorting: false,
                         type: 'link',
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
                         filter: {type: 'input'}
                     }
-                    , {
-                        name: 'publisher', enableSorting: false,
-                        displayName: 'Author',
+                    ,
+                    {
+                        name: 'name', displayName: 'Title', width: '20%', enableSorting: false,
                         filter: {type: 'input'}
                     }
                     , {
-                        name: 'title', displayName: 'Title', width: '20%', enableSorting: false,
-                        type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
-                        filter: {type: 'input'}
-                    }
-                    , {
-                        name: 'counts', displayName: 'counts', enableSorting: false, enableFiltering: false
+                        name: 'id', displayName: 'counts', enableSorting: false, enableFiltering: false
                     }
                     , {
                         name: 'publishing_tm', enableColumnMenu: true,
@@ -228,15 +228,6 @@
                         name: 'status', enableSorting: false,
                         displayName: 'status',
                         filter: {type: 'input'}
-                    }
-                    , {
-                        name: 'visibility', enableSorting: false,
-                        displayName: 'visibility',
-                        filter: {type: 'input'}
-                    }
-                    , {
-                        name: 'action', displayName: 'action', enableSorting: false, enableFiltering: false
-                    }
                 ]
             });
 
@@ -260,7 +251,7 @@
             <hr/>
             <h2>{{ _('Material is published or can be published at portals') }}</h2>
 
-            <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
+            <div class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1"></div>
 
             <div ng-if="myRights('publish')">
                 <div ng-if="!data_resp_portal.portal">

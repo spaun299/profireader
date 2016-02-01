@@ -75,8 +75,8 @@
            $scope.sendData = function (data) {
                 $scope.loading = true;
                 $ok($scope.partners({company_id: $scope.own_company_id}), data, function (resp) {
-                    $scope.datas = resp;
-                    $scope.applyGridExtarnals(resp)
+                    $scope.initGridData = resp;
+                            $scope.applyGridExtarnals(resp);
                 }).finally(function () {
                     $scope.loading = false;
                     $scope.load_contr = true;
@@ -88,6 +88,7 @@
             };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+                    gridInit: $scope.sendData,
                     onRegisterApi: function (gridApi) {
                         $scope.setGridExtarnals(gridApi)
                     },
