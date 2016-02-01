@@ -1,5 +1,5 @@
 from .blueprints_declaration import reader_bp
-from flask import render_template, redirect, jsonify, json, request
+from flask import render_template, redirect, jsonify, json, request, g
 from .request_wrapers import tos_required
 from sqlalchemy import and_
 from ..models.articles import ArticlePortalDivision, ReaderArticlePortalDivision, Search
@@ -8,9 +8,9 @@ from config import Config
 from utils.db_utils import db
 
 
-@reader_bp.route('profile/')
+@reader_bp.route('/profile/')
 def profile():
-    render_template('partials/reader/reader_profile.html')
+    return render_template('partials/reader/reader_profile.html')
 
 
 @reader_bp.route('/details_reader/<string:article_portal_division_id>')
@@ -37,7 +37,7 @@ def details_reader(article_portal_division_id):
 @tos_required
 def list_reader(page=1):
     search_text = request.args.get('search_text') or ''
-    favorite = 'favorite' in request.args
+    favorite = request.args.get('favorite') == 'True'
     if not favorite:
         articles, pages, page = Search.search({'class': ArticlePortalDivision,
                                                'filter': and_(ArticlePortalDivision.portal_division_id ==
