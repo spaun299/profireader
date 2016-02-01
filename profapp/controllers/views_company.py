@@ -202,6 +202,7 @@ def update_rights():
 def update(company_id=None):
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     user_have_comp = True if len(user_companies) > 0 else False
+    user_have_comp = False
     company = db(Company, id=company_id).first()
     return render_template('company/company_edit.html', company_id=company_id, user_comp=user_have_comp,
                            company_name=company.name if company else '',

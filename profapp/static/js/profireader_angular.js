@@ -191,6 +191,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 };
 
                 var restartCropper = function () {
+                    console.log('3')
                     $image.cropper('destroy');
                     if (model.$modelValue.uploaded) {
                         $image.attr('src', model.$modelValue.image_file_id);
@@ -209,12 +210,14 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 };
 
                 if (attrs['prCropper']) {
+                    console.log('1')
                     scope[attrs['prCropper']] = function () {
                         $image.cropper.apply($image, arguments);
                     };
                 }
                 //
                 scope.$watch(attrs['ngModel'] + '.image_file_id', function () {
+                    console.log('2')
                     if (model && model.$modelValue) {
                         //var file_url = fileUrl(model.$modelValue.image_file_id);
                         //$image.attr('src', );
@@ -644,8 +647,8 @@ module.directive('ngEnter', function () {
         });
     };
 });
-module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '$parse','$timeout',
-    function ($filter, $document, $compile, $parse, $timeout) {
+module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '$parse','$timeout','$ok',
+    function ($filter, $document, $compile, $parse, $timeout, $ok) {
 
         return {
             restrict: 'AE',
@@ -653,6 +656,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                 addData: '=',
                 data:'=',
                 send:'=',
+                parentScope: '=',
                 selectedModel: '=',
                 options: '=',
                 extraSettings: '=',
@@ -734,14 +738,19 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                     smartButtonTextConverter: angular.noop
                 };
 
+                $scope.translate_phrase = function(phrase, dict){
+                    $scope.$$translate = $scope.parentScope.$$translate;
+                    return pr_dictionary(phrase, dict,'', $scope, $ok, $scope.parentScope.controllerName)
+                };
+
                 $scope.texts = {
-                    checkAll: 'Check All',
-                    uncheckAll: 'Uncheck All',
-                    selectionCount: 'checked',
+                    checkAll: $scope.translate_phrase("Check All"),
+                    uncheckAll: $scope.translate_phrase('Uncheck All'),
+                    selectionCount: $scope.translate_phrase('checked'),
                     selectionOf: '/',
-                    searchPlaceholder: 'Search...',
-                    buttonDefaultText: 'Select',
-                    dynamicButtonTextSuffix: 'checked'
+                    searchPlaceholder: $scope.translate_phrase('Search...'),
+                    buttonDefaultText: $scope.translate_phrase('Select'),
+                    dynamicButtonTextSuffix: $scope.translate_phrase('checked')
                 };
 
                 $scope.searchFilter = $scope.searchFilter || '';
@@ -893,6 +902,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                 };
 
                 $scope.setSelectedItem = function (id, label, dontRemove) {
+                    console.log($scope)
                     var findObj = getFindObj(id);
                     var finalObj = null;
                     if ($scope.settings.externalIdProp === '') {
@@ -919,7 +929,6 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                         $scope.externalEvents.onItemDeselect(findObj);
                         index = $scope.listElemens.indexOf(label);
                         $scope.listElemens.splice(index, 1);
-                        console.log($scope.listElemens, index)
                         if($scope.listElemens.length>0){
                             $scope.data.filter[$scope.addData.field] = $scope.listElemens;
                         }else{
@@ -953,7 +962,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
 }]);
 
 
-function pr_dictionary(phrase, dict, allow_html, scope, $ok) {
+function pr_dictionary(phrase, dict, allow_html, scope, $ok, ctrl) {
     allow_html = allow_html ? allow_html : '';
     if (typeof phrase !== 'string') {
         return '';
@@ -962,12 +971,12 @@ function pr_dictionary(phrase, dict, allow_html, scope, $ok) {
     if (!scope.$$translate) {
         scope.$$translate = {};
     }
-
+    //console.log(scope.$$translate)
     new Date;
     var t = Date.now() / 1000;
 
     //TODO OZ by OZ hasOwnProperty
-    var CtrlName = scope.controllerName ? scope.controllerName : 'None';
+    var CtrlName = scope.controllerName ? scope.controllerName : ctrl;
     if (scope.$$translate[phrase] === undefined) {
         scope.$$translate[phrase] = {'lang': phrase, 'time': t};
         $ok('/tools/save_translate/', {
@@ -1001,6 +1010,7 @@ function pr_dictionary(phrase, dict, allow_html, scope, $ok) {
         ret = ret.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
             var indexes = g1.split('.');
             var d = dict ? dict : scope;
+
             for (var i in indexes) {
                 if (typeof d[indexes[i]] !== undefined) {
                     d = d[indexes[i]];
@@ -1049,13 +1059,13 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
         },
         refreshGrid: function (col) {
             if (col !== undefined) {
-                if (col.filters && col.filter.type === 'date_range'){
+                if (col.filters && (col.filter.type === 'date_range' || col.filter.type === 'range')){
                     col.filters[0] = '';
                     col.filters[1] = '';
                 }else if(col.filter.type === 'input'){
                     col.filter.text = '';
-                    delete this.all_grid_data['filter'][col.field]
                 }
+                delete this.all_grid_data['filter'][col.field]
                 this.sendData(this.all_grid_data)
             }
         },
@@ -1063,6 +1073,10 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
             var scope = this;
             scope.pos = {};
             for (var i = 0; i < col.length; i++) {
+                scope.gridOptions1.columnDefs[i].headerCellTemplate = '<div ng-class="{ \'sortable\': sortable }"><!-- <div class="ui-grid-vertical-bar">&nbsp;</div> --> ' +
+                    '<div class="ui-grid-cell-contents" col-index="renderIndex" title="{{ grid.appScope._(col.displayName CUSTOM_FILTERS) }}"> <span>{{ grid.appScope._(col.displayName CUSTOM_FILTERS) }}</span>' +
+                    '<span ui-grid-visible="col.sort.direction" ng-class="{ \'ui-grid-icon-up-dir\': col.sort.direction == asc, \'ui-grid-icon-down-dir\': col.sort.direction == desc, \'ui-grid-icon-blank\': !col.sort.direction }"> &nbsp;</span> </div> <div class="ui-grid-column-menu-button" ng-if="grid.options.enableColumnMenus && !col.isRowHeader  && col.colDef.enableColumnMenu !== false" ng-click="toggleMenu($event)" ng-class="{\'ui-grid-column-menu-button-last-col\': isLastCol}">' +
+                    ' <i class="ui-grid-icon-angle-down">&nbsp;</i> </div> <div ui-grid-filter></div></div>';
                 if (col[i].filter ) {
                     if (col[i].filter && col[i].filter.type) {
                         scope.pos[col[i].name] = '1'
@@ -1078,24 +1092,27 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
                         scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container">' +
                             '<input type="text" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}" ng-enter="grid.appScope.searchItemGrid(col)" ng-model="col.filter.text"  aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}">' +
                             '<div role="button" class="ui-grid-filter-button" ng-click="grid.appScope.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filter.text === undefined || col.filter.text === null || col.filter.text === \'\'" ng-show="col.filter.text !== undefined && col.filter.text !== null && col.filter.text !== \'\'">' +
-                            '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter">&nbsp;</i></div>'
+                            '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter">&nbsp;</i></div></div>'
                     }else if(col[i].filter.type === 'date_range'){
                         scope.gridOptions1.columnDefs[i].filters = [{}, {}];
-                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><input  style="width: 100%; display: inline" type="date" class="form-control" uib-datepicker-popup ng-model="col.filters[0].term" ng-required="true" datepicker-options="dateOptions" close-text="Close"/>' +
-                            '<span class="input-group-btn"></span></div>'+
-                                '<div class="ui-grid-filter-container"><input style="width: 100%; display: inline" type="date" class="form-control" uib-datepicker-popup ng-model="col.filters[1].term" ng-required="true" datepicker-options="dateOptions" close-text="Close"/>' +
-                            '<span class="input-group-btn"></span></div><div role="button" class="ui-grid-filter-button" ng-click="grid.appScope.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined" ng-show="col.filters[1].term !== undefined && col.filters[1].term !== \'\' && col.filters[0].term !== undefined && col.filters[0].term !== \'\'">' +
-                            '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter">&nbsp;</i></div>'
+                        scope.gridOptions1.columnDefs[i].width = '25%';
+                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><input  style="width: 48%; display: inline" type="date" class="form-control" uib-datepicker-popup ng-model="col.filters[0].term" ng-required="true" datepicker-options="dateOptions" close-text="Close"/>' +
+                            '<input style="width: 48%; display: inline" type="date" class="form-control" uib-datepicker-popup ng-model="col.filters[1].term" ng-required="true" datepicker-options="dateOptions" close-text="Close"/>' +
+                            '<span class="input-group-btn"></span><div role="button" class="ui-grid-filter-button" ng-click="grid.appScope.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined" ng-show="col.filters[1].term !== undefined && col.filters[1].term !== \'\' && col.filters[0].term !== undefined && col.filters[0].term !== \'\'">' +
+                            '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter" style="right:0.5px;">&nbsp;</i></div></div>'
                     }else if(col[i].filter.type === 'multi_select'){
+                        console.log(scope)
                         scope.listOfSelectedFilterGrid = [];
                         scope.additionalDataForMS = {limit:col[i].filter.limit?col[i].filter.limit:null, type:col[i].filter.type, field:col[i].name};
-                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><div ng-dropdown-multiselect="" add-data="grid.appScope.additionalDataForMS" data="grid.appScope.all_grid_data" send="grid.appScope.sendData" options = "grid.appScope.listsForMS" selected-model="grid.appScope.listOfSelectedFilterGrid"></div></div>'
+                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><div ng-dropdown-multiselect="" parent-scope="grid.appScope" add-data="grid.appScope.additionalDataForMS" data="grid.appScope.all_grid_data" send="grid.appScope.sendData" options = "grid.appScope.listsForMS" selected-model="grid.appScope.listOfSelectedFilterGrid"></div></div>'
                     }else if(col[i].filter.type === 'range'){
                         scope.gridOptions1.columnDefs[i].filters = [{}, {}];
                         scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container">' +
                             '<input type="number" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}" ng-enter="grid.appScope.searchItemGrid(col, colFilter.term)" ng-model="col.filters[0].term"  aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}" style="margin-bottom: 10px;width: 100%" placeholder="From:">' +
                             '<input type="number" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}" ng-enter="grid.appScope.searchItemGrid(col, colFilter.term)" ng-model="col.filters[1].term"  aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}" style="margin-bottom: 5px;width: 100%" placeholder="To:">' +
-                            '<button class="btn btn-group" ng-click="grid.appScope.filterForGridRange(col)" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined || col.filters[1].term === null || col.filters[1].term === \'\' || col.filters[0].term === null || col.filters[0].term === \'\'">Filter</button> <button class="btn btn-group" ng-click="grid.appScope.refreshGrid(col)">Refresh</button>'
+                            '<button class="btn btn-group" ng-click="grid.appScope.filterForGridRange(col)" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined || col.filters[1].term === null || col.filters[1].term === \'\' || col.filters[0].term === null || col.filters[0].term === \'\'">Filter</button> ' +
+                            '<div role="button" class="ui-grid-filter-button" ng-click="grid.appScope.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined" ng-show="col.filters[1].term !== undefined && col.filters[1].term !== \'\' && col.filters[0].term !== undefined && col.filters[0].term !== \'\'">' +
+                            '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter" style="right:0.5px;top:83%">&nbsp;</i></div></div>'
                     }
                 }
                 if(col[i].type === 'link') {
