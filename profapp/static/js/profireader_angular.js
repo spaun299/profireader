@@ -1134,6 +1134,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
             }
         },
         applyGridExtarnals: function (resp) {
+            console.log(resp);
             var scope = this;
             var col = scope.gridOptions1.columnDefs;
             scope.gridOptions1.totalItems = resp.total;
@@ -1170,7 +1171,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
             scope.all_grid_data.paginationOptions.pageSize = $rootScope.gridOptions.paginationPageSize;
             scope.getPropertiesForGrid(scope.gridOptions1.columnDefs);
             if(!scope.load_contr){
-                scope.sendData(scope.all_grid_data)
+                scope.sendData(scope.all_grid_data, 'init')
             }
             scope.gridApi = gridApi;
             scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {
@@ -1178,7 +1179,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
                 if (sortColumns.length !== 0) {
                     scope.all_grid_data['sort'][sortColumns[0].field] = sortColumns[0].sort.direction;
                 }
-                scope.sendData(scope.all_grid_data)
+                scope.sendData(scope.all_grid_data, 'sort')
             });
             gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
                 if (newValue !== oldValue) {
@@ -1189,14 +1190,14 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
                         'col': colDef.name
                     };
                     scope.all_grid_data.paginationOptions.pageNumber = 1;
-                    scope.sendData(scope.all_grid_data)
+                    scope.sendData(scope.all_grid_data, 'celledit')
                 }
             });
             gridApi.pagination.on.paginationChanged(scope, function (newPage, pageSize) {
                 scope.all_grid_data.paginationOptions.pageNumber = newPage;
                 scope.all_grid_data.paginationOptions.pageSize = pageSize;
                 $timeout(function(){
-                   scope.sendData(scope.all_grid_data)
+                   scope.sendData(scope.all_grid_data, 'page')
                 }, 500)
 
             });
@@ -1226,7 +1227,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
                     }
                 }
                 if (at_least_one_filter_changed) {
-                    error ? add_message('You push wrong date', 'danger', 3000):scope.sendData(scope.all_grid_data)
+                    error ? add_message('You push wrong date', 'danger', 3000):scope.sendData(scope.all_grid_data, 'filter')
                 }
             });
             if (scope.gridOptions1.enableRowSelection) {

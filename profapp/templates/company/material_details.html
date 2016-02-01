@@ -7,7 +7,7 @@
     {% endblock company_base %}
     <script>
 
-        module.controller('material_details', ['$scope', '$ok', function ($scope, $ok) {
+        module.controller('material_details', ['$scope', '$ok', '$timeout', function ($scope, $ok, $timeout) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
             $scope.url_search_for_user = {{ raw_url_for('company.search_for_user')|safe }};
             $scope.selectedUser_name = '';
@@ -70,9 +70,28 @@
             $scope.loadMaterialDetails = function () {
                 $ok('', {}, function (resp) {
                     $scope.data = resp;
-                    $scope.applyGridExtarnals(resp.portals);
+                    $timeout(function () {
+                        $scope.applyGridExtarnals(resp.portals);
+                    }, 3000)
+
                     {#                    $scope.change_status_to = $scope.data.allowed_statuses[0];#}
                 });
+            };
+
+            $scope.sendData = function (grid_data, what_happend) {
+                console.log(what_happend);
+                $scope.applyGridExtarnals({grid_data: [], grid_filters: {}});
+                return;
+                {#                        $scope.loading = true;#}
+                {#                        $scope.isSelectedRows = false;#}
+                {#                        $scope.error = '';#}
+                {#                        return $ok($scope.url_search_translations({}), grid_data, function (resp) {#}
+                {#                            $scope.datas = resp;#}
+                {#                            $scope.applyGridExtarnals(resp);#}
+                {#                        }).finally(function () {#}
+                {#                            $scope.loading = false;#}
+                {#                            $scope.load_contr = true#}
+                {#                        });#}
             };
 
             $scope.loadPublications = function () {
@@ -110,6 +129,7 @@
             };
 
             $scope.myRights = function () {
+                return false;
                 for (var i = 0; i < arguments.length; i++) {
                     if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {
                         return false;
@@ -174,18 +194,17 @@
                 });
             };
 
-{#            $scope.sendData = function (data) {#}
-{#                $scope.loading = true;#}
-{#                $scope.error = '';#}
-{#                $ok($scope.url_search_article, data, function (resp) {#}
-{#                    $scope.datas = resp;#}
-{#                    $scope.applyGridExtarnals(resp);#}
-{#                }).finally(function () {#}
-{#                    $scope.loading = false;#}
-{#                    $scope.load_contr = true#}
-{#                });#}
-{#            };#}
-
+            {#            $scope.sendData = function (data) {#}
+            {#                $scope.loading = true;#}
+            {#                $scope.error = '';#}
+            {#                $ok($scope.url_search_article, data, function (resp) {#}
+            {#                    $scope.datas = resp;#}
+            {#                    $scope.applyGridExtarnals(resp);#}
+            {#                }).finally(function () {#}
+            {#                    $scope.loading = false;#}
+            {#                    $scope.load_contr = true#}
+            {#                });#}
+            {#            };#}
 
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
@@ -193,50 +212,51 @@
                     $scope.setGridExtarnals(gridApi)
                 },
                 columnDefs: [
+{#                    {#}
+{#                        name: 'portal', displayName: 'Portal', width: '20%', enableSorting: false,#}
+{#                        type: 'link',#}
+{#                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',#}
+{#                        filter: {type: 'input'}#}
+{#                    }#}
+{#                    , {#}
+{#                        name: 'division', displayName: 'division', width: '20%', enableSorting: false,#}
+{#                        type: 'link',#}
+{#                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',#}
+{#                        filter: {type: 'input'}#}
+{#                    }#}
+{#                    , {#}
+{#                        name: 'publisher', enableSorting: false,#}
+{#                        displayName: 'Author',#}
+{#                        filter: {type: 'input'}#}
+{#                    }#}
+{#                    , #}
                     {
-                        name: 'portal', displayName: 'Portal', width: '20%', enableSorting: false,
+                        name: 'name', displayName: 'Title', width: '20%', enableSorting: false,
                         type: 'link',
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
                         filter: {type: 'input'}
                     }
-                    , {
-                        name: 'division', displayName: 'division', width: '20%', enableSorting: false,
-                        type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
-                        filter: {type: 'input'}
-                    }
-                    , {
-                        name: 'publisher', enableSorting: false,
-                        displayName: 'Author',
-                        filter: {type: 'input'}
-                    }
-                    , {
-                        name: 'title', displayName: 'Title', width: '20%', enableSorting: false,
-                        type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
-                        filter: {type: 'input'}
-                    }
-                    , {
-                        name: 'counts', displayName: 'counts', enableSorting: false, enableFiltering: false
-                    }
-                    , {
-                        name: 'publishing_tm', enableColumnMenu: true,
-                        displayName: 'publishing date',
-                        filter: {type: 'date_range'}
-                    }
-                    , {
-                        name: 'status', enableSorting: false,
-                        displayName: 'status',
-                        filter: {type: 'input'}
-                    }
-                    , {
-                        name: 'visibility', enableSorting: false,
-                        displayName: 'visibility',
-                        filter: {type: 'input'}
-                    }
-                    , {
-                        name: 'action', displayName: 'action', enableSorting: false, enableFiltering: false
-                    }
+{#                    , {#}
+{#                        name: 'counts', displayName: 'counts', enableSorting: false, enableFiltering: false#}
+{#                    }#}
+{#                    , {#}
+{#                        name: 'publishing_tm', enableColumnMenu: true,#}
+{#                        displayName: 'publishing date',#}
+{#                        filter: {type: 'date_range'}#}
+{#                    }#}
+{#                    , {#}
+{#                        name: 'status', enableSorting: false,#}
+{#                        displayName: 'status',#}
+{#                        filter: {type: 'input'}#}
+{#                    }#}
+{#                    , {#}
+{#                        name: 'visibility', enableSorting: false,#}
+{#                        displayName: 'visibility',#}
+{#                        filter: {type: 'input'}#}
+{#                    }#}
+{#                    , {#}
+{#                        name: 'action', displayName: 'action', enableSorting: false, enableFiltering: false#}
+{#                    }#}
                 ]
             });
 
