@@ -1196,7 +1196,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
                 scope.all_grid_data.paginationOptions.pageNumber = newPage;
                 scope.all_grid_data.paginationOptions.pageSize = pageSize;
                 $timeout(function(){
-                   scope.sendData(scope.all_grid_data, 'page')
+                   scope.sendData(scope.all_grid_data)
                 }, 500)
 
             });
