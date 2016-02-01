@@ -45,12 +45,12 @@
         });
 
 
-        module.controller('translation_list', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridConstants', '$timeout', function ($scope, $uibModal, $ok, $sce, uiGridConstants, $timeout) {
+        module.controller('translation_list', ['$scope', '$uibModal', '$ok',function ($scope, $uibModal, $ok) {
 
                     $scope.url_search_translations = {{ raw_url_for('admin.translations_load')|safe }};
                     $scope.url_save_translations = {{ raw_url_for('admin.translations_save')|safe }};
                     $scope.url_delete_translations = {{ raw_url_for('admin.delete')|safe }}
-
+                    $scope.$$translate = {{ translates('translation_list')|safe }};
                             {% raw %}
                     $scope.noData = 'No translations';
                     $scope.error = '';
@@ -185,7 +185,7 @@
         <div class="grid" id="grid1" ui-grid-pagination ui-grid-selection ui-grid-edit ui-grid="gridOptions1"></div>
         <a ng-show="load_contr && !areAllEmpty(datas.grid_data)" class="btn btn-danger"
            ng-class="{'disabled': ( isSelectedRows === false )}" style="text-align: center"
-           ng-click="showModalDelete()">Delete selected rows</a>
+           ng-click="showModalDelete()">{{ _('Delete selected rows') }}</a>
     </div>
     {% endraw %}
 {% endblock portal_content %}
