@@ -559,3 +559,13 @@ class UserPortalReader(Base, PRBase):
         portals = db(Portal).filter(~(Portal.id.in_(db(UserPortalReader.portal_id, user_id=g.user_dict['id'])))).all()
         for portal in portals:
             yield (portal.id, portal.name, )
+
+    @staticmethod
+    def get_portals_and_plan_info_for_user(user_id):
+        for upr in db(UserPortalReader, user_id=user_id).all():
+            yield dict(portal_id=upr.portal_id, status=upr.status, start_tm=upr.start_tm, end_tm=upr.end_tm,
+                       plan_id=upr.portal_plan_id,
+                       plan_name=db(ReaderUserPortalPlan.name, id=upr.portal_plan_id).one()[0],
+                       portal_name=upr.portal.name, portal_host=upr.portal.host,
+                       portal_divisions=[{'name': division.name, 'id': division.id}
+                                         for division in upr.portal.divisions][0])

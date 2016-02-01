@@ -1,11 +1,13 @@
 from .blueprints_declaration import reader_bp
-from flask import render_template, redirect, jsonify, json, request, g
+from flask import render_template, redirect, jsonify, json, request, g, url_for, flash
 from .request_wrapers import tos_required
 from sqlalchemy import and_
 from ..models.articles import ArticlePortalDivision, ReaderArticlePortalDivision, Search
-from ..models.portal import PortalDivision, UserPortalReader
+from ..models.portal import PortalDivision, UserPortalReader, Portal, ReaderUserPortalPlan
+from .errors import BadDataProvided
 from config import Config
 from utils.db_utils import db
+import datetime
 
 
 @reader_bp.route('/profile/')
@@ -36,6 +38,8 @@ def details_reader(article_portal_division_id):
 @reader_bp.route('/list_reader/<int:page>/')
 @tos_required
 def list_reader(page=1):
+    for a in UserPortalReader.get_portals_and_plan_info_for_user(g.user.id):
+        print(a)
     search_text = request.args.get('search_text') or ''
     favorite = request.args.get('favorite') == 'True'
     if not favorite:
@@ -74,3 +78,25 @@ def add_delete_favorite():
     article_portal_division_id = request.form.get('article_portal_division_id')
     ReaderArticlePortalDivision.add_delete_favorite_user_article(article_portal_division_id, favorite)
     return jsonify({'favorite': favorite})
+
+
+@reader_bp.route('subscribe/<string:portal_id>')
+@tos_required
+def reader_subscribe(portal_id):
+    user_dict = g.user_dict
+    portal = Portal.get(portal_id)
+    if not portal:
+        raise BadDataProvided
+
+    user_portal_reader = g.db.query(UserPortalReader).filter_by(user_id=user_dict['id'], portal_id=portal_id).count()
+    if not user_portal_reader:
+        free_plan = g.db.query(ReaderUserPortalPlan.id, ReaderUserPortalPlan.time).filter_by(name='free').one()
+        start_tm = datetime.datetime.utcnow()
+        end_tm = datetime.datetime.fromtimestamp(start_tm.timestamp()+free_plan[1])
+        user_portal_reader = UserPortalReader(user_dict['id'], portal_id, status='active', portal_plan_id=free_plan[0],
+                                              start_tm=start_tm, end_tm=end_tm)
+        g.db.add(user_portal_reader)
+        g.db.commit()
+        flash('You have successfully subscribed to this portal')
+
+    return redirect(url_for('reader.list_reader'))
