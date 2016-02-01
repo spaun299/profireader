@@ -7,22 +7,22 @@
     {% endblock company_base %}
     <script>
 
-        module.controller('materials_articles', ['$scope', '$ok', function ($scope, $ok) {
+        module.controller('material_details', ['$scope', '$ok', function ($scope, $ok) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
             $scope.url_search_for_user = {{ raw_url_for('company.search_for_user')|safe }};
             $scope.selectedUser_name = '';
             $scope.selectedUser = null;
             $scope.selectedUser_sending = false;
             $scope.url_update_material = {{ raw_url_for('article.article_show_form')|safe }};
-{#            $scope.url_update_status = {{ raw_url_for('company.update_material_status')|safe }};#}
+            {#            $scope.url_update_status = {{ raw_url_for('company.update_material_status')|safe }};#}
             $scope.url_submit_to_portal = '{{ url_for('portal.submit_to_portal')|safe }}';
-            $scope.url_send_article_to_user = '{{ url_for('company.send_article_to_user')|safe }}';
-            $scope.url_send_article_user = {{ raw_url_for('company.send_article_to_user')|safe }};
+            {#            $scope.url_send_article_to_user = '{{ url_for('company.send_article_to_user')|safe }}';#}
+            {#            $scope.url_send_article_user = {{ raw_url_for('company.send_article_to_user')|safe }};#}
             $scope.data_resp = '';
             $scope.data_resp_user = '';
             $scope.data_resp_user_search = '';
             $scope.data_resp_portal = '';
-            $scope.$$translate = {{ translates('materials_articles')|safe }};
+            $scope.$$translate = {{ translates('material_details')|safe }};
             submit_to_portal = function () {
                 console.log($scope.data);
 
@@ -55,22 +55,29 @@
             };
 
 
-{#            $scope.changeStatus = function (new_status) {#}
-{#                url_send_request = $scope.url_update_status({#}
-{#                    'company_id': $scope.data.article.company_id,#}
-{#                    'article_id': $scope.data.article.id#}
-{#                });#}
-{#                $ok(url_send_request, {new_status: new_status}, function (resp) {#}
-{#                    $scope.data.article.status = resp.article_new_status;#}
-{#                    $scope.data.allowed_statuses = resp.allowed_statuses;#}
-{#                    $scope.change_status_to = $scope.data.allowed_statuses[0];#}
-{#                });#}
-{#            };#}
+            {#            $scope.changeStatus = function (new_status) {#}
+            {#                url_send_request = $scope.url_update_status({#}
+            {#                    'company_id': $scope.data.material.company_id,#}
+            {#                    'article_id': $scope.data.material.id#}
+            {#                });#}
+            {#                $ok(url_send_request, {new_status: new_status}, function (resp) {#}
+            {#                    $scope.data.material.status = resp.article_new_status;#}
+            {#                    $scope.data.allowed_statuses = resp.allowed_statuses;#}
+            {#                    $scope.change_status_to = $scope.data.allowed_statuses[0];#}
+            {#                });#}
+            {#            };#}
 
-            $scope.loadArticle = function () {
+            $scope.loadMaterialDetails = function () {
                 $ok('', {}, function (resp) {
                     $scope.data = resp;
-                    $scope.change_status_to = $scope.data.allowed_statuses[0];
+                    {#                    $scope.change_status_to = $scope.data.allowed_statuses[0];#}
+                });
+            };
+
+            $scope.loadPublications = function () {
+                $ok('', {}, function (resp) {
+                    $scope.data = resp;
+                    {#                    $scope.change_status_to = $scope.data.allowed_statuses[0];#}
                 });
             };
 
@@ -131,9 +138,9 @@
             $scope.delete_atricle_from_portal = function (article_portal_id, portal_name) {
                 $scope.loading = true;
                 new_data = $scope.data;
-                $ok($scope.url_delete_atricle_from_portal({article_portal_division_id: article_portal_id}), new_data.article.portal_article, function (resp) {
+                $ok($scope.url_delete_atricle_from_portal({article_portal_division_id: article_portal_id}), new_data.material.portal_article, function (resp) {
                     $scope.loading = false;
-                    $scope.data.article.portal_article = resp;
+                    $scope.data.material.portal_article = resp;
                     $scope.article_message = "Article was succesfuly deleted from portal " + portal_name
                 })
             };
@@ -172,42 +179,49 @@
                 },
                 columnDefs: [
                     {
-                        name: 'title', displayName: 'Title', width: '20%',enableSorting: false,
-                        type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
-                        filter: {type: 'input'}
-                    },
-                        {
-                        name: 'portal', displayName: 'Portal', width: '20%',enableSorting: false,
-                        type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
-                        filter: {type: 'input'}
-                    },   {
-                        name: 'division', displayName: 'division', width: '20%',enableSorting: false,
+                        name: 'title', displayName: 'Title', width: '20%', enableSorting: false,
                         type: 'link',
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
                         filter: {type: 'input'}
                     },
                     {
-                        name: 'publisher',enableSorting: false,
+                        name: 'portal', displayName: 'Portal', width: '20%', enableSorting: false,
+                        type: 'link',
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
+                        filter: {type: 'input'}
+                    }, {
+                        name: 'division', displayName: 'division', width: '20%', enableSorting: false,
+                        type: 'link',
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
+                        filter: {type: 'input'}
+                    }
+                    , {
+                        name: 'publisher', enableSorting: false,
                         displayName: 'Author',
-                        filter: {type:'input'}
-                    },{
-                        name: 'publishing_tm',enableColumnMenu: true,
+                        filter: {type: 'input'}
+                    }
+                    , {
+                        name: 'status', enableSorting: false,
+                        displayName: 'publication_statuses',
+                        filter: {type: 'input'}
+                    }
+                    , {
+                        name: 'publishing_tm', enableColumnMenu: true,
                         displayName: 'publishing date',
-                        filter:{type:'date_range'}
-                    },{
-                        name: 'read_count', displayName: 'read count',enableSorting: false,
-                        filter: {type:'select'}
-                    },{
-                        name: 'like_count', displayName: 'like count',enableSorting: false,
-                        filter: {type:'select'}
-                    },{
-                        name: 'fav_count', displayName: 'fav count',enableSorting: false,
-                        filter: {type:'select'}
-                    },{
-                        name: 'comm_count', displayName: 'ccomm count',enableSorting: false,
-                        filter: {type:'select'}
+                        filter: {type: 'date_range'}
+                    }
+                    , {
+                        name: 'read_count', displayName: 'read count', enableSorting: false,
+                        filter: {type: 'select'}
+                    }, {
+                        name: 'like_count', displayName: 'like count', enableSorting: false,
+                        filter: {type: 'select'}
+                    }, {
+                        name: 'fav_count', displayName: 'fav count', enableSorting: false,
+                        filter: {type: 'select'}
+                    }, {
+                        name: 'comm_count', displayName: 'ccomm count', enableSorting: false,
+                        filter: {type: 'select'}
                     }
                 ]
             });
@@ -215,22 +229,22 @@
         }]);
     </script>
 
-    <div ng-init="loadArticle()" ng-controller="materials_articles">
+    <div ng-init="loadMaterialDetails()" ng-controller="material_details">
 
         {% raw %}
         <div ng-if="!data">{{ _('Loading...') }}</div>
         <div ng-if="data">
-            <h2>{{ _('Material details `%(title)s`', {title: data.article.title}) }}</h2>
-            <h4>{{ _('Created at') }} {{data.article.cr_tm}}</h4>
-            <h4>{{ _('Last modified at') }} {{data.article.md_tm}}</h4>
-            <button ng-click="updateMaterial(data.article.id)">{{ _('Update material') }}</button>
+            <h2>{{ _('Material details `%(title)s`', {title: data.material.title}) }}</h2>
+            <h4>{{ _('Created at') }} {{data.material.cr_tm}}</h4>
+            <h4>{{ _('Last modified at') }} {{data.material.md_tm}}</h4>
+            <button ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
             <hr/>
             <div class="material-details-article-preview">
                 {% endraw %}{% include 'partials/article_details.html' %}{% raw %}
             </div>
-            <button ng-click="updateMaterial(data.article.id)">{{ _('Update material') }}</button>
+            <button ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
             <hr/>
-            <h2>{{ _('Material is published at following portals') }}</h2>
+            <h2>{{ _('Material is published or can be published at portals') }}</h2>
 
             <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
 
@@ -261,7 +275,7 @@
                     </form>
                 </div>
                 <span ng-if="data_resp_portal">
-                    {{_('Article %(title)s successfully was published at portal', {'title': data.article.title})}} "{{ data.portal }}"
+                    {{_('Article %(title)s successfully was published at portal', {'title': data.material.title})}} "{{ data.portal }}"
                 </span>
             </div>
         </div>
