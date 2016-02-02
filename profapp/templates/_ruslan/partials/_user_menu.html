@@ -1,0 +1,69 @@
+<script>
+
+    module.controller('UserLoginController', ['$scope', '$uibModal', '$ok', '$timeout', function ($scope, $uibModal, $ok, $timeout) {
+        $scope.user = {{ g.user_dict|tojson|safe }};
+        $scope.tos = function () {
+            var accepted = $scope.user.tos;
+            if (accepted != true) {
+                $('#licence').modal('show');
+                return true
+            }
+        };
+        login_signup = '{{ login_signup }}';  // login_signup = 'login' or 'signup' or None
+        $scope.login_signup = (login_signup === 'signup') ? 'signup' : 'login';
+        $scope.$$translate = {{ translates('UserLoginController')|safe }};
+        $scope.open_filemanager = function () {
+            window.location.href = '/filemanager/';
+        };
+        $scope.selected_company_menu = '';
+        $scope.set_selected_company_menu = function (menu_item) {
+            $timeout(function () {
+                $scope.selected_company_menu = menu_item;
+            }, 0);
+        }
+    }]);
+
+</script>
+<nav ng-controller="UserLoginController"  class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="{{ url_for('general.index') }}"><img
+                        src="/static/front/img/profi.png"/></a>
+
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">LOG IN</a></li>
+            <li><a href="#">SIGN UP</a></li>
+          </ul>
+
+          <ul class="nav navbar-nav navbar-right top-menu">
+            <li class="active"><a href="#" title="Стрічка читача"><i class="fa fa-newspaper-o"></i></a></li>
+            <li><a href="#about" title="Всі повідомлення"><i class="fa fa-pencil-square-o"></i></a></li>
+            <li><a href="#about" title="Менеджер файлів"><i class="fa fa-building-o"></i></a></li>
+            <li><a href="#contact" title="Інформація"><i class="fa fa-folder-open-o"></i></a></li>
+            <li><a href="#"><i class="fa fa-info"></i></a></li>
+            <li><a></a></li>
+          </ul>
+
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <nav ng-controller="UserLoginController" class="navbar navbar-default ">
+      <div class="container">
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="#">News</a></li>
+            <li><a href="#about">Favourite</a></li>
+            <li><a href="#contact">Subscription</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
