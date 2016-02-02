@@ -1,4 +1,4 @@
-from .pr_base import PRBase, Base
+from .pr_base import PRBase, Base, Grid
 from ..constants.TABLE_TYPES import TABLE_TYPES
 from sqlalchemy import Column, ForeignKey, text
 from utils.db_utils import db
@@ -148,27 +148,34 @@ class TranslateTemplate(Base, PRBase):
         return True if list else False
 
     @staticmethod
-    def subquery_search(template=None, url=None, **kwargs):
+    def subquery_search(filters=None, sorts=None, edit=None):
         sub_query = db(TranslateTemplate)
-        if 'filter' in kwargs:
-            if 'url' in kwargs['filter']:
-                sub_query = sub_query.filter_by(url=kwargs['filter']['url'])
-            if 'template' in kwargs['filter']:
-                sub_query = sub_query.filter_by(template=kwargs['filter']['template'])
-        if 'search_text' in kwargs:
-            if 'name' in kwargs['search_text']:
-                sub_query = sub_query.filter(TranslateTemplate.name.ilike("%" + kwargs['search_text']['name'] + "%"))
-            if 'uk' in kwargs['search_text']:
-                sub_query = sub_query.filter(TranslateTemplate.uk.ilike("%" + kwargs['search_text']['uk'] + "%"))
-            if 'en' in kwargs['search_text']:
-                sub_query = sub_query.filter(TranslateTemplate.en.ilike("%" + kwargs['search_text']['en'] + "%"))
-        if 'cr_tm' in kwargs['sort']:
-            sub_query = sub_query.order_by(TranslateTemplate.cr_tm.asc()) if kwargs['sort']['cr_tm'] == 'asc' else sub_query.order_by(TranslateTemplate.cr_tm.desc())
-        elif 'ac_tm' in kwargs['sort']:
-            sub_query = sub_query.order_by(TranslateTemplate.ac_tm.asc()) if kwargs['sort']['ac_tm'] == 'asc' else sub_query.order_by(TranslateTemplate.ac_tm.desc())
+        list_filters = []; list_sorts = []
+        if edit:
+            exist = db(TranslateTemplate, template=edit['template'], name=edit['name']).first()
+            i = datetime.datetime.now()
+            TranslateTemplate.get(exist.id).attr({edit['col']: edit['newValue'], 'md_tm':i}).save().get_client_side_dict()
+        if 'url' in filters:
+            list_filters.append({'type': 'select', 'value': filters['url'], 'field': TranslateTemplate.url})
+        if 'template' in filters:
+            list_filters.append({'type': 'select', 'value': filters['template'], 'field': TranslateTemplate.template})
+        if 'name' in filters:
+            list_filters.append({'type': 'text', 'value': filters['name'], 'field': TranslateTemplate.name})
+        if 'uk' in filters:
+            list_filters.append({'type': 'text', 'value': filters['uk'], 'field': TranslateTemplate.uk})
+        if 'en' in filters:
+            list_filters.append({'type': 'text', 'value': filters['en'], 'field': TranslateTemplate.en})
+        if 'portal.name' in filters:
+            sub_query = sub_query.join(Portal,
+                                       Portal.id == TranslateTemplate.portal_id)
+            list_filters.append({'type': 'text', 'value': filters['portal.name'], 'field': Portal.name})
+        if 'cr_tm' in sorts:
+            list_sorts.append({'type': 'date', 'value': sorts['cr_tm'], 'field': TranslateTemplate.cr_tm})
+        elif 'ac_tm' in sorts:
+            list_sorts.append({'type': 'date', 'value': sorts['ac_tm'], 'field': TranslateTemplate.ac_tm})
         else:
-            sub_query = sub_query.order_by(TranslateTemplate.cr_tm.desc())
-
+            list_sorts.append({'type': 'date', 'value': 'desc', 'field': TranslateTemplate.cr_tm})
+        sub_query = Grid.subquery_grid(sub_query, list_filters, list_sorts)
         return sub_query
 
     def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url|allow_html, portal.id|name',

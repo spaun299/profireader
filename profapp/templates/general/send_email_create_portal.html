@@ -1,0 +1,36 @@
+{% extends "index_layout.html" %}
+{% block title %}Profireader{% endblock title %}
+{% block head %}
+    {{ super() }}
+    {% include 'partials/empty_page.html' %}
+{% endblock head %}
+
+{% block portal_base %}
+    {% include 'partials/portal_base_Profireader.html' %}
+{% endblock portal_base %}
+
+{% block portal_content %}
+    <script>
+      window.send_email = function (){
+          var text = $('#send_message_text').val();
+          var subject={{_('Some one would like to create portal')|tojson}}
+          $.ajax({
+              url: '{{ url_for('general.send_email') }}',
+                  type: 'post',
+                  data: {'subject': subject, 'text': text},
+              success: function(e){
+                  console.log(e.message);
+                 $('#send_email_wrapper').html(e.message).css({'color': 'red', 'font-size': '120%'});
+                  setTimeout(function(){window.location.href = '{{ url_for('general.index') }}'}, 2000);
+              }
+          })};
+
+</script>
+    <div id="send_email_wrapper">
+        <label for="send_message_text">{{ _('Send message to profireader.Create Portal') }}</label></br>
+<textarea id='send_message_text' style="width: 500px; height: 200px">{{ _('Send message to profireader. Default input text') }}
+    </textarea>
+    </br>
+    <input type="submit" placeholder="{{ _('Send email') }}" onclick="send_email()">
+</div>
+{% endblock portal_content %}

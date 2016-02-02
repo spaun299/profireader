@@ -2,21 +2,34 @@ from config import Config
 import math
 from flask import request
 from .request_wrapers import ok
+from sqlalchemy.orm import load_only
 
-def pagination(query, page=1, items_per_page=Config.ITEMS_PER_PAGE):
+def pagination(query, page=1, items_per_page=Config.ITEMS_PER_PAGE, for_id = None):
     """ Pagination for pages. For use this function you have to pass subquery with all filters,
      number of current page. Also you can change page_size(items per page) from config.
      Return query with pagination parameters, all pages, current page"""
-    pages = math.ceil(query.count()/items_per_page)
-    page -= 1
+
+
+    query_for_all = query
+# TODO OZ by OZ: select only ID, and maybe use some sql function to search page via id (window function)
+    query_for_all.options(load_only("id"))
+
+    count = query_for_all.count()
+
+    pages = math.ceil(count/items_per_page)
+    #
+    # if for_id and tuple(query_for_all).index(for_id) > -1:
+    #     page = math.ceil(tuple(query_for_all).index(for_id)+1/items_per_page)-1
+    #     print(page)
 
     if items_per_page:
         query = query.limit(items_per_page)
-    if page:
-        query = query.offset(page*items_per_page) if int(page) in range(
-            0, int(pages)) else query.offset(pages*items_per_page)
 
-    return query, pages, page+1
+    if page > 0:
+        query = query.offset((page-1)*items_per_page) if int(page) in range(1, int(pages)+1) else \
+            query.offset(pages*items_per_page)
+
+    return query, pages, page, count
 
 
 def get_request_page_filter_order_seek(json):

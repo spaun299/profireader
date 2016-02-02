@@ -16,7 +16,6 @@ import os
 from flask import send_from_directory, jsonify, json
 import collections
 from sqlalchemy import and_
-from ..constants.ARTICLE_STATUSES import ARTICLE_STATUS_IN_PORTAL
 from .request_wrapers import ok
 from ..utils.email import send_email
 from flask.ext.login import current_user
@@ -39,7 +38,7 @@ def get_division_for_subportal(portal_id, member_company_id):
 
 
 def get_params(**argv):
-    search_text = request.args.get('search_text') if request.args.get('search_text') else ''
+    search_text = request.args.get('search_text') or ''
     app = current_app._get_current_object()
     portal = g.db().query(Portal).filter_by(host=request.host).one()
 

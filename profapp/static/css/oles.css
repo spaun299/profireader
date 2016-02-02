@@ -132,3 +132,10 @@
 .glyphicon.glyphicon-question-sign {
     color: blue;
 }
+
+.material-details-article-preview {
+    width: 727px;
+    padding: 15px;
+    height: 1000px;
+    overflow: scroll;
+}

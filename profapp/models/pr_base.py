@@ -21,8 +21,10 @@ from utils.validators import validators
 from sqlalchemy import and_
 import datetime
 import operator
+from collections import OrderedDict
 
 Base = declarative_base()
+
 
 # this event is called whenever an attribute
 # on a class is instrumented
@@ -94,7 +96,7 @@ class Search(Base):
                       'fields': all_fields}
             ** kwargs optional
             **kwargs: -search_text = string text for search,
-                      -pagination = boolean, default False
+                      -pagination = boolean, default True
                       , if True this func return n numbers elements which produce in pagination
                       -page = integer current page for pagination,
                       -items_per_page = integer items per page for pagination
@@ -114,7 +116,7 @@ class Search(Base):
                        {'class': ArticlePortalDivision,
                         'filter' and_(ArticlePortalDivision.portal_division_id == division.id,
                                       ArticlePortalDivision.status ==
-                                      ARTICLE_STATUS_IN_PORTAL.published)},
+                                      ArticlePortalDivision.STATUSES['PUBLISHED'])},
                         order_by = ('name', 'title', ). Because class Company does not have 'title'
                         field, and class ArticlePortalDivision does not have 'name' field.
                       -desc_asc = sort by desc or asc default = desc,
@@ -125,7 +127,7 @@ class Search(Base):
         page -= 1
         search_params = []
         order_by_to_str = {1: 'relevance', 2: 'position', 3: 'md_tm'}
-        pagination = kwargs.get('pagination') or False
+        pagination = kwargs.get('pagination') or True
         desc_asc = kwargs.get('desc_asc') or 'desc'
         pages = None
         search_text = kwargs.get('search_text') or ''
@@ -143,7 +145,7 @@ class Search(Base):
                 'Parameter page is not integer, or page < 1 .'
             assert (getattr(args[0]['class'], str(kwargs.get('order_by')), False) is not False) or \
                    (type(kwargs.get('order_by')) is int) or type(
-                kwargs.get('order_by') is (list or tuple)), \
+                    kwargs.get('order_by') is (list or tuple)), \
                 'Bad value for parameter "order_by".' \
                 'You requested attribute which is not in class %s or give bad kwarg type.' \
                 'Can be string, list or tuple %s given' % \
@@ -156,28 +158,28 @@ class Search(Base):
             tb_info = traceback.extract_tb(tb)
             filename_, line_, func_, text_ = tb_info[-1]
             message = 'An error occurred on File "{file}" line {line}\n {assert_message}'.format(
-                line=line_, assert_message=e.args, file=filename_)
+                    line=line_, assert_message=e.args, file=filename_)
             print(message)
             raise errors.BadDataProvided({'message': message})
 
         def get_order(order_name, desc_asc, field):
             order_name += '+' if desc_asc == 'desc' else '-'
             result = {'text+': lambda field_name: desc(
-                func.max(getattr(Search, field_name, Search.text))),
+                    func.max(getattr(Search, field_name, Search.text))),
                       'text-': lambda field_name: asc(func.max(
-                          getattr(Search, field_name, Search.text))),
+                              getattr(Search, field_name, Search.text))),
                       'md_tm+': lambda field_name: desc(func.min(
-                          getattr(Search, field_name, Search.md_tm))),
+                              getattr(Search, field_name, Search.md_tm))),
                       'md_tm-': lambda field_name: asc(func.min(
-                          getattr(Search, field_name, Search.md_tm))),
+                              getattr(Search, field_name, Search.md_tm))),
                       'relevance+': lambda field_name: desc(func.sum(
-                          getattr(Search, field_name, Search.relevance))),
+                              getattr(Search, field_name, Search.relevance))),
                       'relevance-': lambda field_name: asc(func.sum(
-                          getattr(Search, field_name, Search.relevance))),
+                              getattr(Search, field_name, Search.relevance))),
                       'position+': lambda field_name: desc(func.max(
-                          getattr(Search, field_name, Search.position))),
+                              getattr(Search, field_name, Search.position))),
                       'position-': lambda field_name: asc(func.max(
-                          getattr(Search, field_name, Search.position)))
+                              getattr(Search, field_name, Search.position)))
                       }[order_name](field)
             return result
 
@@ -185,27 +187,27 @@ class Search(Base):
             joined = db(Search.index, func.min(Search.text).label('text'),
                         func.min(Search.table_name).label('table_name'),
                         index=subquery_search.subquery().c.index).filter(
-                Search.kind.in_(tuple(field_name))).group_by(Search.index)
+                    Search.kind.in_(tuple(field_name))).group_by(Search.index)
             return joined
 
         for cls in args:
             filter_params = cls.get('filter')
             fields = cls.get('fields') or \
-                [key for key in vars(cls['class']).keys() if key[0] != '_']
+                     [key for key in vars(cls['class']).keys() if key[0] != '_']
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
             search_params.append(and_(Search.index == db(cls['class'].id).filter(
-                filter_params).subquery().c.id, Search.text.ilike(
-                "%" + search_text + "%"), Search.table_name == cls['class'].__tablename__,
-                Search.kind.in_(fields)), )
+                    filter_params).subquery().c.id, Search.text.ilike(
+                    "%" + search_text + "%"), Search.table_name == cls['class'].__tablename__,
+                                      Search.kind.in_(fields)), )
         subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
                              func.min(Search.table_name).label('table_name'),
                              func.min(Search.md_tm).label('md_tm'),
                              func.max(Search.position).label('position'),
                              func.max(Search.text).label('text')).filter(
-            or_(*search_params)).group_by(Search.index)
+                or_(*search_params)).group_by(Search.index)
         if type(kwargs.get('order_by')) in (str, list, tuple):
             order = get_order('text', desc_asc, 'text')
             subquery_search = add_joined_search(kwargs['order_by'])
@@ -218,7 +220,7 @@ class Search(Base):
             subquery_search = subquery_search.order_by(order)
         else:
             subquery_search = subquery_search.order_by(order).order_by(
-                get_order('md_tm', desc_asc, 'md_tm'))
+                    get_order('md_tm', desc_asc, 'md_tm'))
         if pagination:
             pages = math.ceil(subquery_search.count() / items_per_page)
             if items_per_page:
@@ -226,18 +228,19 @@ class Search(Base):
             if page:
                 subquery_search = subquery_search.offset(page * items_per_page) \
                     if int(page) in range(
-                    0, int(pages)) else subquery_search.offset(pages * items_per_page)
+                        0, int(pages)) else subquery_search.offset(pages * items_per_page)
         subquery_search = subquery_search.subquery()
         join_search = []
         for arg in args:
             join_params = arg.get('join') or False
             join_search.append(db(subquery_search).join(
-                join_params or arg['class'],
-                arg['class'].id == subquery_search.c.index).subquery())
+                    join_params or arg['class'],
+                    arg['class'].id == subquery_search.c.index).subquery())
         objects = collections.OrderedDict()
         to_order = {}
-        ord_by = 'text' if type(kwargs.get('order_by')) in (str, list, tuple) \
-            else order_by_to_str[kwargs['order_by']]
+        _order_by = kwargs.get('order_by') or Search.ORDER_MD_TM
+        ord_by = 'text' if type(_order_by) in (str, list, tuple) \
+            else order_by_to_str[_order_by]
         for search in join_search:
             for cls in db(search).all():
                 objects[cls.index] = {'id': cls.index, 'table_name': cls.table_name,
@@ -269,6 +272,7 @@ class Search(Base):
             objects = collections.OrderedDict((id, items[id]) for id, val in ordered)
         return objects, pages, page + 1
 
+
 class MLStripper(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -290,6 +294,36 @@ class MLStripper(HTMLParser):
         if data is '':
             data = html
         return data
+
+
+class Grid:
+    @staticmethod
+    def filter_for_status(statuses):
+        return [{'value': status, 'label': status} for status in statuses.keys()]
+
+    def page_options(client_json):
+        return  {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize']}
+
+    @staticmethod
+    def subquery_grid(query, filters, sorts):
+        for filter in filters:
+            if filter['type'] == 'text':
+                query = query.filter(filter['field'].ilike("%" + filter['value'] + "%"))
+            elif filter['type'] == 'select':
+                query = query.filter(filter['field'] == filter['value'])
+            elif filter['type'] == 'date_range':
+                fromm = datetime.datetime.utcfromtimestamp((filter['value']['from']+1)/1000)
+                to = datetime.datetime.utcfromtimestamp((filter['value']['to']+86399999)/1000)
+                query = query.filter(filter['field'].between(fromm, to))
+            elif filter['type'] == 'range':
+                query = query.filter(filter['field'].between(filter['value']['from'], filter['value']['to']))
+            elif filter['type'] == 'multiselect':
+                query = query.filter(or_(filter['field'] == v for v in filter['value']))
+        for sort in sorts:
+            if sort['type'] == 'date':
+                query = query.order_by(sort['field'].asc()) if sort['value'] == 'asc' else query.order_by(
+                    sort['field'].desc())
+        return query
 
 
 class PRBase:
@@ -383,6 +417,13 @@ class PRBase:
         g.db.expunge(self)
         return self
 
+    @staticmethod
+    def get_ordered_dict(list_of_objects, **kwargs):
+        ret = OrderedDict()
+        for item in list_of_objects:
+            ret[item.id] = item.get_client_side_dict(**kwargs)
+        return ret
+
     def get_client_side_dict(self, fields='id',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
@@ -394,7 +435,8 @@ class PRBase:
     def to_dict_object_property(self, object_name):
         object_property = getattr(self, object_name)
         if isinstance(object_property, datetime.datetime):
-            return object_property.replace(object_property.year, object_property.month, object_property.day, object_property.hour, object_property.minute, object_property.second, 0)
+            return object_property.replace(object_property.year, object_property.month, object_property.day,
+                                           object_property.hour, object_property.minute, object_property.second, 0)
         elif isinstance(object_property, dict):
             return object_property
         else:
@@ -446,8 +488,8 @@ class PRBase:
             columns_not_in_relations = list(set(req_columns.keys()) - set(relations.keys()))
             if len(columns_not_in_relations) > 0:
                 raise ValueError(
-                    "you requested not existing attribute(s) `%s%s`" % (
-                        prefix, '`, `'.join(columns_not_in_relations),))
+                        "you requested not existing attribute(s) `%s%s`" % (
+                            prefix, '`, `'.join(columns_not_in_relations),))
             else:
                 for rel_name in req_columns:
                     add_to_req_relationships(rel_name, '~')
@@ -485,16 +527,16 @@ class PRBase:
 
         if len(req_relationships) > 0:
             relations_not_in_columns = list(set(
-                req_relationships.keys()) - set(columns))
+                    req_relationships.keys()) - set(columns))
             if len(relations_not_in_columns) > 0:
                 raise ValueError(
-                    "you requested not existing relation(s) `%s%s`" % (
-                        prefix, '`, `'.join(relations_not_in_columns),))
+                        "you requested not existing relation(s) `%s%s`" % (
+                            prefix, '`, `'.join(relations_not_in_columns),))
             else:
                 raise ValueError("you requested for relation(s) but "
                                  "column(s) found `%s%s`" % (
                                      prefix, '`, `'.join(set(columns).intersection(
-                                         req_relationships)),))
+                                             req_relationships)),))
 
         return ret
 
@@ -520,6 +562,7 @@ class PRBase:
     #     ret = target.validate('delete')
     #     if len(ret['errors'].keys()):
     #         raise errors.ValidationException(ret)
+
 
     @staticmethod
     def add_to_search(mapper=None, connection=None, target=None):
@@ -575,7 +618,7 @@ class PRBase:
         event.listen(cls, 'after_update', cls.update_search_table)
         event.listen(cls, 'after_delete', cls.delete_from_search)
 
-#
+
 #
 #
 #

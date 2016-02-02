@@ -320,11 +320,6 @@ class MemberCompanyPortal(Base, PRBase):
     #     portal = Portal().own_portal(company_id).companies
     #     return portal
 
-    @staticmethod
-    def get_portals(company_id):
-        """This method return all portals-partners current company"""
-        return db(MemberCompanyPortal, company_id=company_id).all()
-
     # @staticmethod
     # def subquery_company_partners(company_id, search_text, **kwargs):
     #     sub_query = db(MemberCompanyPortal, company_id=company_id)
@@ -429,10 +424,12 @@ class PortalDivision(Base, PRBase):
     #         #     portal_division_id=self.id).one()
 
     def search_filter(self):
+        from .articles import ArticlePortalDivision
+
         return and_(ArticlePortalDivision.portal_division_id.in_(
             db(PortalDivision.id, portal_id=portal.id)),
             ArticlePortalDivision.status ==
-            ARTICLE_STATUS_IN_PORTAL.published)
+            ArticlePortalDivision.STATUSES['PUBLISHED'])
 
     @orm.reconstructor
     def init_on_load(self):
