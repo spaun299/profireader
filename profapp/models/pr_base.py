@@ -302,27 +302,29 @@ class Grid:
         return [{'value': status, 'label': status} for status in statuses.keys()]
 
     def page_options(client_json):
-        return  {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize']}
+        return  {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize']} if client_json else {}
 
     @staticmethod
-    def subquery_grid(query, filters, sorts):
-        for filter in filters:
-            if filter['type'] == 'text':
-                query = query.filter(filter['field'].ilike("%" + filter['value'] + "%"))
-            elif filter['type'] == 'select':
-                query = query.filter(filter['field'] == filter['value'])
-            elif filter['type'] == 'date_range':
-                fromm = datetime.datetime.utcfromtimestamp((filter['value']['from']+1)/1000)
-                to = datetime.datetime.utcfromtimestamp((filter['value']['to']+86399999)/1000)
-                query = query.filter(filter['field'].between(fromm, to))
-            elif filter['type'] == 'range':
-                query = query.filter(filter['field'].between(filter['value']['from'], filter['value']['to']))
-            elif filter['type'] == 'multiselect':
-                query = query.filter(or_(filter['field'] == v for v in filter['value']))
-        for sort in sorts:
-            if sort['type'] == 'date':
-                query = query.order_by(sort['field'].asc()) if sort['value'] == 'asc' else query.order_by(
-                    sort['field'].desc())
+    def subquery_grid(query, filters=None, sorts=None):
+        if filters:
+            for filter in filters:
+                if filter['type'] == 'text':
+                    query = query.filter(filter['field'].ilike("%" + filter['value'] + "%"))
+                elif filter['type'] == 'select':
+                    query = query.filter(filter['field'] == filter['value'])
+                elif filter['type'] == 'date_range':
+                    fromm = datetime.datetime.utcfromtimestamp((filter['value']['from']+1)/1000)
+                    to = datetime.datetime.utcfromtimestamp((filter['value']['to']+86399999)/1000)
+                    query = query.filter(filter['field'].between(fromm, to))
+                elif filter['type'] == 'range':
+                    query = query.filter(filter['field'].between(filter['value']['from'], filter['value']['to']))
+                elif filter['type'] == 'multiselect':
+                    query = query.filter(or_(filter['field'] == v for v in filter['value']))
+        if sorts:
+            for sort in sorts:
+                if sort['type'] == 'date':
+                    query = query.order_by(sort['field'].asc()) if sort['value'] == 'asc' else query.order_by(
+                        sort['field'].desc())
         return query
 
 

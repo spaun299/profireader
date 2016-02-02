@@ -15,7 +15,7 @@ from flask import abort
 from .rights import Right, RightHumnReadible
 from ..controllers.request_wrapers import check_rights
 from .files import File
-from .pr_base import PRBase, Base, Search
+from .pr_base import PRBase, Base, Search, Grid
 from ..controllers import errors
 from ..constants.STATUS import STATUS_NAME
 from .rights import get_my_attributes
@@ -26,6 +26,7 @@ from .users import User
 from ..models.portal import Portal
 from ..models.portal import MemberCompanyPortal
 from ..models.portal import UserPortalReader
+
 
 
 class Company(Base, PRBase):
@@ -191,17 +192,19 @@ class Company(Base, PRBase):
                         } for partner in partners]
 
     @staticmethod
-    def subquery_company_partners(company_id, search_text, **kwargs):
+    def subquery_company_partners(company_id, filters):
         sub_query = db(MemberCompanyPortal, company_id=company_id)
-        if search_text:
+        list_filters = []
+        if filters:
             sub_query = sub_query.join(MemberCompanyPortal.portal)
-            if 'portal.name' in search_text:
-                sub_query = sub_query.filter(Portal.name.ilike("%" + search_text['portal.name'] + "%"))
-            if 'company' in search_text:
-                sub_query = sub_query.join(Company, Portal.company_owner_id == Company.id).\
-                filter(Company.name.ilike("%" + search_text['company'] + "%"))
-            if 'link' in search_text:
-                sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
+            if 'portal.name' in filters:
+                list_filters.append({'type': 'text', 'value': filters['portal.name'], 'field': Portal.name})
+            if 'link' in filters:
+                list_filters.append({'type': 'text', 'value': filters['link'], 'field': Portal.host})
+            if 'company' in filters:
+                sub_query = sub_query.join(Company, Portal.company_owner_id == Company.id)
+                list_filters.append({'type': 'text', 'value': filters['company'], 'field': Company.name})
+            sub_query = Grid.subquery_grid(sub_query, list_filters)
         return sub_query
 
 
