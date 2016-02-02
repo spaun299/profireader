@@ -189,22 +189,3 @@ class TranslateTemplate(Base, PRBase):
             grid_data.append(translate.get_client_side_dict())
         return grid_data
 
-    @staticmethod
-    def list_for_grid_tables(list, add_param, is_dict):
-        new_list = []
-        n = 1
-        if add_param:
-            new_list.append(add_param)
-            n = 2
-        if is_dict == False:
-            list.sort()
-        for s in list:
-            label = list[s] if is_dict else s
-            id = s if is_dict else ''
-            new_list.append({
-                'value': str(n),
-                'label': label[0],
-                'id': id
-            })
-            n += 1
-        return new_list

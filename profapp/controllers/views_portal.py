@@ -3,6 +3,7 @@ from flask import render_template, g, flash, redirect, url_for, jsonify
 from ..models.company import Company
 from flask.ext.login import current_user, login_required
 from ..models.portal import PortalDivisionType
+from ..models.translate import TranslateTemplate
 from utils.db_utils import db
 from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDivision, \
     PortalDivisionSettingsCompanySubportal, PortalConfig
@@ -480,25 +481,18 @@ def publications(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def publications_load(json, company_id):
-    portal = db(Company, id=company_id).one().own_portal
-    if not portal:
-        return dict(portal_not_exist=True)
-    page = json.get('paginationOptions')['pageNumber']
-    pageSize = json.get('paginationOptions')['pageSize']
-    search_text = json.get('search_text')
-    params = PRBase.getParamsGrid(json.get('filter'), json.get('sort'), portal_id=portal.id)
-    subquery = ArticlePortalDivision.subquery_portal_articles(search_text=search_text, **params)
-    articles, pages, current_page = pagination(subquery,
-                                               page=page, items_per_page=pageSize)
-    add_param = {'value': '1', 'label': '-- all --'}
-    comp_grid = Article.list_for_grid_tables(
-            ArticlePortalDivision.get_companies_which_send_article_to_portal(portal.id), add_param, True)
-    statuses_grid = Grid.filter_for_status(ArticlePortalDivision.STATUSES)
-    grid_data = Article.getListGridDataPublication(articles)
-    grid_filters = {'publication_status': statuses_grid, 'company': comp_grid}
-    return {'grid_data': grid_data,
-            'grid_filters': grid_filters,
-            'total': subquery.count()}
+    portal = db(Company, id=company_id).one().own_portal.id
+    subquery = ArticlePortalDivision.subquery_portal_articles(portal, json.get('filter'), json.get('sort'))
+    articles, pages, current_page ,count = pagination(subquery,**Grid.page_options(json.get('paginationOptions')))
+    grid_filters = {
+        'publication_status':Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+        'company': [{'value': company_id, 'label': company} for company_id, company  in
+                    ArticlePortalDivision.get_companies_which_send_article_to_portal(portal).items()]
+    }
+    return {'grid_data': Article.getListGridDataPublication(articles),
+            'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
+                             (k, v) in grid_filters.items()},
+            'total': count}
 
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
