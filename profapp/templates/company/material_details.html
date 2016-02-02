@@ -70,13 +70,13 @@
             $scope.loadMaterialDetails = function () {
                 $ok('', {}, function (resp) {
                     $scope.data = resp;
-                    $scope.initGridData = resp.portals
+                    $scope.initGridData = resp.portals;
                     $scope.applyGridExtarnals($scope.initGridData);
                     {#                    $scope.change_status_to = $scope.data.allowed_statuses[0];#}
                 }).finally(function () {
-                                            $scope.loading = false;
-                                            $scope.load_contr = true
-                                        });
+                    $scope.loading = false;
+                    $scope.load_contr = true
+                });
 
             };
 
