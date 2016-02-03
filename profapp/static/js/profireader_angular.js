@@ -76,7 +76,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     iferror(result, error_code)
                 }
                 else {
-                    alert(result);
+                    add_message(result, 'danger');
                 }
             }
 
@@ -1071,6 +1071,10 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $te
         getPropertiesForGrid: function (col) {
             var scope = this;
             scope.pos = {};
+            //var grid = this.grid;
+            //grid.render_action_buttons = function () {
+            //    return 'lalala';
+            //}
             scope.gridOptions1.headerTemplate = '<div class="ui-grid-header" ><div class="ui-grid-top-panel"><div class="ui-grid-header-viewport"><div class="ui-grid-header"></div><div class="ui-grid-header-canvas" >' +
                 '<div class="ui-grid-header-cell-wrapper" ng-style="colContainer.headerCellWrapperStyle()"><div role="row" class="ui-grid-header-cell-row">'+
                 '<div class="ui-grid-header-cell ui-grid-clearfix ui-grid-category" ng-repeat="cat in grid.options.category" ng-if="cat.visible && (colContainer.renderedColumns | filter:{ colDef:{category: cat.name} }).length > 0"> ' +
@@ -1130,6 +1134,9 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $te
                     scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+col[i].classes+'" title="{{ COL_FIELD }}"><a ng-if="grid.appScope.hideGridLinkIf !== COL_FIELD" href="{{'+link+'}}" ng-bind="COL_FIELD"></a><div ng-if="grid.appScope.hideGridLinkIf === COL_FIELD">{{ COL_FIELD }}</div></div>'
                 }else if(col[i].type === 'img'){
                     scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+col[i].classes+'" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
+                }else if(col[i].type === 'actions') {
+                    //var buttons = _.map(col[i]['buttons'], function(text){ return '<button ng-click="grid.appScope.hahah()">'+text+'</button>' }).join('&nbsp;');
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+col[i].classes+'" >{{ aaa(COL_FIELD) }}</div>'
                 }else if(col[i].type === 'editable'){
                     if(col[i].multiple === true && col[i].rule){
                       scope.gridOptions1.columnDefs[i].cellTemplate = '<div ng-if="grid.appScope.'+col[i].rule+'=== false" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div><div ng-if="grid.appScope.'+col[i].rule+'"><div ng-click="'+col[i].modal+'" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>'

@@ -5,9 +5,39 @@
     {% block company_base %}
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
+
+    {% raw %}
+    <script type="text/ng-template" id="material_details_publish_dialog.html">
+        <div class="modal-header">
+            <h3 class="modal-title">{{ _('Publish naterial to portal. Please select division') }}</h3>
+        </div>
+        <div class="modal-body">
+            <div ng-repeat="division in divisions"><label><input ng-disabled="!division.can_be_published" name="material_details_publish_dialog_division"
+                                                                 ng-value="division" ng-model="selected_division"
+                                                                 type="radio"> {{
+                division.name }} {{ division.portal_division_type_id }}</label></div>
+        </div>
+        {{ selected_division  }}
+        <div class="modal-footer">
+            <button class="btn btn-primary" ng-disabled="!selected_division" type="button" ng-click="publish_do()">{{
+                _('Publish') }}
+            </button>
+            <button class="btn btn-warning" type="button" ng-click="publish_cancel()">{{ _('Cancel') }}</button>
+        </div>
+    </script>
+    {% endraw %}
+
+
     <script>
 
-        module.controller('material_details', ['$scope', '$ok', '$timeout', function ($scope, $ok, $timeout) {
+        module.controller('material_details_publish_dialog', ['$scope', '$modalInstance', 'divisions', function ($scope, $modalInstance, divisions) {
+            $scope.$$translate = {{ translates('material_details_publish_dialog')|safe }};
+            $scope.selected_division = null;
+            $scope.divisions = divisions;
+
+        }]);
+
+        module.controller('material_details', ['$scope', '$ok', '$uibModal', '$timeout', function ($scope, $ok, $uibModal, $timeout) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
             $scope.url_search_for_user = {{ raw_url_for('company.search_for_user')|safe }};
             $scope.selectedUser_name = '';
@@ -161,6 +191,7 @@
                 });
             };
 
+
             $scope.joinToUser = function () {
                 $ok($scope.url_send_article_user(), {
                     send_to_user: {
@@ -192,6 +223,29 @@
             {#                });#}
             {#            };#}
 
+            $scope.grid_action = function (id, action) {
+                console.log(id, action);
+
+
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'material_details_publish_dialog.html',
+                    controller: 'material_details_publish_dialog',
+                    resolve: {
+                        divisions: function () {
+                            return _.find($scope.data['portals']['grid_data'], function (portal) {
+                                return portal['id'] == id;
+                            })['divisions'];
+                        }
+                    }
+                });
+
+                modalInstance.result.then(function (selectedItem) {
+                    $scope.selected = selectedItem;
+                }, function () {
+                    {#                    $log.info('Modal dismissed at: ' + new Date());#}
+                });
+
+            };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                 gridInit: $scope.loadMaterialDetails,
@@ -200,34 +254,64 @@
                 },
                 columnDefs: [
                     {
-                        name: 'company_owner_id', displayName: 'Portal', width: '20%', enableSorting: false,
-                        type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
+                        name: 'own_company.name', displayName: 'Company name', width: '13%', enableSorting: false,
+                        enableFiltering: false,
                         filter: {type: 'input'}
-                    }
-                    , {
-                        name: 'divisions', displayName: 'division', width: '20%', enableSorting: false,
-                        type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
-                        filter: {type: 'input'}
-                    }
-                    ,
+                    },
                     {
-                        name: 'name', displayName: 'Title', width: '20%', enableSorting: false,
+                        name: 'name', displayName: 'Portal', width: '13%', enableSorting: false,
+                        enableFiltering: false,
+                        type: 'link',
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
                         filter: {type: 'input'}
                     }
                     , {
-                        name: 'id', displayName: 'counts', enableSorting: false, enableFiltering: false
+                        name: 'publication.division.name', displayName: 'division', width: '12%', enableSorting: false,
+                        enableFiltering: false,
+                        type: 'link',
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
+                        filter: {type: 'input'}
+                    }
+
+                    , {
+                        name: 'publication.title', displayName: 'Publication Title', width: '12%', enableSorting: false,
+                        enableFiltering: false,
+                        filter: {type: 'input'}
                     }
                     , {
-                        name: 'publishing_tm', enableColumnMenu: true,
+                        name: 'publication.counts', displayName: 'counts', enableSorting: false, enableFiltering: false,
+                        width: '5%',
+                    }
+                    , {
+                        name: 'publication.publishing_tm', enableColumnMenu: true,
+                        enableFiltering: false,
+                        enableSorting: false,
+                        width: '5%',
                         displayName: 'publishing date',
                         filter: {type: 'date_range'}
                     }
                     , {
-                        name: 'status', enableSorting: false,
+                        name: 'publication.status', enableSorting: false,
+                        enableFiltering: false,
                         displayName: 'status',
-                        filter: {type: 'input'}}
+                        width: '5%',
+                        filter: {type: 'input'}
+                    }
+                    , {
+                        name: 'publication.visibility', enableSorting: false,
+                        enableFiltering: false,
+                        displayName: 'visibility',
+                        width: '5%',
+                        filter: {type: 'input'}
+                    }
+                    , {
+                        name: 'actions', enableSorting: false,
+                        enableFiltering: false,
+                        type: 'actions',
+                        displayName: 'Action',
+                        width: '10%',
+                        filter: {type: 'input'}
+                    }
                 ]
             });
 
@@ -286,6 +370,7 @@
         </div>
         {% endraw %}
     </div>
+
 
 
 {% endblock portal_content %}
