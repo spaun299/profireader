@@ -302,7 +302,7 @@ class Grid:
         return [{'value': status, 'label': status} for status in statuses.keys()]
 
     def page_options(client_json):
-        return  {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize']} if client_json else {}
+        return {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize']} if client_json else {}
 
     @staticmethod
     def subquery_grid(query, filters=None, sorts=None):
@@ -313,8 +313,8 @@ class Grid:
                 elif filter['type'] == 'select':
                     query = query.filter(filter['field'] == filter['value'])
                 elif filter['type'] == 'date_range':
-                    fromm = datetime.datetime.utcfromtimestamp((filter['value']['from']+1)/1000)
-                    to = datetime.datetime.utcfromtimestamp((filter['value']['to']+86399999)/1000)
+                    fromm = datetime.datetime.utcfromtimestamp((filter['value']['from'] + 1) / 1000)
+                    to = datetime.datetime.utcfromtimestamp((filter['value']['to'] + 86399999) / 1000)
                     query = query.filter(filter['field'].between(fromm, to))
                 elif filter['type'] == 'range':
                     query = query.filter(filter['field'].between(filter['value']['from'], filter['value']['to']))
@@ -324,7 +324,7 @@ class Grid:
             for sort in sorts:
                 if sort['type'] == 'date':
                     query = query.order_by(sort['field'].asc()) if sort['value'] == 'asc' else query.order_by(
-                        sort['field'].desc())
+                            sort['field'].desc())
         return query
 
 
@@ -420,10 +420,10 @@ class PRBase:
         return self
 
     @staticmethod
-    def get_ordered_dict(list_of_objects, **kwargs):
+    def get_ordered_dict(list_of_dicts, **kwargs):
         ret = OrderedDict()
-        for item in list_of_objects:
-            ret[item.id] = item.get_client_side_dict(**kwargs)
+        for item in list_of_dicts:
+            ret[item['id']] = item
         return ret
 
     def get_client_side_dict(self, fields='id',
@@ -619,7 +619,6 @@ class PRBase:
         event.listen(cls, 'after_insert', cls.add_to_search)
         event.listen(cls, 'after_update', cls.update_search_table)
         event.listen(cls, 'after_delete', cls.delete_from_search)
-
 
 #
 #
