@@ -84,6 +84,16 @@ class Company(Base, PRBase):
                                           backref='logo_owner_company',
                                           foreign_keys='Company.logo_file_id')
 
+
+    def get_readers_for_portal(self, filters):
+        query = g.db.query(User).join(UserPortalReader).join(UserPortalReader.portal).join(Portal.own_company).filter(Company.id == self.id)
+        list_filters = []
+        if filters:
+            for filter in filters:
+                list_filters.append({'type': 'text', 'value': filters[filter], 'field': eval("User."+filter)})
+        query = Grid.subquery_grid(query, list_filters)
+        return query
+
     @property
     def readers_query(self):
         return g.db.query(User.id,
@@ -183,6 +193,13 @@ class Company(Base, PRBase):
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
+    @staticmethod
+    def getListGridDataReaders(readers):
+        return [{'portal' : {'name':partner.portal.name,
+                             'id': partner.portal.id},
+                            'link' : partner.portal.host,
+                            'company' : Company.get(partner.portal.company_owner_id).name
+                        } for partner in readers]
     @staticmethod
     def getListGridDataPortalPartners(partners):
         return [{'portal' : {'name':partner.portal.name,
