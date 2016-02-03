@@ -76,7 +76,6 @@ def materials(company_id):
 @ok
 def materials_load(json, company_id):
     subquery = ArticleCompany.subquery_company_materials(company_id, json.get('filter'), json.get('sort'))
-
     materials, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
 
     grid_filters = {
@@ -86,7 +85,6 @@ def materials_load(json, company_id):
         'publication_status': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
         'publication_visibility': Grid.filter_for_status(ArticlePortalDivision.VISIBILITIES)
     }
-
     return {'grid_data': Article.getListGridDataMaterials(materials),
             'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
                              (k, v) in grid_filters.items()},
@@ -202,7 +200,6 @@ def update_rights():
 def update(company_id=None):
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     user_have_comp = True if len(user_companies) > 0 else False
-    user_have_comp = False
     company = db(Company, id=company_id).first()
     return render_template('company/company_edit.html', company_id=company_id, user_comp=user_have_comp,
                            company_name=company.name if company else '',

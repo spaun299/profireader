@@ -418,27 +418,18 @@ def portals_partners(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def portals_partners_load(json, company_id):
-    page = json.get('paginationOptions')['pageNumber'] if json.get('paginationOptions') else 1
-    pageSize = json.get('paginationOptions')['pageSize'] if json.get('paginationOptions') else 25
-    search_text = json.get('search_text')
-    portal_id = json.get('getPageOfId') if json.get('getPageOfId') else None
-    subquery_member_portal = db(MemberCompanyPortal, portal_id=portal_id,
-                                company_id=company_id).one() if portal_id else None
-    portal = db(Company, id=company_id).one().own_portal
-    portals_partners = [port.get_client_side_dict(fields='name, company_owner_id,id')
-                                 for port in Company.get(json['company_id']).get_portals_where_company_is_member()]
-    params = {}
-    subquery = Company.subquery_company_partners(company_id=company_id, search_text=search_text, **params)
-    partners_g, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
-    user_rights = list(g.user.user_rights_in_company(company_id))
-    grid_data = Company.getListGridDataPortalPartners(partners_g)
+    subquery_member_portal = db(MemberCompanyPortal, portal_id=json.get('getPageOfId'),
+                                    company_id=company_id).one().id if json.get('getPageOfId') else None
+    subquery = Company.subquery_company_partners(company_id, json.get('filter'))
+    partners_g, pages, current_page, count = pagination(subquery, subquery_member_portal, **Grid.page_options(json.get('paginationOptions')))
     return {'page': current_page,
-            'grid_data': grid_data,
-            'total': subquery.count(),
-            'portal': portal.get_client_side_dict(fields='name') if portal else [],
-            'portals_partners': portals_partners,
+            'grid_data': Company.getListGridDataPortalPartners(partners_g),
+            'total': count,
+            'portal': db(Company, id=company_id).one().own_portal.get_client_side_dict(fields='name') if db(Company, id=company_id).one().own_portal else [],
+            'portals_partners': [port.get_client_side_dict(fields='name, company_owner_id,id')
+                                 for port in Company.get(company_id).get_portals_where_company_is_member()],
             'company_id': company_id,
-            'user_rights': user_rights}
+            'user_rights': list(g.user.user_rights_in_company(company_id))}
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])

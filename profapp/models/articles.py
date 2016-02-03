@@ -376,7 +376,7 @@ class ArticleCompany(Base, PRBase):
             sub_query = sub_query.join(ArticlePortalDivision,
                                        ArticlePortalDivision.article_company_id == ArticleCompany.id)
             if 'publication_status' in filters:
-                list_filters.append({'type': 'select', 'value': filters['publication_status'], 'field': ArticlePortalDivision.status})
+                list_filters.append({'type': 'multiselect', 'value': filters['publication_status'], 'field': ArticlePortalDivision.status})
             if 'portals' in filters:
                 sub_query = sub_query.join(PortalDivision,
                                            PortalDivision.id == ArticlePortalDivision.portal_division_id).join(Portal,

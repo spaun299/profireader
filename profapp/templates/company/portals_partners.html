@@ -22,7 +22,7 @@
             $scope.selectedPortal = null;
             $scope.selectedPortal_sending = false;
             $scope.$$translate = {{ translates('portal_list')|safe }};
-            $scope.own_company_id = '{{ company_id }}';
+            $scope.own_company_id = '{{ company.id }}';
             {% raw %}
             $scope.noData = 'No portal partners';
 
@@ -74,9 +74,9 @@
 
            $scope.sendData = function (data) {
                 $scope.loading = true;
-                $ok($scope.partners({company_id: $scope.own_company_id}), data, function (resp) {
+                $ok($scope.load_partners({company_id: $scope.own_company_id}), data, function (resp) {
                     $scope.initGridData = resp;
-                            $scope.applyGridExtarnals(resp);
+                    $scope.applyGridExtarnals(resp);
                 }).finally(function () {
                     $scope.loading = false;
                     $scope.load_contr = true;
