@@ -9,20 +9,29 @@
     {% raw %}
     <script type="text/ng-template" id="material_details_publish_dialog.html">
         <div class="modal-header">
-            <h3 class="modal-title">{{ _('Publish naterial to portal. Please select division') }}</h3>
+            <h3 class="modal-title">{{ _(action + ' material from portal') }}</h3>
         </div>
         <div class="modal-body">
-            <div ng-repeat="division in divisions"><label><input ng-disabled="!division.can_be_published" name="material_details_publish_dialog_division"
-                                                                 ng-value="division" ng-model="selected_division"
-                                                                 type="radio"> {{
+            <div ng-if="action=='publish'">{{ _('You are going to publish material `%(article.title)s` at portal `%(portal.name)s`. Please select division') }}</div>
+            <div ng-if="action=='publish'" ng-repeat="division in portal.divisions"><label><input
+                    ang-disabled="!division.can_be_published"
+                    name="material_details_publish_dialog_division"
+                    ng-value="division" ng-model="$parent.$parent.selected_division"
+                    type="radio"> {{
                 division.name }} {{ division.portal_division_type_id }}</label></div>
+
+            <div ng-if="action=='unpublish'">
+                {{ _('You are going to unpublish publication `%(article.title)s` from portal `%(portal.name)s` division `%(published_at_division.name)s`') }}</div>
+            <hr/>
+            {{ _('You can send message to company') }}<br/>
+            <textarea ng-model="message"></textarea>
+
         </div>
-        {{ selected_division  }}
         <div class="modal-footer">
-            <button class="btn btn-primary" ng-disabled="!selected_division" type="button" ng-click="publish_do()">{{
-                _('Publish') }}
+            <button class="btn btn-primary" ng-disabled="!selected_division" type="button" ng-click="action_do()">{{
+                _('Do ' + action) }}
             </button>
-            <button class="btn btn-warning" type="button" ng-click="publish_cancel()">{{ _('Cancel') }}</button>
+            <button class="btn btn-warning" type="button" ng-click="action_cancel()">{{ _('Cancel ' + action) }}</button>
         </div>
     </script>
     {% endraw %}
@@ -30,12 +39,23 @@
 
     <script>
 
-        module.controller('material_details_publish_dialog', ['$scope', '$modalInstance', 'divisions', function ($scope, $modalInstance, divisions) {
-            $scope.$$translate = {{ translates('material_details_publish_dialog')|safe }};
-            $scope.selected_division = null;
-            $scope.divisions = divisions;
+        module.controller('material_details_publish_dialog', function ($scope, $modalInstance, article, action, portal, published_at_division) {
+                $scope.$$translate = {{ translates('portal')|safe }};
+                $scope.selected_division = null;
+                $scope.portal = portal;
+                $scope.article = article;
+                $scope.action = action;
+                $scope.published_at_division = published_at_division;
 
-        }]);
+                $scope.action_do = function () {
+                    $modalInstance.close($scope.selected_division);
+                };
+
+                $scope.action_cancel = function () {
+                    $modalInstance.dismiss();
+                };
+
+            });
 
         module.controller('material_details', ['$scope', '$ok', '$uibModal', '$timeout', function ($scope, $ok, $uibModal, $timeout) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
@@ -223,23 +243,33 @@
             {#                });#}
             {#            };#}
 
-            $scope.grid_action = function (id, action) {
-                console.log(id, action);
 
+            $scope.grid_action = function (id, action, row, column_name) {
 
                 var modalInstance = $uibModal.open({
                     templateUrl: 'material_details_publish_dialog.html',
                     controller: 'material_details_publish_dialog',
                     resolve: {
-                        divisions: function () {
+                        article: function () {
+{#                            console.log('??!?!?',row['publication']?row['publication']:$scope.data['material']);#}
+                            return row['publication']?row['publication']:$scope.data['material'];
+                        },
+                        action: function () {
+                            return action;
+                        },
+                        published_at_division: function () {
+                            return row['publication']?row['publication']['division']:null;
+                        },
+                        portal: function () {
                             return _.find($scope.data['portals']['grid_data'], function (portal) {
                                 return portal['id'] == id;
-                            })['divisions'];
+                            });
                         }
                     }
                 });
 
                 modalInstance.result.then(function (selectedItem) {
+                    console.log(action, selectedItem);
                     $scope.selected = selectedItem;
                 }, function () {
                     {#                    $log.info('Modal dismissed at: ' + new Date());#}
@@ -308,6 +338,7 @@
                         name: 'actions', enableSorting: false,
                         enableFiltering: false,
                         type: 'actions',
+                        onclick: 'grid_action',
                         displayName: 'Action',
                         width: '10%',
                         filter: {type: 'input'}
@@ -317,6 +348,16 @@
 
         }]);
     </script>
+
+    <style>
+        .pr-grid-cell-type-actions-button-action-publish {
+            background-color: greenyellow;
+        }
+
+        .pr-grid-cell-type-actions-button-action-unpublish {
+            background-color: red;
+        }
+    </style>
 
     <div ng-init="loadMaterialDetails()" ng-controller="material_details">
 
