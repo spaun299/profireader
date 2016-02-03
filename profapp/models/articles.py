@@ -207,26 +207,27 @@ class ArticlePortalDivision(Base, PRBase):
     #                               submitted})
 
     @staticmethod
-    def subquery_portal_articles(search_text=None, portal_id=None, **kwargs):
+    def subquery_portal_articles(portal_id, filters, sorts):
         sub_query = db(ArticlePortalDivision)
-        if 'publication_status' in kwargs['filter'].keys():
-            sub_query = db(ArticlePortalDivision, status=kwargs['filter']['publication_status'])
-        if 'company' in kwargs['filter'].keys():
-            sub_query = sub_query.join(ArticlePortalDivision.company).filter(Company.id == kwargs['filter']['company'])
+        list_filters=[];list_sorts = []
+        if 'publication_status' in filters:
+            list_filters.append({'type': 'select', 'value': filters['publication_status'], 'field': ArticlePortalDivision.status})
+        if 'company' in filters:
+            sub_query = sub_query.join(ArticlePortalDivision.company)
+            list_filters.append({'type': 'select', 'value': filters['company'], 'field': Company.id})
+        if 'date' in filters:
+            list_filters.append({'type': 'date_range', 'value': filters['date'], 'field': ArticlePortalDivision.publishing_tm})
         sub_query = sub_query. \
             join(ArticlePortalDivision.division). \
             join(PortalDivision.portal). \
             filter(Portal.id == portal_id)
-        if search_text:
-            if 'title' in search_text:
-                sub_query = sub_query.filter(ArticlePortalDivision.title.ilike("%" + search_text['title'] + "%"))
-        if 'date' in kwargs['sort'].keys():
-            sub_query = sub_query.order_by(ArticlePortalDivision.publishing_tm.asc()) if kwargs[
-                                                                                             'sort'][
-                                                                                             'date'] == 'asc' else sub_query.order_by(
-                    ArticlePortalDivision.publishing_tm.desc())
+        if 'title' in filters:
+            list_filters.append({'type': 'text', 'value': filters['title'], 'field': ArticlePortalDivision.title})
+        if 'date' in sorts:
+            list_sorts.append({'type': 'date', 'value': sorts['date'], 'field': ArticlePortalDivision.publishing_tm})
         else:
-            sub_query = sub_query.order_by(expression.desc(ArticlePortalDivision.publishing_tm))
+            list_sorts.append({'type': 'date', 'value': 'desc', 'field': ArticlePortalDivision.publishing_tm})
+        sub_query = Grid.subquery_grid(sub_query, list_filters, list_sorts)
         return sub_query
 
     def manage_article_tags(self, new_tags):
@@ -385,12 +386,17 @@ class ArticleCompany(Base, PRBase):
         if 'md_tm' in filters:
             list_filters.append({'type': 'date_range', 'value': filters['md_tm'], 'field': ArticleCompany.md_tm})
         if 'title' in filters:
-            list_filters.append({'type': 'text', 'value': filters['title'], 'field': ArticleCompany.title})
+            list_filters.append({'type': 'text', 'value': filters['title_author'], 'field': ArticleCompany.title})
+        if 'title_author' in filters:
+            list_filters.append({'type': 'text', 'value': filters['title_author'], 'field': ArticleCompany.title})
+            sub_query = sub_query.join(User,
+                                       User.id == ArticleCompany.editor_user_id)
+            list_filters.append({'type': 'text', 'value': filters['title_author'], 'field': User.profireader_name})
         if 'author' in filters:
             sub_query = sub_query.join(User,
                                        User.id == ArticleCompany.editor_user_id)
             list_filters.append({'type': 'text', 'value': filters['author'], 'field': User.profireader_name})
-        if 'md_tm' in sorts.keys():
+        if 'md_tm' in sorts:
             list_sorts.append({'type': 'date', 'value': sorts['md_tm'], 'field': ArticleCompany.md_tm})
         else:
             list_sorts.append({'type': 'date', 'value': 'desc', 'field': ArticleCompany.md_tm})
@@ -618,25 +624,6 @@ class Article(Base, PRBase):
         articles = g.db.query(ArticleCompany).filter_by(company_id=company_id).all()
         return articles if articles else []
 
-    @staticmethod
-    def list_for_grid_tables(list, add_param, is_dict):
-        new_list = []
-        n = 1
-        if add_param:
-            new_list.append(add_param)
-            n = 2
-        if is_dict == False:
-            list.sort()
-        for s in list:
-            label = list[s] if is_dict else s
-            id = s if is_dict else ''
-            new_list.append({
-                'value': str(n),
-                'label': label,
-                'id': id
-            })
-            n += 1
-        return new_list
 
     @staticmethod
     def getListGridDataMaterials(articles):

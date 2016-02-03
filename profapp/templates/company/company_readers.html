@@ -33,29 +33,55 @@ th, td {
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
 <script>
-    module.controller('CompanyReaders', ['$scope', function ($scope) {
+    module.controller('CompanyReaders', ['$scope','$ok', function ($scope, $ok) {
         angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_readers');
         $scope.$$translate = {{ translates('CompanyReaders')|safe }};
+        $scope.own_company_id = '{{ company.id }}';
+        $scope.get_readers = {{ raw_url_for('company.readers_load')|safe }};
+
+        {% raw %}
+        $scope.sendData = function (data) {
+                $scope.loading = true;
+                $ok($scope.get_readers({company_id: $scope.own_company_id}), data, function (resp) {
+                    $scope.initGridData = resp;
+                    $scope.applyGridExtarnals(resp);
+                }).finally(function () {
+                    $scope.loading = false;
+                    $scope.load_contr = true;
+                });
+            };
+
+
+        $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+             gridInit: $scope.sendData,
+             onRegisterApi: function (gridApi) {
+                 $scope.setGridExtarnals(gridApi)
+             },
+             columnDefs: [
+                 { name: 'profireader_first_name', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'First Name', width: '35%',
+                     filter: {type:'input'}
+                 },
+                 { name: 'id',enableCellEdit: false, displayName: 'Id', enableSorting: false, filter: {type:'input'}},
+                 { name: 'profireader_email', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'Email',
+                     filter: {type:'input'}
+                 },
+                 { name: 'profireader_name', enableSorting: false,displayName: 'Nickname', enableCellEdit: false, enableColumnMenu: false,
+                     filter: {type:'input'}
+                 },
+                 { name: 'profireader_last_name', enableSorting: false,displayName: 'Last Name', enableCellEdit: false, enableColumnMenu: false,
+                     filter: {type:'input'}
+                 }
+             ]
+         });
+        {% endraw %}
     }]);
 </script>
-<div ng-controller="CompanyReaders">
-    <table style="width:100%">
-        <tr>
-            <th>e-mail</th>
-            <th>Profireader name</th>
-            <th>first name</th>
-            <th>last name</th>
-        </tr>
-        {% for reader in companyReaders %}
-            <tr>
-                <td>{{ reader['email'] }}</td>
-                <td><a href="{{ url_for('user.profile', user_id=reader['id']) }}">{{ reader['nickname'] }}</a></td>
-                <td>{{ reader['first_name'] }}</td>
-                <td>{{ reader['last_name'] }}</td>
-            </tr>
-        {% endfor %}
-    </table>
-</div>
+
+    <div ng-controller="CompanyReaders">
+        <h3 style="text-align: center!important;">{{_('Portal readers')}}</h3>
+        <div ng-if="!load_contr">{{_('Loading...')}}</div>
+        <div class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1" ></div>
+    </div>
 {% endblock portal_content %}
 
 {% block footer %}
