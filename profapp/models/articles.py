@@ -386,7 +386,12 @@ class ArticleCompany(Base, PRBase):
         if 'md_tm' in filters:
             list_filters.append({'type': 'date_range', 'value': filters['md_tm'], 'field': ArticleCompany.md_tm})
         if 'title' in filters:
-            list_filters.append({'type': 'text', 'value': filters['title'], 'field': ArticleCompany.title})
+            list_filters.append({'type': 'text', 'value': filters['title_author'], 'field': ArticleCompany.title})
+        if 'title_author' in filters:
+            list_filters.append({'type': 'text', 'value': filters['title_author'], 'field': ArticleCompany.title})
+            sub_query = sub_query.join(User,
+                                       User.id == ArticleCompany.editor_user_id)
+            list_filters.append({'type': 'text', 'value': filters['title_author'], 'field': User.profireader_name})
         if 'author' in filters:
             sub_query = sub_query.join(User,
                                        User.id == ArticleCompany.editor_user_id)
@@ -619,25 +624,6 @@ class Article(Base, PRBase):
         articles = g.db.query(ArticleCompany).filter_by(company_id=company_id).all()
         return articles if articles else []
 
-    @staticmethod
-    def list_for_grid_tables(list, add_param, is_dict):
-        new_list = []
-        n = 1
-        if add_param:
-            new_list.append(add_param)
-            n = 2
-        if is_dict == False:
-            list.sort()
-        for s in list:
-            label = list[s] if is_dict else s
-            id = s if is_dict else ''
-            new_list.append({
-                'value': str(n),
-                'label': label,
-                'id': id
-            })
-            n += 1
-        return new_list
 
     @staticmethod
     def getListGridDataMaterials(articles):

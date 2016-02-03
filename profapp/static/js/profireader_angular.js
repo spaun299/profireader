@@ -1026,7 +1026,7 @@ function pr_dictionary(phrase, dict, allow_html, scope, $ok, ctrl) {
     }
 }
 
-module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
+module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $templateCache) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
     angular.extend($rootScope, {
         fileUrl: function (file_id, down, if_no_file) {
@@ -1071,8 +1071,12 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout) {
         getPropertiesForGrid: function (col) {
             var scope = this;
             scope.pos = {};
+            scope.gridOptions1.headerTemplate = $templateCache.get('grid-header.html');
             for (var i = 0; i < col.length; i++) {
-                scope.gridOptions1.columnDefs[i].headerCellTemplate = '<div ng-class="{ \'sortable\': sortable }"><!-- <div class="ui-grid-vertical-bar">&nbsp;</div> --> ' +
+                if(col[i].category){
+                    scope.gridOptions1.columnDefs[i].enableFiltering  = false
+                }
+                scope.gridOptions1.columnDefs[i].headerCellTemplate = '<div ng-class="{ \'sortable\': sortable }">' +
                     '<div class="ui-grid-cell-contents" col-index="renderIndex" title="{{ grid.appScope._(col.displayName CUSTOM_FILTERS) }}"> <span>{{ grid.appScope._(col.displayName CUSTOM_FILTERS) }}</span>' +
                     '<span ui-grid-visible="col.sort.direction" ng-class="{ \'ui-grid-icon-up-dir\': col.sort.direction == asc, \'ui-grid-icon-down-dir\': col.sort.direction == desc, \'ui-grid-icon-blank\': !col.sort.direction }"> &nbsp;</span> </div> <div class="ui-grid-column-menu-button" ng-if="grid.options.enableColumnMenus && !col.isRowHeader  && col.colDef.enableColumnMenu !== false" ng-click="toggleMenu($event)" ng-class="{\'ui-grid-column-menu-button-last-col\': isLastCol}">' +
                     ' <i class="ui-grid-icon-angle-down">&nbsp;</i> </div> <div ui-grid-filter></div></div>';
