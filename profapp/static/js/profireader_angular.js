@@ -1026,7 +1026,7 @@ function pr_dictionary(phrase, dict, allow_html, scope, $ok, ctrl) {
     }
 }
 
-module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $templateCache) {
+module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $templateCache, $sce) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
     angular.extend($rootScope, {
         fileUrl: function (file_id, down, if_no_file) {
@@ -1128,24 +1128,26 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $te
                             '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter" style="right:0.5px;top:83%">&nbsp;</i></div></div>'
                     }
                 }
+
+                var classes_for_row = col[i].classes + ' pr-grid-cell-type-' + col[i].type;
+
                 if(col[i].type === 'link') {
                     var link = 'grid.appScope.'+col[i].href;
                     scope.hideGridLinkIf = col[i].hideIf;
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+col[i].classes+'" title="{{ COL_FIELD }}"><a ng-if="grid.appScope.hideGridLinkIf !== COL_FIELD" href="{{'+link+'}}" ng-bind="COL_FIELD"></a><div ng-if="grid.appScope.hideGridLinkIf === COL_FIELD">{{ COL_FIELD }}</div></div>'
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" title="{{ COL_FIELD }}"><a ng-if="grid.appScope.hideGridLinkIf !== COL_FIELD" href="{{'+link+'}}" ng-bind="COL_FIELD"></a><div ng-if="grid.appScope.hideGridLinkIf === COL_FIELD">{{ COL_FIELD }}</div></div>'
                 }else if(col[i].type === 'img'){
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+col[i].classes+'" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
                 }else if(col[i].type === 'actions') {
-                    //var buttons = _.map(col[i]['buttons'], function(text){ return '<button ng-click="grid.appScope.hahah()">'+text+'</button>' }).join('&nbsp;');
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+col[i].classes+'" >{{ aaa(COL_FIELD) }}</div>'
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'"><button class="pr-grid-cell-type-actions-button-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.'+col[i]['onclick']+'(row.entity.id, \'{{ action_name }}\', row.entity, \''+col[i]['name']+'\')">{{ action_name }}</button></div>'
                 }else if(col[i].type === 'editable'){
                     if(col[i].multiple === true && col[i].rule){
-                      scope.gridOptions1.columnDefs[i].cellTemplate = '<div ng-if="grid.appScope.'+col[i].rule+'=== false" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div><div ng-if="grid.appScope.'+col[i].rule+'"><div ng-click="'+col[i].modal+'" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>'
+                      scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" ng-if="grid.appScope.'+col[i].rule+'=== false" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div><div ng-if="grid.appScope.'+col[i].rule+'"><div ng-click="'+col[i].modal+'" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>'
                     }
                     if(col[i].subtype && col[i].subtype === 'tinymce'){
-                        scope.gridOptions1.columnDefs[i].cellTemplate = '<div ng-click="'+col[i].modal+'" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div>'
+                        scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" ng-click="'+col[i].modal+'" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div>'
                     }
                 }else{
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="ui-grid-cell-contents" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div>'
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div>'
                 }
             }
         },
@@ -1190,6 +1192,16 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $te
                 scope.gridOptions1.gridInit(scope.all_grid_data)
             }
             scope.gridApi = gridApi;
+            scope.gridApi.grid['pr_take_action'] = function (id, action, row) {
+                console.log('pr_take_action', id, action, row);
+                }
+            scope.gridApi.grid['pr_build_actions_buttons'] = function (id, actions, row) {
+                var ret =
+                    $sce.trustAsHtml(_.map(actions, function (action) {return '<button ng-click="grid.appScope.pr_take_action(row.entity.id, \''+action+'\', row.entity)">'+action+'</button>'}).join('&nbsp;'));
+
+                return ret;
+                //console.log('pr_build_actions_buttons', id, actions, row);
+                }
             scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {
                 scope.all_grid_data['sort'] = {};
                 if (sortColumns.length !== 0) {
