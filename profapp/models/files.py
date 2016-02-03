@@ -252,7 +252,9 @@ class File(Base, PRBase):
                     self.thumbnail.append(thumbnail)
                     g.db.add(thumbnail)
                     g.db.flush()
-                except:  # truncated png/gif
+                except Exception as e:  # truncated png/gif
+                    a = e
+                    print(self.id)
                     File.remove(self.id)
                 # resized = image_pil.resize(size)
 
@@ -502,7 +504,6 @@ class File(Base, PRBase):
                             size=size
                             ).save()
             file_cont = FileContent(file=file, content=self.stream.read(-1))
-            print(str(file_cont.content))
             g.db.add(file, file_cont)
             g.db.commit()
             return file
