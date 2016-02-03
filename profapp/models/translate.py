@@ -182,10 +182,3 @@ class TranslateTemplate(Base, PRBase):
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
-    @staticmethod
-    def getListGridDataTranslation(translations):
-        grid_data = []
-        for translate in translations:
-            grid_data.append(translate.get_client_side_dict())
-        return grid_data
-

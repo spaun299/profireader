@@ -58,17 +58,17 @@ th, td {
                  $scope.setGridExtarnals(gridApi)
              },
              columnDefs: [
-                 { name: 'first_name', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'First Name', width: '35%',
+                 { name: 'profireader_first_name', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'First Name', width: '35%',
                      filter: {type:'input'}
                  },
                  { name: 'id',enableCellEdit: false, displayName: 'Id', enableSorting: false, filter: {type:'input'}},
-                 { name: 'email', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'Email',
+                 { name: 'profireader_email', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'Email',
                      filter: {type:'input'}
                  },
-                 { name: 'nickname', enableSorting: false,displayName: 'Nickname', enableCellEdit: false, enableColumnMenu: false,
+                 { name: 'profireader_name', enableSorting: false,displayName: 'Nickname', enableCellEdit: false, enableColumnMenu: false,
                      filter: {type:'input'}
                  },
-                 { name: 'last_name', enableSorting: false,displayName: 'Last Name', enableCellEdit: false, enableColumnMenu: false,
+                 { name: 'profireader_last_name', enableSorting: false,displayName: 'Last Name', enableCellEdit: false, enableColumnMenu: false,
                      filter: {type:'input'}
                  }
              ]
@@ -76,10 +76,12 @@ th, td {
         {% endraw %}
     }]);
 </script>
-<div ng-controller="CompanyReaders">
-    <div ng-if="!load_contr">{{_('Loading...')}}</div>
-    <div class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1" ></div>
-</div>
+
+    <div ng-controller="CompanyReaders">
+        <h3 style="text-align: center!important;">{{_('Portal readers')}}</h3>
+        <div ng-if="!load_contr">{{_('Loading...')}}</div>
+        <div class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1" ></div>
+    </div>
 {% endblock portal_content %}
 
 {% block footer %}
