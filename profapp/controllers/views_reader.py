@@ -6,13 +6,9 @@ from ..models.articles import ArticlePortalDivision, ReaderArticlePortalDivision
 from ..models.portal import PortalDivision, UserPortalReader, Portal, ReaderUserPortalPlan
 from .errors import BadDataProvided
 from config import Config
+from .request_wrapers import ok
 from utils.db_utils import db
 import datetime
-
-
-@reader_bp.route('/profile/')
-def profile():
-    return render_template('partials/reader/reader_profile.html')
 
 
 @reader_bp.route('/details_reader/<string:article_portal_division_id>')
@@ -38,8 +34,7 @@ def details_reader(article_portal_division_id):
 @reader_bp.route('/list_reader/<int:page>/')
 @tos_required
 def list_reader(page=1):
-    for a in UserPortalReader.get_portals_and_plan_info_for_user(g.user.id):
-        print(a)
+
     search_text = request.args.get('search_text') or ''
     favorite = request.args.get('favorite') == 'True'
     if not favorite:
@@ -80,7 +75,7 @@ def add_delete_favorite():
     return jsonify({'favorite': favorite})
 
 
-@reader_bp.route('subscribe/<string:portal_id>')
+@reader_bp.route('/subscribe/<string:portal_id>')
 @tos_required
 def reader_subscribe(portal_id):
     user_dict = g.user_dict
@@ -101,3 +96,28 @@ def reader_subscribe(portal_id):
         flash('You have successfully subscribed to this portal')
 
     return redirect(url_for('reader.list_reader'))
+
+
+@reader_bp.route('/profile/')
+def profile():
+
+    return render_template('partials/reader/reader_profile.html')
+
+
+@reader_bp.route('/profile/', methods=['POST'])
+@ok
+def profile_load(json):
+    portals_and_plans = UserPortalReader.get_portals_and_plan_info_for_user(g.user.id)
+    grid_data = []
+    for field in portals_and_plans:
+        print(field['start_tm'])
+        grid_data.append({'portal_logo': field['portal_logo'], 'portal_name': field['plan_name'],
+                          'package_name': field['plan_name'], 'start_tm': field['start_tm'], 'end_tm': field['end_tm'],
+                          'article_remains': field['amount']})
+
+    print(grid_data)
+    return {'grid_data': grid_data}
+
+@reader_bp.route('/edit_reader_profile')
+def edit_reader_profile():
+    pass

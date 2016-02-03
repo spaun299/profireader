@@ -2,9 +2,63 @@
 {% block title %}{{ _('Profireader reader list') }}{% endblock title %}
 
 {% block portal_content %}
+<script>
+module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridConstants', '$timeout',
 
 
 
+    function ($scope, $uibModal, $ok, $sce, uiGridConstants, $timeout) {
+        $scope.url_search_translations = {{ raw_url_for('reader.profile')|safe }}
+        {% raw %}
+        $scope.sendData = function (grid_data) {
+                        $scope.loading = true;
+                        return $ok($scope.url_search_translations({}), grid_data, function (resp) {
+                            console.log(resp)
+                            $scope.datas = resp;
+                            $scope.applyGridExtarnals(resp);
+                        }).finally(function () {
+                            $scope.loading = false;
+                            $scope.load_contr = true
+                        });
+                    };
 
 
+        $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+                        onRegisterApi: function (gridApi) {
+                            $scope.setGridExtarnals(gridApi)
+                        },
+                        columnDefs: [
+                            {
+                                name: 'portal_logo', enableCellEdit: false, enableFiltering: false, enableSorting: false,
+                                displayName: "Logo",
+                                type: 'img'
+                            }, {
+                                name: 'portal_name', enableSorting: true, enableCellEdit: false, enableFiltering: false,
+                                displayName: 'Portal'
+                            }, {
+                                name: 'package_name', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                                displayName: 'Package'
+                            }, {
+                                name: 'start_tm', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                                displayName: 'Start time'
+                            }, {
+                                name: 'end_tm', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                                displayName: 'End time'
+                            }, {
+                                name: 'article_remains', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                                displayName: 'Article remains'
+                            }
+                        ]
+                    });
+        {% endraw %}
+    }])
+</script>
+{% raw %}
+   <div ng-controller="grid_reader">
+        <div class="grid" id="grid1" ui-grid-pagination ui-grid-selection ui-grid-edit ui-grid="gridOptions1"></div>
+        <a ng-show="load_contr && !areAllEmpty(datas.grid_data)" class="btn btn-danger"
+           ng-class="{'disabled': ( isSelectedRows === false )}" style="text-align: center"
+           ng-click="showModalDelete()">Delete selected rows</a>
+    </div>
+{% endraw %}
 {% endblock portal_content %}

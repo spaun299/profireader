@@ -18,6 +18,7 @@ import simplejson
 from .files import File
 from profapp.controllers.errors import BadDataProvided
 import datetime
+import json
 
 
 class Portal(Base, PRBase):
@@ -544,12 +545,13 @@ class UserPortalReader(Base, PRBase):
     start_tm = Column(TABLE_TYPES['timestamp'])
     end_tm = Column(TABLE_TYPES['timestamp'])
     amount = Column(TABLE_TYPES['int'], default=99999)
+    show_divisions_and_comments = Column(TABLE_TYPES['json'])
 
     portal = relationship('Portal')
     user = relationship('User')
 
     def __init__(self, user_id=None, portal_id=None, status='active', portal_plan_id=None, start_tm=None,
-                 end_tm=None, amount=None):
+                 end_tm=None, amount=None, show_divisions_and_comments=None):
         super(UserPortalReader, self).__init__()
         self.user_id = user_id
         self.portal_id = portal_id
@@ -558,6 +560,12 @@ class UserPortalReader(Base, PRBase):
         self.end_tm = end_tm
         self.amount = amount
         self.portal_plan_id = portal_plan_id or g.db(ReaderUserPortalPlan.id).filter_by(name='free').one()[0]
+        self.show_divisions_and_comments = show_divisions_and_comments or self.get_portal_divisions_json()
+
+    def get_portal_divisions_json(self):
+        return json.dumps({division[0]: {'name': division[1], 'show_division': True, 'comments': True}
+                           for division in db(PortalDivision.id, PortalDivision.name, portal_id=self.portal_id).all()},
+                          ensure_ascii=False)
 
     @staticmethod
     def get_portals_for_user():
@@ -569,9 +577,11 @@ class UserPortalReader(Base, PRBase):
     def get_portals_and_plan_info_for_user(user_id):
         for upr in db(UserPortalReader, user_id=user_id).all():
             yield dict(portal_id=upr.portal_id, status=upr.status, start_tm=upr.start_tm,
+                       portal_logo=File.get(upr.portal.logo_file_id).url() if upr.portal.logo_file_id else '',
                        end_tm=upr.end_tm if upr.end_tm > datetime.datetime.utcnow() else 'Expired at '+upr.end_tm,
                        plan_id=upr.portal_plan_id,
                        plan_name=db(ReaderUserPortalPlan.name, id=upr.portal_plan_id).one()[0],
-                       portal_name=upr.portal.name, portal_host=upr.portal.host,
-                       portal_divisions=[{'name': division.name, 'id': division.id}
-                                         for division in upr.portal.divisions][0])
+                       portal_name=upr.portal.name, portal_host=upr.portal.host, amount=upr.amount,
+                       portal_divisions=[{division.name: division.id}
+                                         for division in upr.portal.divisions],
+                       show_divisions_and_comments=json.loads(upr.show_divisions_and_comments))
