@@ -484,7 +484,8 @@ class User(Base, UserMixin, PRBase):
             list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
             file = File.uploadWithoutChunk(passed_file, self)
             self.profireader_avatar_url = file.url()
-            self.profireader_small_avatar_url = file.get_thumbnails(size=(133,100)).url()
+            file_thumbnail = file.get_thumbnails(size=(133,100)).thumbnail
+            self.profireader_small_avatar_url = file_thumbnail[0].url()
         else:
             list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
             self.profireader_avatar_url = self.gravatar(size=100)
@@ -492,8 +493,6 @@ class User(Base, UserMixin, PRBase):
         if list:
             for f in list:
                 File.remove(f.id)
-
-
         return self
 
     # def can(self, permissions):
