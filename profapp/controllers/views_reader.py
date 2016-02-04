@@ -111,7 +111,7 @@ def profile_load(json):
     grid_data = []
     for field in portals_and_plans:
         print(field['start_tm'])
-        grid_data.append({'portal_logo': field['portal_logo'], 'portal_name': field['plan_name'],
+        grid_data.append({'portal_logo': field['portal_logo'], 'portal_name': field['portal_name'],
                           'package_name': field['plan_name'], 'start_tm': field['start_tm'], 'end_tm': field['end_tm'],
                           'article_remains': field['amount']})
 

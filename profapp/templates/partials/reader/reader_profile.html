@@ -13,7 +13,6 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
         $scope.sendData = function (grid_data) {
                         $scope.loading = true;
                         return $ok($scope.url_search_translations({}), grid_data, function (resp) {
-                            console.log(resp)
                             $scope.datas = resp;
                             $scope.applyGridExtarnals(resp);
                         }).finally(function () {
@@ -34,7 +33,7 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
                                 type: 'img'
                             }, {
                                 name: 'portal_name', enableSorting: true, enableCellEdit: false, enableFiltering: false,
-                                displayName: 'Portal'
+                                displayName: 'Portal', filter: {type:'select'}
                             }, {
                                 name: 'package_name', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
                                 displayName: 'Package'
