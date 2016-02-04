@@ -111,5 +111,5 @@ if __name__ == '__main__':
                     pass
     execute_time = datetime.datetime.now()-time
     print('Updated successfully')
-    print('Execution time: ', execute_time)
+    print('Execution time: {time}'.format(time=execute_time))
     db_session.commit()

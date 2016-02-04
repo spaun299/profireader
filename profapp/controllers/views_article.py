@@ -10,7 +10,6 @@ from config import Config
 from .views_file import crop_image, update_croped_image
 from ..models.files import ImageCroped
 from ..models.company import Company
-from ..models.users import User
 
 from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
@@ -173,8 +172,8 @@ def material_details_load(json, material_id):
                Company.get(article.company_id).get_portals_where_company_is_member()]
 
     for p in portals:
-        p['divisions'] = PRBase.get_ordered_dict(
-                [d for d in p['divisions'] if (d['portal_division_type_id'] in ['events', 'news'])])
+        p['divisions'] = PRBase.get_ordered_dict([d for d in p['divisions'] if (
+        d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
         p['publication'] = None
         p['actions'] = ['publish']
         publication = db(ArticlePortalDivision).filter(
@@ -189,10 +188,11 @@ def material_details_load(json, material_id):
 
     return {'material': article.get_client_side_dict(more_fields='long'),
             'company': Company.get(article.company_id).get_client_side_dict(),
-            'rights_user_in_company': [],
-            'rights_company_in_portal': [],
+            'rights_user_in_company': list(g.user.user_rights_in_company(article.company_id)),
             'portals': {
-                'grid_data': portals
+                'grid_data': portals,
+                'grid_filters': {},
+                'total': 2
             }
             # 'user_rights': ['publish', 'unpublish', 'edit'],
             # TODO: uncomment the string below and delete above
@@ -337,4 +337,3 @@ def add_delete_favorite():
     article_portal_division_id = request.form.get('article_portal_division_id')
     ReaderArticlePortalDivision.add_delete_favorite_user_article(article_portal_division_id, favorite)
     return jsonify({'favorite': favorite})
-
