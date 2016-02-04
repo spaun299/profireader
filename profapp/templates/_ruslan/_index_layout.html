@@ -22,7 +22,7 @@
 {%- block head %}
     {{ super() }}
     <script>
-    var pr_angular_modules = ['ui.bootstrap', 'profireaderdirectives', 'ngSanitize', 'ajaxFormModule', 'profireaderdirectives', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView', 'ui.slider'];
+    var pr_angular_modules = ['ui.bootstrap', 'profireaderdirectives', 'ngSanitize', 'ajaxFormModule', 'profireaderdirectives', 'ngAnimate', 'ngTouch', 'ui.slider'];
     </script>
 
 
@@ -38,6 +38,9 @@
     <script src="{{ url_for('static', filename = 'new/angular-bootstrap/ui-bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'new/angular-bootstrap/ui-bootstrap-tpls.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ajax-validator/ngAjaxValidator.js') }}"></script>
+     <script src="{{ url_for('static', filename = 'angular-ui-slider/slider.js') }}"></script>
+
+
 
 {#    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>#}
     {#    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>#}
@@ -45,7 +48,8 @@
     {#    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.js"></script>#}
 
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular-sanitize.js"></script>
-
+   <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-animate.js"></script>
+      <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-touch.js"></script>
 {#    {% if angular_ui_bootstrap_version %}#}
 {#        <script src="{{ angular_ui_bootstrap_version }}"></script>#}
 {#    {% endif %}#}

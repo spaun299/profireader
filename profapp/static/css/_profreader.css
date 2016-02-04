@@ -23,6 +23,11 @@ body  {
     display: inline-block;
 }
 
+.navbar ul .fa {
+	font-size: 150%;
+}
+
+
 .person-small-cover {
     border-radius: 50%;
     border: 3px #999 solid;

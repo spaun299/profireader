@@ -11,9 +11,11 @@
             }
         };
 
-        $scope.url_list_reader = {{ raw_url_for('article.list_reader')|safe }}
+        $scope.url_list_reader = {{ raw_url_for('reader.list_reader')|safe }}
         $scope.url_company_show = {{ raw_url_for('company.show')|safe }}
         $scope.url_general_help = {{ raw_url_for('general.help')|safe }}
+        $scope.url_auth_logout = {{ raw_url_for('auth.logout')|safe }}
+
 
         login_signup = '{{ login_signup }}';  // login_signup = 'login' or 'signup' or None
         $scope.login_signup = (login_signup === 'signup') ? 'signup' : 'login';
@@ -48,23 +50,16 @@
             <li><a href="{{ url_list_reader() }}" title="Стрічка читача"><i class="fa fa-newspaper-o fa-2x"></i></a></li>
             <li><a href="#" title="Всі повідомлення"><i class="fa fa-envelope-o fa-2x"></i></a></li>
             <li><a href="{{ url_company_show() }}" title="Компанії"><i class="fa fa-building-o fa-2x"></i></a></li>
-            <li><a href="#" ng-click="open_filemanager() title="Менеджер файлів"><i class="fa fa-folder-open-o fa-2x"></i></a></li>
+            <li><a href="#" ng-click="open_filemanager()" title="Менеджер файлів"><i class="fa fa-folder-open-o fa-2x"></i></a></li>
             <li><a href="{{ url_general_help() }}" title="Інформація"><i class="fa fa-info fa-2x"></i></a></li>
             <li><a href="#"></a></li>
-            <li ng-show="!user.id">
-                <ul class="user-auth">
-                    <li><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=login' }}">{{ _('Log In') }}</a></li>
-                    <li><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=signup' }}">{{ _('Sign Up') }}</a></li>
-                </ul>
-            </li>
-
-            <li  ng-show="user.id">
-                 <ul>
-                     <li><a href="{{ flask_endpoint_to_angular('user.profile', user_id='user.id') }}"><img class="person-small-cover" src="{{ current_user.profireader_avatar_url }}">
+            <li ng-show="user.id"><a href="{{ flask_endpoint_to_angular('user.profile', user_id='user.id') }}"><img class="person-small-cover" src="{{ current_user.profireader_avatar_url }}">
                                     {{user.name}}</a></li>
-                     <li><a href="{{ url_for('auth.logout') }}">{{_('Log Out')  }}</a></li>
-                 </ul>
-            </li>
+            <li><a href="{{ url_auth_logout() }}">{{_('Log Out')  }}</a></li>
+            <li ng-show="!user.id"><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=login' }}">{{ _('Log In') }}</a></li>
+            <li ng-show="!user.id"><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=signup' }}">{{ _('Sign Up') }}</a></li>
+
+
           </ul>
         </div><!--/.nav-collapse -->
       </div>
