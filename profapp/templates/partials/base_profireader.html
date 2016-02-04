@@ -25,7 +25,6 @@
 
     module.controller('CompanyMenuController', ['$scope', '$timeout', function ($scope, $timeout) {
         $scope.user = {{ g.user_dict|tojson|safe }};
-        console.log($scope.user)
         $scope.$$translate = {{ translates('CompanyMenuController')|safe }};
         $scope.selected_company_menu = 'aaa';
         $scope.set_selected_company_menu = function (menu_item) {

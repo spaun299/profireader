@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, request, g, make_response,
 from profapp.models.articles import Article, ArticleCompany, ArticlePortalDivision, ReaderArticlePortalDivision
 from profapp.models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
 from profapp.models.portal import PortalDivision, UserPortalReader, Portal, MemberCompanyPortal
-from ..models.pr_base import Search
+from ..models.pr_base import Search, PRBase, Grid
 from .blueprints_declaration import article_bp
 from .request_wrapers import ok, tos_required
 from .pagination import pagination
@@ -15,7 +15,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
 from sqlalchemy.sql import expression, and_
 from sqlalchemy import text
-from collections import OrderedDict
 import time
 
 
@@ -164,36 +163,42 @@ def material_details(material_id):
 @article_bp.route('/material_details/<string:material_id>/', methods=['POST'])
 @ok
 # @check_rights(simple_permissions([]))
-def load_material_details(json, material_id):
+def material_details_load(json, material_id):
     article = ArticleCompany.get(material_id)
-    portals = {port.portal_id: port.portal.get_client_side_dict() for port in
-               MemberCompanyPortal.get_portals(article.company_id)}
 
-    joined_portals = {}
-    if article.portal_article:
-        joined_portals = {articles.division.portal.id: portals.pop(articles.division.portal.id)
-                          for articles in article.portal_article
-                          if articles.division.portal.id in portals}
+    portals = [p.get_client_side_dict(fields='id, name, divisions.id|name|portal_division_type_id, own_company.name')
+               for p in
+               Company.get(article.company_id).get_portals_where_company_is_member()]
 
-    user_rights = list(g.user.user_rights_in_company(article.company_id))
+    for p in portals:
+        p['divisions'] = PRBase.get_ordered_dict([d for d in p['divisions'] if (
+        d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
+        p['publication'] = None
+        p['actions'] = ['publish']
+        publication = db(ArticlePortalDivision).filter(
+                ArticlePortalDivision.portal_division_id.in_(
+                        [div_id for div_id, div in p['divisions'].items()])).first()
+        if publication:
+            p['publication'] = publication.get_client_side_dict(
+                'title,status,visibility,portal_division_id,publishing_tm')
+            p['publication']['division'] = p['divisions'][p['publication']['portal_division_id']]
+            p['publication']['counts'] = '0/0/0/0'
+            p['actions'] = ['unpublish']
 
-    return {'article': article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
-                                                           'company_id, long,'
-                                                           'editor_user_id, company.name|id,'
-                                                           'portal_article.id, portal_article.division.name, '
-                                                           'portal_article.division.portal.name,'
-                                                           'portal_article.status'),
-            # 'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_chage_status_to(article['status']),
-            'portals': portals,
-            'company': Company.get(article.company_id).get_client_side_dict(fields='id, employees.id|profireader_name'),
-            'selected_portal': {},
-            'selected_division': {},
+    return {'material': article.get_client_side_dict(more_fields='long'),
+            'company': Company.get(article.company_id).get_client_side_dict(),
+            'rights_user_in_company': list(g.user.user_rights_in_company(article.company_id)),
+            'portals': {
+                'grid_data': portals,
+                'grid_filters': {},
+                'total': 2
+            }
             # 'user_rights': ['publish', 'unpublish', 'edit'],
             # TODO: uncomment the string below and delete above
             # TODO: when all works with rights are finished
-            'user_rights': user_rights,
-            'send_to_user': {},
-            'joined_portals': joined_portals}
+            # 'user_rights': user_rights,
+            # 'joined_portals': joined_portals
+            }
 
 
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])

@@ -15,7 +15,7 @@ from flask import abort
 from .rights import Right, RightHumnReadible
 from ..controllers.request_wrapers import check_rights
 from .files import File
-from .pr_base import PRBase, Base, Search
+from .pr_base import PRBase, Base, Search, Grid
 from ..controllers import errors
 from ..constants.STATUS import STATUS_NAME
 from .rights import get_my_attributes
@@ -26,6 +26,7 @@ from .users import User
 from ..models.portal import Portal
 from ..models.portal import MemberCompanyPortal
 from ..models.portal import UserPortalReader
+
 
 
 class Company(Base, PRBase):
@@ -83,6 +84,16 @@ class Company(Base, PRBase):
                                           backref='logo_owner_company',
                                           foreign_keys='Company.logo_file_id')
 
+
+    def get_readers_for_portal(self, filters):
+        query = g.db.query(User).join(UserPortalReader).join(UserPortalReader.portal).join(Portal.own_company).filter(Company.id == self.id)
+        list_filters = []
+        if filters:
+            for filter in filters:
+                list_filters.append({'type': 'text', 'value': filters[filter], 'field': eval("User."+filter)})
+        query = Grid.subquery_grid(query, list_filters)
+        return query
+
     @property
     def readers_query(self):
         return g.db.query(User.id,
@@ -118,6 +129,11 @@ class Company(Base, PRBase):
         print(self)
 
         return self
+
+    def get_portals_where_company_is_member(self):
+        """This method return all portals-partners current company"""
+        return [memcomport.portal for memcomport in db(MemberCompanyPortal, company_id=self.id).all()]
+
 
     def suspended_employees(self):
         """ Show all suspended employees from company. Before define method you should have
@@ -178,6 +194,13 @@ class Company(Base, PRBase):
         return self.to_dict(fields, more_fields)
 
     @staticmethod
+    def getListGridDataReaders(readers):
+        return [{'portal' : {'name':partner.portal.name,
+                             'id': partner.portal.id},
+                            'link' : partner.portal.host,
+                            'company' : Company.get(partner.portal.company_owner_id).name
+                        } for partner in readers]
+    @staticmethod
     def getListGridDataPortalPartners(partners):
         return [{'portal' : {'name':partner.portal.name,
                              'id': partner.portal.id},
@@ -186,17 +209,19 @@ class Company(Base, PRBase):
                         } for partner in partners]
 
     @staticmethod
-    def subquery_company_partners(company_id, search_text, **kwargs):
+    def subquery_company_partners(company_id, filters):
         sub_query = db(MemberCompanyPortal, company_id=company_id)
-        if search_text:
+        list_filters = []
+        if filters:
             sub_query = sub_query.join(MemberCompanyPortal.portal)
-            if 'portal.name' in search_text:
-                sub_query = sub_query.filter(Portal.name.ilike("%" + search_text['portal.name'] + "%"))
-            if 'company' in search_text:
-                sub_query = sub_query.join(Company, Portal.company_owner_id == Company.id).\
-                filter(Company.name.ilike("%" + search_text['company'] + "%"))
-            if 'link' in search_text:
-                sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
+            if 'portal.name' in filters:
+                list_filters.append({'type': 'text', 'value': filters['portal.name'], 'field': Portal.name})
+            if 'link' in filters:
+                list_filters.append({'type': 'text', 'value': filters['link'], 'field': Portal.host})
+            if 'company' in filters:
+                sub_query = sub_query.join(Company, Portal.company_owner_id == Company.id)
+                list_filters.append({'type': 'text', 'value': filters['company'], 'field': Company.name})
+            sub_query = Grid.subquery_grid(sub_query, list_filters)
         return sub_query
 
 

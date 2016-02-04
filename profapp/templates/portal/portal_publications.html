@@ -13,7 +13,7 @@
             $scope.url_details = {{ raw_url_for('portal.publication_details')|safe }};
             $scope.url_search_article = {{ raw_url_for('portal.publications_load')|safe }};
 
-            $scope.own_company_id = '{{ company_id }}';
+            $scope.own_company_id = '{{ company.id }}';
             $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
@@ -21,9 +21,8 @@
 
             $scope.sendData = function (data) {
                 $scope.loading = true;
-                console.log($scope.own_company_id)
                 $ok($scope.url_search_article({company_id: $scope.own_company_id}), data, function (resp) {
-                    $scope.datas = resp;
+                    $scope.initGridData = resp;
                     $scope.applyGridExtarnals(resp);
                 }).finally(function () {
                     $scope.loading = false;
@@ -32,6 +31,7 @@
             };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+                    gridInit: $scope.sendData,
                     onRegisterApi: function (gridApi) {
                         $scope.setGridExtarnals(gridApi)
                     },
@@ -42,7 +42,7 @@
                           classes: 'link',
                           filter: {type:'input'}
                       },
-                      { name: 'date',enableCellEdit: false, displayName: 'Date', filter: {type:'date_range'}, filters: 2 },
+                      { name: 'date',enableCellEdit: false, displayName: 'Date', filter: {type:'date_range'}},
                       { name: 'company', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'Company',
                           filter: {type:'select'}
                       },

@@ -1,4 +1,4 @@
-from .pr_base import PRBase, Base
+from .pr_base import PRBase, Base, Grid
 from ..constants.TABLE_TYPES import TABLE_TYPES
 from sqlalchemy import Column, ForeignKey, text
 from utils.db_utils import db
@@ -151,6 +151,10 @@ class TranslateTemplate(Base, PRBase):
     def subquery_search(filters=None, sorts=None, edit=None):
         sub_query = db(TranslateTemplate)
         list_filters = []; list_sorts = []
+        if edit:
+            exist = db(TranslateTemplate, template=edit['template'], name=edit['name']).first()
+            i = datetime.datetime.now()
+            TranslateTemplate.get(exist.id).attr({edit['col']: edit['newValue'], 'md_tm':i}).save().get_client_side_dict()
         if 'url' in filters:
             list_filters.append({'type': 'select', 'value': filters['url'], 'field': TranslateTemplate.url})
         if 'template' in filters:
@@ -171,36 +175,10 @@ class TranslateTemplate(Base, PRBase):
             list_sorts.append({'type': 'date', 'value': sorts['ac_tm'], 'field': TranslateTemplate.ac_tm})
         else:
             list_sorts.append({'type': 'date', 'value': 'desc', 'field': TranslateTemplate.cr_tm})
-        sub_query = TranslateTemplate.subquery_grid(sub_query, list_filters, list_sorts)
+        sub_query = Grid.subquery_grid(sub_query, list_filters, list_sorts)
         return sub_query
 
     def get_client_side_dict(self, fields='id|name|uk|en|ac_tm|md_tm|cr_tm|template|url|allow_html, portal.id|name',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
-    @staticmethod
-    def getListGridDataTranslation(translations):
-        grid_data = []
-        for translate in translations:
-            grid_data.append(translate.get_client_side_dict())
-        return grid_data
-
-    @staticmethod
-    def list_for_grid_tables(list, add_param, is_dict):
-        new_list = []
-        n = 1
-        if add_param:
-            new_list.append(add_param)
-            n = 2
-        if is_dict == False:
-            list.sort()
-        for s in list:
-            label = list[s] if is_dict else s
-            id = s if is_dict else ''
-            new_list.append({
-                'value': str(n),
-                'label': label[0],
-                'id': id
-            })
-            n += 1
-        return new_list

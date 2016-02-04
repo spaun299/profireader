@@ -62,12 +62,12 @@ class Portal(Base, PRBase):
     # articles = relationship('ArticlePortalDivision',
     #                         back_populates='portal',
     #                         uselist=False)
-    articles = relationship('ArticlePortalDivision',
-                            secondary='portal_division',
-                            primaryjoin="Portal.id == PortalDivision.portal_id",
-                            secondaryjoin="PortalDivision.id == ArticlePortalDivision.portal_division_id",
-                            back_populates='portal',
-                            uselist=False)
+    publications = relationship('ArticlePortalDivision',
+                                secondary='portal_division',
+                                primaryjoin="Portal.id == PortalDivision.portal_id",
+                                secondaryjoin="PortalDivision.id == ArticlePortalDivision.portal_division_id",
+                                back_populates='portal',
+                                uselist=False)
 
     company_members = relationship('MemberCompanyPortal',
                                    # secondary='member_company_portal'
@@ -321,11 +321,6 @@ class MemberCompanyPortal(Base, PRBase):
     #     """Return all companies partners at portal"""
     #     portal = Portal().own_portal(company_id).companies
     #     return portal
-
-    @staticmethod
-    def get_portals(company_id):
-        """This method return all portals-partners current company"""
-        return db(MemberCompanyPortal, company_id=company_id).all()
 
     # @staticmethod
     # def subquery_company_partners(company_id, search_text, **kwargs):

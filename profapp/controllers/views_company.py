@@ -76,7 +76,6 @@ def materials(company_id):
 @ok
 def materials_load(json, company_id):
     subquery = ArticleCompany.subquery_company_materials(company_id, json.get('filter'), json.get('sort'))
-
     materials, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
 
     grid_filters = {
@@ -86,7 +85,6 @@ def materials_load(json, company_id):
         'publication_status': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
         'publication_visibility': Grid.filter_for_status(ArticlePortalDivision.VISIBILITIES)
     }
-
     return {'grid_data': Article.getListGridDataMaterials(materials),
             'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
                              (k, v) in grid_filters.items()},
@@ -408,7 +406,7 @@ def load_suspended_employees(json, company_id):
 # @check_rights(simple_permissions([]))
 def readers(company_id, page=1):
     company = Company.get(company_id)
-    company_readers, pages, page = pagination(query=company.readers_query, page=page)
+    company_readers, pages, page, count = pagination(query=company.readers_query, page=page)
 
     reader_fields = ('id', 'email', 'nickname', 'first_name', 'last_name')
     company_readers_list_dict = list(map(lambda x: dict(zip(reader_fields, x)), company_readers))
@@ -421,3 +419,13 @@ def readers(company_id, page=1):
                            page_buttons=Config.PAGINATION_BUTTONS,
                            search_text=None,
                            )
+
+@company_bp.route('/readers/<string:company_id>/', methods=['POST'])
+@ok
+def readers_load(json, company_id):
+    company = Company.get(company_id)
+    company_readers, pages, page, count = pagination(query=company.get_readers_for_portal(json.get('filter')), **Grid.page_options(json.get('paginationOptions')))
+
+    return {'grid_data': [reader.get_client_side_dict('id,profireader_email,profireader_name,profireader_first_name,profireader_last_name') for reader in company_readers],
+            'total': count
+            }
