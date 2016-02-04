@@ -9,7 +9,7 @@
     {% raw %}
     <script type="text/ng-template" id="material_details_publish_dialog.html">
         <div class="modal-header">
-            <h3 class="modal-title">{{ _(action + ' material from portal') }}</h3>
+            <h3 class="modal-title">{{ _(action + ' material at portal') }}</h3>
         </div>
         <div class="modal-body">
             <div ng-if="action=='publish'">{{ _('You are going to publish material `%(article.title)s` at portal `%(portal.name)s`. Please select division') }}</div>
@@ -17,14 +17,13 @@
                     ang-disabled="!division.can_be_published"
                     name="material_details_publish_dialog_division"
                     ng-value="division" ng-model="$parent.$parent.selected_division"
-                    type="radio"> {{
-                division.name }} {{ division.portal_division_type_id }}</label></div>
+                    type="radio"> {{ division.name }}</label></div>
 
             <div ng-if="action=='unpublish'">
                 {{ _('You are going to unpublish publication `%(article.title)s` from portal `%(portal.name)s` division `%(published_at_division.name)s`') }}</div>
             <hr/>
             {{ _('You can send message to company') }}<br/>
-            <textarea ng-model="message"></textarea>
+            <textarea disabled="disabled" style="width: 100%" ng-model="message"></textarea>
 
         </div>
         <div class="modal-footer">
