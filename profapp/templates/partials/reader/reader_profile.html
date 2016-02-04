@@ -13,7 +13,7 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
         $scope.sendData = function (grid_data) {
                         $scope.loading = true;
                         return $ok($scope.url_search_translations({}), grid_data, function (resp) {
-                            $scope.datas = resp;
+                            $scope.initGridData = resp;
                             $scope.applyGridExtarnals(resp);
                         }).finally(function () {
                             $scope.loading = false;
@@ -22,7 +22,10 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
                     };
 
 
+
+
         $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+                        gridInit: $scope.sendData,
                         onRegisterApi: function (gridApi) {
                             $scope.setGridExtarnals(gridApi)
                         },
@@ -32,19 +35,23 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
                                 displayName: "Logo",
                                 type: 'img'
                             }, {
-                                name: 'portal_name', enableSorting: true, enableCellEdit: false, enableFiltering: false,
-                                displayName: 'Portal', filter: {type:'select'}
+                                name: 'portal_name', enableSorting: false, enableCellEdit: false,
+                                displayName: 'Portal', filter: {type: 'input'}
                             }, {
-                                name: 'package_name', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
-                                displayName: 'Package'
+                                name: 'package_name', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false,
+                                displayName: 'Package',
+                                type: 'actions'
+
+
                             }, {
                                 name: 'start_tm', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
-                                displayName: 'Start time'
+                                displayName: 'Start time',
+                                filter: {type: 'date_range'}
                             }, {
-                                name: 'end_tm', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                                name: 'end_tm', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false,
                                 displayName: 'End time'
                             }, {
-                                name: 'article_remains', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                                name: 'article_remains', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false,
                                 displayName: 'Article remains'
                             }
                         ]
@@ -54,7 +61,7 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
 </script>
 {% raw %}
    <div ng-controller="grid_reader">
-        <div class="grid" id="grid1" ui-grid-pagination ui-grid-selection ui-grid-edit ui-grid="gridOptions1"></div>
+        <div class="grid" id="grid1" ui-grid-pagination ui-grid-edit ui-grid="gridOptions1"></div>
         <a ng-show="load_contr && !areAllEmpty(datas.grid_data)" class="btn btn-danger"
            ng-class="{'disabled': ( isSelectedRows === false )}" style="text-align: center"
            ng-click="showModalDelete()">Delete selected rows</a>

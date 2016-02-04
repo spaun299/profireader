@@ -114,16 +114,21 @@ def profile():
 @reader_bp.route('/profile/', methods=['POST'])
 @ok
 def profile_load(json):
-    portals_and_plans = UserPortalReader.get_portals_and_plan_info_for_user(g.user.id)
+    print(json)
+    filter_params = dict()
+    if json.get('paginationOptions'):
+        filter_params.update({'page': json['paginationOptions']['pageNumber'],
+                              'items_per_page': json['paginationOptions']['pageSize']})
+    portals_and_plans = UserPortalReader.get_portals_and_plan_info_for_user(g.user.id, *filter_params)
     grid_data = []
     for field in portals_and_plans:
-        print(field['start_tm'])
         grid_data.append({'portal_logo': field['portal_logo'], 'portal_name': field['portal_name'],
                           'package_name': field['plan_name'], 'start_tm': field['start_tm'], 'end_tm': field['end_tm'],
                           'article_remains': field['amount']})
 
-    print(grid_data)
-    return {'grid_data': grid_data}
+    return {'grid_data': grid_data,
+            'grid_filters': {'portal_name': [{'value': k['portal_name'], 'label': k['portal_name']}] for k in grid_data}}
+
 
 @reader_bp.route('/edit_reader_profile')
 def edit_reader_profile():

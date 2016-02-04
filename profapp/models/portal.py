@@ -7,6 +7,7 @@ from utils.db_utils import db
 # from .company import Company
 from .pr_base import PRBase, Base
 import re
+from ..controllers.pagination import pagination
 from .tag import TagPortalDivision, Tag
 from sqlalchemy import event
 from ..constants.SEARCH import RELEVANCE
@@ -569,8 +570,9 @@ class UserPortalReader(Base, PRBase):
             yield (portal.id, portal.name, )
 
     @staticmethod
-    def get_portals_and_plan_info_for_user(user_id):
-        for upr in db(UserPortalReader, user_id=user_id).all():
+    def get_portals_and_plan_info_for_user(user_id, page=1, items_per_page=50, *filter_params):
+        for upr in pagination(db(UserPortalReader, user_id=user_id).filter(*filter_params), page=page,
+                              items_per_page=items_per_page):
             yield dict(portal_id=upr.portal_id, status=upr.status, start_tm=upr.start_tm,
                        portal_logo=File.get(upr.portal.logo_file_id).url() if upr.portal.logo_file_id else '',
                        end_tm=upr.end_tm if upr.end_tm > datetime.datetime.utcnow() else 'Expired at '+upr.end_tm,
