@@ -388,10 +388,9 @@ class ArticleCompany(Base, PRBase):
         if 'title' in filters:
             list_filters.append({'type': 'text', 'value': filters['title_author'], 'field': ArticleCompany.title})
         if 'title_author' in filters:
-            list_filters.append({'type': 'text', 'value': filters['title_author'], 'field': ArticleCompany.title})
             sub_query = sub_query.join(User,
                                        User.id == ArticleCompany.editor_user_id)
-            list_filters.append({'type': 'text', 'value': filters['title_author'], 'field': User.profireader_name})
+            list_filters.append({'type': 'text_multi', 'value': filters['title_author'], 'field': [ArticleCompany.title, User.profireader_name]})
         if 'author' in filters:
             sub_query = sub_query.join(User,
                                        User.id == ArticleCompany.editor_user_id)

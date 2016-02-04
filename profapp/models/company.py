@@ -200,13 +200,6 @@ class Company(Base, PRBase):
                             'link' : partner.portal.host,
                             'company' : Company.get(partner.portal.company_owner_id).name
                         } for partner in readers]
-    @staticmethod
-    def getListGridDataPortalPartners(partners):
-        return [{'portal' : {'name':partner.portal.name,
-                             'id': partner.portal.id},
-                            'link' : partner.portal.host,
-                            'company' : Company.get(partner.portal.company_owner_id).name
-                        } for partner in partners]
 
     @staticmethod
     def subquery_company_partners(company_id, filters):

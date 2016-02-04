@@ -310,6 +310,8 @@ class Grid:
             for filter in filters:
                 if filter['type'] == 'text':
                     query = query.filter(filter['field'].ilike("%" + filter['value'] + "%"))
+                elif filter['type'] == 'text_multi':
+                    query = query.filter(or_(v.ilike("%" + filter['value'] + "%") for v in filter['field']))
                 elif filter['type'] == 'select':
                     query = query.filter(filter['field'] == filter['value'])
                 elif filter['type'] == 'date_range':
