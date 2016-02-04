@@ -1026,7 +1026,7 @@ function pr_dictionary(phrase, dict, allow_html, scope, $ok, ctrl) {
     }
 }
 
-module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $templateCache, $sce) {
+module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $templateCache) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
     angular.extend($rootScope, {
         fileUrl: function (file_id, down, if_no_file) {
@@ -1225,7 +1225,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $te
                 }
             });
 
-            if(scope.gridOptions1.paginationOptions){
+            if(scope.gridOptions1.paginationTemplate){
                 gridApi.pagination.on.paginationChanged(scope, function (newPage, pageSize) {
                     scope.all_grid_data.paginationOptions.pageNumber = newPage;
                     scope.all_grid_data.paginationOptions.pageSize = pageSize;
