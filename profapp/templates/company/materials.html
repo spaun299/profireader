@@ -38,26 +38,23 @@
                 onRegisterApi: function (gridApi) {
                     $scope.setGridExtarnals(gridApi)
                 },
+                category: [{name: 'searching',field:'title_author', visible: true , filtering: true, filter:{type:'input'}}, {name: 'search',field:'tit', visible: true , filtering: true, filter:{type:'input'}}],
                 columnDefs: [
                     {
-                        name: 'title', displayName: 'Title', width: '30%',enableSorting: false,
+                        name: 'title',category:"searching", displayName: 'Title', width: '30%',enableSorting: false,
                         type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
-                        filter: {type: 'input'}
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
                     },{
-                        name: 'author',enableSorting: false,displayName: 'Author',
-                        filter: {type:'input'}
+                        name: 'author',category:"searching",enableSorting: false,displayName: 'Author'
                     },{
-                        name: 'md_tm',enableColumnMenu: true,
+                        name: 'md_tm', category:"search",enableColumnMenu: true,
                         displayName: 'Date',
-                        filter:{type:'date_range'}
                     },{
-                        name: 'portals', displayName: 'Portals',enableSorting: false,
+                        name: 'portals',category:"search", displayName: 'Portals',enableSorting: false,
                         type: 'link',
                         href: 'url_edit_article_portal({article_portal_division_id: row.entity.id})',
                         hideIf: 'not sent',
                         classes: 'link',
-                        filter: {type:'multi_select'}
                     },{
                         name: 'publication_status',enableSorting: false,
                         filter: {type: 'multi_select'}
@@ -80,6 +77,5 @@
     </div>
     {% endraw %}
 
+
 {% endblock portal_content %}
-
-

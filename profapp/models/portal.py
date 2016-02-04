@@ -60,12 +60,12 @@ class Portal(Base, PRBase):
     # articles = relationship('ArticlePortalDivision',
     #                         back_populates='portal',
     #                         uselist=False)
-    articles = relationship('ArticlePortalDivision',
-                            secondary='portal_division',
-                            primaryjoin="Portal.id == PortalDivision.portal_id",
-                            secondaryjoin="PortalDivision.id == ArticlePortalDivision.portal_division_id",
-                            back_populates='portal',
-                            uselist=False)
+    publications = relationship('ArticlePortalDivision',
+                                secondary='portal_division',
+                                primaryjoin="Portal.id == PortalDivision.portal_id",
+                                secondaryjoin="PortalDivision.id == ArticlePortalDivision.portal_division_id",
+                                back_populates='portal',
+                                uselist=False)
 
     company_members = relationship('MemberCompanyPortal',
                                    # secondary='member_company_portal'
