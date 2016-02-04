@@ -1,5 +1,5 @@
 from sqlalchemy import Integer, String, TIMESTAMP, SMALLINT, BOOLEAN, Column, ForeignKey, UnicodeText, BigInteger, Binary, Float
-from sqlalchemy.dialects.postgresql import BIGINT, INTEGER
+from sqlalchemy.dialects.postgresql import BIGINT, INTEGER, JSON
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from sqlalchemy_utils import URLType
 # read this about UUID:
@@ -44,5 +44,6 @@ TABLE_TYPES = {
     'gender': String(6),
     'language': String(3),
     'url': String(1000), #URLType,
-    'binary': Binary
+    'binary': Binary,
+    'json': JSON
 }
