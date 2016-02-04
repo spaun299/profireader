@@ -30,7 +30,7 @@
     <label for="portal_search">Search</label>
     <input id="portal_search" type="text"><script>load_portals()</script>
           {% for portal in portals %}
-   <h2>{{ portal[1] }}<a href="{{ url_for('general.reader_subscribe', portal_id=portal[0]) }}"> - Subscribe</a></h2>
+   <h2>{{ portal[1] }}<a href="{{ url_for('reader.reader_subscribe', portal_id=portal[0]) }}"> - Subscribe</a></h2>
           {% endfor %}
     {{ __('Presentation text') }}
 {% endblock portal_content %}

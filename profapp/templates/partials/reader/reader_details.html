@@ -4,14 +4,13 @@
 
 {% block portal_content %}
 {% include 'partials/reader/head.html' %}
-{% include 'partials/reader/reader_nav.html' %}
 <script>
 var favorite = {{ favorite|tojson }};
 function add_delete_favorite(boolean){
     var article_portal_division_id = {{ article['id']|tojson }};
     $.ajax({
         type: 'post',
-        url: '{{ url_for('article.add_delete_favorite') }}',
+        url: '{{ url_for('reader.add_delete_favorite') }}',
         data: {'favorite': boolean, 'article_portal_division_id': article_portal_division_id },
         success: function(){
             var text = document.getElementById('favorite');
