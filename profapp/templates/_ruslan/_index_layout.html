@@ -13,42 +13,24 @@
 {% endblock metas %}
 
 {% block styles %}
-
-    {#    {{ super() }}#}
-    {#    <link rel="stylesheet" type="text/css" href="/static/filemanager/angular-filemanager.css">#}
-    {#<link href="{{ url_for('static', filename = 'image_editor/assets/css/bootstrap.min.css') }}" rel="stylesheet">#}
-    {#<link href="{{ url_for('static', filename = 'image_editor/demo/css/main.css') }}" rel="stylesheet">#}
-    {#
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
-    #}
-{#    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.css">#}
-{#    <link rel="stylesheet" href="/static/css/profireader_responsive.css">#}
-{#    <link rel="stylesheet" href="/static/css/profireader.css">#}
-{#    <link rel="stylesheet" href="/static/jquery/smoothness/jquery-ui.css">#}
-{#    <link rel="stylesheet" href="/static/css/oles.css">#}
-{#    <link rel="stylesheet" href="/static/css/icons.css">#}
-{#    <link rel="stylesheet" href="/static/css/andriy-pagination.css">#}
+    <link href="/static/css/_profreader.css" rel="stylesheet">
+    <link href="/static/css/font-awesome.min.css" rel="stylesheet">
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
 
 {%- endblock styles %}
 
 {%- block head %}
     {{ super() }}
-    <link href="/static/css/_profreader.css" rel="stylesheet">
-    <link href="/static/css/font-awesome.min.css" rel="stylesheet">
-    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <script>
+    var pr_angular_modules = ['ui.bootstrap', 'profireaderdirectives', 'ngSanitize', 'ajaxFormModule', 'profireaderdirectives', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView', 'ui.slider'];
+    </script>
+
 
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon"/>
     <link rel="icon" href="/static/favicon.ico" type="image/gif"/>
 
     {{ config_variables()|safe }}
 
-    {#    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>#}
-    {#    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>#}
-
-
-{#    <script src="{{ bootstrap_find_resource('jquery.js', cdn='jquery') }}"></script>#}
     <script src="{{ url_for('static', filename = 'new/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'new/jquery/jquery-ui.js') }}"></script>
     <script src="{{ url_for('static', filename = 'new/bootstrap/js/bootstrap.js') }}"></script>

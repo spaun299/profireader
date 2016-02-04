@@ -585,7 +585,8 @@ function file_choose(selectedfile) {
 
 // 'ui.select' uses "/static/js/select.js" included in _index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
-module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ajaxFormModule', 'profireaderdirectives', 'ui.grid', 'ui.grid.pagination', 'ui.grid.edit', 'ngAnimate', 'ngTouch', 'ui.grid.selection', 'ui.grid.grouping', 'ui.grid.treeView', 'ui.slider']);
+
+module = angular.module('Profireader', pr_angular_modules);
 
 module.config(function ($provide) {
     $provide.decorator('$controller', function ($delegate) {
@@ -1592,10 +1593,11 @@ function find_and_build_url_for_endpoint(dict, rules) {
 
     if (found === false) {
         console.error('Can\'t found flask endpoint for passed dictionary', dict, rules);
+        return '';
     }
     else {
         if (_.size(dict1) > 0) {
-            console.warn("To many parameters passed in dictionary for endpoint rule", dict, rules);
+            console.warn("Too many parameters passed in dictionary for endpoint rule", dict, rules);
         }
         return found;
     }

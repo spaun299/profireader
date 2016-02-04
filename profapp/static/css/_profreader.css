@@ -1,45 +1,31 @@
-body.profireader {
-height:100%;
-}
+body  {
+  padding-top: 70px;
 
-body.profireader {
-  padding-top: 50px;
 }
 
 .container .navbar-header .navbar-brand {
     padding: 5px 0px;
 }
-
 .navbar-brand img {
     height: 100%;
     width: auto;
 }
 
-.top-menu li a i {
-	font-size: 20px;
+.prof_login {
+	font-size: 18px !important;
 }
 
- #wrap {
-        min-height: 100%;
-        height: auto !important;
-        height: 100%;
-        /* Negative indent footer by it's height */
-        margin: 0;
-      }
-	#push, #footer {
-        height: 60px;
-      }
+.prof_top_menu{
+	font-size: 18px
+}
 
-#footer {
+.nav > li > ul > li > a {
+    display: inline-block;
+}
 
-  background-image: -webkit-linear-gradient(#6d94bf, #446e9b 50%, #3e648d);
-  background-image: -o-linear-gradient(#6d94bf, #446e9b 50%, #3e648d);
-  background-image: -webkit-gradient(linear, left top, left bottom, from(#6d94bf), color-stop(50%, #446e9b), to(#3e648d));
-  background-image: linear-gradient(#6d94bf, #446e9b 50%, #3e648d);
-	color: #fff;
-	position: relative;
-	margin-top: -40px; /* negative value of footer height */
-	height: 40px;
-	padding-top: 10px;
- }
-
+.person-small-cover {
+    border-radius: 50%;
+    border: 3px #999 solid;
+    width: 36px;
+    height: 36px;
+}
