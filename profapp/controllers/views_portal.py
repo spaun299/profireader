@@ -423,7 +423,8 @@ def portals_partners_load(json, company_id):
     subquery = Company.subquery_company_partners(company_id, json.get('filter'))
     partners_g, pages, current_page, count = pagination(subquery, subquery_member_portal, **Grid.page_options(json.get('paginationOptions')))
     return {'page': current_page,
-            'grid_data': Company.getListGridDataPortalPartners(partners_g),
+            'grid_data': [{'portal' : {'name':partner.portal.name,'id': partner.portal.id},'link' : partner.portal.host,'company' : Company.get(partner.portal.company_owner_id).name
+                        } for partner in partners_g],
             'total': count,
             'portal': db(Company, id=company_id).one().own_portal.get_client_side_dict(fields='name') if db(Company, id=company_id).one().own_portal else [],
             'portals_partners': [port.get_client_side_dict(fields='name, company_owner_id,id')

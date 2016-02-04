@@ -313,6 +313,8 @@ class User(Base, UserMixin, PRBase):
         g.db.commit()
 
     def avatar(self, avatar_via, size=500, small_size=100, url=None):
+        if avatar_via == 'upload':
+            return self
         avatar_urls = dict(facebook=lambda s: 'http://graph.facebook.com/{facebook_id}/picture?width={size}&'
                                               'height={size}&redirect=0'.format(facebook_id=self.facebook_id, size=s),
                            google=lambda s: 'https://www.googleapis.com/plus/v1/people/{google_id}?'
@@ -503,14 +505,13 @@ class User(Base, UserMixin, PRBase):
         self.profireader_email = new_email
         return True
 
-    # TODO (AA to ???): file.upload(content=content).url() is wrong and should be corrected
     def avatar_update(self, passed_file):
         if passed_file:
-            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if
-                    re.search('^image/.*', file.mime)]
-            self.profireader_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
-            print(passed_file)
-            self.profireader_small_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
+            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
+            file = File.uploadWithoutChunk(passed_file, self)
+            self.profireader_avatar_url = file.url()
+            file_thumbnail = file.get_thumbnails(size=(133,100)).thumbnail
+            self.profireader_small_avatar_url = file_thumbnail[0].url()
         else:
             list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if
                     re.search('^image/.*', file.mime)]
@@ -519,13 +520,6 @@ class User(Base, UserMixin, PRBase):
         if list:
             for f in list:
                 File.remove(f.id)
-        # TODO: this image should be cropped
-        # file = File(
-        #     author_user_id=self.id,
-        #     name=passed_file.filename,
-        #     mime=passed_file.content_type)
-
-
         return self
 
     # def can(self, permissions):
