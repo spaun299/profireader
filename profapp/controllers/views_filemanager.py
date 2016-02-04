@@ -13,6 +13,7 @@ from flask import session, redirect, request, url_for
 from ..models.google import GoogleAuthorize, GoogleToken
 from utils.db_utils import db
 from ..models.company import Company
+from ..models.users import User
 from ..models.translate import TranslateTemplate
 import urllib.parse
 import collections
@@ -47,7 +48,7 @@ def filemanager():
         # Company.get_emploees('can_read', status = 'active')
         # Company.get_emploees(['can_read', 'can_write'], status = ['active','banned'])
         # similar function User.get_emploers ...
-        if user_company.status == 'active' and 'upload_files' in g.user.user_rights_in_company(user_company.company_id):
+        if User.RIGHT_AT_COMPANY['FILES_BROWSE'] in g.user.user_rights_in_company(user_company.company_id):
             library.append({'id':user_company.employer.journalist_folder_file_id,
             'name': "%s files" % (user_company.employer.name,), 'icon': ''})
             if user_company.employer.journalist_folder_file_id == last_root_id:

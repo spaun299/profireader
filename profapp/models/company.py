@@ -8,11 +8,10 @@ from ..constants.TABLE_TYPES import TABLE_TYPES
 from flask import g
 from config import Config
 from ..constants.STATUS import STATUS
-from ..constants.USER_ROLES import COMPANY_OWNER_RIGHTS
 from utils.db_utils import db
 from sqlalchemy import CheckConstraint
 from flask import abort
-from .rights import Right, RightHumnReadible
+from .rights import Right
 from ..controllers.request_wrapers import check_rights
 from .files import File
 from .pr_base import PRBase, Base, Search, Grid
@@ -49,6 +48,7 @@ class Company(Base, PRBase):
     email = Column(TABLE_TYPES['email'], nullable=False, default='')
     short_description = Column(TABLE_TYPES['text'], nullable=False, default='')
     about = Column(TABLE_TYPES['text'], nullable=False, default='')
+    status = Column(TABLE_TYPES['status'], nullable=False, default=STATUS.ACTIVE())
     lat = Column(TABLE_TYPES['float'], nullable=False, default=49.8418907)
     lon = Column(TABLE_TYPES['float'], nullable=False, default=24.0316261)
 
@@ -120,7 +120,7 @@ class Company(Base, PRBase):
                 'message': 'Company name %(name)s already exist. Please choose another name',
                 'data': self.get_client_side_dict()})
 
-        user_company = UserCompany(status=STATUS.ACTIVE(), rights_int=COMPANY_OWNER_RIGHTS)
+        user_company = UserCompany(status=STATUS.ACTIVE(), rights=User.RIGHTS_AT_COMPANY_FOR_OWNER)
         user_company.employer = self
         g.user.employer_assoc.append(user_company)
         g.user.companies.append(self)
@@ -239,27 +239,27 @@ def forbidden_for_current_user(**kwargs):
 
 # TODO (AA to AA): Create a decorator that does this work!
 # TODO: see the function params_for_user_company_business_rules.
-def simple_permissions(rights):
-    def business_rule(**kwargs):
-        # TODO (AA to AA): Implement json handling when json is available among other parameters.
-        params = kwargs['json'] if 'json' in kwargs.keys() else kwargs
-
-        keys = params.keys()
-        if 'company_id' in keys:
-            company_object = params['company_id']
-        elif 'company' in keys:
-            company_object = params['company']
-        else:
-            company_object = None
-        if 'user_id' in keys:
-            user_object = params['user_id']
-        elif 'user' in keys:
-            user_object = params['user']
-        else:
-            user_object = current_user
-
-        return UserCompany.permissions(rights, user_object, company_object)
-    return business_rule
+# def simple_permissions(rights):
+#     def business_rule(**kwargs):
+#         # TODO (AA to AA): Implement json handling when json is available among other parameters.
+#         params = kwargs['json'] if 'json' in kwargs.keys() else kwargs
+#
+#         keys = params.keys()
+#         if 'company_id' in keys:
+#             company_object = params['company_id']
+#         elif 'company' in keys:
+#             company_object = params['company']
+#         else:
+#             company_object = None
+#         if 'user_id' in keys:
+#             user_object = params['user_id']
+#         elif 'user' in keys:
+#             user_object = params['user']
+#         else:
+#             user_object = current_user
+#
+#         return UserCompany.permissions(rights, user_object, company_object)
+#     return business_rule
 
 
 class UserCompany(Base, PRBase):
@@ -279,10 +279,12 @@ class UserCompany(Base, PRBase):
 
     _banned = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
 
-    _rights = Column(TABLE_TYPES['bigint'],
-                     CheckConstraint('_rights >= 0',
-                                     name='cc_unsigned_rights'),
-                     default=0, nullable=False)
+    # _rights = Column(TABLE_TYPES['bigint'],
+    #                  CheckConstraint('_rights >= 0',
+    #                                  name='cc_unsigned_rights'),
+    #                  default=0, nullable=False)
+
+    _rights = Column(TABLE_TYPES['bigint'], default=User.RIGHTS_AT_COMPANY_DEFAULT, nullable=False)
 
     employer = relationship('Company', backref='employee_assoc')
     employee = relationship('User', backref=backref('employer_assoc', lazy='dynamic'))
@@ -291,29 +293,13 @@ class UserCompany(Base, PRBase):
 
     # todo (AA to AA): check handling md_tm
 
-    def __init__(self, user_id=None, company_id=None, status=STATUS.NONACTIVE(), rights_int=0):
+    def __init__(self, user_id=None, company_id=None, status=STATUS.NONACTIVE(), rights=0):
 
         super(UserCompany, self).__init__()
         self.user_id = user_id
         self.company_id = company_id
         self.status = status
-        self.rights_int = rights_int
-
-    @property
-    def banned(self):
-        return self._banned
-
-    @banned.setter
-    def banned(self, banned):
-        self._banned = banned
-
-    @property
-    def rights_int(self):
-        return self._rights
-
-    @rights_int.setter
-    def rights_int(self, rights_int=0):
-        self._rights = rights_int
+        self._rights = rights
 
     @property
     def rights_set(self):
@@ -418,37 +404,37 @@ class UserCompany(Base, PRBase):
                 db(User).filter(~db(UserCompany, user_id=User.id, company_id=company_id).exists()).
                 filter(User.profireader_name.ilike("%" + searchtext + "%")).all()]
 
-    @staticmethod
-    def permissions(needed_rights_iterable, user_object, company_object):
-
-        needed_rights_int = Right.transform_rights_into_integer(needed_rights_iterable)
-        # TODO: implement Anonymous User handling
-        if not (user_object and company_object):
-            raise errors.ImproperRightsDecoratorUse
-
-        user = user_object
-        company = company_object
-        if type(user_object) is str:
-            user = g.db.query(User).filter_by(id=user_object).first()
-            if not user:
-                return abort(400)
-        if type(company_object) is str:
-            company = g.db.query(Company).filter_by(id=company_object).first()
-            if not company:
-                return abort(400)
-
-        user_company = user.employer_assoc.filter_by(company_id=company.id).first()
-
-        if not user_company:
-            return False if needed_rights_iterable else True
-
-        if user_company.banned:  # or user_company.status != STATUS.ACTIVE():
-            return False
-
-        if user_company:
-            available_rights = user_company.rights_int
-        else:
-            return False
-            # available_rights = 0
-
-        return True if available_rights & needed_rights_int == needed_rights_int else False
+    # @staticmethod
+    # def permissions(needed_rights_iterable, user_object, company_object):
+    #
+    #     needed_rights_int = Right.transform_rights_into_integer(needed_rights_iterable)
+    #     # TODO: implement Anonymous User handling
+    #     if not (user_object and company_object):
+    #         raise errors.ImproperRightsDecoratorUse
+    #
+    #     user = user_object
+    #     company = company_object
+    #     if type(user_object) is str:
+    #         user = g.db.query(User).filter_by(id=user_object).first()
+    #         if not user:
+    #             return abort(400)
+    #     if type(company_object) is str:
+    #         company = g.db.query(Company).filter_by(id=company_object).first()
+    #         if not company:
+    #             return abort(400)
+    #
+    #     user_company = user.employer_assoc.filter_by(company_id=company.id).first()
+    #
+    #     if not user_company:
+    #         return False if needed_rights_iterable else True
+    #
+    #     if user_company.banned:  # or user_company.status != STATUS.ACTIVE():
+    #         return False
+    #
+    #     if user_company:
+    #         available_rights = user_company.rights_int
+    #     else:
+    #         return False
+    #         # available_rights = 0
+    #
+    #     return True if available_rights & needed_rights_int == needed_rights_int else False

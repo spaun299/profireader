@@ -1,8 +1,8 @@
 from .blueprints_declaration import company_bp
-from ..models.company import simple_permissions
+
 from flask.ext.login import login_required, current_user
 from flask import render_template, request, url_for, g, redirect
-from ..models.company import Company, UserCompany, Right, RightHumnReadible
+from ..models.company import Company, UserCompany
 from ..models.users import User
 from ..models.translate import TranslateTemplate
 from .request_wrapers import ok, check_rights, tos_required
@@ -153,26 +153,26 @@ def profile(company_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def employees(company_id):
-    company_user_rights = UserCompany.show_rights(company_id)
-    ordered_rights = sorted(Right.keys(), key=lambda t: Right.RIGHT_POSITION()[t.lower()])
-    ordered_rights = list(map((lambda x: getattr(x, 'lower')()), ordered_rights))
+    # company_user_rights = UserCompany.show_rights(company_id)
+    # ordered_rights = sorted(Right.keys(), key=lambda t: Right.RIGHT_POSITION()[t.lower()])
+    # ordered_rights = list(map((lambda x: getattr(x, 'lower')()), ordered_rights))
 
-    for user_id in company_user_rights.keys():
-        rights = company_user_rights[user_id]['rights']
-        rez = OrderedDict()
-        for elem in ordered_rights:
-            rez[elem] = True if elem in rights else False
-        company_user_rights[user_id]['rights'] = rez
+    # for user_id in company_user_rights.keys():
+    #     rights = company_user_rights[user_id]['rights']
+    #     rez = OrderedDict()
+    #     for elem in ordered_rights:
+    #         rez[elem] = True if elem in rights else False
+    #     company_user_rights[user_id]['rights'] = rez
 
     user_id = current_user.get_id()
-    curr_user = {user_id: company_user_rights[user_id]}
+    # curr_user = {user_id: company_user_rights[user_id]}
+    curr_user = {user_id: []}
 
     return render_template('company/company_employees.html',
                            company=db(Company, id=company_id).one(),
-                           company_user_rights=company_user_rights,
+                           company_user_rights=[],
                            curr_user=curr_user,
-                           Right=Right,
-                           RightHumnReadible=RightHumnReadible)
+                           rights={})
 
 
 @company_bp.route('/update_rights', methods=['POST'])

@@ -25,11 +25,9 @@ from flask.ext.login import UserMixin, AnonymousUserMixin
 from .files import File
 from .pr_base import PRBase, Base
 from ..constants.SEARCH import RELEVANCE
-from .rights import Right
 from sqlalchemy import CheckConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
-from ..constants.USER_ROLES import GOD_RIGHTS
-
+from ..constants.STATUS import STATUS
 
 class User(Base, UserMixin, PRBase):
     __tablename__ = 'user'
@@ -53,6 +51,35 @@ class User(Base, UserMixin, PRBase):
     confirmed = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
     _banned = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
 
+    RIGHT_AT_COMPANY = {
+        'FILES_BROWSE':                         2**(4-1),
+        'FILES_UPLOAD':                         2**(5-1),
+        'FILES_DELETE_OTHERS':                  2**(14-1),
+
+        'MATERIALS_SUBMIT_TO_ANOTHER_PORTAL':   2**(8-1),
+        'MATERIALS_EDIT_OTHERS':                2**(12-1),
+
+        'PUBLICATION_PUBLISH_AT_OWN_PORTAL':    2**(2-1),
+        'PUBLICATION_UNPUBLISH_AT_OWN_PORTAL':  2**(3-1),
+        'PUBLICATION_SET_PRIORITY':             2**(11-1),
+
+        'EMPLOYEE_CONFIRM_NEW':                 2**(6-1),
+        'EMPLOYEE_SUSPEND_UNSUSPEND':           2**(7-1),
+
+        'COMPANY_REQUIRE_MEMBEREE_AT_PORTALS':  2**(15-1),
+        'COMPANY_MANAGE_USER_RIGHTS':           2**(9-1),
+        'COMPANY_EDIT_PROFILE':                 2**(1-1),
+
+        'EDIT_PORTAL_PROFILE':                  2**(10-1),
+
+        'PORTAL_MANAGE_READERS':                2**(16-1),
+        'PORTAL_MANAGE_COMMENTS':               2**(18-1),
+        'PORTAL_MANAGE_MEMBERS_COMPANIES':      2**(13-1)
+    }
+
+    RIGHTS_AT_COMPANY_DEFAULT = RIGHT_AT_COMPANY['FILES_BROWSE'] | RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']
+    RIGHTS_AT_COMPANY_FOR_OWNER = 0x7fffffffffffffff
+
     registered_tm = Column(TABLE_TYPES['timestamp'],
                            default=datetime.datetime.utcnow)
     last_seen = Column(TABLE_TYPES['timestamp'],
@@ -72,7 +99,6 @@ class User(Base, UserMixin, PRBase):
 
     employers = relationship('Company', secondary='user_company', back_populates='employees')
     companies = relationship('Company', back_populates='user_owner')
-
 
     # FB_NET_FIELD_NAMES = ['id', 'email', 'first_name', 'last_name', 'name', 'gender', 'link', 'phone']
     # SOCIAL_NETWORKS = ['profireader', 'google', 'facebook', 'linkedin', 'twitter', 'microsoft', 'yahoo']
@@ -295,7 +321,7 @@ class User(Base, UserMixin, PRBase):
                            linkedin=lambda s, u=url: u if u else self.gravatar(size=s),
                            gravatar=lambda s: self.gravatar(size=s),
                            microsoft=lambda _: 'https://apis.live.net/v5.0/{microsoft_id}/picture'.format(
-                               microsoft_id=self.microsoft_id))
+                                   microsoft_id=self.microsoft_id))
         url = avatar_urls[avatar_via](size)
         url_small = avatar_urls[avatar_via](small_size)
         if avatar_via == 'facebook':
@@ -342,7 +368,7 @@ class User(Base, UserMixin, PRBase):
         email = getattr(self, 'profireader_email', 'guest@profireader.com')
         hash = hashlib.md5(email.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
-            url=url, hash=hash, size=size, default=default, rating=rating)
+                url=url, hash=hash, size=size, default=default, rating=rating)
 
     def profile_completed(self):
         completeness = True
@@ -480,12 +506,14 @@ class User(Base, UserMixin, PRBase):
     # TODO (AA to ???): file.upload(content=content).url() is wrong and should be corrected
     def avatar_update(self, passed_file):
         if passed_file:
-            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
+            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if
+                    re.search('^image/.*', file.mime)]
             self.profireader_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
             print(passed_file)
             self.profireader_small_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
         else:
-            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
+            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if
+                    re.search('^image/.*', file.mime)]
             self.profireader_avatar_url = self.gravatar(size=100)
             self.profireader_small_avatar_url = self.gravatar(size=100)
         if list:
@@ -510,7 +538,7 @@ class User(Base, UserMixin, PRBase):
     # TODO (AA to AA): it should be corrected
     def user_rights_in_company(self, company_id):
         user_company = self.employer_assoc.filter_by(company_id=company_id).first()
-        return user_company.rights_set if user_company else []
+        return user_company.rights_set if user_company and user_company.status == STATUS.ACTIVE() and user_company.employer.status == STATUS.ACTIVE() else []
 
     def get_client_side_dict(self, fields='id|profireader_name|profireader_avatar_url|profireader_small_avatar_url',
                              more_fields=None):
