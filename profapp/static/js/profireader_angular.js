@@ -889,7 +889,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                 $scope.deselectAll = function (sendEvent) {
                     if(sendEvent){
                         $scope.isSelectAll = false;
-                        $scope.data.filter = {};
+                        delete $scope.data.filter[$scope.addData.field];
                         $scope.send($scope.data);
                         $scope.externalEvents.onDeselectAll();
                         if ($scope.singleSelection) {
@@ -930,7 +930,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                         if($scope.listElemens.length>0){
                             $scope.data.filter[$scope.addData.field] = $scope.listElemens;
                         }else{
-                            $scope.data.filter = {}
+                            delete $scope.data.filter[$scope.addData.field];
                         }
                         $scope.send($scope.data)
                     } else if (!exists && ($scope.settings.selectionLimit === 0 || $scope.listElemens.length < $scope.settings.selectionLimit)) {
@@ -1026,7 +1026,7 @@ function pr_dictionary(phrase, dict, allow_html, scope, $ok, ctrl) {
     }
 }
 
-module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $templateCache, $sce) {
+module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $templateCache) {
     //$rootScope.theme = 'bs3'; // bootstrap3 theme. Can be also 'bs2', 'default'
     angular.extend($rootScope, {
         fileUrl: function (file_id, down, if_no_file) {
@@ -1045,112 +1045,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $te
         _: function (phrase, dict) {
             return pr_dictionary(phrase, dict, '', this, $ok);
         },
-        searchItemGrid: function (col) {
-            this.all_grid_data.paginationOptions.pageNumber = 1;
-            this.all_grid_data['filter'][col.field] = col.filter.text;
-            this.sendData(this.all_grid_data);
-        },
-        filterForGridRange: function(col){
-            from = col.filters[0]['term'];
-            to = col.filters[1]['term'];
-            this.all_grid_data['filter'][col.field] = {'from':from, 'to':to};
-            this.sendData(this.all_grid_data);
-        },
-        refreshGrid: function (col) {
-            if (col !== undefined) {
-                if (col.filters && (col.filter.type === 'date_range' || col.filter.type === 'range')){
-                    col.filters[0] = '';
-                    col.filters[1] = '';
-                }else if(col.filter.type === 'input'){
-                    col.filter.text = '';
-                }
-                delete this.all_grid_data['filter'][col.field];
-                this.sendData(this.all_grid_data)
-            }
-        },
-        getPropertiesForGrid: function (col) {
-            var scope = this;
-            scope.pos = {};
-            //var grid = this.grid;
-            //grid.render_action_buttons = function () {
-            //    return 'lalala';
-            //}
-            scope.gridOptions1.headerTemplate = '<div class="ui-grid-header" ><div class="ui-grid-top-panel"><div class="ui-grid-header-viewport"><div class="ui-grid-header"></div><div class="ui-grid-header-canvas" >' +
-                '<div class="ui-grid-header-cell-wrapper" ng-style="colContainer.headerCellWrapperStyle()"><div role="row" class="ui-grid-header-cell-row">'+
-                '<div class="ui-grid-header-cell ui-grid-clearfix ui-grid-category" ng-repeat="cat in grid.options.category" ng-if="cat.visible && (colContainer.renderedColumns | filter:{ colDef:{category: cat.name} }).length > 0"> ' +
-                '<div class="ui-grid-filter-container"><input type="text" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}" ng-enter="grid.appScope.searchItemGrid(cat)" ng-model="cat.filter.text" aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}" placeholder="{{ grid.appScope._(\'search\') }}"> ' +
-                '<div role="button" class="ui-grid-filter-button" ng-click="grid.appScope.refreshGrid(cat)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="cat.filter.text === undefined || cat.filter.text === null || cat.filter.text === \'\'" ng-show="cat.filter.text !== undefined && cat.filter.text !== null && cat.filter.text !== \'\'"> <i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter">&nbsp;</i> </div> </div> ' +
-                '<div class="ui-grid-header-cell ui-grid-clearfix" ng-if="col.colDef.category === cat.name" ng-repeat="col in colContainer.renderedColumns | filter:{ colDef:{category: cat.name} }" ui-grid-header-cell col="col" render-index="$index"> <div ng-class="{ \'sortable\': sortable }" class="ng-scope sortable"> <div ui-grid-filter="" ng-show="col.colDef.category !== undefined"></div> </div> </div> </div>'+
-                '<div class="ui-grid-header-cell ui-grid-clearfix" ng-if="col.colDef.category === undefined"  ng-repeat="col in colContainer.renderedColumns track by col.colDef.name" ui-grid-header-cell col="col" render-index="$index" ng-style="$index === 0 && colContainer.columnStyle($index)"></div>' +
-                '</div></div></div></div></div></div>';
-            for (var i = 0; i < col.length; i++) {
-                if(col[i].category){
-                    scope.gridOptions1.columnDefs[i].enableFiltering  = false
-                }
-                scope.gridOptions1.columnDefs[i].headerCellTemplate = '<div ng-class="{ \'sortable\': sortable }">' +
-                    '<div class="ui-grid-cell-contents" col-index="renderIndex" title="{{ grid.appScope._(col.displayName CUSTOM_FILTERS) }}"> <span>{{ grid.appScope._(col.displayName CUSTOM_FILTERS) }}</span>' +
-                    '<span ui-grid-visible="col.sort.direction" ng-class="{ \'ui-grid-icon-up-dir\': col.sort.direction == asc, \'ui-grid-icon-down-dir\': col.sort.direction == desc, \'ui-grid-icon-blank\': !col.sort.direction }"> &nbsp;</span> </div> <div class="ui-grid-column-menu-button" ng-if="grid.options.enableColumnMenus && !col.isRowHeader  && col.colDef.enableColumnMenu !== false" ng-click="toggleMenu($event)" ng-class="{\'ui-grid-column-menu-button-last-col\': isLastCol}">' +
-                    ' <i class="ui-grid-icon-angle-down">&nbsp;</i> </div> <div ui-grid-filter></div></div>';
-                if (col[i].filter ) {
-                    if (col[i].filter && col[i].filter.type) {
-                        scope.pos[col[i].name] = '1'
-                    }
-                    if(typeof(col[i].filters) === 'number'){
-                        var count = scope.gridOptions1.columnDefs[i].filters;
-                        scope.gridOptions1.columnDefs[i].filters = [{}];
-                        for(var filt = 1;filt<count;filt++){
-                            scope.gridOptions1.columnDefs[i].filters.push({})
-                        }
-                    }
-                    if(col[i].filter.type === 'input'){
-                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container">' +
-                            '<input type="text" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}" ng-enter="grid.appScope.searchItemGrid(col)" ng-model="col.filter.text"  aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}">' +
-                            '<div role="button" class="ui-grid-filter-button" ng-click="grid.appScope.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filter.text === undefined || col.filter.text === null || col.filter.text === \'\'" ng-show="col.filter.text !== undefined && col.filter.text !== null && col.filter.text !== \'\'">' +
-                            '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter">&nbsp;</i></div></div>'
-                    }else if(col[i].filter.type === 'date_range'){
-                        scope.gridOptions1.columnDefs[i].filters = [{}, {}];
-                        scope.gridOptions1.columnDefs[i].width = '25%';
-                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><input  style="width: 48%; display: inline" type="date" class="form-control" uib-datepicker-popup ng-model="col.filters[0].term" ng-required="true" datepicker-options="dateOptions" close-text="Close"/>' +
-                            '<input style="width: 48%; display: inline" type="date" class="form-control" uib-datepicker-popup ng-model="col.filters[1].term" ng-required="true" datepicker-options="dateOptions" close-text="Close"/>' +
-                            '<span class="input-group-btn"></span><div role="button" class="ui-grid-filter-button" ng-click="grid.appScope.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined" ng-show="col.filters[1].term !== undefined && col.filters[1].term !== \'\' && col.filters[0].term !== undefined && col.filters[0].term !== \'\'">' +
-                            '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter" style="right:0.5px;">&nbsp;</i></div></div>'
-                    }else if(col[i].filter.type === 'multi_select'){
-                        scope.listOfSelectedFilterGrid = [];
-                        scope.additionalDataForMS[col[i].name] = {limit:col[i].filter.limit?col[i].filter.limit:null, type:col[i].filter.type, field:col[i].name};
-                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><div ng-dropdown-multiselect="" parent-scope="grid.appScope" add-data="grid.appScope.additionalDataForMS[col.name]" send="grid.appScope.sendData" options = "grid.appScope.listsForMS[col.name]" selected-model="grid.appScope.listOfSelectedFilterGrid"></div></div>'
-                    }else if(col[i].filter.type === 'range'){
-                        scope.gridOptions1.columnDefs[i].filters = [{}, {}];
-                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container">' +
-                            '<input type="number" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}" ng-enter="grid.appScope.searchItemGrid(col, colFilter.term)" ng-model="col.filters[0].term"  aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}" style="margin-bottom: 10px;width: 100%" placeholder="From:">' +
-                            '<input type="number" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}" ng-enter="grid.appScope.searchItemGrid(col, colFilter.term)" ng-model="col.filters[1].term"  aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}" style="margin-bottom: 5px;width: 100%" placeholder="To:">' +
-                            '<button class="btn btn-group" ng-click="grid.appScope.filterForGridRange(col)" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined || col.filters[1].term === null || col.filters[1].term === \'\' || col.filters[0].term === null || col.filters[0].term === \'\'">Filter</button> ' +
-                            '<div role="button" class="ui-grid-filter-button" ng-click="grid.appScope.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined" ng-show="col.filters[1].term !== undefined && col.filters[1].term !== \'\' && col.filters[0].term !== undefined && col.filters[0].term !== \'\'">' +
-                            '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter" style="right:0.5px;top:83%">&nbsp;</i></div></div>'
-                    }
-                }
 
-                var classes_for_row = col[i].classes + ' pr-grid-cell-type-' + col[i].type;
-
-                if(col[i].type === 'link') {
-                    var link = 'grid.appScope.'+col[i].href;
-                    scope.hideGridLinkIf = col[i].hideIf;
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" title="{{ COL_FIELD }}"><a ng-if="grid.appScope.hideGridLinkIf !== COL_FIELD" href="{{'+link+'}}" ng-bind="COL_FIELD"></a><div ng-if="grid.appScope.hideGridLinkIf === COL_FIELD">{{ COL_FIELD }}</div></div>'
-                }else if(col[i].type === 'img'){
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
-                }else if(col[i].type === 'actions') {
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'"><button class="pr-grid-cell-type-actions-button-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.'+col[i]['onclick']+'(row.entity.id, \'{{ action_name }}\', row.entity, \''+col[i]['name']+'\')">{{ action_name }}</button></div>'
-                }else if(col[i].type === 'editable'){
-                    if(col[i].multiple === true && col[i].rule){
-                      scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" ng-if="grid.appScope.'+col[i].rule+'=== false" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div><div ng-if="grid.appScope.'+col[i].rule+'"><div ng-click="'+col[i].modal+'" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>'
-                    }
-                    if(col[i].subtype && col[i].subtype === 'tinymce'){
-                        scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" ng-click="'+col[i].modal+'" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div>'
-                    }
-                }else{
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div>'
-                }
-            }
-        },
         applyGridExtarnals: function (resp) {
             var scope = this;
             var col = scope.gridOptions1.columnDefs;
@@ -1181,27 +1076,134 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $te
                 scope.all_grid_data['editItem'] = {};
             }
         },
-        editableTemplateGrid: '<div class = "ui_dropdown"><form name="inputForm"><select ng-class="\'colt\' + col.uid" ui-grid-edit-dropdown ng-model="MODEL_COL_FIELD" ng-options="field[editDropdownIdLabel] as field[editDropdownValueLabel] CUSTOM_FILTERS for field in row.entity.allowed_status"></select></form></div>',
-        selectRowTemplateGrid: '<div class="ui-grid-cell-contents">{{ COL_FIELD }}<i class="glyphicon glyphicon-collapse-down" style="float:right"></i></div>',
+
         setGridExtarnals: function (gridApi) {
             var scope = this;
             scope.additionalDataForMS = {};
             scope.all_grid_data.paginationOptions.pageSize = $rootScope.gridOptions.paginationPageSize;
-            scope.getPropertiesForGrid(scope.gridOptions1.columnDefs);
+
+            var col = scope.gridOptions1.columnDefs;
+
+            scope.gridOptions1.headerTemplate = '<div class="ui-grid-header" ><div class="ui-grid-top-panel"><div class="ui-grid-header-viewport"><div class="ui-grid-header"></div><div class="ui-grid-header-canvas" >' +
+                '<div class="ui-grid-header-cell-wrapper" ng-style="colContainer.headerCellWrapperStyle()"><div role="row" class="ui-grid-header-cell-row">'+
+                '<div class="ui-grid-header-cell ui-grid-clearfix ui-grid-category" ng-repeat="cat in grid.options.category" ng-if="cat.visible && (colContainer.renderedColumns | filter:{ colDef:{category: cat.name} }).length > 0"> ' +
+                '<div class="ui-grid-filter-container"><input type="text" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}" ng-enter="grid.searchItemGrid(cat)" ng-model="cat.filter.text" aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}" placeholder="{{ grid.appScope._(\'search\') }}"> ' +
+                '<div role="button" class="ui-grid-filter-button" ng-click="grid.refreshGrid(cat)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="cat.filter.text === undefined || cat.filter.text === null || cat.filter.text === \'\'" ng-show="cat.filter.text !== undefined && cat.filter.text !== null && cat.filter.text !== \'\'"> <i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter">&nbsp;</i> </div> </div> ' +
+                '<div class="ui-grid-header-cell ui-grid-clearfix" ng-if="col.colDef.category === cat.name" ng-repeat="col in colContainer.renderedColumns | filter:{ colDef:{category: cat.name} }" ui-grid-header-cell col="col" render-index="$index"> <div ng-class="{ \'sortable\': sortable }" class="ng-scope sortable"> <div ui-grid-filter="" ng-show="col.colDef.category !== undefined"></div> </div> </div> </div>'+
+                '<div class="ui-grid-header-cell ui-grid-clearfix" ng-if="col.colDef.category === undefined"  ng-repeat="col in colContainer.renderedColumns track by col.colDef.name" ui-grid-header-cell col="col" render-index="$index" ng-style="$index === 0 && colContainer.columnStyle($index)"></div>' +
+                '</div></div></div></div></div></div>';
+
+            for (var i = 0; i < col.length; i++) {
+                if(col[i].category){
+                    scope.gridOptions1.columnDefs[i].enableFiltering  = false
+                }
+                scope.gridOptions1.columnDefs[i].headerCellTemplate = '<div ng-class="{ \'sortable\': sortable }">' +
+                    '<div class="ui-grid-cell-contents" col-index="renderIndex" title="{{ grid.appScope._(col.displayName CUSTOM_FILTERS) }}"> <span>{{ grid.appScope._(col.displayName CUSTOM_FILTERS) }}</span>' +
+                    '<span ui-grid-visible="col.sort.direction" ng-class="{ \'ui-grid-icon-up-dir\': col.sort.direction == asc, \'ui-grid-icon-down-dir\': col.sort.direction == desc, \'ui-grid-icon-blank\': !col.sort.direction }"> &nbsp;</span> </div> <div class="ui-grid-column-menu-button" ng-if="grid.options.enableColumnMenus && !col.isRowHeader  && col.colDef.enableColumnMenu !== false" ng-click="toggleMenu($event)" ng-class="{\'ui-grid-column-menu-button-last-col\': isLastCol}">' +
+                    ' <i class="ui-grid-icon-angle-down">&nbsp;</i> </div> <div ui-grid-filter></div></div>';
+                if (col[i].filter ) {
+                    if(typeof(col[i].filters) === 'number'){
+                        var count = scope.gridOptions1.columnDefs[i].filters;
+                        scope.gridOptions1.columnDefs[i].filters = [{}];
+                        for(var filt = 1;filt<count;filt++){
+                            scope.gridOptions1.columnDefs[i].filters.push({})
+                        }
+                    }
+                    if(col[i].filter.type === 'input'){
+                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container">' +
+                            '<input type="text" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}" ng-enter="grid.searchItemGrid(col)" ng-model="col.filter.text"  aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}">' +
+                            '<div role="button" class="ui-grid-filter-button" ng-click="grid.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filter.text === undefined || col.filter.text === null || col.filter.text === \'\'" ng-show="col.filter.text !== undefined && col.filter.text !== null && col.filter.text !== \'\'">' +
+                            '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter">&nbsp;</i></div></div>'
+                    }else if(col[i].filter.type === 'date_range'){
+                        scope.gridOptions1.columnDefs[i].filters = [{}, {}];
+                        scope.gridOptions1.columnDefs[i].width = '25%';
+                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><input  style="width: 48%; display: inline" type="date" class="form-control" uib-datepicker-popup ng-model="col.filters[0].term" ng-required="true" datepicker-options="dateOptions" close-text="Close"/>' +
+                            '<input style="width: 48%; display: inline" type="date" class="form-control" uib-datepicker-popup ng-model="col.filters[1].term" ng-required="true" datepicker-options="dateOptions" close-text="Close"/>' +
+                            '<span class="input-group-btn"></span><div role="button" class="ui-grid-filter-button" ng-click="grid.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined" ng-show="col.filters[1].term !== undefined && col.filters[1].term !== \'\' && col.filters[0].term !== undefined && col.filters[0].term !== \'\'">' +
+                            '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter" style="right:0.5px;">&nbsp;</i></div></div>'
+                    }else if(col[i].filter.type === 'multi_select'){
+                        scope.listOfSelectedFilterGrid = [];
+                        scope.additionalDataForMS[col[i].name] = {limit:col[i].filter.limit?col[i].filter.limit:null, type:col[i].filter.type, field:col[i].name};
+                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><div ng-dropdown-multiselect="" parent-scope="grid.appScope" add-data="grid.appScope.additionalDataForMS[col.name]" send="grid.appScope.sendData" options = "grid.appScope.listsForMS[col.name]" selected-model="grid.appScope.listOfSelectedFilterGrid"></div></div>'
+                    }else if(col[i].filter.type === 'range'){
+                        scope.gridOptions1.columnDefs[i].filters = [{}, {}];
+                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container">' +
+                            '<input type="number" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}"  ng-model="col.filters[0].term"  aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}" style="margin-bottom: 10px;width: 100%" placeholder="From:">' +
+                            '<input type="number" class="ui-grid-filter-input ui-grid-filter-input-{{$index}}"  ng-model="col.filters[1].term"  aria-label="{{colFilter.ariaLabel || aria.defaultFilterLabel}}" style="margin-bottom: 5px;width: 100%" placeholder="To:">' +
+                            '<button class="btn btn-group" ng-click="grid.filterForGridRange(col)" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined || col.filters[1].term === null || col.filters[1].term === \'\' || col.filters[0].term === null || col.filters[0].term === \'\'">Filter</button> ' +
+                            '<div role="button" class="ui-grid-filter-button" ng-click="grid.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined" ng-show="col.filters[1].term !== undefined && col.filters[1].term !== \'\' && col.filters[0].term !== undefined && col.filters[0].term !== \'\'">' +
+                            '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter" style="right:0.5px;top:83%">&nbsp;</i></div></div>'
+                    }
+                }
+
+                var classes_for_row = col[i].classes + ' pr-grid-cell-type-' + col[i].type + ' pr-grid-cell-column-' + col[i].name.replace(/\./g,'-');
+
+                if(col[i].type === 'link') {
+                    var link = 'grid.appScope.'+col[i].href;
+                    scope.hideGridLinkIf = col[i].hideIf;
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" title="{{ COL_FIELD }}"><a ng-if="grid.appScope.hideGridLinkIf !== COL_FIELD" href="{{'+link+'}}" ng-bind="COL_FIELD"></a><div ng-if="grid.appScope.hideGridLinkIf === COL_FIELD">{{ COL_FIELD }}</div></div>'
+                }else if(col[i].type === 'img'){
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
+                }else if(col[i].type === 'actions') {
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'"><button class="pr-grid-cell-type-actions-button-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.'+col[i]['onclick']+'(row.entity.id, \'{{ action_name }}\', row.entity, \''+col[i]['name']+'\')" title="{{ grid.appScope._(\'grid action \' + action_name) }}">{{ grid.appScope._(\'grid action \' + action_name) }}</button></div>'
+                }else if(col[i].type === 'editable'){
+                    if(col[i].multiple === true && col[i].rule){
+                      scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" ng-if="grid.appScope.'+col[i].rule+'=== false" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div><div ng-if="grid.appScope.'+col[i].rule+'"><div ng-click="'+col[i].modal+'" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>'
+                    }
+                    if(col[i].subtype && col[i].subtype === 'tinymce'){
+                        scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" ng-click="'+col[i].modal+'" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div>'
+                    }
+                }else{
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div>'
+                }
+            }
+
+
             if(!scope.load_contr){
                 scope.gridOptions1.gridInit(scope.all_grid_data)
             }
+
             scope.gridApi = gridApi;
+
+
+            scope.gridApi.grid['searchItemGrid'] = function (col) {
+                scope.all_grid_data.paginationOptions.pageNumber = 1;
+                scope.all_grid_data['filter'][col.field] = col.filter.text;
+                scope.sendData(scope.all_grid_data);
+            };
+
+            scope.gridApi.grid['filterForGridRange'] = function(col){
+                from = col.filters[0]['term'];
+                to = col.filters[1]['term'];
+                scope.all_grid_data['filter'][col.field] = {'from':from, 'to':to};
+                scope.sendData(scope.all_grid_data);
+            };
+
+            scope.gridApi.grid['refreshGrid'] = function (col) {
+                if (col !== undefined) {
+                    if (col.filters && (col.filter.type === 'date_range' || col.filter.type === 'range')){
+                        col.filters[0] = '';
+                        col.filters[1] = '';
+                    }else if(col.filter.type === 'input'){
+                        col.filter.text = '';
+                    }
+                    delete scope.all_grid_data['filter'][col.field];
+                    scope.sendData(scope.all_grid_data)
+                }
+            };
+
+
             scope.gridApi.grid['pr_take_action'] = function (id, action, row) {
                 console.log('pr_take_action', id, action, row);
-                }
+                };
             scope.gridApi.grid['pr_build_actions_buttons'] = function (id, actions, row) {
                 var ret =
                     $sce.trustAsHtml(_.map(actions, function (action) {return '<button ng-click="grid.appScope.pr_take_action(row.entity.id, \''+action+'\', row.entity)">'+action+'</button>'}).join('&nbsp;'));
 
                 return ret;
                 //console.log('pr_build_actions_buttons', id, actions, row);
-                }
+                };
+
             scope.gridApi.core.on.sortChanged(scope, function (grid, sortColumns) {
                 scope.all_grid_data['sort'] = {};
                 if (sortColumns.length !== 0) {
@@ -1209,6 +1211,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $te
                 }
                 scope.sendData(scope.all_grid_data)
             });
+
             gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
                 if (newValue !== oldValue) {
                     scope.all_grid_data['editItem'] = {
@@ -1221,14 +1224,18 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $te
                     scope.sendData(scope.all_grid_data)
                 }
             });
-            gridApi.pagination.on.paginationChanged(scope, function (newPage, pageSize) {
-                scope.all_grid_data.paginationOptions.pageNumber = newPage;
-                scope.all_grid_data.paginationOptions.pageSize = pageSize;
-                $timeout(function(){
-                   scope.sendData(scope.all_grid_data)
-                }, 500)
 
-            });
+            if(scope.gridOptions1.paginationTemplate){
+                gridApi.pagination.on.paginationChanged(scope, function (newPage, pageSize) {
+                    scope.all_grid_data.paginationOptions.pageNumber = newPage;
+                    scope.all_grid_data.paginationOptions.pageSize = pageSize;
+                    $timeout(function(){
+                       scope.sendData(scope.all_grid_data)
+                    }, 500)
+
+                });
+            }
+
             gridApi.core.on.filterChanged(scope, function () {
                 var grid = this.grid;
                 var at_least_one_filter_changed = false;
@@ -1258,6 +1265,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize , $timeout, $te
                     error ? add_message('You push wrong date', 'danger', 3000):scope.sendData(scope.all_grid_data)
                 }
             });
+
             if (scope.gridOptions1.enableRowSelection) {
                 gridApi.selection.on.rowSelectionChanged(scope, function (row) {
                     scope.list_select = scope.gridApi.selection.getSelectedRows();
