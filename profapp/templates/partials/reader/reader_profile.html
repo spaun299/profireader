@@ -1,15 +1,29 @@
 {% extends "index_layout_new.html" %}
-{% block title %}{{ _('Profireader reader list') }}{% endblock title %}
+{% block title %}{{ _('Profireader reader profile') }}{% endblock title %}
 
 {% block portal_content %}
+    {% include 'partials/reader/reader_nav.html' %}
+    <script type="text/ng-template" id="grid_reader_modal.html">
+<h4><textarea>Plan text</textarea></h4>
+        <div class='modal-footer'>
+            <button id='buttonClose' class='btn btn-primary' ng-click='cancel()'>Close</button>
+        </div>
+    </script>
 <script>
+
+
+
+module.controller('grid_reader_modal', function ($scope, $uibModalInstance, list) {
+              $scope.list = list;
+              $scope.cancel = function () {
+                $uibModalInstance.close($scope.list);
+              };
+        });
+
 module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridConstants', '$timeout',
-
-
-
     function ($scope, $uibModal, $ok, $sce, uiGridConstants, $timeout) {
         $scope.url_search_translations = {{ raw_url_for('reader.profile')|safe }}
-
+        $scope.reader_edit_profile = '{{ url_for('reader.edit_profile') }}';
         {% raw %}
         $scope.sendData = function (grid_data) {
                         $scope.loading = true;
@@ -25,6 +39,21 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
             return 'http://' + link;
         };
 
+$scope.showModalForEditNew = function () {
+                        var list = $scope.list_select;
+                        var modalInstance = $uibModal.open({
+                            templateUrl: 'grid_reader_modal.html',
+                           controller: 'grid_reader_modal',
+                            resolve: {
+                                'list': function () {
+                                    return list
+                                }
+                            }
+                        });
+                        modalInstance.result.then(function (list) {
+                           // $scope.deleteItems(list);
+                        });
+                    };
         $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                         gridInit: $scope.sendData,
                         onRegisterApi: function (gridApi) {
@@ -40,9 +69,11 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
                                 displayName: 'Portal', filter: {type: 'input'}, type: 'link',
                                 href: 'portal_link(row.entity.portal_host)'
                             }, {
-                                name: 'package_name', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false,
-                                displayName: 'Package', type: 'link',
-                                href: 'row.entity.portal_host'
+                                name: 'package_name', enableSorting: false, enableColumnMenu: false, enableFiltering: false,
+                                displayName: 'Package',
+                                type: 'show_modal',
+                                modal: "grid.appScope.showModalForEditNew(row, col, row.entity[col.field])",
+                                filter: {type: 'input'}
                             }, {
                                 name: 'start_tm', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
                                 displayName: 'Start time',
@@ -53,7 +84,9 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
                             }, {
                                 name: 'article_remains', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false,
                                 displayName: 'Article remains'
-                            }
+                            },
+                            {name: 'configure', displayName: 'Edit', type: 'link', href: 'reader_edit_profile',
+                                enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false}
                         ]
                     });
         {% endraw %}

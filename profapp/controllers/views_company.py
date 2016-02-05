@@ -46,9 +46,6 @@ def show():
     return render_template('company/companies.html')
 
 
-from sqlalchemy import and_
-
-
 @company_bp.route('/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([]))

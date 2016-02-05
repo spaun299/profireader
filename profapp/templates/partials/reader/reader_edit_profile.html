@@ -1,0 +1,25 @@
+{% extends "index_layout_new.html" %}
+{% block title %}{{ _('Profireader reader edit') }}{% endblock title %}
+
+{% block portal_content %}
+    <script>
+        module.controller('reader_edit_profile', ['$scope', function ($scope) {
+        $scope.data = {};
+            $scope.afterLoad = function(resp, deff) {
+                deff(resp)
+            };
+}])
+    </script>
+
+{% include 'partials/reader/reader_nav.html' %}
+{% raw %}
+<div ng-controller="reader_edit_profile" ng-init="getData()" ng-model="data">
+        <div af
+             af-after-save="afterSave"
+             af-after-load="afterLoad"
+             ng-model="data">
+    l;kjjjjjjjjjjjjjjjjjjjjjjjj
+{{ data }}</div>
+</div>
+{% endraw %}
+{% endblock portal_content %}

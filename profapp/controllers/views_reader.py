@@ -133,8 +133,7 @@ def profile_load(json):
         grid_data.append({'portal_logo': field['portal_logo'], 'portal_name': field['portal_name'],
                           'package_name': field['plan_name'] + ' - UPGRADE', 'start_tm': field['start_tm'],
                           'end_tm': field['end_tm'], 'article_remains': field['amount'],
-                          'portal_host': field['portal_host']})
-        print(field['portal_host'])
+                          'portal_host': field['portal_host'], 'configure': 'configure'})
 
     return {'grid_data': grid_data,
             'grid_filters': {'portal_name': [{'value': key['portal_name'], 'label': key['portal_name']}]
@@ -143,4 +142,11 @@ def profile_load(json):
 
 @reader_bp.route('/edit_profile')
 def edit_profile():
-    pass
+    return render_template('partials/reader/reader_edit_profile.html')
+
+
+@reader_bp.route('/edit_profile', methods=['POST'])
+@ok
+def edit_profile_load(json):
+
+    return {'klkll': 213}
