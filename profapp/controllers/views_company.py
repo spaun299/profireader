@@ -148,11 +148,28 @@ def profile(company_id):
                            user_rights=user_rights)
 
 
-@company_bp.route('/employees/<string:company_id>/')
+@company_bp.route('/<string:company_id>/employees/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def employees(company_id):
+    return render_template('company/company_employees.html', company=Company.get(company_id))
+
+
+@company_bp.route('/<string:company_id>/employees/', methods=['POST'])
+@ok
+def employees_load(json, company_id):
+    company = Company.get(company_id)
+    employees = [
+        PRBase.merge_dicts(assoc.employee.get_client_side_dict(),
+                           assoc.get_client_side_dict(fields='status,position'),
+                           assoc.get_client_side_dict(fields='_rights'))
+        for assoc in company.employee_assoc]
+
+    return {
+        'company': company.get_client_side_dict(fields='id,name'),
+        'grid_data': employees
+    }
     # company_user_rights = UserCompany.show_rights(company_id)
     # ordered_rights = sorted(Right.keys(), key=lambda t: Right.RIGHT_POSITION()[t.lower()])
     # ordered_rights = list(map((lambda x: getattr(x, 'lower')()), ordered_rights))
@@ -164,15 +181,15 @@ def employees(company_id):
     #         rez[elem] = True if elem in rights else False
     #     company_user_rights[user_id]['rights'] = rez
 
-    user_id = current_user.get_id()
+    # user_id = current_user.get_id()
     # curr_user = {user_id: company_user_rights[user_id]}
-    curr_user = {user_id: []}
+    # curr_user = {user_id: []}
 
-    return render_template('company/company_employees.html',
-                           company=db(Company, id=company_id).one(),
-                           company_user_rights=[],
-                           curr_user=curr_user,
-                           rights={})
+    # return render_template('company/company_employees.html',
+    #                        company=db(Company, id=company_id).one(),
+    #                        company_user_rights=[],
+    #                        curr_user=curr_user,
+    #                        rights={})
 
 
 @company_bp.route('/update_rights', methods=['POST'])
@@ -420,12 +437,16 @@ def readers(company_id, page=1):
                            search_text=None,
                            )
 
+
 @company_bp.route('/readers/<string:company_id>/', methods=['POST'])
 @ok
 def readers_load(json, company_id):
     company = Company.get(company_id)
-    company_readers, pages, page, count = pagination(query=company.get_readers_for_portal(json.get('filter')), **Grid.page_options(json.get('paginationOptions')))
+    company_readers, pages, page, count = pagination(query=company.get_readers_for_portal(json.get('filter')),
+                                                     **Grid.page_options(json.get('paginationOptions')))
 
-    return {'grid_data': [reader.get_client_side_dict('id,profireader_email,profireader_name,profireader_first_name,profireader_last_name') for reader in company_readers],
+    return {'grid_data': [reader.get_client_side_dict(
+            'id,profireader_email,profireader_name,profireader_first_name,profireader_last_name') for reader in
+                          company_readers],
             'total': count
             }
