@@ -23,30 +23,12 @@
         }
     }]);
 
-    module.controller('CompanyMenuController', ['$scope', '$timeout', function ($scope, $timeout) {
-        $scope.user = {{ g.user_dict|tojson|safe }};
-        $scope.$$translate = {{ translates('CompanyMenuController')|safe }};
-        $scope.selected_company_menu = 'aaa';
-        $scope.set_selected_company_menu = function (menu_item) {
-            $timeout(function () {
-                $scope.selected_company_menu = menu_item;
-            }, 0);
-        }
-    }]);
-
 </script>
 
-<!-- read this -->
 <nav ng-controller="UserLoginController" class="navbar navbar-default widewrapper ">
 
     <div class="top-style-line" style="height: 1px;"></div>
     <div class="container">
-        {% raw %}
-        <script type="text/ng-template" id="filemanager.html">
-            <iframe src="{{ src }}"
-                    style="border: none; margin: 0px; padding: 0px; width: 100%; height: 100%"></iframe>
-        </script>
-        {% endraw %}
         <div class="container-fluid">
             <!-- Profireader and toggle get grouped for better mobile display -->
             <div class="navbar-header">
@@ -85,7 +67,7 @@
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a href="{{ flask_endpoint_to_angular('user.profile', user_id='user.id') }}">{{ '{{' }}_('My
+                                        <a href="{{ url_for('user.profile', user_id=g.user.id) }}">{{ '{{' }}_('My
                                             Profile'){{ '}}' }}</a></li>
                                     {#                                    <li><a href="{{ url_for('auth.change_password') }}">{{ '{{' }}_('Change Password'){{ '}}' }}</a></li>#}
                                     {#                                    <li><a href="{{ url_for('auth.change_email_request') }}">{{ '{{' }}_('Change Email'){{ '}}' }}</a></li>#}
