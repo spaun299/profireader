@@ -148,5 +148,7 @@ def edit_profile():
 @reader_bp.route('/edit_profile', methods=['POST'])
 @ok
 def edit_profile_load(json):
-
-    return {'klkll': 213}
+    divisions = [{'name1': {'show_articles': True, 'show_comments': True, 'show_favorite_comments': False, 'show_liked_comments': True},
+                 'name2': {'show_articles': False, 'show_comments': True, 'show_favorite_comments': False, 'show_liked_comments': False},
+                  'name3': {'show_articles': True, 'show_comments': False, 'show_favorite_comments': False, 'show_liked_comments': True}}]
+    return {'divisions': divisions}
