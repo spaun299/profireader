@@ -253,16 +253,16 @@ def load_portal_id(app):
     return func
 
 
-def flask_endpoint_to_angular(endpoint, **kwargs):
-    options = {}
-    for kw in kwargs:
-        options[kw] = "{{" + "{0}".format(kwargs[kw]) + "}}"
-    url = url_for(endpoint, **options)
-    import urllib.parse
-
-    url = urllib.parse.unquote(url)
-    url = url.replace('{{', '{{ ').replace('}}', ' }}')
-    return url
+# def flask_endpoint_to_angular(endpoint, **kwargs):
+#     options = {}
+#     for kw in kwargs:
+#         options[kw] = "{{" + "{0}".format(kwargs[kw]) + "}}"
+#     url = url_for(endpoint, **options)
+#     import urllib.parse
+#
+#     url = urllib.parse.unquote(url)
+#     url = url.replace('{{', '{{ ').replace('}}', ' }}')
+#     return url
 
 
 def fileUrl(id, down=False, if_no_file=None):
@@ -506,7 +506,7 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     csrf.init_app(app)
 
     # read this: http://stackoverflow.com/questions/6036082/call-a-python-function-from-jinja2
-    app.jinja_env.globals.update(flask_endpoint_to_angular=flask_endpoint_to_angular)
+    # app.jinja_env.globals.update(flask_endpoint_to_angular=flask_endpoint_to_angular)
     app.jinja_env.globals.update(raw_url_for=raw_url_for)
     app.jinja_env.globals.update(pre=pre)
     app.jinja_env.globals.update(translates=translates)
