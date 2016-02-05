@@ -483,10 +483,10 @@ def publications(company_id):
 def publications_load(json, company_id):
     portal = db(Company, id=company_id).one().own_portal.id
     subquery = ArticlePortalDivision.subquery_portal_articles(portal, json.get('filter'), json.get('sort'))
-    articles, pages, current_page ,count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
+    articles, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
     grid_filters = {
-        'publication_status':Grid.filter_for_status(ArticlePortalDivision.STATUSES),
-        'company': [{'value': company_id, 'label': company} for company_id, company  in
+        'publication_status': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+        'company': [{'value': company_id, 'label': company} for company_id, company in
                     ArticlePortalDivision.get_companies_which_send_article_to_portal(portal).items()]
     }
     return {'grid_data': Article.getListGridDataPublication(articles),

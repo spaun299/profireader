@@ -107,29 +107,40 @@ def reader_subscribe(portal_id):
 
 @reader_bp.route('/profile/')
 def profile():
-
     return render_template('partials/reader/reader_profile.html')
 
 
 @reader_bp.route('/profile/', methods=['POST'])
 @ok
 def profile_load(json):
-    print(json)
-    filter_params = dict()
+    pagination_params = list()
+    filter_params = []
     if json.get('paginationOptions'):
-        filter_params.update({'page': json['paginationOptions']['pageNumber'],
-                              'items_per_page': json['paginationOptions']['pageSize']})
-    portals_and_plans = UserPortalReader.get_portals_and_plan_info_for_user(g.user.id, *filter_params)
+        pagination_params.extend([json['paginationOptions']['pageNumber'], json['paginationOptions']['pageSize']])
+    if json.get('filter'):
+        if json.get('filter').get('portal_name'):
+            filter_params.append(UserPortalReader.portal_id.in_(db(Portal.id).filter(
+                Portal.name.ilike('%' + json.get('filter').get('portal_name') + '%'))))
+        if json.get('filter').get('start_tm'):
+            from_tm = datetime.datetime.utcfromtimestamp(int(json.get('filter').get('start_tm')['from'] + 1) / 1000)
+            to_tm = datetime.datetime.utcfromtimestamp(int(json.get('filter').get('start_tm')['to'] + 86399999) / 1000)
+            filter_params.extend([UserPortalReader.start_tm >= from_tm,
+                                  UserPortalReader.start_tm <= to_tm])
+    portals_and_plans = UserPortalReader.get_portals_and_plan_info_for_user(g.user.id, *pagination_params,
+                                                                            filter_params=and_(*filter_params))
     grid_data = []
     for field in portals_and_plans:
         grid_data.append({'portal_logo': field['portal_logo'], 'portal_name': field['portal_name'],
-                          'package_name': field['plan_name'], 'start_tm': field['start_tm'], 'end_tm': field['end_tm'],
-                          'article_remains': field['amount']})
+                          'package_name': field['plan_name'] + ' - UPGRADE', 'start_tm': field['start_tm'],
+                          'end_tm': field['end_tm'], 'article_remains': field['amount'],
+                          'portal_host': field['portal_host']})
+        print(field['portal_host'])
 
     return {'grid_data': grid_data,
-            'grid_filters': {'portal_name': [{'value': k['portal_name'], 'label': k['portal_name']}] for k in grid_data}}
+            'grid_filters': {'portal_name': [{'value': key['portal_name'], 'label': key['portal_name']}]
+                             for key in grid_data}}
 
 
-@reader_bp.route('/edit_reader_profile')
-def edit_reader_profile():
+@reader_bp.route('/edit_profile')
+def edit_profile():
     pass

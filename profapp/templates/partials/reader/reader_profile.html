@@ -9,6 +9,7 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
 
     function ($scope, $uibModal, $ok, $sce, uiGridConstants, $timeout) {
         $scope.url_search_translations = {{ raw_url_for('reader.profile')|safe }}
+
         {% raw %}
         $scope.sendData = function (grid_data) {
                         $scope.loading = true;
@@ -20,9 +21,9 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
                             $scope.load_contr = true
                         });
                     };
-
-
-
+        $scope.portal_link = function(link){
+            return 'http://' + link;
+        };
 
         $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                         gridInit: $scope.sendData,
@@ -36,13 +37,12 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
                                 type: 'img'
                             }, {
                                 name: 'portal_name', enableSorting: false, enableCellEdit: false,
-                                displayName: 'Portal', filter: {type: 'input'}
+                                displayName: 'Portal', filter: {type: 'input'}, type: 'link',
+                                href: 'portal_link(row.entity.portal_host)'
                             }, {
                                 name: 'package_name', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false,
-                                displayName: 'Package',
-                                type: 'actions'
-
-
+                                displayName: 'Package', type: 'link',
+                                href: 'row.entity.portal_host'
                             }, {
                                 name: 'start_tm', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
                                 displayName: 'Start time',
