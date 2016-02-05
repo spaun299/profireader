@@ -936,6 +936,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                         $scope.externalEvents.onItemSelect(finalObj);
                         if(label.length>0){
                             $scope.listElemens.push(label);
+                            console.log($scope.listElemens)
                             $scope.data.filter[$scope.addData.field]=$scope.listElemens;
                             $scope.send($scope.data)
 
