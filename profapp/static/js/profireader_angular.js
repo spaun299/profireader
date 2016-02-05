@@ -652,6 +652,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
             restrict: 'AE',
             scope: {
                 addData: '=',
+                data:'=',
                 send: '=',
                 parentScope: '=',
                 selectedModel: '=',
@@ -666,9 +667,9 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                 var checkboxes = attrs.checkboxes ? true : false;
                 var groups = attrs.groupBy ? true : false;
 
-                var template = '<div class="multiselect-parent btn-group dropdown-multiselect" style="width:100%">';
-                template += '<button type="button" style="width:100%"  class="dropdown-toggle" ng-class="settings.buttonClasses" ng-click="toggleDropdown()">{{getButtonText()}}&nbsp;<span class="caret"></span></button>';
-                template += '<ul class="dropdown-menu dropdown-menu-form ng-dr-ms" ng-style="{display: open ? \'block\' : \'none\', height : settings.scrollable ? settings.scrollableHeight : \'auto\' }" style="overflow: scroll; position: relative;" >';
+                var template = '<div class="multiselect-parent btn-group dropdown-multiselect" style="width:100%"><div class="kk"><div>';
+                template += '<button type="button" style="width:100%"  id="t1" class="dropdown-toggle" ng-class="settings.buttonClasses" ng-click="toggleDropdown()">{{getButtonText()}}&nbsp;<span class="caret"></span></button>';
+                template += '<ul class="dropdown-menu dropdown-menu-form ng-dr-ms" ng-style="{display: open ? \'block\' : \'none\', height : settings.scrollable ? settings.scrollableHeight : \'auto\' }" style="position: fixed; top:auto; left: auto; width: 20%" >';
                 template += '<li ng-show="settings.selectionLimit === 0"><a data-ng-click="selectAll()"><span class="glyphicon glyphicon-ok"></span>  {{texts.checkAll}}</a>';
                 template += '<li ng-show="settings.showUncheckAll"><a data-ng-click="deselectAll(true);"><span class="glyphicon glyphicon-remove"></span>   {{texts.uncheckAll}}</a></li>';
                 template += '<li ng-show="(settings.showCheckAll || settings.selectionLimit < 0) && !settings.showUncheckAll" class="divider"></li>';
@@ -696,8 +697,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
             link: function ($scope, $element, $attrs) {
                 var $dropdownTrigger = $element.children()[0];
 
-                $scope.toggleDropdown = function () {
-                    //$('.ng-dr-ms').appendTo($("body"));
+                $scope.toggleDropdown = function (){
                     $scope.open = !$scope.open;
                 };
 
@@ -705,8 +705,6 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                     $scope.setSelectedItem(id);
                     $event.stopImmediatePropagation();
                 };
-
-                $scope.data = $scope.parentScope.$parent.all_grid_data;
 
                 $scope.externalEvents = {
                     onItemSelect: angular.noop,
@@ -825,10 +823,11 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
 
                 $scope.getButtonText = function () {
                     if (!$scope.listElemens) {
-                        $scope.listElemens = []
+                        $scope.listElemens = {};
+                        $scope.listElemens[$scope.addData.field] = []
                     }
                     if ($scope.data.filter[$scope.addData.field]) {
-                        $scope.selectedModel = $scope.listElemens
+                        $scope.selectedModel = $scope.listElemens[$scope.addData.field]
                     }
                     if ($scope.settings.dynamicTitle && ($scope.selectedModel.length > 0 || (angular.isObject($scope.selectedModel) && _.keys($scope.selectedModel).length > 0))) {
                         if ($scope.settings.smartButtonMaxItems > 0) {
@@ -852,7 +851,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                             if ($scope.singleSelection) {
                                 totalSelected = ($scope.selectedModel !== null && angular.isDefined($scope.selectedModel[$scope.settings.idProp])) ? 1 : 0;
                             } else {
-                                totalSelected = angular.isDefined($scope.selectedModel) ? $scope.listElemens.length : 0;
+                                totalSelected = angular.isDefined($scope.selectedModel) ? $scope.listElemens[$scope.addData.field].length : 0;
                             }
 
                             if (totalSelected === 0) {
@@ -876,14 +875,14 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                 $scope.selectAll = function () {
                     $scope.isSelectAll = true;
                     $scope.externalEvents.onSelectAll();
-                    $scope.listElemens = [];
+                    $scope.listElemens[$scope.addData.field] = [];
                     angular.forEach($scope.options, function (value) {
                         $scope.setSelectedItem(value[$scope.settings.idProp], '', true);
                     });
                     for (var f = 0; f < $scope.selectedModel.length; f++) {
                         $scope.listElemens.push($scope.options[f]['label'])
                     }
-                    $scope.data.filter[$scope.addData.field] = $scope.listElemens;
+                    $scope.data.filter[$scope.addData.field] = $scope.listElemens[$scope.addData.field];
                     $scope.send($scope.data)
                 };
 
@@ -913,8 +912,8 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                         clearObject($scope.selectedModel);
                         angular.extend($scope.selectedModel, finalObj);
                         $scope.externalEvents.onItemSelect(finalObj);
-                        $scope.listElemens.push(label);
-                        $scope.data.filter[$scope.addData.field] = $scope.listElemens;
+                        $scope.listElemens[$scope.addData.field].push(label);
+                        $scope.data.filter[$scope.addData.field] = $scope.listElemens[$scope.addData.field];
                         $scope.send($scope.data);
                         if ($scope.settings.closeOnSelect) $scope.open = false;
 
@@ -922,25 +921,25 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                     }
 
                     dontRemove = dontRemove || false;
-                    var exists = $scope.listElemens.indexOf(label) !== -1;
+                    var exists = $scope.listElemens[$scope.addData.field].indexOf(label) !== -1;
 
                     if (!dontRemove && exists) {
                         $scope.externalEvents.onItemDeselect(findObj);
-                        index = $scope.listElemens.indexOf(label);
-                        $scope.listElemens.splice(index, 1);
-                        if ($scope.listElemens.length > 0) {
-                            $scope.data.filter[$scope.addData.field] = $scope.listElemens;
+                        index = $scope.listElemens[$scope.addData.field].indexOf(label);
+                        $scope.listElemens[$scope.addData.field].splice(index, 1);
+                        if ($scope.listElemens[$scope.addData.field].length > 0) {
+                            $scope.data.filter[$scope.addData.field] = $scope.listElemens[$scope.addData.field];
                         } else {
                             delete $scope.data.filter[$scope.addData.field];
                         }
                         $scope.send($scope.data)
-                    } else if (!exists && ($scope.settings.selectionLimit === 0 || $scope.listElemens.length < $scope.settings.selectionLimit)) {
+                    } else if (!exists && ($scope.settings.selectionLimit === 0 || $scope.listElemens[$scope.addData.field].length < $scope.settings.selectionLimit)) {
                         $scope.externalEvents.onItemSelect(finalObj);
                         if (label.length > 0) {
-                            $scope.listElemens.push(label);
-                            $scope.data.filter[$scope.addData.field] = $scope.listElemens;
-                            $scope.send($scope.data)
-
+                            var dat = $scope.data
+                            $scope.listElemens[$scope.addData.field].push(label);
+                            dat.filter[$scope.addData.field] = $scope.listElemens[$scope.addData.field];
+                            $scope.send(dat)
                         }
                     }
                     if ($scope.settings.closeOnSelect) $scope.open = false;
@@ -953,7 +952,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                     if ($scope.isSelectAll) {
                         return true
                     }
-                    return $scope.listElemens.indexOf(label) !== -1;
+                    return $scope.listElemens[$scope.addData.field].indexOf(label) !== -1;
                 };
 
                 $scope.externalEvents.onInitDone();
@@ -1136,7 +1135,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                             type: col[i].filter.type,
                             field: col[i].name
                         };
-                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><div ng-dropdown-multiselect="" parent-scope="grid.appScope" add-data="grid.appScope.additionalDataForMS[col.name]" send="grid.appScope.sendData" options = "grid.appScope.listsForMS[col.name]" selected-model="grid.appScope.listOfSelectedFilterGrid"></div></div>'
+                        scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><div ng-dropdown-multiselect="" parent-scope="grid.appScope" data="grid.appScope.all_grid_data" add-data="grid.appScope.additionalDataForMS[col.name]" send="grid.setGridData" options = "grid.appScope.listsForMS[col.name]" selected-model="grid.appScope.listOfSelectedFilterGrid"></div></div>'
                     } else if (col[i].filter.type === 'range') {
                         scope.gridOptions1.columnDefs[i].filters = [{}, {}];
                         scope.gridOptions1.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container">' +
@@ -1169,29 +1168,30 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div>'
                 }
             }
-
-
-            if (!scope.load_contr) {
-                scope.gridOptions1.loadGridData(scope.all_grid_data, function (grid_data) {
-                    scope.initGridData = grid_data;
-                    scope.applyGridExtarnals(grid_data);
-                });
-            }
-
             scope.gridApi = gridApi;
-
 
             scope.gridApi.grid['searchItemGrid'] = function (col) {
                 scope.all_grid_data.paginationOptions.pageNumber = 1;
                 scope.all_grid_data['filter'][col.field] = col.filter.text;
-                scope.sendData(scope.all_grid_data);
+                scope.gridApi.grid.setGridData(scope.all_grid_data)
             };
+
+            scope.gridApi.grid['setGridData'] = function (all_grid_data) {
+                scope.gridOptions1.loadGridData(all_grid_data, function (grid_data) {
+                    scope.initGridData = grid_data;
+                    scope.applyGridExtarnals(grid_data);
+                });
+            };
+            if (!scope.load_contr) {
+                scope.gridApi.grid.setGridData(scope.all_grid_data)
+            }
+
 
             scope.gridApi.grid['filterForGridRange'] = function (col) {
                 from = col.filters[0]['term'];
                 to = col.filters[1]['term'];
                 scope.all_grid_data['filter'][col.field] = {'from': from, 'to': to};
-                scope.sendData(scope.all_grid_data);
+                scope.gridApi.grid.setGridData(scope.all_grid_data);
             };
 
             scope.gridApi.grid['refreshGrid'] = function (col) {
@@ -1203,7 +1203,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                         col.filter.text = '';
                     }
                     delete scope.all_grid_data['filter'][col.field];
-                    scope.sendData(scope.all_grid_data)
+                    scope.gridApi.grid.setGridData(scope.all_grid_data)
                 }
             };
 
@@ -1226,7 +1226,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 if (sortColumns.length !== 0) {
                     scope.all_grid_data['sort'][sortColumns[0].field] = sortColumns[0].sort.direction;
                 }
-                scope.sendData(scope.all_grid_data)
+                scope.gridApi.grid.setGridData(scope.all_grid_data)
             });
 
             gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
@@ -1238,7 +1238,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                         'col': colDef.name
                     };
                     scope.all_grid_data.paginationOptions.pageNumber = 1;
-                    scope.sendData(scope.all_grid_data)
+                    scope.gridApi.grid.setGridData(scope.all_grid_data)
                 }
             });
 
@@ -1247,7 +1247,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     scope.all_grid_data.paginationOptions.pageNumber = newPage;
                     scope.all_grid_data.paginationOptions.pageSize = pageSize;
                     $timeout(function () {
-                        scope.sendData(scope.all_grid_data)
+                        scope.gridApi.grid.setGridData(scope.all_grid_data)
                     }, 500)
 
                 });
@@ -1282,7 +1282,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                 }
                 if (at_least_one_filter_changed) {
-                    error ? add_message('You push wrong date', 'danger', 3000) : scope.sendData(scope.all_grid_data)
+                    error ? add_message('You push wrong date', 'danger', 3000) : scope.gridApi.grid.setGridData(scope.all_grid_data)
                 }
             });
 
