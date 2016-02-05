@@ -10,6 +10,7 @@ from config import Config
 from .views_file import crop_image, update_croped_image
 from ..models.files import ImageCroped
 from ..models.company import Company
+
 from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
 from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
@@ -201,6 +202,38 @@ def material_details_load(json, material_id):
             }
 
 
+# @article_bp.route('/material_details_publications/<string:material_id>/', methods=['POST'])
+# @ok
+# def material_portals_load(json, material_id):
+# article = ArticleCompany.get(material_id)
+#
+#
+# joined_portals = {}
+# if article.portal_article:
+#     joined_portals = {articles.division.portal.id: portals.pop(articles.division.portal.id)
+#                       for articles in article.portal_article
+#                       if articles.division.portal.id in portals}
+#
+# user_rights = list(g.user.user_rights_in_company(article.company_id))
+#
+# return {'article': article.get_client_side_dict(more_fields='long'),
+#         'company': Company.get(article.company_id).get_client_side_dict(),
+#         'publications': {
+#             'portals': portals,
+#             'statuses': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+#             'visibilities': Grid.filter_for_status(ArticlePortalDivision.VISIBILITIES)
+#         }
+#         # 'allowed_statuses': ARTICLE_STATUS_IN_COMPANY.can_user_chage_status_to(article['status']),
+#
+#
+#         # 'user_rights': ['publish', 'unpublish', 'edit'],
+#         # TODO: uncomment the string below and delete above
+#         # TODO: when all works with rights are finished
+#         # 'user_rights': user_rights,
+#         # 'joined_portals': joined_portals
+#         }
+
+
 @article_bp.route('/details/<string:article_id>/', methods=['GET'])
 @tos_required
 def details(article_id):
@@ -242,3 +275,65 @@ def details_load(json, article_id):
 #     return {'article': a.save().get_client_side_dict()}
 
 
+@article_bp.route('/details_reader/<string:article_portal_division_id>')
+@tos_required
+def details_reader(article_portal_division_id):
+    article = ArticlePortalDivision.get(article_portal_division_id)
+    article.add_recently_read_articles_to_session()
+    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+                                                       'publishing_tm, keywords, status, long, image_file_id,'
+                                                       'division.name, division.portal.id,'
+                                                       'company.name|id')
+    article_dict['tags'] = article.tags
+    ReaderArticlePortalDivision.add_to_table_if_not_exists(article_portal_division_id)
+    favorite = article.check_favorite_status(user_id=g.user.id)
+
+    return render_template('partials/reader/reader_details.html',
+                           article=article_dict,
+                           favorite=favorite
+                           )
+
+
+@article_bp.route('/list_reader')
+@article_bp.route('/list_reader/<int:page>/')
+@tos_required
+def list_reader(page=1):
+    search_text = request.args.get('search_text') or ''
+    favorite = 'favorite' in request.args
+    if not favorite:
+        articles, pages, page = Search.search({'class': ArticlePortalDivision,
+                                               'filter': and_(ArticlePortalDivision.portal_division_id ==
+                                                              db(PortalDivision).filter(
+                                                                      PortalDivision.portal_id ==
+                                                                      db(UserPortalReader,
+                                                                         user_id=g.user.id).subquery().
+                                                                      c.portal_id).subquery().c.id,
+                                                              ArticlePortalDivision.status ==
+                                                              ArticlePortalDivision.STATUSES['PUBLISHED']),
+                                               'tags': True, 'return_fields': 'default_dict'}, page=page)
+    else:
+        articles, pages, page = Search.search({'class': ArticlePortalDivision,
+                                               'filter': (ArticlePortalDivision.id == db(ReaderArticlePortalDivision,
+                                                                                         user_id=g.user.id,
+                                                                                         favorite=True).subquery().c.
+                                                          article_portal_division_id),
+                                               'tags': True, 'return_fields': 'default_dict'}, page=page,
+                                              search_text=search_text)
+    portals = UserPortalReader.get_portals_for_user() if not articles else None
+
+    return render_template('partials/reader/reader_base.html',
+                           articles=articles,
+                           pages=pages,
+                           current_page=page,
+                           page_buttons=Config.PAGINATION_BUTTONS,
+                           portals=portals,
+                           favorite=favorite
+                           )
+
+
+@article_bp.route('add_to_favorite/', methods=['POST'])
+def add_delete_favorite():
+    favorite = json.loads(request.form.get('favorite'))
+    article_portal_division_id = request.form.get('article_portal_division_id')
+    ReaderArticlePortalDivision.add_delete_favorite_user_article(article_portal_division_id, favorite)
+    return jsonify({'favorite': favorite})

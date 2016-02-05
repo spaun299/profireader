@@ -10,7 +10,6 @@ from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDiv
 from ..models.tag import Tag, TagPortal, TagPortalDivision
 from .request_wrapers import ok, check_rights, tos_required
 from ..models.articles import ArticlePortalDivision, ArticleCompany, Article
-from ..models.company import simple_permissions
 from ..models.rights import Right
 from profapp.models.rights import RIGHTS
 from ..controllers import errors

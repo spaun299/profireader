@@ -139,3 +139,9 @@
     height: 1000px;
     overflow: scroll;
 }
+
+/*TODO: RI by OZ: this class is for gray backdrop when dialog is opened (pls try open dialog 'publish' in  materials details page with and without this class. maybe obsolete with neww bootstrap) */
+/*.modal-backdrop {*/
+    /*position: fixed;*/
+    /*height: 100%;*/
+/*}*/
