@@ -160,15 +160,16 @@ def employees(company_id):
 @ok
 def employees_load(json, company_id):
     company = Company.get(company_id)
-    employees = [
+    employees_list = [
         PRBase.merge_dicts(assoc.employee.get_client_side_dict(),
                            assoc.get_client_side_dict(fields='status,position'),
-                           assoc.get_client_side_dict(fields='_rights'))
+                           {'rights': PRBase.convert_binary_rights_to_dict(
+                                   assoc.get_client_side_dict(fields='_rights')['_rights'], User.RIGHT_AT_COMPANY)})
         for assoc in company.employee_assoc]
 
     return {
         'company': company.get_client_side_dict(fields='id,name'),
-        'grid_data': employees
+        'grid_data': employees_list
     }
     # company_user_rights = UserCompany.show_rights(company_id)
     # ordered_rights = sorted(Right.keys(), key=lambda t: Right.RIGHT_POSITION()[t.lower()])

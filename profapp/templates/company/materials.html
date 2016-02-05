@@ -4,6 +4,8 @@
 
 {% block portal_content %}
 
+    {% include 'company/company_base_angular.html' %}
+
     <script>
         module.controller('article_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
 
@@ -64,11 +66,11 @@
         }]);
         {% endraw %}
     </script>
-    {% include 'company/company_base_angular.html' %}
+
     {% raw %}
     <div ng-controller="article_list">
         <a href="{{ url_material_create({company_id: company_id}) }}">{{ _('Create new material') }}</a>
-        <div ng-if="!load_contr">{{_('Loading...')}}</div>
+        <div ng-if="!load_contr">{{ _('Loading...') }}</div>
         <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
     </div>
     {% endraw %}

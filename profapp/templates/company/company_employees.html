@@ -7,36 +7,51 @@
     {% endblock company_base %}
 
     <script>
-        module.controller('company_employees_controller', function ($scope, $ok) {
+        module.controller('company_employees_controller', function ($scope, $ok, $timeout) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('employees');
 
             $scope.$$translate = {{ translates('company_employees_controller')|safe }};
+            $scope.company = {{ company.get_client_side_dict(fields = 'id,name')|tojson|safe }};
+            $scope.url_user = {{ raw_url_for('user.profile')|safe }};
+            $scope.lala = 'aaa';
 
-            $scope.data = null;
-            $scope.company = null;
 
-            $scope.loadData = function (data , setdatafuctions) {
-                $scope.loading = true;
+            $scope.loadData = function (data, setdatafuctions) {
                 $ok('', data, setdatafuctions);
             }
+
+            $scope.set_lalal = function () {
+                $scope.lala += '?';
+            }
+
+            $scope.set_lalal1 = function () {
+                $timeout(function () {
+                    $scope.lala += '+';
+                }, 1000)
+            }
+
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                 loadGridData: $scope.loadData,
                 columnDefs: [
-                    {name: 'id', displayName: 'id', width: '53%', filter: {type: 'input'}},
-                        {name: 'id', displayName: 'id', width: '13%', filter: {type: 'input'}},
-                        {name: 'id', displayName: 'id', width: '13%', filter: {type: 'input'}}
+                    {name: 'profireader_name', width: '53%', filter: {type: 'input'}},
+                    {name: 'status', width: '13%', filter: {type: 'input'}},
+                    {name: 'position', width: '13%', filter: {type: 'input'}},
+                    {name: 'rights', width: '13%', type: 'icons', filter: {type: 'input'}}
                 ]
             });
-
-
         });
     </script>
 
     <div ng-controller="company_employees_controller">
         {% raw %}
-            <h2>{{ _('Employees at company `%(company.name)s`') }}</h2>
-            <div class="grid" id="grid1" ui-grid-edit ui-grid="gridOptions1"></div>
+        <h2>{{ _('Employees at company `%(company.name)s`') }}</h2>
+        {{ lala }}
+        <input ng-model="lala">
+        <button ng-click="lala = lala + '!'">aaaa</button>
+        <button ng-click="set_lalal()">bbbb</button>
+        <button ng-click="set_lalal1()">cccc</button>
+        <div class="grid" id="grid1" ui-grid-edit ui-grid="gridOptions1"></div>
         {% endraw %}
     </div>
 

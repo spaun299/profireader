@@ -145,3 +145,11 @@
     /*position: fixed;*/
     /*height: 100%;*/
 /*}*/
+
+
+/*TODO: RI by OZ: this class for grid icons (see employees icons) */
+.pr-grid-cell-type-icons-img {
+    width: 1em;
+    height: 1em;
+    content:url("/static/images/0.gif");
+}
