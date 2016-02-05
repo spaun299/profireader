@@ -10,12 +10,9 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
     function ($scope, $uibModal, $ok, $sce, uiGridConstants, $timeout) {
         $scope.url_search_translations = {{ raw_url_for('reader.profile')|safe }}
         {% raw %}
-        $scope.sendData = function (grid_data) {
+        $scope.sendData = function (grid_data, setdatafuctions) {
                         $scope.loading = true;
-                        return $ok($scope.url_search_translations({}), grid_data, function (resp) {
-                            $scope.datas = resp;
-                            $scope.applyGridExtarnals(resp);
-                        }).finally(function () {
+                        return $ok($scope.url_search_translations({}), grid_data, setdatafuctions).finally(function () {
                             $scope.loading = false;
                             $scope.load_contr = true
                         });
@@ -23,29 +20,20 @@ module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridC
 
 
         $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
-                        onRegisterApi: function (gridApi) {
-                            $scope.setGridExtarnals(gridApi)
-                        },
+                        loadGridData: $scope.sendData,
                         columnDefs: [
                             {
-                                name: 'portal_logo', enableCellEdit: false, enableFiltering: false, enableSorting: false,
-                                displayName: "Logo",
-                                type: 'img'
+                                name: 'portal_logo', enableCellEdit: false, type: 'img'
                             }, {
-                                name: 'portal_name', enableSorting: true, enableCellEdit: false, enableFiltering: false,
-                                displayName: 'Portal', filter: {type:'select'}
+                                name: 'portal_name', enableSorting: true, enableCellEdit: false, filter: {type:'select'}
                             }, {
-                                name: 'package_name', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
-                                displayName: 'Package'
+                                name: 'package_name', enableCellEdit: false, enableColumnMenu: false
                             }, {
-                                name: 'start_tm', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
-                                displayName: 'Start time'
+                                name: 'start_tm', enableCellEdit: false, enableColumnMenu: false
                             }, {
-                                name: 'end_tm', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
-                                displayName: 'End time'
+                                name: 'end_tm', enableCellEdit: false, enableColumnMenu: false
                             }, {
-                                name: 'article_remains', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
-                                displayName: 'Article remains'
+                                name: 'article_remains', enableCellEdit: false, enableColumnMenu: false
                             }
                         ]
                     });

@@ -262,7 +262,7 @@ class UserCompany(Base, PRBase):
 
     md_tm = Column(TABLE_TYPES['timestamp'])
 
-    _banned = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
+    banned = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
 
     # _rights = Column(TABLE_TYPES['bigint'],
     #                  CheckConstraint('_rights >= 0',
