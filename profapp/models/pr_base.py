@@ -337,6 +337,14 @@ class PRBase:
     def position_unique_filter(self):
         return self.__class__.position != None
 
+    @staticmethod
+    def merge_dicts(*args):
+        ret = {}
+        for d in args:
+            ret.update(d)
+        return ret
+
+
     # if insert_after_id == False - insert at top
     # if insert_after_id == True - insert at bottom
     # if insert_after_id == Null - set null (element is not positioned)

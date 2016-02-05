@@ -275,70 +275,41 @@
             };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
-                gridInit: $scope.loadMaterialDetails,
-                onRegisterApi: function (gridApi) {
-                    $scope.setGridExtarnals(gridApi)
-                },
+                loadGridData: $scope.loadMaterialDetails,
                 columnDefs: [
                     {
-                        name: 'own_company.name', displayName: 'Company name', width: '13%', enableSorting: false,
-                        enableFiltering: false,
-                        filter: {type: 'input'}
+                        name: 'own_company.name', width: '13%', filter: {type: 'input'}
                     },
                     {
-                        name: 'name', displayName: 'Portal', width: '13%', enableSorting: false,
-                        enableFiltering: false,
-                        type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
-                        filter: {type: 'input'}
+                        name: 'name', width: '13%', type: 'link',
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
                     }
                     , {
-                        name: 'publication.division.name', displayName: 'division', width: '12%', enableSorting: false,
-                        enableFiltering: false,
+                        name: 'publication.division.name', width: '12%',
                         type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})',
-                        filter: {type: 'input'}
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
                     }
 
                     , {
-                        name: 'publication.title', displayName: 'Publication Title', width: '12%', enableSorting: false,
-                        enableFiltering: false,
-                        filter: {type: 'input'}
+                        name: 'publication.title', width: '12%'
                     }
                     , {
-                        name: 'publication.counts', displayName: 'counts', enableSorting: false, enableFiltering: false,
-                        width: '5%',
+                        name: 'publication.counts', displayName: 'counts', width: '5%' }
+                    , {
+                        name: 'publication.publishing_tm', enableColumnMenu: true, width: '5%'}
+                    , {
+                        name: 'publication.status', width: '5%'
+
                     }
                     , {
-                        name: 'publication.publishing_tm', enableColumnMenu: true,
-                        enableFiltering: false,
-                        enableSorting: false,
-                        width: '5%',
-                        displayName: 'publishing date',
-                        filter: {type: 'date_range'}
+                        name: 'publication.visibility', width: '5%'
                     }
                     , {
-                        name: 'publication.status', enableSorting: false,
-                        enableFiltering: false,
-                        displayName: 'status',
-                        width: '5%',
-                        filter: {type: 'input'}
-                    }
-                    , {
-                        name: 'publication.visibility', enableSorting: false,
-                        enableFiltering: false,
-                        displayName: 'visibility',
-                        width: '5%',
-                        filter: {type: 'input'}
-                    }
-                    , {
-                        name: 'actions', enableSorting: false,
-                        enableFiltering: false,
+                        name: 'actions',
                         type: 'actions',
                         onclick: 'grid_action',
-                        displayName: 'Action',
                         width: '10%',
-                        filter: {type: 'input'}
+                        afilter: {type: 'input'}
                     }
                 ]
             });
