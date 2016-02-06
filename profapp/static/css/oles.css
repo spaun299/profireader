@@ -118,15 +118,15 @@
 }
 
 /*div[aria-label="Insert/edit video"] > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) {*/
-    /*display: none*/
+/*display: none*/
 /*}*/
 
 /*div[aria-label="Insert/edit video"] > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(1) > div:nth-child(3) {*/
-    /*display: none*/
+/*display: none*/
 /*}*/
 
 /*div[aria-label="Insert/edit video"] > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(1) > div:nth-child(4) {*/
-    /*display: none*/
+/*display: none*/
 /*}*/
 
 .glyphicon.glyphicon-question-sign {
@@ -142,6 +142,112 @@
 
 /*TODO: RI by OZ: this class is for gray backdrop when dialog is opened (pls try open dialog 'publish' in  materials details page with and without this class. maybe obsolete with neww bootstrap) */
 /*.modal-backdrop {*/
-    /*position: fixed;*/
-    /*height: 100%;*/
+/*position: fixed;*/
+/*height: 100%;*/
 /*}*/
+
+/*TODO: RI by OZ: this class for grid icons (see employees icons) */
+.pr-grid-cell-type-icons-img {
+    width: 1em;
+    height: 1em;
+    margin: 0px 1px;
+}
+
+.pr-grid-cell-type-icons-img.disabled {
+    width: 1em;
+    height: 1em;
+    margin: 0px 1px;
+    -khtml-opacity: .30;
+    -moz-opacity: .30;
+    -ms-filter: (alpha(opacity=30));
+    filter: alpha(opacity=30);
+    filter: progid:DXImageTransform.Microsoft.Alpha(opacity=0.3);
+    opacity: .30;
+}
+
+.pr-grid-cell-type-icons-img-icon-FILES_BROWSE {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-FILES_UPLOAD {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-FILES_DELETE_OTHERS {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-MATERIALS_SUBMIT_TO_ANOTHER_PORTAL {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-MATERIALS_EDIT_OTHERS {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-PUBLICATION_PUBLISH_AT_OWN_PORTAL {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-PUBLICATION_UNPUBLISH_AT_OWN_PORTAL {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-PUBLICATION_SET_PRIORITY {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-EMPLOYEE_CONFIRM_NEW {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-EMPLOYEE_SUSPEND_UNSUSPEND {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-COMPANY_REQUIRE_MEMBEREE_AT_PORTALS {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-COMPANY_MANAGE_USER_RIGHTS {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-COMPANY_EDIT_PROFILE {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-EDIT_PORTAL_PROFILE {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-PORTAL_MANAGE_READERS {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-PORTAL_MANAGE_COMMENTS {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+.pr-grid-cell-type-icons-img-icon-PORTAL_MANAGE_MEMBERS_COMPANIES {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+

@@ -1,42 +1,47 @@
 {% extends "index_lazy_layout.html" %}
 
+{% block head %}
+    {{ super() }}
+    {% include '_ruslan/partials/_header_files_grid.html' %}
+{% endblock head %}
+
 {% block portal_content %}
 
     {% block company_base %}
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
 
+
     <script>
-        module.controller('company_employees_controller', function ($scope, $ok) {
+        module.controller('company_employees_controller', function ($scope, $ok, $timeout) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('employees');
 
             $scope.$$translate = {{ translates('company_employees_controller')|safe }};
+            $scope.company = {{ company.get_client_side_dict(fields = 'id,name')|tojson|safe }};
+            $scope.url_employee_details = {{ raw_url_for('company.employee_details')|safe }};
 
-            $scope.data = null;
-            $scope.company = null;
-
-            $scope.loadData = function (data , setdatafuctions) {
-                $scope.loading = true;
-                $ok('', data, setdatafuctions);
-            }
+            $scope.loadData = function (data, callbackfunc) {
+                $ok('', data, callbackfunc);
+            };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                 loadGridData: $scope.loadData,
                 columnDefs: [
-                    {name: 'id', displayName: 'id', width: '53%', filter: {type: 'input'}},
-                        {name: 'id', displayName: 'id', width: '13%', filter: {type: 'input'}},
-                        {name: 'id', displayName: 'id', width: '13%', filter: {type: 'input'}}
+                    {name: 'profireader_name', width: '30%', type: 'link',
+                        href: 'url_employee_details({company_id:grid.appScope.company.id, user_id: row.entity.id})',
+                        afilter: {type: 'input'}},
+                    {name: 'position', width: '30%', afilter: {type: 'input'}},
+                    {name: 'status', width: '10%', afilter: {type: 'input'}},
+                    {name: 'rights', width: '300', type: 'icons', afilter: {type: 'input'}}
                 ]
             });
-
-
         });
     </script>
 
     <div ng-controller="company_employees_controller">
         {% raw %}
-            <h2>{{ _('Employees at company `%(company.name)s`') }}</h2>
-            <div class="grid" id="grid1" ui-grid-edit ui-grid="gridOptions1"></div>
+        <h2>{{ _('Employees at company `%(company.name)s`') }}</h2>
+        <div class="grid" id="grid1" ui-grid-edit ui-grid="gridOptions1"></div>
         {% endraw %}
     </div>
 

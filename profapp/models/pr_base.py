@@ -344,6 +344,10 @@ class PRBase:
             ret.update(d)
         return ret
 
+    @staticmethod
+    def convert_binary_rights_to_dict(binary_rights, all_rights):
+        return {right_name: True if (binary_rights & right_binary_value) else False for right_name, right_binary_value
+                in all_rights.items()}
 
     # if insert_after_id == False - insert at top
     # if insert_after_id == True - insert at bottom
