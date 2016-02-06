@@ -193,6 +193,16 @@ def employees_load(json, company_id):
     #                        rights={})
 
 
+@company_bp.route('/<string:company_id>/employee_details/<string:user_id>/', methods=['GET'])
+@tos_required
+@login_required
+# @check_rights(simple_permissions([]))
+def employee_details(company_id, user_id):
+    employment = db(UserCompany).filter_by(user_id=user_id, company_id=company_id).one()
+    return render_template('company/company_employee_details.html', employer=employment.employer, employee=employment.employee,
+                           employment=employment)
+
+
 @company_bp.route('/update_rights', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([RIGHTS.MANAGE_RIGHTS_COMPANY()]))

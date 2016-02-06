@@ -1,0 +1,24 @@
+{% extends "index_lazy_layout.html" %}
+
+{% block title %}Employee details{% endblock title %}
+
+{% block portal_content %}
+
+    <script>
+        module.controller('company_employee_details', function ($scope, $ok) {
+            $scope.employee = {{ employee.get_client_side_dict()|tojson|safe }};
+            $scope.employer = {{ employer.get_client_side_dict()|tojson|safe }};
+            $scope.employment = {{ employment.get_client_side_dict()|tojson|safe }};
+        });
+    </script>
+    {% raw %}
+
+    <div ng-init="loadData()" ng-controller="company_employee_details">
+
+        <h2>{{ _('Employee `%(employee.profireader_name)s` at company `%(employer.name)s`') }}</h2>
+        <button class="btn" type="button" ng-click="update()">{{ _('Update employment') }}</button>
+    </div>
+
+    {% endraw %}
+
+{% endblock portal_content %}

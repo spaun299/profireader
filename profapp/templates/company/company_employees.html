@@ -1,10 +1,16 @@
 {% extends "index_lazy_layout.html" %}
 
+{% block head %}
+    {{ super() }}
+    {% include '_ruslan/partials/_header_files_grid.html' %}
+{% endblock head %}
+
 {% block portal_content %}
 
     {% block company_base %}
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
+
 
     <script>
         module.controller('company_employees_controller', function ($scope, $ok, $timeout) {
@@ -12,32 +18,21 @@
 
             $scope.$$translate = {{ translates('company_employees_controller')|safe }};
             $scope.company = {{ company.get_client_side_dict(fields = 'id,name')|tojson|safe }};
-            $scope.url_user = {{ raw_url_for('user.profile')|safe }};
-            $scope.lala = 'aaa';
+            $scope.url_employee_details = {{ raw_url_for('company.employee_details')|safe }};
 
-
-            $scope.loadData = function (data, setdatafuctions) {
-                $ok('', data, setdatafuctions);
-            }
-
-            $scope.set_lalal = function () {
-                $scope.lala += '?';
-            }
-
-            $scope.set_lalal1 = function () {
-                $timeout(function () {
-                    $scope.lala += '+';
-                }, 1000)
-            }
-
+            $scope.loadData = function (data, callbackfunc) {
+                $ok('', data, callbackfunc);
+            };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                 loadGridData: $scope.loadData,
                 columnDefs: [
-                    {name: 'profireader_name', width: '53%', filter: {type: 'input'}},
-                    {name: 'status', width: '13%', filter: {type: 'input'}},
-                    {name: 'position', width: '13%', filter: {type: 'input'}},
-                    {name: 'rights', width: '13%', type: 'icons', filter: {type: 'input'}}
+                    {name: 'profireader_name', width: '30%', type: 'link',
+                        href: 'url_employee_details({company_id:grid.appScope.company.id, user_id: row.entity.id})',
+                        afilter: {type: 'input'}},
+                    {name: 'position', width: '30%', afilter: {type: 'input'}},
+                    {name: 'status', width: '10%', afilter: {type: 'input'}},
+                    {name: 'rights', width: '300', type: 'icons', afilter: {type: 'input'}}
                 ]
             });
         });
@@ -46,11 +41,6 @@
     <div ng-controller="company_employees_controller">
         {% raw %}
         <h2>{{ _('Employees at company `%(company.name)s`') }}</h2>
-        {{ lala }}
-        <input ng-model="lala">
-        <button ng-click="lala = lala + '!'">aaaa</button>
-        <button ng-click="set_lalal()">bbbb</button>
-        <button ng-click="set_lalal1()">cccc</button>
         <div class="grid" id="grid1" ui-grid-edit ui-grid="gridOptions1"></div>
         {% endraw %}
     </div>
