@@ -27,7 +27,6 @@ from ..models.portal import MemberCompanyPortal
 from ..models.portal import UserPortalReader
 
 
-
 class Company(Base, PRBase):
     __tablename__ = 'company'
     id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
@@ -36,7 +35,7 @@ class Company(Base, PRBase):
     journalist_folder_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'), nullable=False)
     # corporate_folder_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'))
     system_folder_file_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'), nullable=False)
-#    portal_consist = Column(TABLE_TYPES['boolean'])
+    #    portal_consist = Column(TABLE_TYPES['boolean'])
     author_user_id = Column(TABLE_TYPES['id_profireader'],
                             ForeignKey('user.id'),
                             nullable=False)
@@ -69,28 +68,28 @@ class Company(Base, PRBase):
                      'country': {'relevance': lambda field='country': RELEVANCE.country},
                      'phone': {'relevance': lambda field='phone': RELEVANCE.phone}}
 
-# TODO: AA by OZ: we need employees.position (from user_company table) (also search and fix #ERROR employees.position.2#)
-#ERROR employees.position.1#
+    # TODO: AA by OZ: we need employees.position (from user_company table) (also search and fix #ERROR employees.position.2#)
+    # ERROR employees.position.1#
     employees = relationship('User',
                              secondary='user_company',
                              back_populates='employers',
                              lazy='dynamic')
 
     youtube_playlists = relationship('YoutubePlaylist')
-    
+
     # todo: add company time creation
     logo_file_relationship = relationship('File',
                                           uselist=False,
                                           backref='logo_owner_company',
                                           foreign_keys='Company.logo_file_id')
 
-
     def get_readers_for_portal(self, filters):
-        query = g.db.query(User).join(UserPortalReader).join(UserPortalReader.portal).join(Portal.own_company).filter(Company.id == self.id)
+        query = g.db.query(User).join(UserPortalReader).join(UserPortalReader.portal).join(Portal.own_company).filter(
+                Company.id == self.id)
         list_filters = []
         if filters:
             for filter in filters:
-                list_filters.append({'type': 'text', 'value': filters[filter], 'field': eval("User."+filter)})
+                list_filters.append({'type': 'text', 'value': filters[filter], 'field': eval("User." + filter)})
         query = Grid.subquery_grid(query, list_filters)
         return query
 
@@ -101,17 +100,17 @@ class Company(Base, PRBase):
                           User.profireader_name,
                           User.profireader_first_name,
                           User.profireader_last_name
-                          ).\
-            join(UserPortalReader).\
-            join(Portal).\
-            join(self.__class__).\
-            order_by(User.profireader_name).\
-            filter(self.__class__.id==self.id)
+                          ). \
+            join(UserPortalReader). \
+            join(Portal). \
+            join(self.__class__). \
+            order_by(User.profireader_name). \
+            filter(self.__class__.id == self.id)
 
-    # get all users in company : company.employees
-    # get all users companies : user.employers
+        # get all users in company : company.employees
+        # get all users companies : user.employers
 
-# TODO: VK by OZ I think this have to be moved to __init__ and dublication check to validation
+    # TODO: VK by OZ I think this have to be moved to __init__ and dublication check to validation
     def setup_new_company(self):
         """Add new company to company table and make all necessary relationships,
         if company with this name already exist raise DublicateName"""
@@ -134,7 +133,6 @@ class Company(Base, PRBase):
         """This method return all portals-partners current company"""
         return [memcomport.portal for memcomport in db(MemberCompanyPortal, company_id=self.id).all()]
 
-
     def suspended_employees(self):
         """ Show all suspended employees from company. Before define method you should have
         query with one company """
@@ -153,7 +151,7 @@ class Company(Base, PRBase):
     def search_for_company(user_id, searchtext):
         """Return all companies which are not current user employers yet"""
         query_companies = db(Company).filter(
-            Company.name.like("%" + searchtext + "%")).filter.all()
+                Company.name.like("%" + searchtext + "%")).filter.all()
         ret = []
         for x in query_companies:
             ret.append(x.dict())
@@ -161,12 +159,12 @@ class Company(Base, PRBase):
         return ret
         # return PRBase.searchResult(query_companies)
 
-    # @staticmethod
-    # def update_comp(company_id, data):
-    #     """Edit company. Pass to data parameters which will be edited"""
-    #     company = db(Company, id=company_id)
-    #     upd = {x: y for x, y in zip(data.keys(), data.values())}
-    #     company.update(upd)
+        # @staticmethod
+        # def update_comp(company_id, data):
+        #     """Edit company. Pass to data parameters which will be edited"""
+        #     company = db(Company, id=company_id)
+        #     upd = {x: y for x, y in zip(data.keys(), data.values())}
+        #     company.update(upd)
 
         # if passed_file:
         #     file = File(company_id=company_id,
@@ -186,10 +184,11 @@ class Company(Base, PRBase):
         return [company.get_client_side_dict() for company in
                 db(Company).filter(~db(UserCompany, user_id=user_id,
                                        company_id=Company.id).exists()).
-                filter(Company.name.ilike("%" + searchtext + "%")
-                       ).all()]
+                    filter(Company.name.ilike("%" + searchtext + "%")
+                           ).all()]
 
-    def get_client_side_dict(self, fields='id,name,author_user_id,country,region,address,phone,phone2,email,short_description,journalist_folder_file_id,logo_file_id,about,lat,lon,own_portal.id|host',
+    def get_client_side_dict(self,
+                             fields='id,name,author_user_id,country,region,address,phone,phone2,email,short_description,journalist_folder_file_id,logo_file_id,about,lat,lon,own_portal.id|host',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
@@ -254,13 +253,13 @@ class UserCompany(Base, PRBase):
     user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'), nullable=False)
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'), nullable=False)
 
-    status = Column(Enum(*tuple(map(lambda l: getattr(l, 'lower')(),
-                                get_my_attributes(STATUS_NAME))),
-                         name='status_name_type'), nullable=False)
+    status = Column(TABLE_TYPES['status'], default='APPLICANT')
+    STATUSES = {'APPLICANT', 'ACTIVE', 'SUSPENDED', 'FIRED'}
 
     position = Column(TABLE_TYPES['short_name'], default='')
 
     md_tm = Column(TABLE_TYPES['timestamp'])
+    works_since_tm = Column(TABLE_TYPES['timestamp'])
 
     banned = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
 
@@ -278,13 +277,27 @@ class UserCompany(Base, PRBase):
 
     # todo (AA to AA): check handling md_tm
 
-    def __init__(self, user_id=None, company_id=None, status=STATUS.NONACTIVE(), rights=0):
+    def __init__(self, user_id=None, company_id=None, status=STATUS.NONACTIVE(), rights=0,
+                 works_since_tm=works_since_tm):
 
         super(UserCompany, self).__init__()
         self.user_id = user_id
         self.company_id = company_id
         self.status = status
         self._rights = rights
+        self.works_since_tm = works_since_tm
+
+    def get_client_side_dict(self, fields='id,user_id,company_id,works_since_tm,position,status',
+                             more_fields=None):
+        ret = self.to_dict(fields, more_fields)
+        ret['rights'] = PRBase.convert_rights_binary_to_dict(self._rights, User.RIGHT_AT_COMPANY)
+        return ret
+
+    def set_client_side_dict(self, json):
+        self.attr(g.filter_json(json, 'status|position'))
+        self._rights = PRBase.convert_rights_dict_to_binary(json['_rights'], User.RIGHT_AT_COMPANY)
+
+
 
     @property
     def rights_set(self):
@@ -326,7 +339,7 @@ class UserCompany(Base, PRBase):
                                       company_id=company_id,
                                       new_rights=()
                                       )
-        # db_session.flush()
+            # db_session.flush()
 
     @staticmethod
     def apply_request(company_id, user_id, bool):
@@ -346,7 +359,7 @@ class UserCompany(Base, PRBase):
     @staticmethod
     # @check_rights(simple_permissions([Right['manage_rights_company']]))
     # @check_rights(forbidden_for_current_user)
-    def update_rights(user_id, company_id, new_rights, position = None):
+    def update_rights(user_id, company_id, new_rights, position=None):
         """This method defines for update user-rights in company. Apply list of rights"""
         new_rights_binary = Right.transform_rights_into_integer(new_rights)
         user_company = db(UserCompany, user_id=user_id, company_id=company_id)
@@ -387,39 +400,39 @@ class UserCompany(Base, PRBase):
         in their name like searchtext"""
         return [user.get_client_side_dict(fields='profireader_name|id') for user in
                 db(User).filter(~db(UserCompany, user_id=User.id, company_id=company_id).exists()).
-                filter(User.profireader_name.ilike("%" + searchtext + "%")).all()]
+                    filter(User.profireader_name.ilike("%" + searchtext + "%")).all()]
 
-    # @staticmethod
-    # def permissions(needed_rights_iterable, user_object, company_object):
-    #
-    #     needed_rights_int = Right.transform_rights_into_integer(needed_rights_iterable)
-    #     # TODO: implement Anonymous User handling
-    #     if not (user_object and company_object):
-    #         raise errors.ImproperRightsDecoratorUse
-    #
-    #     user = user_object
-    #     company = company_object
-    #     if type(user_object) is str:
-    #         user = g.db.query(User).filter_by(id=user_object).first()
-    #         if not user:
-    #             return abort(400)
-    #     if type(company_object) is str:
-    #         company = g.db.query(Company).filter_by(id=company_object).first()
-    #         if not company:
-    #             return abort(400)
-    #
-    #     user_company = user.employer_assoc.filter_by(company_id=company.id).first()
-    #
-    #     if not user_company:
-    #         return False if needed_rights_iterable else True
-    #
-    #     if user_company.banned:  # or user_company.status != STATUS.ACTIVE():
-    #         return False
-    #
-    #     if user_company:
-    #         available_rights = user_company.rights_int
-    #     else:
-    #         return False
-    #         # available_rights = 0
-    #
-    #     return True if available_rights & needed_rights_int == needed_rights_int else False
+        # @staticmethod
+        # def permissions(needed_rights_iterable, user_object, company_object):
+        #
+        #     needed_rights_int = Right.transform_rights_into_integer(needed_rights_iterable)
+        #     # TODO: implement Anonymous User handling
+        #     if not (user_object and company_object):
+        #         raise errors.ImproperRightsDecoratorUse
+        #
+        #     user = user_object
+        #     company = company_object
+        #     if type(user_object) is str:
+        #         user = g.db.query(User).filter_by(id=user_object).first()
+        #         if not user:
+        #             return abort(400)
+        #     if type(company_object) is str:
+        #         company = g.db.query(Company).filter_by(id=company_object).first()
+        #         if not company:
+        #             return abort(400)
+        #
+        #     user_company = user.employer_assoc.filter_by(company_id=company.id).first()
+        #
+        #     if not user_company:
+        #         return False if needed_rights_iterable else True
+        #
+        #     if user_company.banned:  # or user_company.status != STATUS.ACTIVE():
+        #         return False
+        #
+        #     if user_company:
+        #         available_rights = user_company.rights_int
+        #     else:
+        #         return False
+        #         # available_rights = 0
+        #
+        #     return True if available_rights & needed_rights_int == needed_rights_int else False

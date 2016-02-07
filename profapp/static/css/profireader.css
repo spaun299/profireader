@@ -1774,6 +1774,11 @@ form {
     height: 36px;
 }
 
+.logo-small-cover {
+    width: 36px;
+    height: 36px;
+}
+
 .topbar-menu-links {
     display: block;
     width: 1170px;

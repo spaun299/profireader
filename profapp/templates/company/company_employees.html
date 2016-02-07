@@ -27,10 +27,14 @@
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                 loadGridData: $scope.loadData,
                 columnDefs: [
-                    {name: 'profireader_name', width: '30%', type: 'link',
-                        href: 'url_employee_details({company_id:grid.appScope.company.id, user_id: row.entity.id})',
-                        afilter: {type: 'input'}},
-                    {name: 'position', width: '30%', afilter: {type: 'input'}},
+                    {
+                        name: 'profireader_name', width: '20%', type: 'link',
+                        href: 'url_employee_details({company_id:grid.appScope.company.id, user_id: row.entity.user_id})',
+                        afilter: {type: 'input'}
+                    },
+
+                    {name: 'works_since_tm', width: '20%', afilter: {type: 'input'}},
+                    {name: 'position', width: '20%', afilter: {type: 'input'}},
                     {name: 'status', width: '10%', afilter: {type: 'input'}},
                     {name: 'rights', width: '300', type: 'icons', afilter: {type: 'input'}}
                 ]

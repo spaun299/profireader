@@ -153,10 +153,7 @@
     margin: 0px 1px;
 }
 
-.pr-grid-cell-type-icons-img.disabled {
-    width: 1em;
-    height: 1em;
-    margin: 0px 1px;
+.disabled {
     -khtml-opacity: .30;
     -moz-opacity: .30;
     -ms-filter: (alpha(opacity=30));
@@ -251,3 +248,6 @@
 }
 
 
+.fr {
+    float: right;
+}

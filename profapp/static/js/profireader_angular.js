@@ -738,9 +738,10 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                     smartButtonTextConverter: angular.noop
                 };
 
-                $scope.translate_phrase = function (phrase, dict) {
+                $scope.translate_phrase = function () {
                     $scope.$$translate = $scope.parentScope.$$translate;
-                    return pr_dictionary(phrase, dict, '', $scope, $ok, $scope.parentScope.controllerName)
+                    var args = [].slice.call(arguments);
+                    return pr_dictionary(args.shift(), args, '', $scope, $ok, $scope.parentScope.controllerName)
                 };
 
                 $scope.texts = {
@@ -962,7 +963,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
     }]);
 
 
-function pr_dictionary(phrase, dict, allow_html, scope, $ok, ctrl) {
+function pr_dictionary(phrase, dictionaries, allow_html, scope, $ok, ctrl) {
     allow_html = allow_html ? allow_html : '';
     if (typeof phrase !== 'string') {
         return '';
@@ -1006,10 +1007,16 @@ function pr_dictionary(phrase, dict, allow_html, scope, $ok, ctrl) {
     }
 
     try {
+        if (!dictionaries.length) {
+            dictionaries = [true];
+        }
         var ret = scope.$$translate[phrase]['lang'];
         ret = ret.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
             var indexes = g1.split('.');
-            var d = dict ? dict : scope;
+            var d = {};
+            $.each(dictionaries, function (ind, dict) {
+                $.extend(d, dict === true ? scope : dict);
+            });
 
             for (var i in indexes) {
                 if (typeof d[indexes[i]] !== undefined) {
@@ -1040,11 +1047,13 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             }
             return $sce.trustAsHtml(full_text);
         },
-        __: function (phrase, dict) {
-            return $sce.trustAsHtml(pr_dictionary(phrase, dict, '*', this, $ok));
+        __: function () {
+            var args = [].slice.call(arguments);
+            return $sce.trustAsHtml(pr_dictionary(args.shift(), args, '*', this, $ok));
         },
-        _: function (phrase, dict) {
-            return pr_dictionary(phrase, dict, '', this, $ok);
+        _: function () {
+            var args = [].slice.call(arguments);
+            return pr_dictionary(args.shift(), args, '', this, $ok);
         },
 
         applyGridExtarnals: function (resp) {
@@ -1087,7 +1096,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             $.each(col, function (ind, c) {
                 col[ind] = $.extend({
                     enableSorting: false,
-                    enableFiltering: c['filter']?true:false,
+                    enableFiltering: c['filter'] ? true : false,
                     displayName: c['displayName'] ? c['displayName'] : (c['name'].replace(".", ' ') + ' grid column name')
                 }, c);
             });
@@ -1159,7 +1168,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 } else if (col[i].type === 'actions') {
                     scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><button class="btn pr-grid-cell-type-actions-button pr-grid-cell-type-actions-button-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.' + col[i]['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col[i]['name'] + '\')" title="{{ grid.appScope._(\'grid action \' + action_name) }}">{{ grid.appScope._(\'grid action \' + action_name) }}</button></div>'
                 } else if (col[i].type === 'icons') {
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><img ng-class="{disabled: icon_enabled}" src="/static/images/0.gif" ' +
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><img ng-class="{disabled: !icon_enabled}" src="/static/images/0.gif" ' +
                         'class="pr-grid-cell-type-icons-img pr-grid-cell-type-icons-img-icon-{{ icon_name }}" ng-repeat="(icon_name, icon_enabled) in COL_FIELD" ng-click="grid.appScope.' + col[i]['onclick'] + '(row.entity.id, \'{{ icon_name }}\', row.entity, \'' + col[i]['name'] + '\')" title="{{ grid.appScope._(\'grid icon \' + icon_name) }}"/></div>'
                 } else if (col[i].type === 'editable') {
                     if (col[i].multiple === true && col[i].rule) {
