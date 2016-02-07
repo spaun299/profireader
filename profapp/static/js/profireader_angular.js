@@ -1160,7 +1160,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                 }
 
-                var classes_for_row = col[i].classes + ' pr-grid-cell-type-' + col[i].type + ' pr-grid-cell-column-' + col[i].name.replace(/\./g, '-');
+                var classes_for_row = col[i].classes + ' ui-grid-cell-contents pr-grid-cell-type-' + col[i].type + ' pr-grid-cell-column-' + col[i].name.replace(/\./g, '-');
 
                 if (col[i].type === 'link') {
                     var link = 'grid.appScope.' + col[i].href;
@@ -1187,6 +1187,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
 
             if (!scope.load_contr) {
+
                 scope.gridOptions1.loadGridData(scope.all_grid_data, function (grid_data) {
                     scope.initGridData = grid_data;
                     scope.applyGridExtarnals(grid_data);
@@ -1244,7 +1245,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 scope.sendData(scope.all_grid_data)
             });
 
-            gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
+            if (gridApi.edit) gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
                 if (newValue !== oldValue) {
                     scope.all_grid_data['editItem'] = {
                         'name': rowEntity.name,

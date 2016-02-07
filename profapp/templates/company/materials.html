@@ -1,5 +1,10 @@
 {% extends "index_lazy_layout.html" %}
 
+{% block head %}
+    {{ super() }}
+    {% include '_ruslan/partials/_header_files_grid.html' %}
+{% endblock head %}
+
 {% block title %}{{ _('Materials at %(company_name)s', {'company_name': company.name}) }}{% endblock title %}
 
 {% block portal_content %}
@@ -7,9 +12,11 @@
     {% include 'company/company_base_angular.html' %}
 
     <script>
-        module.controller('article_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
+        module.controller('materials_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
 
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
+            $scope.company_id = '{{ company.id }}';
+            $scope.$$translate = {{ translates('materials_list')|safe }};
 
             $scope.url_search_article = {{ raw_url_for('company.materials_load')|safe }};
 
@@ -18,47 +25,43 @@
             $scope.url_material_update = {{ raw_url_for('article.article_show_form')|safe }};
             $scope.url_publication_update = {{ raw_url_for('article.article_show_form')|safe }};
 
-            $scope.company_id = '{{ company.id }}';
-            $scope.$$translate = {{ translates('article_list')|safe }};
 
             {% raw %}
             $scope.noData = 'No materials';
 
             $scope.sendData = function (grid_data, setdatafuctions) {
-                $scope.loading = true;
+                console.log(grid_data, setdatafuctions);
                 $ok($scope.url_search_article({company_id: $scope.company_id}), grid_data, setdatafuctions).finally(function () {
-                    $scope.loading = false;
                     $scope.load_contr = true;
                 });
             };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                 loadGridData: $scope.sendData,
-                category: [{name: 'searching',field:'title_author', visible: true , filtering: true, filter:{type:'input'}}],
+                acategory: [{
+                    name: 'searching',
+                    field: 'title_author',
+                    visible: true,
+                    filtering: true,
+                    filter: {type: 'input'}
+                }],
                 columnDefs: [
                     {
-                        name: 'title',category:"searching", displayName: 'Title', width: '30%',enableSorting: false,
-                        type: 'link',
+                        name: 'title', acategory: "searching", width: '30%', type: 'link',
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
-                    },{
-                        name: 'author',category:"searching",enableSorting: false,displayName: 'Author'
-                    },{
+                    }, {
+                        name: 'author', acategory: "searching"
+                    }, {
                         name: 'md_tm', enableColumnMenu: true,
-                        displayName: 'Date',
-                        filter: {type: 'date_range'}
-                    },{
-                        name: 'portals', displayName: 'Portals',enableSorting: false,
-                        type: 'link',
+                        afilter: {type: 'date_range'}
+                    }, {
+                        name: 'portals', type: 'link', hideIf: 'not sent', classes: 'link',
                         href: 'url_edit_article_portal({article_portal_division_id: row.entity.id})',
-                        hideIf: 'not sent',
-                        classes: 'link',
-                        filter: {type:'select'}
-                    },{
-                        name: 'publication_status',enableSorting: false,
-                        filter: {type: 'multi_select'}
-                    },{
-                        name: 'publication_visibility', displayName: 'Publication visibility',enableSorting: false,
-                        filter: {type: 'select'}
+                        afilter: {type: 'select'}
+                    }, {
+                        name: 'publication_status', afilter: {type: 'multi_select'}
+                    }, {
+                        name: 'publication_visibility', afilter: {type: 'select'}
                     }
                 ]
             });
@@ -68,10 +71,9 @@
     </script>
 
     {% raw %}
-    <div ng-controller="article_list">
+    <div ng-controller="materials_list">
         <a href="{{ url_material_create({company_id: company_id}) }}">{{ _('Create new material') }}</a>
-        <div ng-if="!load_contr">{{ _('Loading...') }}</div>
-        <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
+        <div class="grid" id="grid1" ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
     </div>
     {% endraw %}
 
