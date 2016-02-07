@@ -163,15 +163,15 @@
                 $scope.data_resp_portal = resp;
             };
 
-            $scope.myRights = function () {
-                return false;
-                for (var i = 0; i < arguments.length; i++) {
-                    if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {
-                        return false;
-                    }
-                }
-                return true;
-            };
+{#            $scope.myRights = function () {#}
+{#                return false;#}
+{#                for (var i = 0; i < arguments.length; i++) {#}
+{#                    if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {#}
+{#                        return false;#}
+{#                    }#}
+{#                }#}
+{#                return true;#}
+{#            };#}
 
             $scope.cancel = function () {
                 return false;
@@ -346,7 +346,7 @@
 
             <div class="grid" id="grid1" ui-grid-edit ui-grid="gridOptions1"></div>
 
-            <div ng-if="myRights('publish')">
+            <div ng-if="false & myRights('publish')">
                 <div ng-if="!data_resp_portal.portal">
                     <hr>
                     <!-- <form ang-ok ng-onsuccess="resp_data_portal" ng-onsubmit="getData" ng-action="url_submit_to_portal"> -->

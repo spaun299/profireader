@@ -295,11 +295,10 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
         return {
             restrict: 'A',
             scope: {
-                prImage: '&',
+                prImage: '=',
                 prNoImage: '@'
             },
             link: function (scope, element, attrs) {
-
                 var image_reference = attrs['prImage'].split('.').pop();
                 var no_image = attrs['prNoImage'] ? attrs['prNoImage'] : false;
 
@@ -307,12 +306,16 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     no_image = noImageForImageName(image_reference);
                 }
 
+                scope.$watch('prImage', function (newval, oldval) {
+                    element.css({
+                    backgroundImage: "url('" + fileUrl(newval, false, no_image) + "')"
+                    });
+                });
                 element.attr('src', '/static/images/0.gif');
                 element.css({
                     backgroundPosition: 'center',
                     backgroundSize: 'contain',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundImage: "url('" + fileUrl(scope['prImage'](), false, no_image) + "')"
+                    backgroundRepeat: 'no-repeat'
                 });
             }
         };

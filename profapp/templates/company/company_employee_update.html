@@ -1,43 +1,50 @@
 {% extends "index_lazy_layout.html" %}
 
-{% block title %}Employee details{% endblock title %}
+{% block title %}Employment update{% endblock title %}
 
 {% block portal_content %}
 
     <script>
         module.controller('company_employee_update', function ($scope, $ok) {
 
+            $scope.url_company_employee_details = {{ raw_url_for('company.employee_details')|safe }};
 
-            $scope.employee = {{ employee|tojson|safe }};
-            $scope.employer = {{ employer|tojson|safe }};
-            $scope.employment_statuses = {{ employment_statuses|tojson|safe }};
-
+            $scope.after_save = function () {
+                window.location.href = $scope.url_company_employee_details({
+                    'company_id': $scope.data.employer.id,
+                    'user_id': $scope.data.employee.id
+                });
+            }
 
         });
     </script>
     {% raw %}
 
     <div ng-controller="company_employee_update">
-        <div af aaf-amid-load="amidLoad" aaf-amid-save="amidSave" aaf-before-save="getData"
-             af-after-save="after_save"
-             aaf-beforeValidate="getData" aaf-watch="employment.article" ng-model="employment">
+        <div af af-after-save="after_save" af-watch="data.employment" ng-model="data">
             <h2>
-                <img class="person-small-cover" pr-image pr-no-image="{{ employee.profireader_small_avatar_url }}"/>
-                <img class="logo-small-cover" pr-image="employer.logo_file_id"/>
-                {{ _('Employee `%(employee.profireader_name)s` at company `%(employer.name)s`') }}</h2>
+                {{ data.employer.logo_file_id }}
+                <img class="person-small-cover" pr-image
+                     pr-no-image="{{ data.employee.profireader_small_avatar_url }}"/>
+                <img class="logo-small-cover" pr-image="data.employer.logo_file_id"/>
+                {{ _('Employee `%(data.employee.profireader_name)s` at company `%(data.employer.name)s`') }}</h2>
 
             <img pr-image="employer.logo_file_id"/>
-            {{ _('Works since') }} {{ employment.works_since_tm }}<br>
-            {{ _('status') }} <select ng-model="employment.status" ng-options=""></select><br>
-            {{ _('position') }} <input ng-model="employment.position"/><br>
+            {{ _('Works since') }} {{ data.employment.works_since_tm }}<br>
+            {{ _('status') }} <select ng-model="data.employment.status"
+                                      ng-options="status as status disable when !available for (status, available) in data.statuses_available"></select><br>
+            {{ _('position') }} <input ng-model="data.employment.position"/><br>
             {{ _('permissions') }}<br>
-            <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in employment.rights">
+            <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in data.employment.rights">
                 <img src="/static/images/0.gif"
                      class="pr-grid-cell-type-icons-img pr-grid-cell-type-icons-img-icon-{{ right_name }}"/>
-                <label><input ng-model="employment.rights[right_name]" type="checkbox"/> {{ right_name }}</label>
+                <label><input ng-model="data.employment.rights[right_name]" type="checkbox"/> {{ right_name }}</label>
             </div>
-            <button class="btn fr" type="button" ng-click="$af.reset(employment)">{{ _('Reset') }}</button>
-            <button class="btn fr" type="button" ng-disabled="!$af.isActionAllowed(employment, 'save')" ng-click="$af.save(employment)">{{ _('Save') }}</button>
+            <button class="btn fr" type="button" ng-disabled="!$af.isActionAllowed(data, 'save')"
+                    ng-click="$af.save(data)">{{ _('Save') }}
+            </button>
+            <button class="btn fr" type="button" ng-click="$af.reset(data)">{{ _('Reset') }}</button>
+
         </div>
     </div>
 
