@@ -13,9 +13,10 @@
 
     <script>
 
-        module.controller('material_details_publish_dialog', function ($scope, $uibModalInstance, article, company, action, portal, published_at_division, rights_user_in_company, rights_company_at_portal) {
+        module.controller('material_details_publish_dialog', function ($scope, $ok, $uibModalInstance, article, company, action, portal, published_at_division, rights_user_in_company, rights_company_at_portal) {
+
             $scope.$$translate = {{ translates('material_details_publish_dialog')|safe }};
-            $scope.url_submit_to_portal = '{{ url_for('portal.submit_to_portal')|safe }}';
+            $scope.url_submit_to_portal = '{{ url_for('article.material_submit_to_portal')|safe }}';
 
             $scope.selected_division = null;
             $scope.portal = portal;
@@ -27,18 +28,15 @@
             $scope.published_at_division = published_at_division;
 
             $scope.action_do = function (submit_or_publish) {
+                $ok($scope.url_submit_to_portal + '?action=' + submit_or_publish, {
+                    material_id: $scope.article.id,
+                    portal_division_id: $scope.selected_division.id,
+                    publication_data: {}
+                }, $uibModalInstance.close)
 
-                $ok(url_submit_to_portal, $scope.data, function (resp) {
-
-                    $scope.data = resp.data
-                })
-
-                $uibModalInstance.close($scope.selected_division);
             };
 
-            $scope.action_cancel = function () {
-                $uibModalInstance.dismiss();
-            };
+            $scope.action_cancel = $uibModalInstance.dismiss;
 
         });
 
@@ -81,7 +79,7 @@
                     type="button" ng-click="action_do('submit')">{{ _('Do submit') }}
             </button>
             <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="true"
-                    title="{{ _('Your company have not permission to publish. pls submit') }}"
+                    title="{{ _('Your company has no permission to publish. pls submit') }}"
                     type="button" ng-click="action_do('publish')">{{ _('Do publish') }}
             </button>
             <button ng-if="action=='unpublish'" class="btn btn-primary" type="button" ng-click="action_do()">{{
@@ -301,13 +299,15 @@
                     }
                 });
 
-                modalInstance.result.then(function (selectedItem) {
-                    console.log(action, selectedItem);
-                    $scope.selected = selectedItem;
-                }, function () {
-                    {#                    $log.info('Modal dismissed at: ' + new Date());#}
+                modalInstance.result.then(function (updated_row) {
+                    {#                    TODO: SS by OZ: this function search and replace row. please move it somewhere to your scope#}
+                    var found = $.each($scope.data.portals['grid_data'], function (index, portal_row) {
+                        if (portal_row['id'] === updated_row['id']) {
+                            console.log($scope.data.portals['grid_data'][index]);
+                            $scope.data.portals['grid_data'][index] = updated_row;
+                        }
+                    });
                 });
-
             };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
@@ -342,7 +342,7 @@
                     }
                     , {
                         name: 'publication.status', width: '10%',
-                        filter: {type: 'multi_select'}
+                        afilter: {type: 'multi_select'}
 
                     }
                     , {
@@ -379,12 +379,14 @@
             <h2>{{ _('Material details `%(title)s`', {title: data.material.title}) }}</h2>
             <h4>{{ _('Created at') }} {{data.material.cr_tm}}</h4>
             <h4>{{ _('Last modified at') }} {{data.material.md_tm}}</h4>
-            <br/><br/><button class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+            <button class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+            <br/><br/>
             <hr/>
             <div class="material-details-article-preview">
                 {% endraw %}{% include 'partials/article_details.html' %}{% raw %}
             </div>
-                        <br/><br/><button class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+            <button class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+            <br/><br/>
             <hr/>
             <h2>{{ _('Material is published or can be published at portals') }}</h2>
         </div>
