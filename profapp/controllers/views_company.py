@@ -142,10 +142,11 @@ def update_material_status(json, company_id, article_id):
 @login_required
 # @check_rights(simple_permissions(['manage_rights_company']))
 def profile(company_id):
-    user_rights = list(g.user.user_rights_in_company(company_id))
+
     return render_template('company/company_profile.html',
                            company=db(Company, id=company_id).one(),
-                           user_rights=user_rights)
+                           rights_user_in_company = UserCompany.get(company_id=company_id).get_rights()
+                           )
 
 
 @company_bp.route('/<string:company_id>/employees/', methods=['GET'])
@@ -161,11 +162,8 @@ def employees(company_id):
 def employees_load(json, company_id):
     company = Company.get(company_id)
     employees_list = [
-        PRBase.merge_dicts(assoc.employee.get_client_side_dict(),
-                           assoc.get_client_side_dict(fields='status,position'),
-                           {'rights': PRBase.convert_binary_rights_to_dict(
-                                   assoc.get_client_side_dict(fields='_rights')['_rights'], User.RIGHT_AT_COMPANY)})
-        for assoc in company.employee_assoc]
+        PRBase.merge_dicts(employment.employee.get_client_side_dict(), employment.get_client_side_dict())
+        for employment in company.employee_assoc]
 
     return {
         'company': company.get_client_side_dict(fields='id,name'),
@@ -198,9 +196,46 @@ def employees_load(json, company_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def employee_details(company_id, user_id):
-    employment = db(UserCompany).filter_by(user_id=user_id, company_id=company_id).one()
-    return render_template('company/company_employee_details.html', employer=employment.employer, employee=employment.employee,
-                           employment=employment)
+    employment = UserCompany.get(user_id=user_id, company_id=company_id)
+    return render_template('company/company_employee_details.html',
+                           employer=employment.employer.get_client_side_dict(),
+                           employee=employment.employee.get_client_side_dict(),
+                           employment=employment.get_client_side_dict())
+
+
+@company_bp.route('/<string:company_id>/employee_update/<string:user_id>/', methods=['GET'])
+@tos_required
+@login_required
+# @check_rights(simple_permissions([]))
+def employee_update(company_id, user_id):
+    return render_template('company/company_employee_update.html',
+                           employment=UserCompany.get(user_id=user_id, company_id=company_id))
+    # employer=employment.employer.get_client_side_dict(),
+    # employee=employment.employee.get_client_side_dict())
+
+
+@company_bp.route('/<string:company_id>/employee_update/<string:user_id>/', methods=['POST'])
+@tos_required
+@login_required
+@ok
+# @check_rights(simple_permissions([]))
+def employee_update_load(json, company_id, user_id):
+    action = g.req('action', allowed=['load', 'validate', 'save'])
+    employment = UserCompany.get(user_id=user_id, company_id=company_id)
+    if action == 'load':
+        return  {'employment': employment.get_client_side_dict(),
+                'employee': employment.employee.get_client_side_dict(),
+                'employer': employment.employer.get_client_side_dict(fields='id|logo_file_id|name'),
+                'statuses_available': employment.get_statuses_avaible(),
+                'rights_available': employment.get_rights_avaible()}
+    else:
+        employment.set_client_side_dict(json['employment'])
+        if action == 'validate':
+            employment.detach()
+            return employment.validate(False)
+        else:
+            employment.save()
+    return employment.get_client_side_dict()
 
 
 @company_bp.route('/update_rights', methods=['POST'])

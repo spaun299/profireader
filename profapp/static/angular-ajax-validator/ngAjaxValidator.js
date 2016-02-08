@@ -72,6 +72,9 @@
         ret.validate = function (model) {
             return ret.$callDirectiveMethod(model, 'validate');
         };
+        ret.reset = function (model) {
+            return ret.$callDirectiveMethod(model, 'reset');
+        };
         ret.isActionAllowed = function (model, action) {
             return ret.$callDirectiveMethod(model, 'isActionAllowed', action);
         };
@@ -142,6 +145,8 @@
                 var defaultCallbacks = {
                     afBeforeLoad: trivialbefore,
                     afAmidLoad: trivialbefore,
+                    afBeforeReset: trivialbefore,
+                    afAmidReset: trivialbefore,
                     afBeforeValidate: trivialbefore,
                     afAmidValidate: trivialbefore,
                     afAmidSave: trivialbefore,
@@ -152,6 +157,7 @@
                             return true;
                         }
                     },
+                    afAfterReset: trivialbefore,
                     afAfterValidate: function () {
                         return function (resp) {
                             setInParent('afValidationResult', cloneObject(resp));
@@ -237,9 +243,18 @@
                         func1('Load', 'loading', 'clean', 'loading_failed',
                             function (resp) {
                                 $scope.model = cloneObject(resp);
+                                $scope.$af_original_model = cloneObject(resp);
                             });
                     }
                 };
+
+                $scope.reset = function () {
+                    if ($scope.isActionAllowed('reset')) {
+                        $scope.model = cloneObject($scope.$af_original_model);
+                        $scope.$af_original_model_dirty = false;
+                    }
+                };
+
 
                 $scope.validate = function () {
                     if ($scope.isActionAllowed('validate')) {
@@ -262,6 +277,10 @@
                 };
 
                 $scope.isActionAllowed = function (action) {
+                    if (action === 'reset') {
+                        return $scope.$af_original_model_dirty?true:false;
+                    }
+
                     var http = $af.$getValidationDict($scope['model']);
                     if (http && http['http']) {
                         //console.error('called method `' + action + '` is forbidden for model because http sent');
@@ -289,6 +308,7 @@
 
                 var watchfunc = function (oldval, newval) {
                     setInParent('afState', 'dirty');
+                    $scope.$af_original_model_dirty = true;
                     debouncedvalidate();
                 };
 

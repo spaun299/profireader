@@ -26,6 +26,11 @@ body  {
     height: 36px;
 }
 
+.logo-small-cover {
+    width: 36px;
+    height: 36px;
+}
+
 .nav > li > ul > li > a {
     display: inline-block;
 }

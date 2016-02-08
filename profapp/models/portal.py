@@ -298,6 +298,17 @@ class MemberCompanyPortal(Base, PRBase):
                         # , backref='partner_portals'
                         )
 
+    RIGHT_AT_PORTAL = {
+        'MATERIAL_SUBMIT': 2 ** (1 - 1),
+        'PUBLICATION_PUBLISH': 2 ** (2 - 1),
+
+        'PUBLICATION_UNPUBLISH': 2 ** (3 - 1)
+    }
+
+    RIGHT_AT_PORTAL = RIGHT_AT_PORTAL['MATERIAL_SUBMIT']
+
+    RIGHT_AT_PORTAL_FOR_OWN_PORTAL = 0x7fffffffffffffff
+
     def __init__(self, company_id=None, portal=None, company=None, plan=None):
         if company_id and company:
             raise BadDataProvided

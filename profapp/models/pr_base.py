@@ -345,9 +345,16 @@ class PRBase:
         return ret
 
     @staticmethod
-    def convert_binary_rights_to_dict(binary_rights, all_rights):
+    def convert_rights_binary_to_dict(binary_rights, all_rights):
         return {right_name: True if (binary_rights & right_binary_value) else False for right_name, right_binary_value
                 in all_rights.items()}
+
+    @staticmethod
+    def convert_rights_dict_to_binary(dict_rights, all_rights):
+        ret = 0
+        for right_name, right_binary_value in all_rights.items():
+            ret |= (right_binary_value if (right_name in dict_rights and dict_rights[right_name]) else 0)
+        return ret
 
     # if insert_after_id == False - insert at top
     # if insert_after_id == True - insert at bottom

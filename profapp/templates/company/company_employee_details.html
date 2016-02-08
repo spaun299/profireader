@@ -1,22 +1,47 @@
 {% extends "index_lazy_layout.html" %}
 
-{% block title %}Employee details{% endblock title %}
+{% block title %}Employment details{% endblock title %}
 
 {% block portal_content %}
 
     <script>
         module.controller('company_employee_details', function ($scope, $ok) {
-            $scope.employee = {{ employee.get_client_side_dict()|tojson|safe }};
-            $scope.employer = {{ employer.get_client_side_dict()|tojson|safe }};
-            $scope.employment = {{ employment.get_client_side_dict()|tojson|safe }};
+
+            $scope.employee = {{ employee|tojson|safe }};
+            $scope.employer = {{ employer|tojson|safe }};
+            $scope.employment = {{ employment|tojson|safe }};
+
+            $scope.url_company_employee_update = {{ raw_url_for('company.employee_update')|safe }};
+
+            $scope.update = function () {
+                window.location.href = $scope.url_company_employee_update({
+                    'company_id': $scope.employer.id,
+                    'user_id': $scope.employee.id
+                });
+            }
+
         });
     </script>
     {% raw %}
 
-    <div ng-init="loadData()" ng-controller="company_employee_details">
+    <div ang-init="loadData()" ng-controller="company_employee_details">
 
-        <h2>{{ _('Employee `%(employee.profireader_name)s` at company `%(employer.name)s`') }}</h2>
-        <button class="btn" type="button" ng-click="update()">{{ _('Update employment') }}</button>
+        <h2>
+            <img class="person-small-cover" pr-image pr-no-image="{{ employee.profireader_small_avatar_url }}"/>
+            <img class="logo-small-cover" pr-image="employer.logo_file_id"/>
+            {{ _('Employee `%(employee.profireader_name)s` at company `%(employer.name)s`') }}</h2>
+
+        <img pr-image="employer.logo_file_id"/>
+        {{ _('Works since') }} {{ employment.works_since_tm }}<br>
+        {{ _('status') }} {{ employment.status }}<br>
+        {{ _('position') }} {{ employment.position }}<br>
+        {{ _('permissions') }}<br>
+        <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in employment.rights">
+            <img src="/static/images/0.gif"
+                 class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ right_name }}"/>
+            {{ right_name }}
+        </div>
+        <button class="btn fr" type="button" ng-click="update()">{{ _('Update employment') }}</button>
     </div>
 
     {% endraw %}
