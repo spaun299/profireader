@@ -38,7 +38,7 @@
         {{ _('permissions') }}<br>
         <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in employment.rights">
             <img src="/static/images/0.gif"
-                 class="pr-grid-cell-type-icons-img pr-grid-cell-type-icons-img-icon-{{ right_name }}"/>
+                 class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ right_name }}"/>
             {{ right_name }}
         </div>
         <button class="btn fr" type="button" ng-click="update()">{{ _('Update employment') }}</button>
