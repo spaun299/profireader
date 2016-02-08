@@ -37,7 +37,7 @@
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                 loadGridData: $scope.sendData,
-                acategory: [{
+                category: [{
                     name: 'searching',
                     field: 'title_author',
                     visible: true,
@@ -46,11 +46,11 @@
                 }],
                 columnDefs: [
                     {
-                        name: 'title', acategory:"searching",  width: '30%',
+                        name: 'title', category:"searching",  width: '30%',
                         type: 'link',
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
                     },{
-                        name: 'author', acategory:"searching"
+                        name: 'author', category:"searching"
                     },{
                         name: 'md_tm', aenableColumnMenu: true,
                         afilter: {type: 'date_range'}

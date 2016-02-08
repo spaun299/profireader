@@ -181,7 +181,7 @@ def material_details_load(json, material_id):
                         [div_id for div_id, div in p['divisions'].items()])).first()
         if publication:
             p['publication'] = publication.get_client_side_dict(
-                    'title,status,visibility,portal_division_id,publishing_tm')
+                    'position,title,status,visibility,portal_division_id,publishing_tm')
             p['publication']['division'] = p['divisions'][p['publication']['portal_division_id']]
             p['publication']['counts'] = '0/0/0/0'
             p['actions'] = ['unpublish']
@@ -190,7 +190,10 @@ def material_details_load(json, material_id):
             'company': Company.get(article.company_id).get_client_side_dict(),
             'rights_user_in_company': UserCompany.get(company_id=article.company_id).get_rights(),
             'portals': {
-                'grid_data': portals
+                'grid_data': portals,
+                'grid_filters': {
+                    'publication.status': Grid.filter_for_status(ArticlePortalDivision.STATUSES)
+                }
             }
             # 'user_rights': ['publish', 'unpublish', 'edit'],
             # TODO: uncomment the string below and delete above

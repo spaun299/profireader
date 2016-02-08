@@ -15,6 +15,8 @@
 
         module.controller('material_details_publish_dialog', function ($scope, $uibModalInstance, article, company, action, portal, published_at_division, rights_user_in_company, rights_company_at_portal) {
             $scope.$$translate = {{ translates('material_details_publish_dialog')|safe }};
+            $scope.url_submit_to_portal = '{{ url_for('portal.submit_to_portal')|safe }}';
+
             $scope.selected_division = null;
             $scope.portal = portal;
             $scope.article = article;
@@ -24,7 +26,13 @@
             $scope.rights_company_at_portal = rights_company_at_portal;
             $scope.published_at_division = published_at_division;
 
-            $scope.action_do = function () {
+            $scope.action_do = function (submit_or_publish) {
+
+                $ok(url_submit_to_portal, $scope.data, function (resp) {
+
+                    $scope.data = resp.data
+                })
+
                 $uibModalInstance.close($scope.selected_division);
             };
 
@@ -50,6 +58,7 @@
                 <div ng-if="action=='publish'">{{ _('You are going to publish material `%(article.title)s` at portal
                     `%(portal.name)s`. Please select division') }}
                 </div>
+                <br/>
                 <div ng-if="action=='publish'" ng-repeat="division in portal.divisions"><label><input
                         ang-disabled="!division.can_be_published"
                         name="material_details_publish_dialog_division"
@@ -68,11 +77,12 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="true" title="{{ _('Your company have not permission to publish. pls submit') }}"
-                    type="button" ng-click="action_do('publish')">{{ _('Do publish') }}
-            </button>
             <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="!selected_division"
                     type="button" ng-click="action_do('submit')">{{ _('Do submit') }}
+            </button>
+            <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="true"
+                    title="{{ _('Your company have not permission to publish. pls submit') }}"
+                    type="button" ng-click="action_do('publish')">{{ _('Do publish') }}
             </button>
             <button ng-if="action=='unpublish'" class="btn btn-primary" type="button" ng-click="action_do()">{{
                 _('Do ' + action) }}
@@ -96,22 +106,12 @@
             $scope.selectedUser_sending = false;
             $scope.url_update_material = {{ raw_url_for('article.article_show_form')|safe }};
             {#            $scope.url_update_status = {{ raw_url_for('company.update_material_status')|safe }};#}
-            $scope.url_submit_to_portal = '{{ url_for('portal.submit_to_portal')|safe }}';
             {#            $scope.url_send_article_to_user = '{{ url_for('company.send_article_to_user')|safe }}';#}
             {#            $scope.url_send_article_user = {{ raw_url_for('company.send_article_to_user')|safe }};#}
             $scope.data_resp = '';
             $scope.data_resp_user = '';
             $scope.data_resp_user_search = '';
             $scope.data_resp_portal = '';
-
-            submit_to_portal = function () {
-                console.log($scope.data);
-
-                $ok(url_submit_to_portal, $scope.data, function (resp) {
-
-                    $scope.data = resp.data
-                })
-            };
 
 
             {#            $scope.saveData =function(data, tags){#}
@@ -148,16 +148,11 @@
             {#                });#}
             {#            };#}
 
-            $scope.loadMaterialDetails = function () {
-                $ok('', {}, function (resp) {
+            $scope.loadMaterialDetails = function (data, callback) {
+                $ok('', data, function (resp) {
+                    callback(resp.portals);
                     $scope.data = resp;
-                    $scope.initGridData = resp.portals;
-                    $scope.applyGridExtarnals($scope.initGridData);
-                    {#                    $scope.change_status_to = $scope.data.allowed_statuses[0];#}
-                }).finally(function () {
-                    $scope.loading = false;
-                    $scope.load_contr = true
-                });
+                }).finally();
 
             };
 
@@ -332,27 +327,33 @@
                     }
 
                     , {
-                        name: 'publication.title', width: '12%'
+                        name: 'publication.title', width: '12%',
+                        type: 'link',
+                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
                     }
                     , {
-                        name: 'publication.counts', width: '5%'
+                        name: 'publication.position', width: '3%'
                     }
                     , {
-                        name: 'publication.publishing_tm', aenableColumnMenu: true, width: '5%'
+                        name: 'publication.counts', width: '7%'
                     }
                     , {
-                        name: 'publication.status', width: '5%'
+                        name: 'publication.publishing_tm', enableSorting: true, width: '10%'
+                    }
+                    , {
+                        name: 'publication.status', width: '10%',
+                        filter: {type: 'multi_select'}
 
                     }
                     , {
-                        name: 'publication.visibility', width: '5%'
+                        name: 'publication.visibility', width: '10%'
                     }
                     , {
                         name: 'actions',
                         type: 'actions',
                         onclick: 'grid_action',
-                        width: '10%',
-                        afilter: {type: 'input'}
+                        width: '10%'
+
                     }
                 ]
             });
@@ -370,7 +371,7 @@
         }
     </style>
 
-    <div ng-init="loadMaterialDetails()" ng-controller="material_details">
+    <div ng-controller="material_details">
 
         {% raw %}
         <div ng-if="!data">{{ _('Loading...') }}</div>
@@ -378,49 +379,52 @@
             <h2>{{ _('Material details `%(title)s`', {title: data.material.title}) }}</h2>
             <h4>{{ _('Created at') }} {{data.material.cr_tm}}</h4>
             <h4>{{ _('Last modified at') }} {{data.material.md_tm}}</h4>
-            <button ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+            <br/><br/><button class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
             <hr/>
             <div class="material-details-article-preview">
                 {% endraw %}{% include 'partials/article_details.html' %}{% raw %}
             </div>
-            <button ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+                        <br/><br/><button class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
             <hr/>
             <h2>{{ _('Material is published or can be published at portals') }}</h2>
-
-            <div class="grid" id="grid1" ui-grid-edit ui-grid="gridOptions1"></div>
-
-            <div ng-if="0">
-                <div ng-if="!data_resp_portal.portal">
-                    <hr>
-                    <!-- <form ang-ok ng-onsuccess="resp_data_portal" ng-onsubmit="getData" ng-action="url_submit_to_portal"> -->
-                    <form>
-                        {{_('Publish this material to portal')}}
-                        <select ng-model="data.selected_division">
-                            <option disabled>---{{_('Below materials sent')}}---</option>
-                            <optgroup ng-repeat="port in porals_divisions(data.portals)" label="{{ port.name }}">
-                                <option ng-repeat="division in port.divisions" value="{{ division.id }}"
-                                        ng-selected="selected">
-                                    {{ division.name }} {{ division.portal_division_type_id }}
-                                </option>
-                            </optgroup>
-
-                            <optgroup disabled ng-repeat="joined_portal in data.joined_portals"
-                                      label="| {{ joined_portal.name }} |">
-                                <option ng-repeat="division in joined_portal.divisions" value="{{ division.id }}">
-                                    {{ division.name }}
-                                </option>
-                            </optgroup>
-                        </select>
-                        <br/>
-
-                    </form>
-                </div>
-                <span ng-if="data_resp_portal">
-                    {{_('Article %(title)s successfully was published at portal', {'title': data.material.title})}} "{{ data.portal }}"
-                </span>
-            </div>
         </div>
+
+
+        <div class="grid" id="grid1" ui-grid-edit ui-grid="gridOptions1"></div>
         {% endraw %}
+
+        {#            <div ng-if="0">#}
+        {#                <div ng-if="!data_resp_portal.portal">#}
+        {#                    <hr>#}
+        {#                    <!-- <form ang-ok ng-onsuccess="resp_data_portal" ng-onsubmit="getData" ng-action="url_submit_to_portal"> -->#}
+        {#                    <form>#}
+        {#                        {{_('Publish this material to portal')}}#}
+        {#                        <select ng-model="data.selected_division">#}
+        {#                            <option disabled>---{{_('Below materials sent')}}---</option>#}
+        {#                            <optgroup ng-repeat="port in porals_divisions(data.portals)" label="{{ port.name }}">#}
+        {#                                <option ng-repeat="division in port.divisions" value="{{ division.id }}"#}
+        {#                                        ng-selected="selected">#}
+        {#                                    {{ division.name }} {{ division.portal_division_type_id }}#}
+        {#                                </option>#}
+        {#                            </optgroup>#}
+        {##}
+        {#                            <optgroup disabled ng-repeat="joined_portal in data.joined_portals"#}
+        {#                                      label="| {{ joined_portal.name }} |">#}
+        {#                                <option ng-repeat="division in joined_portal.divisions" value="{{ division.id }}">#}
+        {#                                    {{ division.name }}#}
+        {#                                </option>#}
+        {#                            </optgroup>#}
+        {#                        </select>#}
+        {#                        <br/>#}
+        {##}
+        {#                    </form>#}
+        {#                </div>#}
+        {#                <span ng-if="data_resp_portal">#}
+        {#                    {{_('Article %(title)s successfully was published at portal', {'title': data.material.title})}} "{{ data.portal }}"#}
+        {#                </span>#}
+        {#     </div>#}
+
+
     </div>
 
 
