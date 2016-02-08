@@ -85,12 +85,19 @@ def materials_load(json, company_id):
         'publication_status': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
         'publication_visibility': Grid.filter_for_status(ArticlePortalDivision.VISIBILITIES)
     }
-    return {'grid_data': Article.getListGridDataMaterials(materials),
+
+    return {'grid_data': Article.getListGridDataMaterials(materials),# [{'name':'Steve', 'age': 10, 'email': 'ss@ss.com'}, {'name':'Viktor', 'age': 12, 'email': 'Hs@ss.com'},{'name':'Vova', 'age': 15, 'email': 'H555@ss.com'}]],
             'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
                              (k, v) in grid_filters.items()},
             'total': count
             }
-
+@company_bp.route('/<string:company_id>/materials/s', methods=['POST'])
+@ok
+def mat(json, company_id):
+    grid_data = [{'name':'Steve', 'age': 10, 'email': 'ss@ss.com'}, {'name':'Viktor', 'age': 12, 'email': 'Hs@ss.com'},{'name':'Vova', 'age': 15, 'email': 'H555@ss.com'}]
+    return {'grid_data': grid_data,
+            'total': len(grid_data)
+            }
 
 @company_bp.route('/<string:article_portal_division_id>/', methods=['POST'])
 @login_required
