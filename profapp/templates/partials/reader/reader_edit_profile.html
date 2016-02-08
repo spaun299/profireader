@@ -3,23 +3,42 @@
 
 {% block portal_content %}
     <script>
-        module.controller('reader_edit_profile', ['$scope', function ($scope) {
-        $scope.data = {};
-            $scope.afterLoad = function(resp, deff) {
-                deff(resp)
-            };
-}])
+        module.controller('reader_edit_profile', ['$scope', '$http', function ($scope, $http) {
+            $scope.reader_edit_url = '{{ url_for('reader.edit_profile_submit') }}';
+            $scope.edit = function (){
+                $http({
+                    method: 'POST',
+                    url: $scope.reader_edit_url,
+                    data: $scope.data
+                    }).success(function (resp) {
+                            $scope.data = resp.data}
+
+            )}}]);
     </script>
 
 {% include 'partials/reader/reader_nav.html' %}
 {% raw %}
-<div ng-controller="reader_edit_profile" ng-model="data">
-        <div af
+    <div ng-controller="reader_edit_profile" ng-model="data">
+        <div>
+            <div af
              af-after-save="afterSave"
              af-after-load="afterLoad"
              ng-model="data">
+                <span style="display:block; width: 50px">
+                </span>Division name<span style="margin-left: 85px;display:inline-block;">| Show articles | Show comments | Show favorite comments | Show liked comments
+            </span><br>
+                <form >
+            <span ng-repeat="division in data.divisions"><br>
+                <span style="display:inline-block; width: 50px">{{ division.name }}</span>
+                <span style="margin-left: 130px" ng-repeat="show in division.show_divisions_and_comments" ng-model="show">
+                    <label><input ng-model="show" type="checkbox" class="show_checkbox" value="{{ show }}">{{ show }}</label>
+                </span>
+            </span>
+                <input type="submit" ng-click="edit()">
+                    </form>
+            </div>
 
         </div>
-</div>
+    </div>
 {% endraw %}
 {% endblock portal_content %}

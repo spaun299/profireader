@@ -142,13 +142,20 @@ def profile_load(json):
 
 @reader_bp.route('/edit_profile')
 def edit_profile():
+
     return render_template('partials/reader/reader_edit_profile.html')
 
 
 @reader_bp.route('/edit_profile', methods=['POST'])
 @ok
 def edit_profile_load(json):
-    divisions = [{'name1': {'show_articles': True, 'show_comments': True, 'show_favorite_comments': False, 'show_liked_comments': True},
-                 'name2': {'show_articles': False, 'show_comments': True, 'show_favorite_comments': False, 'show_liked_comments': False},
-                  'name3': {'show_articles': True, 'show_comments': False, 'show_favorite_comments': False, 'show_liked_comments': True}}]
+    divisions = [{'name': 'ssssssss', 'show_divisions_and_comments':{'show_articles': True, 'show_comments': True, 'show_favorite_comments': False, 'show_liked_comments': True}},
+                 {'name': 'ssss1111111ssss', 'show_divisions_and_comments':{'show_articles': False, 'show_comments': True, 'show_favorite_comments': False, 'show_liked_comments': False}},
+                  {'name': 'sss2222222222sssss','show_divisions_and_comments':{'show_articles': True, 'show_comments': False, 'show_favorite_comments': False, 'show_liked_comments': True}}]
     return {'divisions': divisions}
+
+@reader_bp.route('/edit_profile_submit')
+@ok
+def edit_profile_submit(json):
+    pass
+

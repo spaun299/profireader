@@ -19,6 +19,7 @@ from .files import File
 from profapp.controllers.errors import BadDataProvided
 import datetime
 import json
+from functools import reduce
 
 
 class Portal(Base, PRBase):
@@ -541,12 +542,14 @@ class UserPortalReader(Base, PRBase):
     end_tm = Column(TABLE_TYPES['timestamp'])
     amount = Column(TABLE_TYPES['int'], default=99999)
     show_divisions_and_comments = Column(TABLE_TYPES['json'])
-
     portal = relationship('Portal')
     user = relationship('User')
+    show_divisions_and_comments_numeric = dict(show_articles=1, show_comments=2, show_favorite_comments=4,
+                                               show_liked_comments=8)
+    show_divisions_and_comments_binary_all = bin(reduce(lambda x, y: x+y, show_divisions_and_comments_numeric.values()))
 
     def __init__(self, user_id=None, portal_id=None, status='active', portal_plan_id=None, start_tm=None,
-                 end_tm=None, amount=None, show_divisions_and_comments=None):
+                 end_tm=None, amount=None):
         super(UserPortalReader, self).__init__()
         self.user_id = user_id
         self.portal_id = portal_id
@@ -555,7 +558,7 @@ class UserPortalReader(Base, PRBase):
         self.end_tm = end_tm
         self.amount = amount
         self.portal_plan_id = portal_plan_id or g.db(ReaderUserPortalPlan.id).filter_by(name='free').one()[0]
-        self.show_divisions_and_comments = show_divisions_and_comments or self.get_portal_divisions_json()
+        self._show_divisions_and_comments = None
 
     def get_portal_divisions_json(self):
         return json.dumps({division[0]: {'name': division[1], 'show_division': True, 'comments': True}
@@ -570,7 +573,6 @@ class UserPortalReader(Base, PRBase):
 
     @staticmethod
     def get_portals_and_plan_info_for_user(user_id, page, items_per_page, filter_params):
-        print(filter_params)
         from ..controllers.pagination import pagination
         query, pages, page, count = pagination(db(UserPortalReader, user_id=user_id).filter(filter_params),
                                                page=int(page), items_per_page=int(items_per_page))
@@ -585,3 +587,11 @@ class UserPortalReader(Base, PRBase):
                        portal_divisions=[{division.name: division.id}
                                          for division in upr.portal.divisions],
                        show_divisions_and_comments=json.loads(upr.show_divisions_and_comments))
+
+    @property
+    def show_divisions_and_comments(self):
+        return self.show_divisions_and_comments
+
+    @show_divisions_and_comments.setter
+    def show_divisions_and_comments(self, value):
+        reduce(lambda x, y: x+y, self.show_divisions_and_comments_binary.values())
