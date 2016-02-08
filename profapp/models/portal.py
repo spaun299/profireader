@@ -31,6 +31,8 @@ class Portal(Base, PRBase):
     url_google = Column(TABLE_TYPES['url'])
     url_tweeter = Column(TABLE_TYPES['url'])
     url_linkedin = Column(TABLE_TYPES['url'])
+    # url_vkontakte = Column(TABLE_TYPES['url'])
+
 
     company_owner_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'), unique=True)
     # portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))

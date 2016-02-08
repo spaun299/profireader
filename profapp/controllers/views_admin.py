@@ -73,7 +73,7 @@ def translations_save(json):
 def delete(json):
     return TranslateTemplate.delete(json['objects'])
 
-# Mine ips
+# Greckas ips
 
 @admin_bp.route('/ips', methods=['GET'])
 def ips():
@@ -105,7 +105,7 @@ def ips_load(json):
         Ips.get(exist.id).attr({json.get('editItem')['col']: json.get('editItem')['newValue'], 'md_tm':i}).save().get_client_side_dict()
     subquery = Ips.subquery_search(**params)
 
-    translations, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
+    translations, pages, current_page, count = pagination(subquery, page=page, items_per_page=pageSize)
     add_param = {'value': '1','label': '-- all --'}
 
     templates = db(TranslateTemplate.template).group_by(TranslateTemplate.template) \
@@ -180,7 +180,7 @@ def config_load(json):
                                                  url=json.get('url') or None,
                                                  **params)
 
-    translations, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize)
+    translations, pages, current_page, count = pagination(subquery, page=page, items_per_page=pageSize)
     grid_data = TranslateTemplate.getListGridDataTranslation(translations)
 
     return {'grid_data': grid_data,

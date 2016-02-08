@@ -41,7 +41,7 @@ def edit_profile(user_id):
     if 'avatar' in request.form.keys():
         avatar_type = request.form.get('avatar')
         avatar_methods = {'Upload Image': 'upload', 'Use Gravatar': 'gravatar', 'facebook': 'facebook',
-                          'google': 'google', 'linkedin': 'linkedin', 'microsoft': 'microsoft'}
+                          'google': 'google', 'linkedin': 'linkedin', 'microsoft': 'microsoft', 'vkontakte': 'vkontakte'}
         avatar_type = avatar_methods[avatar_type]
         if avatar_type == 'Upload Image':
             user = user_query.first()
