@@ -1189,17 +1189,21 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             scope.gridApi.grid['searchItemGrid'] = function (col) {
                 scope.all_grid_data.paginationOptions.pageNumber = 1;
                 scope.all_grid_data['filter'][col.field] = col.filter.text;
-                scope.gridApi.grid.setGridData(scope.all_grid_data)
+                scope.gridApi.grid.setGridData(scope.all_grid_data, 'searchItemGrid')
             };
 
-            scope.gridApi.grid['setGridData'] = function (all_grid_data) {
+            scope.gridApi.grid['setGridData'] = function (all_grid_data, action) {
+                //var all_grid_data = scope.all_grid_data;
+                console.log(action);
                 scope.gridOptions1.loadGridData(all_grid_data, function (grid_data) {
                     scope.initGridData = grid_data;
                     scope.applyGridExtarnals(grid_data);
                 });
             };
+
             if (!scope.load_contr) {
-                scope.gridApi.grid.setGridData(scope.all_grid_data)
+                scope.load_contr = true;
+                scope.gridApi.grid.setGridData(scope.all_grid_data, 'init')
             }
 
 
@@ -1207,7 +1211,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 from = col.filters[0]['term'];
                 to = col.filters[1]['term'];
                 scope.all_grid_data['filter'][col.field] = {'from': from, 'to': to};
-                scope.gridApi.grid.setGridData(scope.all_grid_data);
+                scope.gridApi.grid.setGridData(scope.all_grid_data, 'filterForGridRange');
             };
 
             scope.gridApi.grid['refreshGrid'] = function (col) {
@@ -1219,7 +1223,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                         col.filter.text = '';
                     }
                     delete scope.all_grid_data['filter'][col.field];
-                    scope.gridApi.grid.setGridData(scope.all_grid_data)
+                    scope.gridApi.grid.setGridData(scope.all_grid_data, 'refreshGrid')
                 }
             };
 
@@ -1242,7 +1246,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 if (sortColumns.length !== 0) {
                     scope.all_grid_data['sort'][sortColumns[0].field] = sortColumns[0].sort.direction;
                 }
-                scope.gridApi.grid.setGridData(scope.all_grid_data)
+                scope.gridApi.grid.setGridData(scope.all_grid_data, 'sortChanged')
             });
 
             if (gridApi.edit) gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
@@ -1254,7 +1258,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                         'col': colDef.name
                     };
                     scope.all_grid_data.paginationOptions.pageNumber = 1;
-                    scope.gridApi.grid.setGridData(scope.all_grid_data)
+                    scope.gridApi.grid.setGridData(scope.all_grid_data, 'afterCellEdit')
                 }
             });
 
@@ -1263,7 +1267,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     scope.all_grid_data.paginationOptions.pageNumber = newPage;
                     scope.all_grid_data.paginationOptions.pageSize = pageSize;
                     $timeout(function () {
-                        scope.gridApi.grid.setGridData(scope.all_grid_data)
+                        scope.gridApi.grid.setGridData(scope.all_grid_data, 'paginationTemplate')
                     }, 500)
 
                 });
@@ -1298,7 +1302,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                 }
                 if (at_least_one_filter_changed) {
-                    error ? add_message('You push wrong date', 'danger', 3000) : scope.gridApi.grid.setGridData(scope.all_grid_data)
+                    error ? add_message('You push wrong date', 'danger', 3000) : scope.gridApi.grid.setGridData(scope.all_grid_data, 'filterChanged')
                 }
             });
 
