@@ -254,7 +254,7 @@ class UserCompany(Base, PRBase):
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'), nullable=False)
 
     status = Column(TABLE_TYPES['status'], default='APPLICANT')
-    STATUSES = {'APPLICANT', 'ACTIVE', 'SUSPENDED', 'FIRED'}
+    STATUSES = {'APPLICANT': 'APPLICANT', 'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED', 'FIRED': 'FIRED'}
 
     RIGHT_AT_COMPANY = {
         'FILES_BROWSE': 2 ** (4 - 1),
@@ -399,9 +399,8 @@ class UserCompany(Base, PRBase):
         db(UserCompany, company_id=company_id, user_id=user_id,
            status=STATUS.NONACTIVE()).update({'status': stat})
 
-    def has_rights(self, right):
-        return True if self.status == self.STATUSES['ACTIVE'] and right in self.RIGHT_AT_COMPANY \
-            (self.RIGHT_AT_COMPANY[right] & self._rights) else False
+    def has_rights(self, binary_right):
+        return True if self.status == self.STATUSES['ACTIVE'] and (binary_right & self._rights) else False
         # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
         # return user_company.rights_set if user_company and user_company.status == STATUS.ACTIVE() and user_company.employer.status == STATUS.ACTIVE() else []
 
