@@ -99,52 +99,8 @@
             $scope.$$translate = {{ translates('material_details')|safe }};
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
             $scope.url_search_for_user = {{ raw_url_for('company.search_for_user')|safe }};
-            $scope.selectedUser_name = '';
-            $scope.selectedUser = null;
-            $scope.selectedUser_sending = false;
             $scope.url_update_material = {{ raw_url_for('article.article_show_form')|safe }};
-            {#            $scope.url_update_status = {{ raw_url_for('company.update_material_status')|safe }};#}
-            {#            $scope.url_send_article_to_user = '{{ url_for('company.send_article_to_user')|safe }}';#}
-            {#            $scope.url_send_article_user = {{ raw_url_for('company.send_article_to_user')|safe }};#}
-            $scope.data_resp = '';
-            $scope.data_resp_user = '';
-            $scope.data_resp_user_search = '';
-            $scope.data_resp_portal = '';
 
-
-            {#            $scope.saveData =function(data, tags){#}
-            {#                data['tags'] = tags;#}
-            {#                $ok($scope.url_submit_to_portal,#}
-            {#                        data,#}
-            {#                        function (resp) {#}
-            {#                            $scope.data = resp;#}
-            {#                            $scope.data_resp_portal = resp.portal;#}
-            {#                        }#}
-            {#                );#}
-            {#            };#}
-
-            $scope.saveData = function (data) {
-                $ok($scope.url_submit_to_portal,
-                        data,
-                        function (resp) {
-                            $scope.data = resp;
-                            $scope.data_resp_portal = resp.portal;
-                        }
-                );
-            };
-
-
-            {#            $scope.changeStatus = function (new_status) {#}
-            {#                url_send_request = $scope.url_update_status({#}
-            {#                    'company_id': $scope.data.material.company_id,#}
-            {#                    'article_id': $scope.data.material.id#}
-            {#                });#}
-            {#                $ok(url_send_request, {new_status: new_status}, function (resp) {#}
-            {#                    $scope.data.material.status = resp.article_new_status;#}
-            {#                    $scope.data.allowed_statuses = resp.allowed_statuses;#}
-            {#                    $scope.change_status_to = $scope.data.allowed_statuses[0];#}
-            {#                });#}
-            {#            };#}
 
             $scope.loadMaterialDetails = function (data, callback) {
                 $ok('', data, function (resp) {
@@ -154,128 +110,18 @@
 
             };
 
-            $scope.loadPublications = function () {
-                $ok('', {}, function (resp) {
-                    $scope.data = resp;
-                    {#                    $scope.change_status_to = $scope.data.allowed_statuses[0];#}
-                });
-            };
-
-            $scope.afterLoadArticle = function (resp, default_after_load) {
-                default_after_load(resp);
-            };
-
-            {#            $scope.tagsObject = {};#}
-            {#            $scope.tagsObject.tags = [];#}
-
-            $scope.porals_divisions = function (portals) {
-                var divisions = {};
-                $.each(portals, function (k, v) {
-                    divisions[k] = v;
-                });
-                return divisions;
-            };
-
-            $scope.resp_data = function (resp) {
-                $scope.data_resp = resp;
-            };
-
-            $scope.resp_data_user = function (resp) {
-                $scope.data_resp_user = resp;
-            };
-
-            $scope.resp_data_portal = function (resp) {
-                $scope.data_resp_portal = resp;
-            };
-
-            {#            $scope.myRights = function () {#}
-            {#                return false;#}
-            {#                for (var i = 0; i < arguments.length; i++) {#}
-            {#                    if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {#}
-            {#                        return false;#}
-            {#                    }#}
-            {#                }#}
-            {#                return true;#}
-            {#            };#}
-
-            $scope.cancel = function () {
-                return false;
-            };
 
             $scope.updateMaterial = function (material_id) {
                 window.location.href = $scope.url_update_material({'material_id': material_id});
             };
 
-            $scope.onSelect = function ($item, $model, $label) {
-                if (!$item || !$item.id) {
-                    $scope.selectedUser_name = '';
-                    $scope.selectedUser = null;
-                }
-                else {
-                    $scope.selectedUser = $item;
-                }
-            };
-            $scope.url_delete_atricle_from_portal = {{ raw_url_for('company.delete_atricle_from_portal')|safe }};
-            $scope.delete_atricle_from_portal = function (article_portal_id, portal_name) {
-                $scope.loading = true;
-                new_data = $scope.data;
-                $ok($scope.url_delete_atricle_from_portal({article_portal_division_id: article_portal_id}), new_data.material.portal_article, function (resp) {
-                    $scope.loading = false;
-                    $scope.data.material.portal_article = resp;
-                    $scope.article_message = "Article was succesfuly deleted from portal " + portal_name
-                })
-            };
-
-            $scope.searchForUserToJoin = function (val) {
-                return $ok($scope.url_search_for_user({company_id: $scope.data.company.id}), {
-                    company_id: $scope.data.company_id,
-                    search: val
-                }, function (resp) {
-                    return resp.length ? resp : [{id: false, profireader_name: 'No results'}];
-                });
-            };
-
-
-            $scope.joinToUser = function () {
-                $ok($scope.url_send_article_user(), {
-                    send_to_user: {
-                        'id': $scope.selectedUser.id,
-                        'profireader_name': $scope.selectedUser.profireader_name
-                    }
-                }, function (resp) {
-                    $scope.selectedUser = null;
-                    $scope.selectedUser_name = null;
-                    $scope.data['users'] = resp['users'];
-                    $scope.data_resp_user_search = resp;
-                    setTimeout(function () {
-
-                    }, 500);
-                }).finally(function () {
-                    $scope.selectedUser_sending = false;
-                });
-            };
-
-            {#            $scope.sendData = function (data) {#}
-            {#                $scope.loading = true;#}
-            {#                $scope.error = '';#}
-            {#                $ok($scope.url_search_article, data, function (resp) {#}
-            {#                    $scope.datas = resp;#}
-            {#                    $scope.applyGridExtarnals(resp);#}
-            {#                }).finally(function () {#}
-            {#                    $scope.loading = false;#}
-            {#                    $scope.load_contr = true#}
-            {#                });#}
-            {#            };#}
-
 
             $scope.grid_action = function (id, action, row, column_name) {
-
                 var modalInstance = $uibModal.open({
                     templateUrl: 'material_details_publish_dialog.html',
                     controller: 'material_details_publish_dialog',
                     resolve: {
                         article: function () {
-                            {#                            console.log('??!?!?',row['publication']?row['publication']:$scope.data['material']);#}
                             return row['publication'] ? row['publication'] : $scope.data['material'];
                         },
                         action: function () {
@@ -321,14 +167,12 @@
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
                     }
                     , {
-                        name: 'publication.division.name', width: '12%',
-                        type: 'link',
+                        name: 'publication.division.name', width: '12%', type: 'link',
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
                     }
 
                     , {
-                        name: 'publication.title', width: '12%',
-                        type: 'link',
+                        name: 'publication.title', width: '12%', type: 'link',
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
                     }
                     , {
@@ -341,18 +185,14 @@
                         name: 'publication.publishing_tm', enableSorting: true, width: '10%'
                     }
                     , {
-                        name: 'publication.status', width: '10%',
-                        afilter: {type: 'multi_select'}
+                        name: 'publication.status', width: '10%', afilter: {type: 'multi_select'}
 
                     }
                     , {
                         name: 'publication.visibility', width: '10%'
                     }
                     , {
-                        name: 'actions',
-                        type: 'actions',
-                        onclick: 'grid_action',
-                        width: '10%'
+                        name: 'actions', type: 'actions', onclick: 'grid_action', width: '10%'
 
                     }
                 ]
@@ -372,63 +212,23 @@
     </style>
 
     <div ng-controller="material_details">
-
         {% raw %}
-        <div ng-if="!data">{{ _('Loading...') }}</div>
-        <div ng-if="data">
-            <h2>{{ _('Material details `%(title)s`', {title: data.material.title}) }}</h2>
-            <h4>{{ _('Created at') }} {{data.material.cr_tm}}</h4>
-            <h4>{{ _('Last modified at') }} {{data.material.md_tm}}</h4>
-            <button class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
-            <br/><br/>
-            <hr/>
-            <div class="material-details-article-preview">
-                {% endraw %}{% include 'partials/article_details.html' %}{% raw %}
-            </div>
-            <button class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
-            <br/><br/>
-            <hr/>
-            <h2>{{ _('Material is published or can be published at portals') }}</h2>
+        <h2>{{ _('Material details `%(title)s`', {title: data.material.title}) }}</h2>
+        <h4>{{ _('Created at') }} {{data.material.cr_tm}}</h4>
+        <h4>{{ _('Last modified at') }} {{data.material.md_tm}}</h4>
+        <hr/>
+        <button class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+        <div class="material-details-article-preview">
+            {% endraw %}{% include 'partials/article_details.html' %}{% raw %}
         </div>
+        <button class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+        <br/><br/>
+        <hr/>
 
-
+        <h2>{{ _('Material is published or can be published at portals') }}</h2>
         <div class="grid" id="grid1" ui-grid-edit ui-grid="gridOptions1"></div>
         {% endraw %}
 
-        {#            <div ng-if="0">#}
-        {#                <div ng-if="!data_resp_portal.portal">#}
-        {#                    <hr>#}
-        {#                    <!-- <form ang-ok ng-onsuccess="resp_data_portal" ng-onsubmit="getData" ng-action="url_submit_to_portal"> -->#}
-        {#                    <form>#}
-        {#                        {{_('Publish this material to portal')}}#}
-        {#                        <select ng-model="data.selected_division">#}
-        {#                            <option disabled>---{{_('Below materials sent')}}---</option>#}
-        {#                            <optgroup ng-repeat="port in porals_divisions(data.portals)" label="{{ port.name }}">#}
-        {#                                <option ng-repeat="division in port.divisions" value="{{ division.id }}"#}
-        {#                                        ng-selected="selected">#}
-        {#                                    {{ division.name }} {{ division.portal_division_type_id }}#}
-        {#                                </option>#}
-        {#                            </optgroup>#}
-        {##}
-        {#                            <optgroup disabled ng-repeat="joined_portal in data.joined_portals"#}
-        {#                                      label="| {{ joined_portal.name }} |">#}
-        {#                                <option ng-repeat="division in joined_portal.divisions" value="{{ division.id }}">#}
-        {#                                    {{ division.name }}#}
-        {#                                </option>#}
-        {#                            </optgroup>#}
-        {#                        </select>#}
-        {#                        <br/>#}
-        {##}
-        {#                    </form>#}
-        {#                </div>#}
-        {#                <span ng-if="data_resp_portal">#}
-        {#                    {{_('Article %(title)s successfully was published at portal', {'title': data.material.title})}} "{{ data.portal }}"#}
-        {#                </span>#}
-        {#     </div>#}
-
-
     </div>
-
-
 
 {% endblock portal_content %}
