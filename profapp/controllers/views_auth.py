@@ -86,7 +86,7 @@ def login_signup_general(*soc_network_names):
                 if 'portal_id' in session.keys():
                     portal_id = session['portal_id']
                     session.pop('portal_id')
-                    return redirect(url_for('general.reader_subscribe', portal_id=portal_id))
+                    return redirect(url_for('reader.reader_subscribe', portal_id=portal_id))
                 # return redirect(url_for('general.index'))  # #  http://profireader.com/
                 # url = redirect_url()
                 # print(url)
@@ -124,7 +124,7 @@ def login_signup_endpoint():
     # if g.user_init and g.user_init.is_authenticated():
     if g.user_init.is_authenticated():
         if 'portal_id' in session.keys():
-            return redirect(url_for('general.reader_subscribe', portal_id=session['portal_id']))
+            return redirect(url_for('reader.reader_subscribe', portal_id=session['portal_id']))
         # flash('You are already logged in')
 
     login_signup = request.args.get('login_signup', 'login')
@@ -211,7 +211,7 @@ def login():
     if g.user_init.is_authenticated():
         if portal_id:
             session.pop('portal_id')
-            return redirect(url_for('general.reader_subscribe', portal_id=portal_id))
+            return redirect(url_for('reader.reader_subscribe', portal_id=portal_id))
         flash('You are already logged in. If you want to login with another account logout first please')
         return redirect(url_for('general.index'))
 
@@ -228,7 +228,7 @@ def login():
             login_user(user)
             if portal_id:
                 session.pop('portal_id')
-                return redirect(url_for('general.reader_subscribe', portal_id=portal_id))
+                return redirect(url_for('reader.reader_subscribe', portal_id=portal_id))
             # return redirect(request.args.get('next') or url_for('general.index'))
             return redirect(redirect_url())
         flash('Invalid username or password.')

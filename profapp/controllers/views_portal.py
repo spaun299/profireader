@@ -3,14 +3,14 @@ from flask import render_template, g, flash, redirect, url_for, jsonify
 from ..models.company import Company
 from flask.ext.login import current_user, login_required
 from ..models.portal import PortalDivisionType
+from ..models.translate import TranslateTemplate
 from utils.db_utils import db
 from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDivision, \
     PortalDivisionSettingsCompanySubportal, PortalConfig
 from ..models.tag import Tag, TagPortal, TagPortalDivision
 from .request_wrapers import ok, check_rights, tos_required
 from ..models.articles import ArticlePortalDivision, ArticleCompany, Article
-from ..models.company import simple_permissions
-from ..models.rights import Right
+from ..models.company import UserCompany
 from profapp.models.rights import RIGHTS
 from ..controllers import errors
 from ..models.pr_base import PRBase, Grid
@@ -418,28 +418,20 @@ def portals_partners(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def portals_partners_load(json, company_id):
-    page = json.get('paginationOptions')['pageNumber'] if json.get('paginationOptions') else 1
-    pageSize = json.get('paginationOptions')['pageSize'] if json.get('paginationOptions') else 25
-    search_text = json.get('search_text')
-    portal_id = json.get('getPageOfId') if json.get('getPageOfId') else None
-    subquery_member_portal = db(MemberCompanyPortal, portal_id=portal_id,
-                                company_id=company_id).one() if portal_id else None
-    portal = db(Company, id=company_id).one().own_portal
-    portals_partners = [port.get_client_side_dict(fields='name, company_owner_id,id')
-                                 for port in Company.get(json['company_id']).get_portals_where_company_is_member()]
-    params = {}
-    subquery = Company.subquery_company_partners(company_id=company_id, search_text=search_text, **params)
-    partners_g, pages, current_page = pagination(subquery, page=page, items_per_page=pageSize,
-                                                 object=subquery_member_portal)
-    user_rights = list(g.user.user_rights_in_company(company_id))
-    grid_data = Company.getListGridDataPortalPartners(partners_g)
+    subquery_member_portal = db(MemberCompanyPortal, portal_id=json.get('getPageOfId'),
+                                    company_id=company_id).one().id if json.get('getPageOfId') else None
+    subquery = Company.subquery_company_partners(company_id, json.get('filter'))
+    partners_g, pages, current_page, count = pagination(subquery, subquery_member_portal, **Grid.page_options(json.get('paginationOptions')))
     return {'page': current_page,
-            'grid_data': grid_data,
-            'total': subquery.count(),
-            'portal': portal.get_client_side_dict(fields='name') if portal else [],
-            'portals_partners': portals_partners,
+            'grid_data': [{'portal' : {'name':partner.portal.name,'id': partner.portal.id},'link' : partner.portal.host,'company' : Company.get(partner.portal.company_owner_id).name
+                        } for partner in partners_g],
+            'total': count,
+            'portal': db(Company, id=company_id).one().own_portal.get_client_side_dict(fields='name') if db(Company, id=company_id).one().own_portal else [],
+            'portals_partners': [port.get_client_side_dict(fields='name, company_owner_id,id')
+                                 for port in Company.get(company_id).get_portals_where_company_is_member()],
             'company_id': company_id,
-            'user_rights': user_rights}
+            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()
+            }
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])
@@ -458,11 +450,10 @@ def companies_partners_load(json, company_id):
     portal = db(Company, id=company_id).one().own_portal
     companies_partners = [comp.get_client_side_dict(fields='company.id, company.name') for comp in
                           portal.company_members] if portal else []
-    user_rights = list(g.user.user_rights_in_company(company_id))
     return {'portal': portal.get_client_side_dict(fields='name') if portal else [],
             'companies_partners': companies_partners,
             'company_id': company_id,
-            'user_rights': user_rights}
+            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()}
 
 
 @portal_bp.route('/search_for_portal_to_join/', methods=['POST'])
@@ -490,25 +481,18 @@ def publications(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def publications_load(json, company_id):
-    portal = db(Company, id=company_id).one().own_portal
-    if not portal:
-        return dict(portal_not_exist=True)
-    page = json.get('paginationOptions')['pageNumber']
-    pageSize = json.get('paginationOptions')['pageSize']
-    search_text = json.get('search_text')
-    params = PRBase.getParamsGrid(json.get('filter'), json.get('sort'), portal_id=portal.id)
-    subquery = ArticlePortalDivision.subquery_portal_articles(search_text=search_text, **params)
-    articles, pages, current_page = pagination(subquery,
-                                               page=page, items_per_page=pageSize)
-    add_param = {'value': '1', 'label': '-- all --'}
-    comp_grid = Article.list_for_grid_tables(
-            ArticlePortalDivision.get_companies_which_send_article_to_portal(portal.id), add_param, True)
-    statuses_grid = Grid.filter_for_status(ArticlePortalDivision.STATUSES)
-    grid_data = Article.getListGridDataPublication(articles)
-    grid_filters = {'publication_status': statuses_grid, 'company': comp_grid}
-    return {'grid_data': grid_data,
-            'grid_filters': grid_filters,
-            'total': subquery.count()}
+    portal = db(Company, id=company_id).one().own_portal.id
+    subquery = ArticlePortalDivision.subquery_portal_articles(portal, json.get('filter'), json.get('sort'))
+    articles, pages, current_page ,count = pagination(subquery,**Grid.page_options(json.get('paginationOptions')))
+    grid_filters = {
+        'publication_status':Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+        'company': [{'value': company_id, 'label': company} for company_id, company  in
+                    ArticlePortalDivision.get_companies_which_send_article_to_portal(portal).items()]
+    }
+    return {'grid_data': Article.getListGridDataPublication(articles),
+            'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
+                             (k, v) in grid_filters.items()},
+            'total': count}
 
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
@@ -529,7 +513,7 @@ def publication_details_load(json, article_id, company_id):
         if article['status'] != ArticlePortalDivision.STATUSES['PUBLISHED'] \
         else ArticlePortalDivision.STATUSES['NOT_PUBLISHED']
     return {'article': article,
-            'user_rights': list(g.user.user_rights_in_company(company_id)),
+            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights(),
             'new_status': new_status,
             'allowed_statuses': allowed_statuses}
 

@@ -55,7 +55,7 @@ def translations_load(json):
                     db(TranslateTemplate.url).group_by(TranslateTemplate.url) \
         .order_by(expression.asc(expression.func.lower(TranslateTemplate.url))).all()]
     }
-    return {'grid_data': TranslateTemplate.getListGridDataTranslation(translations),
+    return {'grid_data': [translation.get_client_side_dict() for translation in translations],
             'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
                              (k, v) in grid_filters.items()},
             'total': count

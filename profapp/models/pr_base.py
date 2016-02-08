@@ -302,27 +302,31 @@ class Grid:
         return [{'value': status, 'label': status} for status in statuses.keys()]
 
     def page_options(client_json):
-        return  {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize']}
+        return {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize']} if client_json else {}
 
     @staticmethod
-    def subquery_grid(query, filters, sorts):
-        for filter in filters:
-            if filter['type'] == 'text':
-                query = query.filter(filter['field'].ilike("%" + filter['value'] + "%"))
-            elif filter['type'] == 'select':
-                query = query.filter(filter['field'] == filter['value'])
-            elif filter['type'] == 'date_range':
-                fromm = datetime.datetime.utcfromtimestamp((filter['value']['from']+1)/1000)
-                to = datetime.datetime.utcfromtimestamp((filter['value']['to']+86399999)/1000)
-                query = query.filter(filter['field'].between(fromm, to))
-            elif filter['type'] == 'range':
-                query = query.filter(filter['field'].between(filter['value']['from'], filter['value']['to']))
-            elif filter['type'] == 'multiselect':
-                query = query.filter(or_(filter['field'] == v for v in filter['value']))
-        for sort in sorts:
-            if sort['type'] == 'date':
-                query = query.order_by(sort['field'].asc()) if sort['value'] == 'asc' else query.order_by(
-                    sort['field'].desc())
+    def subquery_grid(query, filters=None, sorts=None):
+        if filters:
+            for filter in filters:
+                if filter['type'] == 'text':
+                    query = query.filter(filter['field'].ilike("%" + filter['value'] + "%"))
+                elif filter['type'] == 'text_multi':
+                    query = query.filter(or_(v.ilike("%" + filter['value'] + "%") for v in filter['field']))
+                elif filter['type'] == 'select':
+                    query = query.filter(filter['field'] == filter['value'])
+                elif filter['type'] == 'date_range':
+                    fromm = datetime.datetime.utcfromtimestamp((filter['value']['from'] + 1) / 1000)
+                    to = datetime.datetime.utcfromtimestamp((filter['value']['to'] + 86399999) / 1000)
+                    query = query.filter(filter['field'].between(fromm, to))
+                elif filter['type'] == 'range':
+                    query = query.filter(filter['field'].between(filter['value']['from'], filter['value']['to']))
+                elif filter['type'] == 'multiselect':
+                    query = query.filter(or_(filter['field'] == v for v in filter['value']))
+        if sorts:
+            for sort in sorts:
+                if sort['type'] == 'date':
+                    query = query.order_by(sort['field'].asc()) if sort['value'] == 'asc' else query.order_by(
+                            sort['field'].desc())
         return query
 
 
@@ -332,6 +336,25 @@ class PRBase:
 
     def position_unique_filter(self):
         return self.__class__.position != None
+
+    @staticmethod
+    def merge_dicts(*args):
+        ret = {}
+        for d in args:
+            ret.update(d)
+        return ret
+
+    @staticmethod
+    def convert_rights_binary_to_dict(binary_rights, all_rights):
+        return {right_name: True if (binary_rights & right_binary_value) else False for right_name, right_binary_value
+                in all_rights.items()}
+
+    @staticmethod
+    def convert_rights_dict_to_binary(dict_rights, all_rights):
+        ret = 0
+        for right_name, right_binary_value in all_rights.items():
+            ret |= (right_binary_value if (right_name in dict_rights and dict_rights[right_name]) else 0)
+        return ret
 
     # if insert_after_id == False - insert at top
     # if insert_after_id == True - insert at bottom
@@ -418,10 +441,10 @@ class PRBase:
         return self
 
     @staticmethod
-    def get_ordered_dict(list_of_objects, **kwargs):
+    def get_ordered_dict(list_of_dicts, **kwargs):
         ret = OrderedDict()
-        for item in list_of_objects:
-            ret[item.id] = item.get_client_side_dict(**kwargs)
+        for item in list_of_dicts:
+            ret[item['id']] = item
         return ret
 
     def get_client_side_dict(self, fields='id',
@@ -617,7 +640,6 @@ class PRBase:
         event.listen(cls, 'after_insert', cls.add_to_search)
         event.listen(cls, 'after_update', cls.update_search_table)
         event.listen(cls, 'after_delete', cls.delete_from_search)
-
 
 #
 #

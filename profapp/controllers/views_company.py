@@ -1,8 +1,8 @@
 from .blueprints_declaration import company_bp
-from ..models.company import simple_permissions
+
 from flask.ext.login import login_required, current_user
 from flask import render_template, request, url_for, g, redirect
-from ..models.company import Company, UserCompany, Right, RightHumnReadible
+from ..models.company import Company, UserCompany
 from ..models.users import User
 from ..models.translate import TranslateTemplate
 from .request_wrapers import ok, check_rights, tos_required
@@ -76,7 +76,6 @@ def materials(company_id):
 @ok
 def materials_load(json, company_id):
     subquery = ArticleCompany.subquery_company_materials(company_id, json.get('filter'), json.get('sort'))
-
     materials, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
 
     grid_filters = {
@@ -86,7 +85,6 @@ def materials_load(json, company_id):
         'publication_status': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
         'publication_visibility': Grid.filter_for_status(ArticlePortalDivision.VISIBILITIES)
     }
-
     return {'grid_data': Article.getListGridDataMaterials(materials),
             'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
                              (k, v) in grid_filters.items()},
@@ -144,37 +142,100 @@ def update_material_status(json, company_id, article_id):
 @login_required
 # @check_rights(simple_permissions(['manage_rights_company']))
 def profile(company_id):
-    user_rights = list(g.user.user_rights_in_company(company_id))
+
     return render_template('company/company_profile.html',
                            company=db(Company, id=company_id).one(),
-                           user_rights=user_rights)
+                           rights_user_in_company = UserCompany.get(company_id=company_id).get_rights()
+                           )
 
 
-@company_bp.route('/employees/<string:company_id>/')
+@company_bp.route('/<string:company_id>/employees/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def employees(company_id):
-    company_user_rights = UserCompany.show_rights(company_id)
-    ordered_rights = sorted(Right.keys(), key=lambda t: Right.RIGHT_POSITION()[t.lower()])
-    ordered_rights = list(map((lambda x: getattr(x, 'lower')()), ordered_rights))
+    return render_template('company/company_employees.html', company=Company.get(company_id))
 
-    for user_id in company_user_rights.keys():
-        rights = company_user_rights[user_id]['rights']
-        rez = OrderedDict()
-        for elem in ordered_rights:
-            rez[elem] = True if elem in rights else False
-        company_user_rights[user_id]['rights'] = rez
 
-    user_id = current_user.get_id()
-    curr_user = {user_id: company_user_rights[user_id]}
+@company_bp.route('/<string:company_id>/employees/', methods=['POST'])
+@ok
+def employees_load(json, company_id):
+    company = Company.get(company_id)
+    employees_list = [
+        PRBase.merge_dicts(employment.employee.get_client_side_dict(), employment.get_client_side_dict())
+        for employment in company.employee_assoc]
 
-    return render_template('company/company_employees.html',
-                           company=db(Company, id=company_id).one(),
-                           company_user_rights=company_user_rights,
-                           curr_user=curr_user,
-                           Right=Right,
-                           RightHumnReadible=RightHumnReadible)
+    return {
+        'company': company.get_client_side_dict(fields='id,name'),
+        'grid_data': employees_list
+    }
+    # company_user_rights = UserCompany.show_rights(company_id)
+    # ordered_rights = sorted(Right.keys(), key=lambda t: Right.RIGHT_POSITION()[t.lower()])
+    # ordered_rights = list(map((lambda x: getattr(x, 'lower')()), ordered_rights))
+
+    # for user_id in company_user_rights.keys():
+    #     rights = company_user_rights[user_id]['rights']
+    #     rez = OrderedDict()
+    #     for elem in ordered_rights:
+    #         rez[elem] = True if elem in rights else False
+    #     company_user_rights[user_id]['rights'] = rez
+
+    # user_id = current_user.get_id()
+    # curr_user = {user_id: company_user_rights[user_id]}
+    # curr_user = {user_id: []}
+
+    # return render_template('company/company_employees.html',
+    #                        company=db(Company, id=company_id).one(),
+    #                        company_user_rights=[],
+    #                        curr_user=curr_user,
+    #                        rights={})
+
+
+@company_bp.route('/<string:company_id>/employee_details/<string:user_id>/', methods=['GET'])
+@tos_required
+@login_required
+# @check_rights(simple_permissions([]))
+def employee_details(company_id, user_id):
+    employment = UserCompany.get(user_id=user_id, company_id=company_id)
+    return render_template('company/company_employee_details.html',
+                           employer=employment.employer.get_client_side_dict(),
+                           employee=employment.employee.get_client_side_dict(),
+                           employment=employment.get_client_side_dict())
+
+
+@company_bp.route('/<string:company_id>/employee_update/<string:user_id>/', methods=['GET'])
+@tos_required
+@login_required
+# @check_rights(simple_permissions([]))
+def employee_update(company_id, user_id):
+    return render_template('company/company_employee_update.html',
+                           employment=UserCompany.get(user_id=user_id, company_id=company_id))
+    # employer=employment.employer.get_client_side_dict(),
+    # employee=employment.employee.get_client_side_dict())
+
+
+@company_bp.route('/<string:company_id>/employee_update/<string:user_id>/', methods=['POST'])
+@tos_required
+@login_required
+@ok
+# @check_rights(simple_permissions([]))
+def employee_update_load(json, company_id, user_id):
+    action = g.req('action', allowed=['load', 'validate', 'save'])
+    employment = UserCompany.get(user_id=user_id, company_id=company_id)
+    if action == 'load':
+        return  {'employment': employment.get_client_side_dict(),
+                'employee': employment.employee.get_client_side_dict(),
+                'employer': employment.employer.get_client_side_dict(fields='id|logo_file_id|name'),
+                'statuses_available': employment.get_statuses_avaible(),
+                'rights_available': employment.get_rights_avaible()}
+    else:
+        employment.set_client_side_dict(json['employment'])
+        if action == 'validate':
+            employment.detach()
+            return employment.validate(False)
+        else:
+            employment.save()
+    return employment.get_client_side_dict()
 
 
 @company_bp.route('/update_rights', methods=['POST'])
@@ -202,7 +263,6 @@ def update_rights():
 def update(company_id=None):
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     user_have_comp = True if len(user_companies) > 0 else False
-    user_have_comp = False
     company = db(Company, id=company_id).first()
     return render_template('company/company_edit.html', company_id=company_id, user_comp=user_have_comp,
                            company_name=company.name if company else '',
@@ -409,7 +469,7 @@ def load_suspended_employees(json, company_id):
 # @check_rights(simple_permissions([]))
 def readers(company_id, page=1):
     company = Company.get(company_id)
-    company_readers, pages, page = pagination(query=company.readers_query, page=page)
+    company_readers, pages, page, count = pagination(query=company.readers_query, page=page)
 
     reader_fields = ('id', 'email', 'nickname', 'first_name', 'last_name')
     company_readers_list_dict = list(map(lambda x: dict(zip(reader_fields, x)), company_readers))
@@ -422,3 +482,17 @@ def readers(company_id, page=1):
                            page_buttons=Config.PAGINATION_BUTTONS,
                            search_text=None,
                            )
+
+
+@company_bp.route('/readers/<string:company_id>/', methods=['POST'])
+@ok
+def readers_load(json, company_id):
+    company = Company.get(company_id)
+    company_readers, pages, page, count = pagination(query=company.get_readers_for_portal(json.get('filter')),
+                                                     **Grid.page_options(json.get('paginationOptions')))
+
+    return {'grid_data': [reader.get_client_side_dict(
+            'id,profireader_email,profireader_name,profireader_first_name,profireader_last_name') for reader in
+                          company_readers],
+            'total': count
+            }

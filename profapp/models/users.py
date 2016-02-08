@@ -26,11 +26,9 @@ from flask.ext.login import UserMixin, AnonymousUserMixin
 from .files import File
 from .pr_base import PRBase, Base
 from ..constants.SEARCH import RELEVANCE
-from .rights import Right
 from sqlalchemy import CheckConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
-from ..constants.USER_ROLES import GOD_RIGHTS
-
+from ..constants.STATUS import STATUS
 
 class User(Base, UserMixin, PRBase):
     __tablename__ = 'user'
@@ -73,7 +71,6 @@ class User(Base, UserMixin, PRBase):
 
     employers = relationship('Company', secondary='user_company', back_populates='employees')
     companies = relationship('Company', back_populates='user_owner')
-
 
     # FB_NET_FIELD_NAMES = ['id', 'email', 'first_name', 'last_name', 'name', 'gender', 'link', 'phone']
     # SOCIAL_NETWORKS = ['profireader', 'google', 'facebook', 'linkedin', 'twitter', 'microsoft', 'yahoo']
@@ -298,6 +295,8 @@ class User(Base, UserMixin, PRBase):
         g.db.commit()
 
     def avatar(self, avatar_via, size=500, small_size=100, url=None):
+        if avatar_via == 'upload':
+            return self
         avatar_urls = dict(facebook=lambda s: 'http://graph.facebook.com/{facebook_id}/picture?width={size}&'
                                               'height={size}&redirect=0'.format(facebook_id=self.facebook_id, size=s),
                            google=lambda s: 'https://www.googleapis.com/plus/v1/people/{google_id}?'
@@ -307,7 +306,7 @@ class User(Base, UserMixin, PRBase):
                            # vkontakte=lambda s, u=url: u if u else self.gravatar(size=s),
                            gravatar=lambda s: self.gravatar(size=s),
                            microsoft=lambda _: 'https://apis.live.net/v5.0/{microsoft_id}/picture'.format(
-                               microsoft_id=self.microsoft_id))
+                                   microsoft_id=self.microsoft_id))
         url = avatar_urls[avatar_via](size)
         url_small = avatar_urls[avatar_via](small_size)
         if avatar_via == 'facebook':
@@ -367,7 +366,7 @@ class User(Base, UserMixin, PRBase):
         email = getattr(self, 'profireader_email', 'guest@profireader.com')
         hash = hashlib.md5(email.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
-            url=url, hash=hash, size=size, default=default, rating=rating)
+                url=url, hash=hash, size=size, default=default, rating=rating)
 
     def profile_completed(self):
         completeness = True
@@ -502,27 +501,21 @@ class User(Base, UserMixin, PRBase):
         self.profireader_email = new_email
         return True
 
-    # TODO (AA to ???): file.upload(content=content).url() is wrong and should be corrected
     def avatar_update(self, passed_file):
         if passed_file:
             list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
-            self.profireader_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
-            print(passed_file)
-            self.profireader_small_avatar_url = File.uploadWithoutChunk(passed_file, self).url()
+            file = File.uploadWithoutChunk(passed_file, self)
+            self.profireader_avatar_url = file.url()
+            file_thumbnail = file.get_thumbnails(size=(133,100)).thumbnail
+            self.profireader_small_avatar_url = file_thumbnail[0].url()
         else:
-            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
+            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if
+                    re.search('^image/.*', file.mime)]
             self.profireader_avatar_url = self.gravatar(size=100)
             self.profireader_small_avatar_url = self.gravatar(size=100)
         if list:
             for f in list:
                 File.remove(f.id)
-        # TODO: this image should be cropped
-        # file = File(
-        #     author_user_id=self.id,
-        #     name=passed_file.filename,
-        #     mime=passed_file.content_type)
-
-
         return self
 
     # def can(self, permissions):
@@ -531,11 +524,6 @@ class User(Base, UserMixin, PRBase):
 
     # def is_administrator(self):
     #    return self.can(Permission.ADMINISTER)
-
-    # TODO (AA to AA): it should be corrected
-    def user_rights_in_company(self, company_id):
-        user_company = self.employer_assoc.filter_by(company_id=company_id).first()
-        return user_company.rights_set if user_company else []
 
     def get_client_side_dict(self, fields='id|profireader_name|profireader_avatar_url|profireader_small_avatar_url',
                              more_fields=None):

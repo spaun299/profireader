@@ -1,0 +1,40 @@
+body  {
+  padding-top: 100px;
+
+}
+
+.container .navbar-header .navbar-brand {
+    padding: 10px 0px;
+}
+.navbar-brand img {
+    height: 100%;
+    width: auto;
+}
+
+.prof_login {
+	font-size: 18px !important;
+}
+
+.prof_top_menu{
+	font-size: 18px
+}
+
+.person-small-cover {
+    border-radius: 50%;
+    border: 3px #999 solid;
+    width: 36px;
+    height: 36px;
+}
+
+.logo-small-cover {
+    width: 36px;
+    height: 36px;
+}
+
+.nav > li > ul > li > a {
+    display: inline-block;
+}
+
+.navbar ul .fa {
+	font-size: 150%;
+}

@@ -64,15 +64,17 @@
 
                 return $sce.trustAsHtml(full_text.replace(re, '<span style="color:blue">' + search_text + '</span>'));
             }
-            $scope.myRights = function () {
-                if (!$scope.data || !$scope.data.user_rights) return false;
-                for (var i = 0; i < arguments.length; i++) {
-                    if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {
-                        return false;
-                    }
-                }
-                return true;
-            };
+
+{#            $scope.myRights = function () {#}
+{#                if (!$scope.data || !$scope.data.user_rights) return false;#}
+{#                for (var i = 0; i < arguments.length; i++) {#}
+{#                    if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {#}
+{#                        return false;#}
+{#                    }#}
+{#                }#}
+{#                return true;#}
+{#            };#}
+
         }]);
 
     </script>

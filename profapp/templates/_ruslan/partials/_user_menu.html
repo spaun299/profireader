@@ -1,0 +1,78 @@
+<script>
+
+    module.controller('UserLoginController', ['$scope', '$uibModal', '$ok', '$timeout', function ($scope, $uibModal, $ok, $timeout) {
+        $scope.user = {{ g.user_dict|tojson|safe }};
+
+        $scope.tos = function () {
+            var accepted = $scope.user.tos;
+            if (accepted != true) {
+                $('#licence').modal('show');
+                return true
+            }
+        };
+
+        $scope.url_list_reader = {{ raw_url_for('reader.list_reader')|safe }}
+                $scope.url_company_show = {{ raw_url_for('company.show')|safe }}
+                        $scope.url_general_help = {{ raw_url_for('general.help')|safe }}
+                                $scope.url_auth_logout = {{ raw_url_for('auth.logout')|safe }}
+                                        $scope.url_user_profile = {{ raw_url_for('user.profile')|safe }}
+
+                                                $scope.user_avatar_url = '{{ current_user.profireader_avatar_url }}'
+
+
+        login_signup = '{{ login_signup }}';  // login_signup = 'login' or 'signup' or None
+        $scope.login_signup = (login_signup === 'signup') ? 'signup' : 'login';
+        $scope.$$translate = {{ translates('UserLoginController')|safe }};
+        $scope.open_filemanager = function () {
+            window.location.href = '/filemanager/';
+        };
+        $scope.selected_company_menu = '';
+        $scope.set_selected_company_menu = function (menu_item) {
+            $timeout(function () {
+                $scope.selected_company_menu = menu_item;
+            }, 0);
+        }
+    }]);
+
+</script>
+{% raw %}
+<nav ng-controller="UserLoginController" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <a class="navbar-brand" href="{{ url_for('general.index') }}"><img src="/static/front/img/profi.png"></a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="{{ url_list_reader() }}" title="Стрічка читача"><i class="fa fa-newspaper-o fa-2x"></i></a>
+                </li>
+                <li><a href="#" title="Всі повідомлення"><i class="fa fa-envelope-o fa-2x"></i></a></li>
+                <li><a href="{{ url_company_show() }}" title="Компанії"><i class="fa fa-building-o fa-2x"></i></a></li>
+                <li><a href="#" ng-click="open_filemanager()" title="Менеджер файлів"><i
+                        class="fa fa-folder-open-o fa-2x"></i></a></li>
+                <li><a href="{{ url_general_help() }}" title="Інформація"><i class="fa fa-info fa-2x"></i></a></li>
+                <li><a href="#"></a></li>
+                <li ng-show="user.id"><a href="{{ url_user_profile({user_id: 'user.id'}) }}"><img
+                        class="person-small-cover"
+                        pr-image="" pr-no-image="{{ user_avatar_url }}"
+                > {{user.name}}</a></li>
+                <li ng-show="user.id"><a href="{{ url_auth_logout() }}">{{_('Log Out') }}</a></li>
+                <li ng-show="!user.id"><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=login' }}">{{
+                    _('Log In') }}</a></li>
+                <li ng-show="!user.id"><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=signup' }}">{{
+                    _('Sign Up') }}</a></li>
+
+
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+{% endraw %}

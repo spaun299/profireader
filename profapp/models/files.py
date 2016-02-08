@@ -252,7 +252,9 @@ class File(Base, PRBase):
                     self.thumbnail.append(thumbnail)
                     g.db.add(thumbnail)
                     g.db.flush()
-                except:  # truncated png/gif
+                except Exception as e:  # truncated png/gif
+                    a = e
+                    print(self.id)
                     File.remove(self.id)
                 # resized = image_pil.resize(size)
 
@@ -294,7 +296,7 @@ class File(Base, PRBase):
 
     def url(self):
         server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', self.id)
-        return '//file' + server + '.profireader.com/' + self.id + '/'
+        return 'http://file' + server + '.profireader.com/' + self.id + '/'
 
     @staticmethod
     def get_index(file, lists):
@@ -502,7 +504,6 @@ class File(Base, PRBase):
                             size=size
                             ).save()
             file_cont = FileContent(file=file, content=self.stream.read(-1))
-            print(str(file_cont.content))
             g.db.add(file, file_cont)
             g.db.commit()
             return file

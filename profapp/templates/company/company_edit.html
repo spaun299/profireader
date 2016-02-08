@@ -19,6 +19,7 @@
             $scope.data = {};
             $scope.company_id = '{{ company.id }}';
             $scope.user_have_company = '{{ user_comp }}'=== 'True'? true: null;
+            $scope.cropper_for_copmany = true
 
             $scope.cancel = function () {
                 window.location.href = $scope.url_back();
@@ -99,7 +100,6 @@
                    type="submit"
                    value="{{ data.id ? _('save') : _('create') }}"/>
         </div>
-
     </div>
 
 

@@ -1,12 +1,25 @@
 {#TODO: SS by OZ: add {% raw and remove this all stupid {{ '{{' }} %}#}
+<script>
+    module.controller('CompanyMenuController', ['$scope', '$timeout', function ($scope, $timeout) {
+        $scope.user = {{ g.user_dict|tojson|safe }};
+        console.log($scope.user)
+        $scope.$$translate = {{ translates('CompanyMenuController')|safe }};
+        $scope.selected_company_menu = 'aaa';
+        $scope.set_selected_company_menu = function (menu_item) {
+            $timeout(function () {
+                $scope.selected_company_menu = menu_item;
+            }, 0);
+        };
+    }]);
+</script>
 <div ng-controller="CompanyMenuController" class="topbar-menu-links">
     <div ng-cloak ng-show="user.id">
 
 
-
-        <a style="float: right" class="navbar-brand" href="{{ url_for('company.profile', company_id = company.id) }}"><img
+        <a style="float: right" class="navbar-brand"
+           href="{{ url_for('company.profile', company_id = company.id) }}"><img
                 pr-no-image="/static/images/company_no_logo.png" pr-image="'{{ company.logo_file_relationship.id }}'"
-                style="witdh: 300px; height: 60px;" /></a>
+                style="witdh: 300px; height: 60px;"/></a>
         <a style="float: right" ng-class="{'selected': selected_company_menu == 'home'}"
            href="{{ url_for('company.profile', company_id = company.id) }}">{{ company.name }}</a>
 
@@ -32,7 +45,6 @@
            href="#">{{ '{{' }}_('Statistics'){{ '}}' }}</a>
         <a ng-class="{'selected': selected_company_menu == 'portal_profile'}" id="portal_profile"
            href="#">{{ '{{' }}_('Portal profile'){{ '}}' }}</a>
-
 
 
     </div>

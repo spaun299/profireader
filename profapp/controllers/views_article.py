@@ -9,7 +9,7 @@ from .pagination import pagination
 from config import Config
 from .views_file import crop_image, update_croped_image
 from ..models.files import ImageCroped
-from ..models.company import Company
+from ..models.company import Company, UserCompany
 
 from utils.db_utils import db
 from sqlalchemy.orm.exc import NoResultFound
@@ -167,14 +167,33 @@ def material_details(material_id):
 def material_details_load(json, material_id):
     article = ArticleCompany.get(material_id)
 
+    portals = [p.get_client_side_dict(fields='id, name, divisions.id|name|portal_division_type_id, own_company.name')
+               for p in
+               Company.get(article.company_id).get_portals_where_company_is_member()]
+
+    for p in portals:
+        p['divisions'] = PRBase.get_ordered_dict([d for d in p['divisions'] if (
+            d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
+        p['publication'] = None
+        p['actions'] = ['publish']
+        publication = db(ArticlePortalDivision).filter(
+                ArticlePortalDivision.portal_division_id.in_(
+                        [div_id for div_id, div in p['divisions'].items()])).first()
+        if publication:
+            p['publication'] = publication.get_client_side_dict(
+                    'position,title,status,visibility,portal_division_id,publishing_tm')
+            p['publication']['division'] = p['divisions'][p['publication']['portal_division_id']]
+            p['publication']['counts'] = '0/0/0/0'
+            p['actions'] = ['unpublish']
+
     return {'material': article.get_client_side_dict(more_fields='long'),
             'company': Company.get(article.company_id).get_client_side_dict(),
-            'rights_user_in_company': list(g.user.user_rights_in_company(article.company_id)),
+            'rights_user_in_company': UserCompany.get(company_id=article.company_id).get_rights(),
             'portals': {
-                'grid_data': [p.get_client_side_dict() for p in
-                              Company.get(article.company_id).get_portals_where_company_is_member()],
-                'grid_filters': {},
-                'total': 2
+                'grid_data': portals,
+                'grid_filters': {
+                    'publication.status': Grid.filter_for_status(ArticlePortalDivision.STATUSES)
+                }
             }
             # 'user_rights': ['publish', 'unpublish', 'edit'],
             # TODO: uncomment the string below and delete above

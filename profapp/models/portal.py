@@ -17,6 +17,8 @@ from config import Config
 import simplejson
 from .files import File
 from profapp.controllers.errors import BadDataProvided
+import datetime
+import json
 
 
 class Portal(Base, PRBase):
@@ -62,12 +64,12 @@ class Portal(Base, PRBase):
     # articles = relationship('ArticlePortalDivision',
     #                         back_populates='portal',
     #                         uselist=False)
-    articles = relationship('ArticlePortalDivision',
-                            secondary='portal_division',
-                            primaryjoin="Portal.id == PortalDivision.portal_id",
-                            secondaryjoin="PortalDivision.id == ArticlePortalDivision.portal_division_id",
-                            back_populates='portal',
-                            uselist=False)
+    publications = relationship('ArticlePortalDivision',
+                                secondary='portal_division',
+                                primaryjoin="Portal.id == PortalDivision.portal_id",
+                                secondaryjoin="PortalDivision.id == ArticlePortalDivision.portal_division_id",
+                                back_populates='portal',
+                                uselist=False)
 
     company_members = relationship('MemberCompanyPortal',
                                    # secondary='member_company_portal'
@@ -319,6 +321,17 @@ class MemberCompanyPortal(Base, PRBase):
                         # , backref='partner_portals'
                         )
 
+    RIGHT_AT_PORTAL = {
+        'MATERIAL_SUBMIT': 2 ** (1 - 1),
+        'PUBLICATION_PUBLISH': 2 ** (2 - 1),
+
+        'PUBLICATION_UNPUBLISH': 2 ** (3 - 1)
+    }
+
+    RIGHT_AT_PORTAL = RIGHT_AT_PORTAL['MATERIAL_SUBMIT']
+
+    RIGHT_AT_PORTAL_FOR_OWN_PORTAL = 0x7fffffffffffffff
+
     def __init__(self, company_id=None, portal=None, company=None, plan=None):
         if company_id and company:
             raise BadDataProvided
@@ -364,12 +377,14 @@ class ReaderUserPortalPlan(Base, PRBase):
     name = Column(TABLE_TYPES['name'], nullable=False, default='free')
     time = Column(TABLE_TYPES['bigint'], default=9999999)
     price = Column(TABLE_TYPES['float'], default=0)
+    amount = Column(TABLE_TYPES['int'], default=9999999)
 
-    def __init__(self, name=None, time=None, price=None):
+    def __init__(self, name=None, time=None, price=None, amount=None):
         super(ReaderUserPortalPlan, self).__init__()
         self.name = name
         self.time = time
         self.price = price
+        self.amount = amount
 
 
 class PortalLayout(Base, PRBase):
@@ -558,22 +573,44 @@ class UserPortalReader(Base, PRBase):
     portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('reader_user_portal_plan.id'))
     start_tm = Column(TABLE_TYPES['timestamp'])
     end_tm = Column(TABLE_TYPES['timestamp'])
+    amount = Column(TABLE_TYPES['int'], default=99999)
+    show_divisions_and_comments = Column(TABLE_TYPES['json'])
 
     portal = relationship('Portal')
     user = relationship('User')
 
     def __init__(self, user_id=None, portal_id=None, status='active', portal_plan_id=None, start_tm=None,
-                 end_tm=None):
+                 end_tm=None, amount=None, show_divisions_and_comments=None):
         super(UserPortalReader, self).__init__()
         self.user_id = user_id
         self.portal_id = portal_id
         self.status = status
         self.start_tm = start_tm
         self.end_tm = end_tm
+        self.amount = amount
         self.portal_plan_id = portal_plan_id or g.db(ReaderUserPortalPlan.id).filter_by(name='free').one()[0]
+        self.show_divisions_and_comments = show_divisions_and_comments or self.get_portal_divisions_json()
+
+    def get_portal_divisions_json(self):
+        return json.dumps({division[0]: {'name': division[1], 'show_division': True, 'comments': True}
+                           for division in db(PortalDivision.id, PortalDivision.name, portal_id=self.portal_id).all()},
+                          ensure_ascii=False)
 
     @staticmethod
     def get_portals_for_user():
         portals = db(Portal).filter(~(Portal.id.in_(db(UserPortalReader.portal_id, user_id=g.user_dict['id'])))).all()
         for portal in portals:
             yield (portal.id, portal.name, )
+
+    @staticmethod
+    def get_portals_and_plan_info_for_user(user_id):
+        for upr in db(UserPortalReader, user_id=user_id).all():
+            yield dict(portal_id=upr.portal_id, status=upr.status, start_tm=upr.start_tm,
+                       portal_logo=File.get(upr.portal.logo_file_id).url() if upr.portal.logo_file_id else '',
+                       end_tm=upr.end_tm if upr.end_tm > datetime.datetime.utcnow() else 'Expired at '+upr.end_tm,
+                       plan_id=upr.portal_plan_id,
+                       plan_name=db(ReaderUserPortalPlan.name, id=upr.portal_plan_id).one()[0],
+                       portal_name=upr.portal.name, portal_host=upr.portal.host, amount=upr.amount,
+                       portal_divisions=[{division.name: division.id}
+                                         for division in upr.portal.divisions],
+                       show_divisions_and_comments=json.loads(upr.show_divisions_and_comments))
