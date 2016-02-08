@@ -10,7 +10,7 @@ from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDiv
 from ..models.tag import Tag, TagPortal, TagPortalDivision
 from .request_wrapers import ok, check_rights, tos_required
 from ..models.articles import ArticlePortalDivision, ArticleCompany, Article
-from ..models.rights import Right
+from ..models.company import UserCompany
 from profapp.models.rights import RIGHTS
 from ..controllers import errors
 from ..models.pr_base import PRBase, Grid
@@ -430,7 +430,8 @@ def portals_partners_load(json, company_id):
             'portals_partners': [port.get_client_side_dict(fields='name, company_owner_id,id')
                                  for port in Company.get(company_id).get_portals_where_company_is_member()],
             'company_id': company_id,
-            'user_rights': list(g.user.user_rights_in_company(company_id))}
+            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()
+            }
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])
@@ -449,11 +450,10 @@ def companies_partners_load(json, company_id):
     portal = db(Company, id=company_id).one().own_portal
     companies_partners = [comp.get_client_side_dict(fields='company.id, company.name') for comp in
                           portal.company_members] if portal else []
-    user_rights = list(g.user.user_rights_in_company(company_id))
     return {'portal': portal.get_client_side_dict(fields='name') if portal else [],
             'companies_partners': companies_partners,
             'company_id': company_id,
-            'user_rights': user_rights}
+            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()}
 
 
 @portal_bp.route('/search_for_portal_to_join/', methods=['POST'])
@@ -513,7 +513,7 @@ def publication_details_load(json, article_id, company_id):
         if article['status'] != ArticlePortalDivision.STATUSES['PUBLISHED'] \
         else ArticlePortalDivision.STATUSES['NOT_PUBLISHED']
     return {'article': article,
-            'user_rights': list(g.user.user_rights_in_company(company_id)),
+            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights(),
             'new_status': new_status,
             'allowed_statuses': allowed_statuses}
 

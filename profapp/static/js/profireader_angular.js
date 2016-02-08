@@ -295,11 +295,10 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
         return {
             restrict: 'A',
             scope: {
-                prImage: '&',
+                prImage: '=',
                 prNoImage: '@'
             },
             link: function (scope, element, attrs) {
-
                 var image_reference = attrs['prImage'].split('.').pop();
                 var no_image = attrs['prNoImage'] ? attrs['prNoImage'] : false;
 
@@ -307,12 +306,16 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     no_image = noImageForImageName(image_reference);
                 }
 
+                scope.$watch('prImage', function (newval, oldval) {
+                    element.css({
+                    backgroundImage: "url('" + fileUrl(newval, false, no_image) + "')"
+                    });
+                });
                 element.attr('src', '/static/images/0.gif');
                 element.css({
                     backgroundPosition: 'center',
                     backgroundSize: 'contain',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundImage: "url('" + fileUrl(scope['prImage'](), false, no_image) + "')"
+                    backgroundRepeat: 'no-repeat'
                 });
             }
         };
@@ -736,9 +739,10 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                     smartButtonTextConverter: angular.noop
                 };
 
-                $scope.translate_phrase = function (phrase, dict) {
+                $scope.translate_phrase = function () {
                     $scope.$$translate = $scope.parentScope.$$translate;
-                    return pr_dictionary(phrase, dict, '', $scope, $ok, $scope.parentScope.controllerName)
+                    var args = [].slice.call(arguments);
+                    return pr_dictionary(args.shift(), args, '', $scope, $ok, $scope.parentScope.controllerName)
                 };
 
                 $scope.texts = {
@@ -961,7 +965,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
     }]);
 
 
-function pr_dictionary(phrase, dict, allow_html, scope, $ok, ctrl) {
+function pr_dictionary(phrase, dictionaries, allow_html, scope, $ok, ctrl) {
     allow_html = allow_html ? allow_html : '';
     if (typeof phrase !== 'string') {
         return '';
@@ -1005,10 +1009,16 @@ function pr_dictionary(phrase, dict, allow_html, scope, $ok, ctrl) {
     }
 
     try {
+        if (!dictionaries.length) {
+            dictionaries = [true];
+        }
         var ret = scope.$$translate[phrase]['lang'];
         ret = ret.replace(/%\(([^)]*)\)(s|d|f|m|i)/g, function (g0, g1) {
             var indexes = g1.split('.');
-            var d = dict ? dict : scope;
+            var d = {};
+            $.each(dictionaries, function (ind, dict) {
+                $.extend(d, dict === true ? scope : dict);
+            });
 
             for (var i in indexes) {
                 if (typeof d[indexes[i]] !== undefined) {
@@ -1039,11 +1049,13 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             }
             return $sce.trustAsHtml(full_text);
         },
-        __: function (phrase, dict) {
-            return $sce.trustAsHtml(pr_dictionary(phrase, dict, '*', this, $ok));
+        __: function () {
+            var args = [].slice.call(arguments);
+            return $sce.trustAsHtml(pr_dictionary(args.shift(), args, '*', this, $ok));
         },
-        _: function (phrase, dict) {
-            return pr_dictionary(phrase, dict, '', this, $ok);
+        _: function () {
+            var args = [].slice.call(arguments);
+            return pr_dictionary(args.shift(), args, '', this, $ok);
         },
 
         applyGridExtarnals: function (resp) {
@@ -1086,7 +1098,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             $.each(col, function (ind, c) {
                 col[ind] = $.extend({
                     enableSorting: false,
-                    enableFiltering: c['filter']?true:false,
+                    enableFiltering: c['filter'] ? true : false,
                     displayName: c['displayName'] ? c['displayName'] : (c['name'].replace(".", ' ') + ' grid column name')
                 }, c);
             });
@@ -1147,7 +1159,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                 }
 
-                var classes_for_row = col[i].classes + ' pr-grid-cell-type-' + col[i].type + ' pr-grid-cell-column-' + col[i].name.replace(/\./g, '-');
+                var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + col[i].type + ' pr-grid-cell-field-name-' + col[i].name.replace(/\./g, '-') + ' ' + (col[i].classes?col[i].classes:'') + ' ';
 
                 if (col[i].type === 'link') {
                     var link = 'grid.appScope.' + col[i].href;
@@ -1156,10 +1168,11 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 } else if (col[i].type === 'img') {
                     scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
                 } else if (col[i].type === 'actions') {
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><button class="btn pr-grid-cell-type-actions-button pr-grid-cell-type-actions-button-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.' + col[i]['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col[i]['name'] + '\')" title="{{ grid.appScope._(\'grid action \' + action_name) }}">{{ grid.appScope._(\'grid action \' + action_name) }}</button></div>'
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><button ' +
+                        'class="btn pr-grid-cell-field-type-actions-action pr-grid-cell-field-type-actions-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.' + col[i]['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col[i]['name'] + '\')" title="{{ grid.appScope._(\'grid action \' + action_name) }}">{{ grid.appScope._(\'grid action \' + action_name) }}</button></div>'
                 } else if (col[i].type === 'icons') {
-                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><img ng-class="{disabled: icon_enabled}" src="/static/images/0.gif" ' +
-                        'class="pr-grid-cell-type-icons-img pr-grid-cell-type-icons-img-icon-{{ icon_name }}" ng-repeat="(icon_name, icon_enabled) in COL_FIELD" ng-click="grid.appScope.' + col[i]['onclick'] + '(row.entity.id, \'{{ icon_name }}\', row.entity, \'' + col[i]['name'] + '\')" title="{{ grid.appScope._(\'grid icon \' + icon_name) }}"/></div>'
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><img ng-class="{disabled: !icon_enabled}" src="/static/images/0.gif" ' +
+                        'class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ icon_name }}" ng-repeat="(icon_name, icon_enabled) in COL_FIELD" ng-click="grid.appScope.' + col[i]['onclick'] + '(row.entity.id, \'{{ icon_name }}\', row.entity, \'' + col[i]['name'] + '\')" title="{{ grid.appScope._(\'grid icon \' + icon_name) }}"/></div>'
                 } else if (col[i].type === 'editable') {
                     if (col[i].multiple === true && col[i].rule) {
                         scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" ng-if="grid.appScope.' + col[i].rule + '=== false" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div><div ng-if="grid.appScope.' + col[i].rule + '"><div ng-click="' + col[i].modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>'
@@ -1176,17 +1189,21 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             scope.gridApi.grid['searchItemGrid'] = function (col) {
                 scope.all_grid_data.paginationOptions.pageNumber = 1;
                 scope.all_grid_data['filter'][col.field] = col.filter.text;
-                scope.gridApi.grid.setGridData(scope.all_grid_data)
+                scope.gridApi.grid.setGridData(scope.all_grid_data, 'searchItemGrid')
             };
 
-            scope.gridApi.grid['setGridData'] = function (all_grid_data) {
+            scope.gridApi.grid['setGridData'] = function (all_grid_data, action) {
+                //var all_grid_data = scope.all_grid_data;
+                console.log(action);
                 scope.gridOptions1.loadGridData(all_grid_data, function (grid_data) {
                     scope.initGridData = grid_data;
                     scope.applyGridExtarnals(grid_data);
                 });
             };
+
             if (!scope.load_contr) {
-                scope.gridApi.grid.setGridData(scope.all_grid_data)
+                scope.load_contr = true;
+                scope.gridApi.grid.setGridData(scope.all_grid_data, 'init')
             }
 
 
@@ -1194,7 +1211,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 from = col.filters[0]['term'];
                 to = col.filters[1]['term'];
                 scope.all_grid_data['filter'][col.field] = {'from': from, 'to': to};
-                scope.gridApi.grid.setGridData(scope.all_grid_data);
+                scope.gridApi.grid.setGridData(scope.all_grid_data, 'filterForGridRange');
             };
 
             scope.gridApi.grid['refreshGrid'] = function (col) {
@@ -1206,7 +1223,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                         col.filter.text = '';
                     }
                     delete scope.all_grid_data['filter'][col.field];
-                    scope.gridApi.grid.setGridData(scope.all_grid_data)
+                    scope.gridApi.grid.setGridData(scope.all_grid_data, 'refreshGrid')
                 }
             };
 
@@ -1229,10 +1246,10 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 if (sortColumns.length !== 0) {
                     scope.all_grid_data['sort'][sortColumns[0].field] = sortColumns[0].sort.direction;
                 }
-                scope.gridApi.grid.setGridData(scope.all_grid_data)
+                scope.gridApi.grid.setGridData(scope.all_grid_data, 'sortChanged')
             });
 
-            gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
+            if (gridApi.edit) gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
                 if (newValue !== oldValue) {
                     scope.all_grid_data['editItem'] = {
                         'name': rowEntity.name,
@@ -1241,7 +1258,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                         'col': colDef.name
                     };
                     scope.all_grid_data.paginationOptions.pageNumber = 1;
-                    scope.gridApi.grid.setGridData(scope.all_grid_data)
+                    scope.gridApi.grid.setGridData(scope.all_grid_data, 'afterCellEdit')
                 }
             });
 
@@ -1250,7 +1267,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     scope.all_grid_data.paginationOptions.pageNumber = newPage;
                     scope.all_grid_data.paginationOptions.pageSize = pageSize;
                     $timeout(function () {
-                        scope.gridApi.grid.setGridData(scope.all_grid_data)
+                        scope.gridApi.grid.setGridData(scope.all_grid_data, 'paginationTemplate')
                     }, 500)
 
                 });
@@ -1285,7 +1302,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                 }
                 if (at_least_one_filter_changed) {
-                    error ? add_message('You push wrong date', 'danger', 3000) : scope.gridApi.grid.setGridData(scope.all_grid_data)
+                    error ? add_message('You push wrong date', 'danger', 3000) : scope.gridApi.grid.setGridData(scope.all_grid_data, 'filterChanged')
                 }
             });
 
