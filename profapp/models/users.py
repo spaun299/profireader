@@ -7,6 +7,7 @@ from flask import session, json
 from urllib import request as req
 from config import Config
 import re
+import urllib
 
 # from db_init import Base, g.db
 from authomatic.providers import oauth2
@@ -123,6 +124,16 @@ class User(Base, UserMixin, PRBase):
     microsoft_gender = Column(TABLE_TYPES['gender'])
     microsoft_link = Column(TABLE_TYPES['link'])
     microsoft_phone = Column(TABLE_TYPES['phone'])
+
+    # VKONTAKTE
+    # vkontakte_id = Column(TABLE_TYPES['id_soc_net'])
+    # vkontakte_email = Column(TABLE_TYPES['email'], unique=True, index=True)
+    # vkontakte_first_name = Column(TABLE_TYPES['name'])
+    # vkontakte_last_name = Column(TABLE_TYPES['name'])
+    # vkontakte_name = Column(TABLE_TYPES['name'])
+    # vkontakte_gender = Column(TABLE_TYPES['gender'])
+    # vkontakte_link = Column(TABLE_TYPES['link'])
+    # vkontakte_phone = Column(TABLE_TYPES['phone'])
 
     # YAHOO
     yahoo_id = Column(TABLE_TYPES['id_soc_net'])
@@ -292,6 +303,7 @@ class User(Base, UserMixin, PRBase):
                                             'fields=image&key={key}'.format(google_id=self.google_id,
                                                                             size=s, key=Config.GOOGLE_API_KEY_SIMPLE),
                            linkedin=lambda s, u=url: u if u else self.gravatar(size=s),
+                           # vkontakte=lambda s, u=url: u if u else self.gravatar(size=s),
                            gravatar=lambda s: self.gravatar(size=s),
                            microsoft=lambda _: 'https://apis.live.net/v5.0/{microsoft_id}/picture'.format(
                                    microsoft_id=self.microsoft_id))
@@ -318,6 +330,19 @@ class User(Base, UserMixin, PRBase):
         elif avatar_via == 'linkedin':
             self.profireader_avatar_url = url
             self.profireader_small_avatar_url = url
+        # elif avatar_via == 'vkontakte':
+        #     avatar = json.load(urllib.urlopen("https://api.vk.com/method/users.get?v=5.8&fields="
+        #                                 "photo_{size}&access_token={access_token}".
+        #                                 format(size=str(size),
+        #                                      access_token=access_token)))['response'][0].get(# Here needs right token from VK
+        #                                         'photo_{size}'.format(size=size))
+        #     avatar_small = json.load(urllib.urlopen("https://api.vk.com/method/users.get?v=5.8&fields="
+        #                                       "photo_{size}&access_token={access_token}".
+        #                                       format(size=str(small_size),
+        #                                              access_token=access_token)))['response'][0].get(# Here needs right token from VK
+        #                                              'photo_{size}'.format(size=small_size))
+        #     self.profireader_avatar_url = url
+        #     self.profireader_small_avatar_url = url
         elif avatar_via == 'microsoft':
             avatar = req.urlopen(url=url)
             if 'Default' not in avatar.url:

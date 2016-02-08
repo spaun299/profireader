@@ -3,6 +3,7 @@ import re
 import json
 
 from flask import Flask, g, request, current_app
+from beaker.middleware import SessionMiddleware
 from authomatic import Authomatic
 from profapp.utils.redirect_url import url_page
 from flask import url_for
@@ -344,14 +345,40 @@ def nl2br(value):
 def config_variables():
     variables = g.db.query(Config).filter_by(client_side=1).all()
     ret = {}
+
+    for variable in variables:
+        var_id = variable.id
+        if variable.type == 'int':
+            ret[var_id] = '%s' % (int(variable.value))
+        elif variable.type == 'bool':
+            ret[var_id] = 'false' if int(variable.value) == 0 else 'true'
+        elif variable.type == 'float':
+             ret[var_id] = '%s' % (float(variable.value))
+        elif variable.type == 'timestamp':
+            ret[var_id] = 'new Date(%s)' % (int(variable.value))
+        else:
+            ret[var_id] = '\'' + variable.value + '\''
+    return "<script>\nConfig = {};\n" + ''.join(
+        [("Config['%s']=%s;\n" % (var_id, ret[var_id])) for var_id in ret]) + '</script>'
+
+
+def config_variables():
+    variables = g.db.query(Config).filter_by(server_side=1).all()
+    ret = {}
     for variable in variables:
         var_id = variable.id
         if variable.type == 'int':
             ret[var_id] = '%s' % (int(variable.value),)
         elif variable.type == 'bool':
             ret[var_id] = 'false' if int(variable.value) == 0 else 'true'
+        elif variable.type == 'float':
+             ret[var_id] = '%s' % (float(variable.value))
+        elif variable.type == 'timestamp':
+            ret[var_id] = 'new Date(%s)' % (int(variable.value))
         else:
-            ret[var_id] = '\'' + variable.value + '\''
+            ret[var_id] = '\'' + variable.value.replace('\\','\\\\').replace('\n','\\n').replace('\'','\\\'') + '\''
+
+
     return "<script>\nConfig = {};\n" + ''.join(
         [("Config['%s']=%s;\n" % (var_id, ret[var_id])) for var_id in ret]) + '</script>'
 

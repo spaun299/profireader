@@ -1,0 +1,144 @@
+{% extends "index_lazy_layout.html" %}
+
+{% block title %}Profireader - Ips{% endblock title %}
+
+{% block portal_content %}
+
+
+    <script type="text/ng-template" id="delete_ips.html">
+        <div class='modal-header'><h4>Do you want delete this rows?</h4></div>
+        <div class='modal-footer'>
+            <button id='buttonDelete' class='btn btn-warning' ng-click='deleteItems()'>Delete</button>
+            <button id='buttonClose' class='btn btn-primary' ng-click='cancel()'>Close</button>
+        </div>
+    </script>
+
+    <script>
+
+        module.controller('delete_ip_controller', function ($scope, $modalInstance, list) {
+              $scope.list = list;
+              $scope.deleteItems = function () {
+                $modalInstance.close($scope.list);
+              };
+              $scope.cancel = function () {
+                $modalInstance.dismiss('cancel');
+              };
+        });
+
+
+        module.controller('ips_list', ['$scope', '$modal', '$ok', '$sce', 'uiGridConstants', '$timeout', function ($scope, $modal, $ok, $sce, uiGridConstants, $timeout) {
+
+                    $scope.url_search_ips = {{ raw_url_for('admin.ips_load')|safe }};
+                    $scope.url_save_ips = {{ raw_url_for('admin.ips_save')|safe }};
+                    $scope.url_delete_ips = {{ raw_url_for('admin.ips_delete')|safe }}
+                    $scope.url_add_ips = {{ raw_url_for('admin.ips_add')|safe }}
+
+                            {% raw %}
+                    $scope.noData = 'No ips';
+                    $scope.error = '';
+                    $scope.allow_html_text = 'dsa';
+
+                    $scope.showModalDelete = function () {
+                        var list = $scope.list_select;
+                        var modalInstance = $modal.open({
+                            templateUrl: 'delete_ips.html',
+                            controller: 'delete_ip_controller',
+                            resolve: {
+                                'list': function () {
+                                    return list
+                                }
+                            }
+                        });
+                        modalInstance.result.then(function (list) {
+                            $scope.deleteItems(list);
+                        });
+                    };
+
+                        $scope.new_record = {ip: ''}
+
+                        $scope.addNewRecord = function () {
+
+                            $ok($scope.url_add_ip(), $scope.new_record, function (resp) {
+                                $scope.sendData($scope.all_grid_data);
+                                // refresh grid (with filter reset and resp[id])
+                            });
+
+                    };
+
+                    $scope.deleteItems = function (list) {
+                        $ok($scope.url_delete_ips(), {objects: list}, function (resp) {
+                            if (resp == 'True') {
+                                $scope.sendData($scope.all_grid_data)
+                            } else {
+                                $scope.error = 'error delete'
+                            }
+                        });
+                    };
+
+                    $scope.sendData = function (grid_data) {
+                        $scope.loading = true;
+                        $scope.isSelectedRows = false;
+                        $scope.error = '';
+                        return $ok($scope.url_search_ips({}), grid_data, function (resp) {
+                            $scope.datas = resp;
+                            $scope.applyGridExtarnals(resp);
+                        }).finally(function () {
+                            $scope.loading = false;
+                            $scope.load_contr = true
+                        });
+                    };
+
+                    $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+                        remoteData: $scope.sendData,
+                        onRegisterApi: function (gridApi) {
+                            $scope.setGridExtarnals(gridApi)
+                        },
+                        columnDefs: [
+                            {
+                                name: 'id',
+                                enableCellEdit: false,
+                                enableFiltering: false,
+                                enableSorting: true,
+                                displayName: 'Id'
+                            },{
+                                name: 'ip',
+                                enableCellEdit: false,
+                                enableFiltering: false,
+                                enableSorting: true,
+                                displayName: 'Ip-address'
+                            },
+                            // TODO SS by OZ: 1. why allow_html is not visible?. 2 Pls allow dot-delimitted keys fields format like `portal.name`
+
+
+                        ]
+                    });
+                }]);
+
+        {% endraw %}
+    </script>
+    {% raw %}
+    <style>
+        .editable-buttons {
+            display: none;
+        }
+    </style>
+    <div ng-init="sendData(all_grid_data)" ng-controller="ips_list">
+
+        <div style="clear: right"></div>
+        <input ng-model="new_record.ip" /><a ng-show="load_contr && (datas.grid_data)" class="btn btn-danger"
+           style="text-align: center"
+           ng-click="addNewRecord()">Add new form</a>
+        <div>
+            <div class="grid" id="grid1" ui-grid-pagination ui-grid-selection ui-grid-edit ui-grid="gridOptions1"></div>
+        </div>
+        <a ng-show="load_contr && !areAllEmpty(datas.grid_data)" class="btn btn-danger"
+           ng-class="{'disabled': ( isSelectedRows === false )}" style="text-align: center"
+           ng-click="showModalDelete()">Delete selected rows</a>
+
+
+    </div>
+
+    {% endraw %}
+{% endblock portal_content %}
+
+
