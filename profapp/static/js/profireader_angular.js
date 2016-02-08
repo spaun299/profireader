@@ -1066,7 +1066,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 sort: {},
                 editItem: {}
             };
-            scope.additionalDataForMS = {};
+            gridApi.grid.additionalDataForMS = {};
             gridApi.grid.all_grid_data.paginationOptions.pageSize = $rootScope.gridOptions.paginationPageSize;
             var col = gridApi.grid.options.columnDefs;
             $.each(col, function (ind, c) {
@@ -1115,13 +1115,13 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                             '<span class="input-group-btn"></span><div role="button" class="ui-grid-filter-button" ng-click="grid.refreshGrid(col)" ng-if="!colFilter.disableCancelFilterButton" ng-disabled="col.filters[1].term === undefined || col.filters[0].term === undefined" ng-show="col.filters[1].term !== undefined && col.filters[1].term !== \'\' && col.filters[0].term !== undefined && col.filters[0].term !== \'\'">' +
                             '<i class="ui-grid-icon-cancel" ui-grid-one-bind-aria-label="aria.removeFilter" style="right:0.5px;">&nbsp;</i></div></div>'
                     } else if (col[i].filter.type === 'multi_select') {
-                        scope.listOfSelectedFilterGrid = [];
-                        scope.additionalDataForMS[col[i].name] = {
+                        gridApi.grid.listOfSelectedFilterGrid = [];
+                        gridApi.grid.additionalDataForMS[col[i].name] = {
                             limit: col[i].filter.limit ? col[i].filter.limit : null,
                             type: col[i].filter.type,
                             field: col[i].name
                         };
-                        gridApi.grid.options.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><div ng-dropdown-multiselect="" parent-scope="grid.appScope" data="grid.all_grid_data" add-data="grid.appScope.additionalDataForMS[col.name]" send="grid.setGridData" options = "grid.appScope.listsForMS[col.name]" selected-model="grid.appScope.listOfSelectedFilterGrid"></div></div>'
+                        gridApi.grid.options.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><div ng-dropdown-multiselect="" parent-scope="grid" data="grid.all_grid_data" add-data="grid.additionalDataForMS[col.name]" send="grid.setGridData" options = "grid.listsForMS[col.name]" selected-model="grid.listOfSelectedFilterGrid"></div></div>'
                     } else if (col[i].filter.type === 'range') {
                         gridApi.grid.options.columnDefs[i].filters = [{}, {}];
                         gridApi.grid.options.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container">' +
@@ -1169,7 +1169,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 //var all_grid_data = scope.all_grid_data;
                 gridApi.grid.options.loadGridData(all_grid_data, function (grid_data) {
                     //scope.initGridData = grid_data;
-                    gridApi.grid.options.data = grid_data.grid_data
+                    gridApi.grid.options.data = grid_data.grid_data;
                     if('grid_data' in grid_data){
                         scope.initGridData = grid_data
                     }else{
@@ -1177,7 +1177,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
                         }
                     }
-                    scope.listsForMS = {};
+                    gridApi.grid.listsForMS = {};
                     gridApi.grid.options.totalItems = grid_data.total;
                     if (grid_data.page) {
                         gridApi.grid.options.pageNumber = grid_data.page;
@@ -1192,7 +1192,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                                 gridApi.grid.options.columnDefs[i]['filter']['selectOptions'] = grid_data.grid_filters[col[i].name]
                             } else if (col[i].filter.type === 'multi_select') {
                                 gridApi.grid.options.columnDefs[i]['filter']['selectOptions'] = grid_data.grid_filters[col[i].name];
-                                scope.listsForMS[col[i].name] = grid_data.grid_filters[col[i].name].slice(1);
+                                gridApi.grid.listsForMS[col[i].name] = grid_data.grid_filters[col[i].name].slice(1);
                             }
                         }
                     }
