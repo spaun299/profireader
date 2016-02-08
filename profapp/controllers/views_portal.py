@@ -549,21 +549,3 @@ def update_article_portal(json, article_id):
 #     return {'portal': portal.name}
 
 
-@portal_bp.route('/submit_to_portal/', methods=['POST'])
-# @login_required
-# @check_rights(simple_permissions([]))
-@ok
-def submit_to_portal(json):
-    # json['tags'] = ['money', 'sex', 'rock and roll']; tag position is important
-
-    article = ArticleCompany.get(json['article']['id'])
-    portal_division_id = json['selected_division']
-    article_portal = article.clone_for_portal(portal_division_id)
-    article.save()
-    portal = article_portal.get_article_owner_portal(portal_division_id=portal_division_id)
-    json['article'] = article_portal.get_client_side_dict(fields=
-                                                          'id, title,short, cr_tm, md_tm, company_id, status, long,'
-                                                          'editor_user_id, company.name|id,portal_article.id,'
-                                                          'portal_article.division.name, portal_article.division.portal.name,portal_article.status')
-    json.update({'portal': portal.name})
-    return json

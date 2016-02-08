@@ -161,46 +161,61 @@ def material_details(material_id):
                            company=Company.get(ArticleCompany.get(material_id).company.id))
 
 
+# def format_material_published(publication, portal):
+#
+
+def get_portal_dict_for_material(portal):
+    ret = portal.get_client_side_dict(fields='id, name, divisions.id|name|portal_division_type_id, own_company.name')
+    ret['divisions'] = PRBase.get_ordered_dict([d for d in ret['divisions'] if (
+        d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
+    publication_in_portal = db(ArticlePortalDivision).filter(
+            ArticlePortalDivision.portal_division_id.in_(
+                    [div_id for div_id, div in ret['divisions'].items()])).first()
+
+    if publication_in_portal:
+        ret['publication'] = publication_in_portal.get_client_side_dict(
+                'position,title,status,visibility,portal_division_id,publishing_tm')
+        ret['publication']['division'] = ret['divisions'][ret['publication']['portal_division_id']]
+        ret['publication']['counts'] = '0/0/0/0'
+        ret['actions'] = ['unpublish']
+    else:
+        ret['publication'] = None
+        ret['actions'] = ['publish']
+
+    return ret
+
+
 @article_bp.route('/material_details/<string:material_id>/', methods=['POST'])
 @ok
-# @check_rights(simple_permissions([]))
 def material_details_load(json, material_id):
     article = ArticleCompany.get(material_id)
 
-    portals = [p.get_client_side_dict(fields='id, name, divisions.id|name|portal_division_type_id, own_company.name')
-               for p in
+    portals = [get_portal_dict_for_material(p) for p in
                Company.get(article.company_id).get_portals_where_company_is_member()]
 
-    for p in portals:
-        p['divisions'] = PRBase.get_ordered_dict([d for d in p['divisions'] if (
-            d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
-        p['publication'] = None
-        p['actions'] = ['publish']
-        publication = db(ArticlePortalDivision).filter(
-                ArticlePortalDivision.portal_division_id.in_(
-                        [div_id for div_id, div in p['divisions'].items()])).first()
-        if publication:
-            p['publication'] = publication.get_client_side_dict(
-                    'position,title,status,visibility,portal_division_id,publishing_tm')
-            p['publication']['division'] = p['divisions'][p['publication']['portal_division_id']]
-            p['publication']['counts'] = '0/0/0/0'
-            p['actions'] = ['unpublish']
+    return {
+        'material': article.get_client_side_dict(more_fields='long'),
+        'company': Company.get(article.company_id).get_client_side_dict(),
+        'rights_user_in_company': UserCompany.get(company_id=article.company_id).get_rights(),
+        'portals': {
+            'grid_data': portals,
+            'grid_filters': {
+                'publication.status': Grid.filter_for_status(ArticlePortalDivision.STATUSES)
+            }
+        }
+    }
 
-    return {'material': article.get_client_side_dict(more_fields='long'),
-            'company': Company.get(article.company_id).get_client_side_dict(),
-            'rights_user_in_company': UserCompany.get(company_id=article.company_id).get_rights(),
-            'portals': {
-                'grid_data': portals,
-                'grid_filters': {
-                    'publication.status': Grid.filter_for_status(ArticlePortalDivision.STATUSES)
-                }
-            }
-            # 'user_rights': ['publish', 'unpublish', 'edit'],
-            # TODO: uncomment the string below and delete above
-            # TODO: when all works with rights are finished
-            # 'user_rights': user_rights,
-            # 'joined_portals': joined_portals
-            }
+
+@article_bp.route('/material_submit_to_portal/', methods=['POST'])
+# @check_rights(simple_permissions([]))
+@ok
+def material_submit_to_portal(json):
+    action = g.req('action', allowed=['submit', 'publish'])
+    portal = PortalDivision.get(json['portal_division_id']).portal
+
+    publication = ArticleCompany.get(json['material_id']).clone_for_portal(json['portal_division_id'], action)
+
+    return get_portal_dict_for_material(portal)
 
 
 # @article_bp.route('/material_details_publications/<string:material_id>/', methods=['POST'])
