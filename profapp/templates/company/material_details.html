@@ -319,7 +319,7 @@
                 loadGridData: $scope.loadMaterialDetails,
                 columnDefs: [
                     {
-                        name: 'own_company.name', width: '13%', filter: {type: 'input'}
+                        name: 'own_company.name', width: '13%', afilter: {type: 'input'}
                     },
                     {
                         name: 'name', width: '13%', type: 'link',
@@ -335,10 +335,10 @@
                         name: 'publication.title', width: '12%'
                     }
                     , {
-                        name: 'publication.counts', displayName: 'counts', width: '5%'
+                        name: 'publication.counts', width: '5%'
                     }
                     , {
-                        name: 'publication.publishing_tm', enableColumnMenu: true, width: '5%'
+                        name: 'publication.publishing_tm', aenableColumnMenu: true, width: '5%'
                     }
                     , {
                         name: 'publication.status', width: '5%'
