@@ -44,7 +44,7 @@ def req(name, allowed=None, default=None, exception=True):
         return None
 
 
-def filter_json(json, *args, NoneTo='', ExceptionOnNotPresent=False, prefix=''):
+def filter_json(json,  NoneTo='', ExceptionOnNotPresent=False, prefix='', *args):
     ret = {}
     req_columns = {}
     req_relationships = {}

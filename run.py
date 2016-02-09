@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     session_opts = {
     'session.type': 'ext:memcached',
-    'session.url': 'memcached.m:11211'
+    'session.url': 'memcached.profi:11211'
     }
 
     class BeakerSessionInterface(SessionInterface):

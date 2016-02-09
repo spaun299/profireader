@@ -76,7 +76,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     iferror(result, error_code)
                 }
                 else {
-                    add_message(result, 'danger');
+                    // add_message(result, 'danger');
                 }
             }
 
