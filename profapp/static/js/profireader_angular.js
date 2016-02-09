@@ -605,20 +605,20 @@ module.config(function ($provide) {
     });
 });
 
-module.controller('filemanagerCtrl', ['$scope', '$modalInstance', 'file_manager_called_for', 'file_manager_on_action',
+module.controller('filemanagerCtrl', ['$scope', '$uibModalInstance', 'file_manager_called_for', 'file_manager_on_action',
     'file_manager_default_action', 'get_root',
-    function ($scope, $modalInstance, file_manager_called_for, file_manager_on_action, file_manager_default_action, get_root) {
+    function ($scope, $uibModalInstance, file_manager_called_for, file_manager_on_action, file_manager_default_action, get_root) {
 
 //TODO: SW fix this pls
 
         closeFileManager = function () {
             $scope.$apply(function () {
-                $modalInstance.dismiss('cancel')
+                $uibModalInstance.dismiss('cancel')
             });
         };
 
         $scope.close = function () {
-            $modalInstance.dismiss('cancel');
+            $uibModalInstance.dismiss('cancel');
         };
         $scope.src = '/filemanager/';
         var params = {};

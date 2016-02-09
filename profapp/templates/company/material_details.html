@@ -147,9 +147,9 @@
 
                 modalInstance.result.then(function (updated_row) {
                     {#                    TODO: SS by OZ: this function search and replace row. please move it somewhere to your scope#}
-                    var found = $.each($scope.data.portals['grid_data'], function (index, portal_row) {
+{#                    $scope.grid_change_row(updated_row);#}
+                    $.each($scope.data.portals['grid_data'], function (index, portal_row) {
                         if (portal_row['id'] === updated_row['id']) {
-                            console.log($scope.data.portals['grid_data'][index]);
                             $scope.data.portals['grid_data'][index] = updated_row;
                         }
                     });
@@ -207,7 +207,7 @@
         }
 
         .pr-grid-cell-field-type-actions-action-unpublish {
-            background-color: red;
+            background-color: #1ab7ea;
         }
     </style>
 

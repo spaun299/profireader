@@ -661,26 +661,29 @@ class Article(Base, PRBase):
 
     @staticmethod
     def getListGridDataPublication(articles):
+        actions_for_statuses = {
+            ArticlePortalDivision.STATUSES['NOT_PUBLISHED']: ['publish', 'delete'],
+            ArticlePortalDivision.STATUSES['PUBLISHED']: ['unpublish'],
+            ArticlePortalDivision.STATUSES['DELETED']: ['undelete']
+        }
         publications = []
-        for a in articles:
-            a = a.get_client_side_dict()
+        for article in articles:
+            a = article.get_client_side_dict()
             if a.get('long'):
                 del a['long']
             publications.append(a)
         grid_data = []
         for article in publications:
-            allowed_statuses = []
-            art_stats = []
-            for s in art_stats:
-                allowed_statuses.append({'id': s, 'value': s})
+            # TODO: SS by OZ: why variable is called port??!?!?!
             port = article['company']['name'] if article['company']['name'] else 'Not sent to any company yet'
             grid_data.append({'date': article['publishing_tm'],
                               'title': article['title'],
                               'company': port,
-                              'publication_status': article['status'],
+                              'status': article['status'],
                               'id': str(article['id']),
                               'level': True,
-                              'allowed_status': allowed_statuses})
+                              'actions': actions_for_statuses[article['status']]
+                              })
         return grid_data
 
     @staticmethod
