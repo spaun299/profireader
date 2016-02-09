@@ -1,4 +1,4 @@
-{% extends "index_layout.html" %}
+{% extends "index_lazy_layout.html" %}
 {% block title %}Profireader - {{ current_user.profireader_name }}{% endblock title %}
 {% block head %}
     {{ super() }}
@@ -39,7 +39,7 @@
         <div class="info">
     {#        <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=256) }}"><br>#}
     {#        <img class="img-rounded profile-thumbnail" src="{{ user.profireader_avatar_url }}" style="width:{{ avatar_size }}px;height:{{ avatar_size }}px;border:0"><br>#}
-            <div class="profile-thumbnail" style="background-image: url('{{ user.profireader_avatar_url }}')"></div>
+            <div class="profile-thumbnail" style="background-image: url('{{ user.profireader_small_avatar_url }}')"></div>
             <div class="item"><span>{{ '{{' }}_('Your email'){{ '}}' }}:</span> {{ user.profireader_email }}</div>
             <div class="item"><span>{{ '{{' }}_('Your display name'){{ '}}' }}:</span> {{ user.profireader_name }}</div>
             <div class="item"><span>{{ '{{' }}_('Your first name'){{ '}}' }}:</span> {{ user.profireader_first_name or ''}}</div>

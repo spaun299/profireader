@@ -675,7 +675,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
 
                 var template = '<div class="multiselect-parent btn-group dropdown-multiselect" style="width:100%"><div class="kk"><div>';
                 template += '<button type="button" style="width:100%"  id="t1" class="dropdown-toggle" ng-class="settings.buttonClasses" ng-click="toggleDropdown()">{{getButtonText()}}&nbsp;<span class="caret"></span></button>';
-                template += '<ul class="dropdown-menu dropdown-menu-form ng-dr-ms" ng-style="{display: open ? \'block\' : \'none\', height : settings.scrollable ? settings.scrollableHeight : \'auto\' }" style="position: fixed; top:auto; left: auto; width: 20%" >';
+                template += '<ul class="dropdown-menu dropdown-menu-form ng-dr-ms" ng-style="{display: open ? \'block\' : \'none\', height : settings.scrollable ? settings.scrollableHeight : \'auto\' }" style="position: fixed; top:auto; left: auto; width: 20%;cursor: pointer" >';
                 template += '<li ng-show="settings.selectionLimit === 0"><a data-ng-click="selectAll()"><span class="glyphicon glyphicon-ok"></span>  {{texts.checkAll}}</a>';
                 template += '<li ng-show="settings.showUncheckAll"><a data-ng-click="deselectAll(true);"><span class="glyphicon glyphicon-remove"></span>   {{texts.uncheckAll}}</a></li>';
                 template += '<li ng-show="(settings.showCheckAll || settings.selectionLimit < 0) && !settings.showUncheckAll" class="divider"></li>';
@@ -833,9 +833,6 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                         $scope.listElemens = {};
                         $scope.listElemens[$scope.addData.field] = []
                     }
-                    if ($scope.data.filter[$scope.addData.field]) {
-                        $scope.selectedModel = $scope.listElemens[$scope.addData.field]
-                    }
                     if ($scope.settings.dynamicTitle && ($scope.selectedModel.length > 0 || (angular.isObject($scope.selectedModel) && _.keys($scope.selectedModel).length > 0))) {
                         if ($scope.settings.smartButtonMaxItems > 0) {
                             var itemsText = [];
@@ -881,22 +878,25 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
 
                 $scope.selectAll = function () {
                     $scope.isSelectAll = true;
-                    $scope.externalEvents.onSelectAll();
-                    $scope.listElemens[$scope.addData.field] = [];
-                    angular.forEach($scope.options, function (value) {
-                        $scope.setSelectedItem(value[$scope.settings.idProp], '', true);
-                    });
-                    for (var f = 0; f < $scope.selectedModel.length; f++) {
-                        $scope.listElemens.push($scope.options[f]['label'])
+                    if($scope.options.length !== $scope.listElemens[$scope.addData.field].length) {
+                        $scope.externalEvents.onSelectAll();
+                        $scope.listElemens[$scope.addData.field] = [];
+                        angular.forEach($scope.options, function (value) {
+                            $scope.setSelectedItem(value[$scope.settings.idProp], '', true);
+                        });
+                        for (var f = 0; f < $scope.options.length; f++) {
+                            $scope.listElemens[$scope.addData.field].push($scope.options[f]['label'])
+                        }
+                        $scope.data.filter[$scope.addData.field] = $scope.listElemens[$scope.addData.field];
+                        $scope.send($scope.data)
                     }
-                    $scope.data.filter[$scope.addData.field] = $scope.listElemens[$scope.addData.field];
-                    $scope.send($scope.data)
                 };
 
                 $scope.deselectAll = function (sendEvent) {
-                    if (sendEvent) {
+                    if (sendEvent && $scope.listElemens[$scope.addData.field].length >0) {
                         $scope.isSelectAll = false;
                         delete $scope.data.filter[$scope.addData.field];
+                        $scope.listElemens[$scope.addData.field] = [];
                         $scope.send($scope.data);
                         $scope.externalEvents.onDeselectAll();
                         if ($scope.singleSelection) {
@@ -943,10 +943,9 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                     } else if (!exists && ($scope.settings.selectionLimit === 0 || $scope.listElemens[$scope.addData.field].length < $scope.settings.selectionLimit)) {
                         $scope.externalEvents.onItemSelect(finalObj);
                         if (label.length > 0) {
-                            var dat = $scope.data
                             $scope.listElemens[$scope.addData.field].push(label);
-                            dat.filter[$scope.addData.field] = $scope.listElemens[$scope.addData.field];
-                            $scope.send(dat)
+                            $scope.data.filter[$scope.addData.field] = $scope.listElemens[$scope.addData.field];
+                            $scope.send($scope.data)
                         }
                     }
                     if ($scope.settings.closeOnSelect) $scope.open = false;
@@ -980,7 +979,6 @@ function pr_dictionary(phrase, dictionaries, allow_html, scope, $ok, ctrl) {
     //console.log(scope.$$translate)
     new Date;
     var t = Date.now() / 1000;
-
     //TODO OZ by OZ hasOwnProperty
     var CtrlName = scope.controllerName ? scope.controllerName : ctrl;
     if (scope.$$translate[phrase] === undefined) {
@@ -991,6 +989,7 @@ function pr_dictionary(phrase, dictionaries, allow_html, scope, $ok, ctrl) {
             allow_html: allow_html,
             url: window.location.href
         }, function (resp) {
+
 
         });
     }
@@ -1070,7 +1069,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 editItem: {}
             };
             gridApi.grid.additionalDataForMS = {};
-            gridApi.grid.all_grid_data.paginationOptions.pageSize = $rootScope.gridOptions.paginationPageSize;
+            gridApi.grid.all_grid_data.paginationOptions.pageSize = gridApi.grid.options.paginationPageSize;
             var col = gridApi.grid.options.columnDefs;
             $.each(col, function (ind, c) {
                 col[ind] = $.extend({
@@ -1124,7 +1123,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                             type: col[i].filter.type,
                             field: col[i].name
                         };
-                        gridApi.grid.options.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><div ng-dropdown-multiselect="" parent-scope="grid" data="grid.all_grid_data" add-data="grid.additionalDataForMS[col.name]" send="grid.setGridData" options = "grid.listsForMS[col.name]" selected-model="grid.listOfSelectedFilterGrid"></div></div>'
+                        gridApi.grid.options.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container"><div ng-dropdown-multiselect="" parent-scope="grid.appScope" data="grid.all_grid_data" add-data="grid.additionalDataForMS[col.name]" send="grid.setGridData" options = "grid.listsForMS[col.name]" selected-model="grid.listOfSelectedFilterGrid"></div></div>'
                     } else if (col[i].filter.type === 'range') {
                         gridApi.grid.options.columnDefs[i].filters = [{}, {}];
                         gridApi.grid.options.columnDefs[i].filterHeaderTemplate = '<div class="ui-grid-filter-container">' +
