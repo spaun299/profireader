@@ -1147,6 +1147,16 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 if (col[i].type === 'link') {
                     var link = 'grid.appScope.' + col[i].href;
                     scope.hideGridLinkIf = col[i].hideIf;
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" title="{{ COL_FIELD }}"><a ng-if="grid.appScope.hideGridLinkIf !== COL_FIELD" href="{{'+link+'}}" ng-bind="COL_FIELD"></a><div ng-if="grid.appScope.hideGridLinkIf === COL_FIELD">{{ COL_FIELD }}</div></div>'
+                }else if(col[i].type === 'img'){
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
+                }else if(col[i].type === 'actions') {
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'"><button class="pr-grid-cell-type-actions-button-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.'+col[i]['onclick']+'(row.entity.id, \'{{ action_name }}\', row.entity, \''+col[i]['name']+'\')">{{ action_name }}</button></div>'
+                }else if(col[i].type === 'show_modal') {
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" title="{{ COL_FIELD }}"><a ng-click="'+col[i].modal+'" ng-bind="COL_FIELD"></a></div>'
+                }else if(col[i].type === 'editable'){
+                    if(col[i].multiple === true && col[i].rule){
+                      scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" ng-if="grid.appScope.'+col[i].rule+'=== false" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div><div ng-if="grid.appScope.'+col[i].rule+'"><div ng-click="'+col[i].modal+'" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>'
                     gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}"><a ng-if="grid.appScope.hideGridLinkIf !== COL_FIELD" href="{{' + link + '}}" ng-bind="COL_FIELD"></a><div ng-if="grid.appScope.hideGridLinkIf === COL_FIELD">{{ COL_FIELD }}</div></div>'
                 } else if (col[i].type === 'img') {
                     gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
