@@ -23,7 +23,7 @@ module.controller('grid_reader_modal', function ($scope, $uibModalInstance, list
 module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridConstants', '$timeout',
     function ($scope, $uibModal, $ok, $sce, uiGridConstants, $timeout) {
         $scope.url_search_translations = {{ raw_url_for('reader.profile')|safe }}
-        $scope.reader_edit_profile = '{{ url_for('reader.edit_profile') }}';
+        $scope.reader_edit_profile = {{ raw_url_for('reader.edit_portal_subscription')|safe }};
         {% raw %}
         $scope.sendData = function (grid_data) {
                         $scope.loading = true;
@@ -85,7 +85,7 @@ $scope.showModalForEditNew = function () {
                                 name: 'article_remains', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false,
                                 displayName: 'Article remains'
                             },
-                            {name: 'configure', displayName: 'Edit', type: 'link', href: 'reader_edit_profile',
+                            {name: 'configure', displayName: 'Edit', type: 'link', href: 'reader_edit_profile({reader_portal_id:row.entity.user_portal_reader_id})',
                                 enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false}
                         ]
                     });

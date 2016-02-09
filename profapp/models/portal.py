@@ -541,15 +541,12 @@ class UserPortalReader(Base, PRBase):
     start_tm = Column(TABLE_TYPES['timestamp'])
     end_tm = Column(TABLE_TYPES['timestamp'])
     amount = Column(TABLE_TYPES['int'], default=99999)
-    show_divisions_and_comments = Column(TABLE_TYPES['json'])
     portal = relationship('Portal')
     user = relationship('User')
-    show_divisions_and_comments_numeric = dict(show_articles=1, show_comments=2, show_favorite_comments=4,
-                                               show_liked_comments=8)
-    show_divisions_and_comments_binary_all = bin(reduce(lambda x, y: x+y, show_divisions_and_comments_numeric.values()))
+    show_divisions_and_comments = relationship('ReaderDivision', back_populates='user_portal_reader')
 
     def __init__(self, user_id=None, portal_id=None, status='active', portal_plan_id=None, start_tm=None,
-                 end_tm=None, amount=None):
+                 end_tm=None, amount=None, show_divisions_and_comments=None):
         super(UserPortalReader, self).__init__()
         self.user_id = user_id
         self.portal_id = portal_id
@@ -557,8 +554,9 @@ class UserPortalReader(Base, PRBase):
         self.start_tm = start_tm
         self.end_tm = end_tm
         self.amount = amount
+        self.show_divisions_and_comments = show_divisions_and_comments
         self.portal_plan_id = portal_plan_id or g.db(ReaderUserPortalPlan.id).filter_by(name='free').one()[0]
-        self._show_divisions_and_comments = None
+
 
     def get_portal_divisions_json(self):
         return json.dumps({division[0]: {'name': division[1], 'show_division': True, 'comments': True}
@@ -578,20 +576,56 @@ class UserPortalReader(Base, PRBase):
                                                page=int(page), items_per_page=int(items_per_page))
 
         for upr in query:
-            yield dict(portal_id=upr.portal_id, status=upr.status, start_tm=upr.start_tm,
+            print(upr.show_divisions_and_comments)
+            yield dict(id=upr.id, portal_id=upr.portal_id, status=upr.status, start_tm=upr.start_tm,
                        portal_logo=File.get(upr.portal.logo_file_id).url() if upr.portal.logo_file_id else '',
                        end_tm=upr.end_tm if upr.end_tm > datetime.datetime.utcnow() else 'Expired at '+upr.end_tm,
                        plan_id=upr.portal_plan_id,
                        plan_name=db(ReaderUserPortalPlan.name, id=upr.portal_plan_id).one()[0],
                        portal_name=upr.portal.name, portal_host=upr.portal.host, amount=upr.amount,
                        portal_divisions=[{division.name: division.id}
-                                         for division in upr.portal.divisions],
-                       show_divisions_and_comments=json.loads(upr.show_divisions_and_comments))
+                                         for division in upr.portal.divisions])
+
+
+class ReaderDivision(Base, PRBase):
+    __tablename__ = 'reader_division'
+    id = Column(TABLE_TYPES['id_profireader'], primary_key=True, nullable=False, unique=True)
+    user_portal_reader_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user_portal_reader.id'))
+    division_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal_division.id'))
+    _show_division_and_comments = Column(TABLE_TYPES['json'])
+    user_portal_reader = relationship('UserPortalReader', back_populates='show_divisions_and_comments')
+    portal_division = relationship('PortalDivision')
+    show_division_and_comments_numeric = dict(show_articles=1, show_comments=2, show_favorite_comments=4,
+                                               show_liked_comments=8)
+    show_division_and_comments_numeric_all = reduce(lambda x, y: x+y, show_division_and_comments_numeric.values())
+    def __init__(self, user_portal_reader=None, portal_division=None):
+        super(ReaderDivision, self).__init__()
+        self._show_division_and_comments = self.show_division_and_comments_numeric_all
+        self.user_portal_reader = user_portal_reader
+        self.portal_division = portal_division
 
     @property
     def show_divisions_and_comments(self):
-        return self.show_divisions_and_comments
+        binary_data = bin(self._show_division_and_comments).replace('0b', '')
+        while len(binary_data) < 4:
+            binary_data = '0'+binary_data
+        show_division_and_comments_all = ['show_articles', 'show_comments',
+                                           'show_favorite_comments', 'show_liked_comments']
+        show_division_and_comments_return = {key: False for key in show_division_and_comments_all}
+        for count, pos in enumerate(binary_data):
+            if int(pos):
+                show_division_and_comments_return[show_division_and_comments_all[int(count)]] = True
+        return show_division_and_comments_return
 
     @show_divisions_and_comments.setter
-    def show_divisions_and_comments(self, value):
-        reduce(lambda x, y: x+y, self.show_divisions_and_comments_binary.values())
+    def show_divisions_and_comments(self, dictionary):
+        """ :param value: dictionary, key from 'show_divisions_and_comments_numeric', value True or False """
+        self._show_division_and_comments = self.show_division_and_comments_binary_all & reduce(
+            lambda x, y: int(x)+int(y), list(map(lambda key: self.show_division_and_comments_numeric[key],
+                                                 filter(bool, dictionary.values()))))
+
+    # def get_reader_settings_for_divisions(self):
+         # divisions = [{'name': 'ssssssss', 'show_divisions_and_comments': (('show_articles', False), ('show_comments', True), ('show_favorite_comments', True), ('show_liked_comments', False))},
+         #         {'name': 'ssss1111111ssss', 'show_divisions_and_comments': (('show_articles', True), ('show_comments', False), ('show_favorite_comments', False), ('show_liked_comments', True))},
+         #        {'name': 'sss2222222222sssss', 'show_divisions_and_comments': (('show_articles', True), ('show_comments', True), ('show_favorite_comments', True), ('show_liked_comments', True))}]
+         # settings_for_divisions =

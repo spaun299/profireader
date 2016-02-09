@@ -3,7 +3,7 @@ from flask import render_template, redirect, jsonify, json, request, g, url_for,
 from .request_wrapers import tos_required
 from sqlalchemy import and_
 from ..models.articles import ArticlePortalDivision, ReaderArticlePortalDivision, Search
-from ..models.portal import PortalDivision, UserPortalReader, Portal, ReaderUserPortalPlan
+from ..models.portal import PortalDivision, UserPortalReader, Portal, ReaderUserPortalPlan, ReaderDivision
 from .errors import BadDataProvided
 from config import Config
 from .request_wrapers import ok
@@ -97,9 +97,13 @@ def reader_subscribe(portal_id):
         start_tm = datetime.datetime.utcnow()
         end_tm = datetime.datetime.fromtimestamp(start_tm.timestamp()+free_plan[1])
         user_portal_reader = UserPortalReader(user_dict['id'], portal_id, status='active', portal_plan_id=free_plan[0],
-                                              start_tm=start_tm, end_tm=end_tm, amount=free_plan[2])
+                                              start_tm=start_tm, end_tm=end_tm, amount=free_plan[2],
+                                              show_divisions_and_comments=[division_comments for division_comments in
+                                                                           [ReaderDivision(portal_division=division)
+                                                                            for division in portal.divisions]])
         g.db.add(user_portal_reader)
         g.db.commit()
+
         flash('You have successfully subscribed to this portal')
 
     return redirect(url_for('reader.list_reader'))
@@ -130,9 +134,9 @@ def profile_load(json):
                                                                             filter_params=and_(*filter_params))
     grid_data = []
     for field in portals_and_plans:
-        grid_data.append({'portal_logo': field['portal_logo'], 'portal_name': field['portal_name'],
-                          'package_name': field['plan_name'] + ' - UPGRADE', 'start_tm': field['start_tm'],
-                          'end_tm': field['end_tm'], 'article_remains': field['amount'],
+        grid_data.append({'user_portal_reader_id': field['id'], 'portal_logo': field['portal_logo'],
+                          'portal_name': field['portal_name'], 'package_name': field['plan_name'] + ' - UPGRADE',
+                          'start_tm': field['start_tm'], 'end_tm': field['end_tm'], 'article_remains': field['amount'],
                           'portal_host': field['portal_host'], 'configure': 'configure'})
 
     return {'grid_data': grid_data,
@@ -140,22 +144,26 @@ def profile_load(json):
                              for key in grid_data}}
 
 
-@reader_bp.route('/edit_profile')
-def edit_profile():
+@reader_bp.route('/edit_portal_subscription/<string:reader_portal_id>')
+def edit_portal_subscription(reader_portal_id):
 
-    return render_template('partials/reader/reader_edit_profile.html')
+    return render_template('partials/reader/edit_portal_subscription.html')
 
 
-@reader_bp.route('/edit_profile', methods=['POST'])
+@reader_bp.route('/edit_portal_subscription/<string:reader_portal_id>', methods=['POST'])
 @ok
-def edit_profile_load(json):
-    divisions = [{'name': 'ssssssss', 'show_divisions_and_comments':{'show_articles': True, 'show_comments': True, 'show_favorite_comments': False, 'show_liked_comments': True}},
-                 {'name': 'ssss1111111ssss', 'show_divisions_and_comments':{'show_articles': False, 'show_comments': True, 'show_favorite_comments': False, 'show_liked_comments': False}},
-                  {'name': 'sss2222222222sssss','show_divisions_and_comments':{'show_articles': True, 'show_comments': False, 'show_favorite_comments': False, 'show_liked_comments': True}}]
-    return {'divisions': divisions}
+def edit_portal_subscription_load(json, reader_portal_id):
+    user_portal_reader = db(UserPortalReader, id=reader_portal_id).one()
+    divisions = [{'name': 'ssssssss', 'show_divisions_and_comments': (('show_articles', False), ('show_comments', True), ('show_favorite_comments', True), ('show_liked_comments', False))},
+                 {'name': 'ssss1111111ssss', 'show_divisions_and_comments': (('show_articles', True), ('show_comments', False), ('show_favorite_comments', False), ('show_liked_comments', True))},
+                {'name': 'sss2222222222sssss', 'show_divisions_and_comments': (('show_articles', True), ('show_comments', True), ('show_favorite_comments', True), ('show_liked_comments', True))}]
 
-@reader_bp.route('/edit_profile_submit')
+    return {'divisions': divisions, 'reader_portal_id': reader_portal_id}
+
+
+@reader_bp.route('/edit_profile_submit/<string:reader_portal_id>', methods=['POST'])
 @ok
-def edit_profile_submit(json):
-    pass
+def edit_profile_submit(json, reader_portal_id):
+    print(json)
+    return json
 

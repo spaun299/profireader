@@ -4,18 +4,18 @@
 {% block portal_content %}
     <script>
         module.controller('reader_edit_profile', ['$scope', '$http', function ($scope, $http) {
-            $scope.reader_edit_url = '{{ url_for('reader.edit_profile_submit') }}';
+            $scope.edit_data = function(data){console.log(data);};
+            $scope.reader_edit_url = {{ raw_url_for('reader.edit_profile_submit')|safe }};
             $scope.edit = function (){
+                console.log($scope.data);
                 $http({
                     method: 'POST',
-                    url: $scope.reader_edit_url,
+                    url: $scope.reader_edit_url({reader_portal_id: $scope.data.reader_portal_id}),
                     data: $scope.data
                     }).success(function (resp) {
                             $scope.data = resp.data}
-
             )}}]);
     </script>
-
 {% include 'partials/reader/reader_nav.html' %}
 {% raw %}
     <div ng-controller="reader_edit_profile" ng-model="data">
@@ -30,11 +30,13 @@
                 <form >
             <span ng-repeat="division in data.divisions"><br>
                 <span style="display:inline-block; width: 50px">{{ division.name }}</span>
-                <span style="margin-left: 130px" ng-repeat="show in division.show_divisions_and_comments" ng-model="show">
-                    <label><input ng-model="show" type="checkbox" class="show_checkbox" value="{{ show }}">{{ show }}</label>
+                <span style="margin-left: 130px;" ng-repeat="show in division.show_divisions_and_comments">
+                    <label style="position: absolute; width: 70px; margin-left: 30px">
+                        <input ng-model="show[1]" type="checkbox" class="show_checkbox">{{ show[1] }}
+                    </label>
                 </span>
             </span>
-                <input type="submit" ng-click="edit()">
+                <input style="margin-left: 100px" type="submit" ng-click="edit()">
                     </form>
             </div>
 
