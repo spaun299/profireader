@@ -659,32 +659,6 @@ class Article(Base, PRBase):
                                       'level': False})
         return grid_data
 
-    @staticmethod
-    def getListGridDataPublication(articles):
-        actions_for_statuses = {
-            ArticlePortalDivision.STATUSES['NOT_PUBLISHED']: ['publish', 'delete'],
-            ArticlePortalDivision.STATUSES['PUBLISHED']: ['unpublish'],
-            ArticlePortalDivision.STATUSES['DELETED']: ['undelete']
-        }
-        publications = []
-        for article in articles:
-            a = article.get_client_side_dict()
-            if a.get('long'):
-                del a['long']
-            publications.append(a)
-        grid_data = []
-        for article in publications:
-            # TODO: SS by OZ: why variable is called port??!?!?!
-            port = article['company']['name'] if article['company']['name'] else 'Not sent to any company yet'
-            grid_data.append({'date': article['publishing_tm'],
-                              'title': article['title'],
-                              'company': port,
-                              'status': article['status'],
-                              'id': str(article['id']),
-                              'level': True,
-                              'actions': actions_for_statuses[article['status']]
-                              })
-        return grid_data
 
     @staticmethod
     def getListGridDataArticles(articles):
