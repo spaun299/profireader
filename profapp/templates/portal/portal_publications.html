@@ -12,7 +12,7 @@
     <script>
         function set_local_scope($scope, action, publication, company, portal, rights_user_in_company) {
 
-            $scope.url_delete_unpublish_dialog = '{{ url_for('article.publication_delete_unpublish')|safe }}';
+            $scope.url_delete_unpublish_dialog = '{{ url_for('portal.publication_delete_unpublish')|safe }}';
 
             $scope.publication = publication;
             $scope.action = action;
@@ -25,7 +25,7 @@
             $scope.$$translate = {{ translates('publication_delete_unpublish_dialog')|safe }};
             set_local_scope($scope, action, publication, company, portal, rights_user_in_company);
 
-            $scope.action_do = function (action) {
+            $scope.action_do = function (submit_or_publish) {
                 $ok($scope.url_delete_unpublish_dialog + '?action=' + submit_or_publish, {
                     publication_id: $scope.publication.id
                 }, $uibModalInstance.close)
@@ -50,9 +50,9 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary" type="button" ng-click="action_do('delete')">{{ _('do %(action)s') }}
+            <button class="btn btn-primary" type="button" ng-click="action_do(action)">{{ _('do %(action)s') }}
             </button>
-            <button class="btn" type="button" ng-click="action_cancel('delete')">{{ _('cancel %(action)s') }}</button>
+            <button class="btn" type="button" ng-click="action_cancel(action)">{{ _('cancel %(action)s') }}</button>
         </div>
     </script>
     {% endraw %}
@@ -171,6 +171,7 @@
 
             $scope.sendData = function (data, callback) {
                 $ok($scope.url_search_article({company_id: $scope.own_company_id}), data, function (resp) {
+                    $scope.data = resp;
                     $scope.portal = resp.portal;
                     $scope.company = resp.company;
                     $scope.rights_user_in_company = resp.rights_user_in_company;
@@ -202,13 +203,8 @@
                 });
 
                 modalInstance.result.then(function (updated_row) {
-                    //                    TODO: SS by OZ: this function search and replace row. please move it somewhere to your scope
-                    var found = $.each($scope.data.portals['grid_data'], function (index, portal_row) {
-                        if (portal_row['id'] === updated_row['id']) {
-                            console.log($scope.data.portals['grid_data'][index]);
-                            $scope.data.portals['grid_data'][index] = updated_row;
-                        }
-                    });
+                    debugger;
+                    $scope.grid_change_row($scope.data, updated_row);
                 });
             }
 
