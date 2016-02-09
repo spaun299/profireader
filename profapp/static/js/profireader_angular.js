@@ -311,7 +311,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
 
                 scope.$watch('prImage', function (newval, oldval) {
                     element.css({
-                    backgroundImage: "url('" + fileUrl(newval, false, no_image) + "')"
+                        backgroundImage: "url('" + fileUrl(newval, false, no_image) + "')"
                     });
                 });
                 element.attr('src', '/static/images/0.gif');
@@ -658,7 +658,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
             restrict: 'AE',
             scope: {
                 addData: '=',
-                data:'=',
+                data: '=',
                 send: '=',
                 parentScope: '=',
                 selectedModel: '=',
@@ -703,7 +703,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
             link: function ($scope, $element, $attrs) {
                 var $dropdownTrigger = $element.children()[0];
 
-                $scope.toggleDropdown = function (){
+                $scope.toggleDropdown = function () {
                     $scope.open = !$scope.open;
                 };
 
@@ -878,7 +878,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
 
                 $scope.selectAll = function () {
                     $scope.isSelectAll = true;
-                    if($scope.options.length !== $scope.listElemens[$scope.addData.field].length) {
+                    if ($scope.options.length !== $scope.listElemens[$scope.addData.field].length) {
                         $scope.externalEvents.onSelectAll();
                         $scope.listElemens[$scope.addData.field] = [];
                         angular.forEach($scope.options, function (value) {
@@ -893,7 +893,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                 };
 
                 $scope.deselectAll = function (sendEvent) {
-                    if (sendEvent && $scope.listElemens[$scope.addData.field].length >0) {
+                    if (sendEvent && $scope.listElemens[$scope.addData.field].length > 0) {
                         $scope.isSelectAll = false;
                         delete $scope.data.filter[$scope.addData.field];
                         $scope.listElemens[$scope.addData.field] = [];
@@ -1059,6 +1059,13 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             var args = [].slice.call(arguments);
             return pr_dictionary(args.shift(), args, '', this, $ok);
         },
+        grid_change_row: function (grid_data, new_row) {
+            $.each(grid_data['grid_data'], function (index, old_row) {
+                if (old_row['id'] === new_row['id']) {
+                    grid_data['grid_data'][index] = new_row;
+                }
+            });
+        },
 
         setGridExtarnals: function (gridApi) {
             var scope = this;
@@ -1135,7 +1142,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                 }
 
-                var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + col[i].type + ' pr-grid-cell-field-name-' + col[i].name.replace(/\./g, '-') + ' ' + (col[i].classes?col[i].classes:'') + ' ';
+                var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + col[i].type + ' pr-grid-cell-field-name-' + col[i].name.replace(/\./g, '-') + ' ' + (col[i].classes ? col[i].classes : '') + ' ';
 
                 if (col[i].type === 'link') {
                     var link = 'grid.appScope.' + col[i].href;
@@ -1172,10 +1179,10 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 gridApi.grid.options.loadGridData(all_grid_data, function (grid_data) {
                     //scope.initGridData = grid_data;
                     gridApi.grid.options.data = grid_data.grid_data;
-                    if('grid_data' in grid_data){
+                    if ('grid_data' in grid_data) {
                         scope.initGridData = grid_data
-                    }else{
-                        for(var z=0;z<grid_data.length;z++ ){
+                    } else {
+                        for (var z = 0; z < grid_data.length; z++) {
 
                         }
                     }

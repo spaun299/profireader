@@ -146,13 +146,7 @@
                 });
 
                 modalInstance.result.then(function (updated_row) {
-                    {#                    TODO: SS by OZ: this function search and replace row. please move it somewhere to your scope#}
-{#                    $scope.grid_change_row(updated_row);#}
-                    $.each($scope.data.portals['grid_data'], function (index, portal_row) {
-                        if (portal_row['id'] === updated_row['id']) {
-                            $scope.data.portals['grid_data'][index] = updated_row;
-                        }
-                    });
+                    $scope.grid_change_row($scope.data.portals, updated_row);
                 });
             };
 

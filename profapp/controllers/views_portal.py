@@ -474,6 +474,20 @@ def publications(company_id):
     return render_template('portal/portal_publications.html', company=Company.get(company_id))
 
 
+def get_publication_dict(publication):
+    actions_for_statuses = {
+        ArticlePortalDivision.STATUSES['NOT_PUBLISHED']: ['publish', 'delete'],
+        ArticlePortalDivision.STATUSES['PUBLISHED']: ['unpublish'],
+        ArticlePortalDivision.STATUSES['DELETED']: ['undelete']
+    }
+    ret = publication.get_client_side_dict()
+    if ret.get('long'):
+            del ret['long']
+
+    ret['actions'] = actions_for_statuses[ret['status']]
+
+    return ret
+
 @portal_bp.route('/company/<string:company_id>/publications/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([]))
@@ -492,20 +506,19 @@ def publications_load(json, company_id):
         'company': company.get_client_side_dict(),
         'portal': portal.get_client_side_dict(),
         'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights(),
-        'grid_data': Article.getListGridDataPublication(publications)}
+        'grid_data': list(map(get_publication_dict, publications))}
 
 
 @portal_bp.route('/publication_delete_unpublish/', methods=['POST'])
-# @check_rights(simple_permissions([]))
 @ok
-def material_submit_to_portal(json):
+# @check_rights(simple_permissions([]))
+def publication_delete_unpublish(json):
     action = g.req('action', allowed=['delete', 'unpublish'])
 
-    publication = ArticleCompany.get(json['publication_id'])
+    publication = ArticlePortalDivision.get(json['publication_id'])
     publication.status = ArticlePortalDivision.STATUSES['NOT_PUBLISHED' if action == 'unpublish' else 'DELETED']
-    publication.save()
 
-    # return get_portal_dict_for_material(portal)
+    return get_publication_dict(publication.save())
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
 @tos_required
