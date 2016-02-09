@@ -29,10 +29,10 @@
             </span><br>
                 <form >
             <span ng-repeat="division in data.divisions"><br>
-                <span style="display:inline-block; width: 50px">{{ division.name }}</span>
+                <span style="display:inline-block; width: 70px">{{ division.name }}</span>
                 <span style="margin-left: 130px;" ng-repeat="show in division.show_divisions_and_comments">
-                    <label style="position: absolute; width: 70px; margin-left: 30px">
-                        <input ng-model="show[1]" type="checkbox" class="show_checkbox">{{ show[1] }}
+                    <label style="position: absolute; width: 70px; margin-left: 5px">
+                        <input ng-model="show[1]" type="checkbox" class="show_checkbox">
                     </label>
                 </span>
             </span>

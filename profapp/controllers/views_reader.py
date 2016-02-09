@@ -154,16 +154,21 @@ def edit_portal_subscription(reader_portal_id):
 @ok
 def edit_portal_subscription_load(json, reader_portal_id):
     user_portal_reader = db(UserPortalReader, id=reader_portal_id).one()
-    divisions = [{'name': 'ssssssss', 'show_divisions_and_comments': (('show_articles', False), ('show_comments', True), ('show_favorite_comments', True), ('show_liked_comments', False))},
-                 {'name': 'ssss1111111ssss', 'show_divisions_and_comments': (('show_articles', True), ('show_comments', False), ('show_favorite_comments', False), ('show_liked_comments', True))},
-                {'name': 'sss2222222222sssss', 'show_divisions_and_comments': (('show_articles', True), ('show_comments', True), ('show_favorite_comments', True), ('show_liked_comments', True))}]
-
+    divisions = list(map(lambda div_and_com: {'name': div_and_com.portal_division.name,
+                                              'division_id': div_and_com.division_id,
+                                              'show_divisions_and_comments': list(
+                                                  map(lambda args: (args[0], args[1]),
+                                                      div_and_com.show_divisions_and_comments))},
+                         user_portal_reader.show_divisions_and_comments))
     return {'divisions': divisions, 'reader_portal_id': reader_portal_id}
 
 
 @reader_bp.route('/edit_profile_submit/<string:reader_portal_id>', methods=['POST'])
 @ok
 def edit_profile_submit(json, reader_portal_id):
-    print(json)
+    divisions_and_comments = db(UserPortalReader, id=reader_portal_id).one().show_divisions_and_comments
+    for item in json['divisions']:
+        for show_division_and_comments in divisions_and_comments:
+            if item['division_id'] == show_division_and_comments.division_id:
+                show_division_and_comments.show_divisions_and_comments = item['show_divisions_and_comments']
     return json
-
