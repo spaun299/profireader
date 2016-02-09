@@ -68,8 +68,7 @@ def load_companies(json):
 @login_required
 # @check_rights(simple_permissions([]))
 def materials(company_id):
-    return render_template('company/materials.html', company=db(Company, id=company_id).one(),
-                           angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js')
+    return render_template('company/materials.html', company=db(Company, id=company_id).one())
 
 
 @company_bp.route('/<string:company_id>/materials/', methods=['POST'])
