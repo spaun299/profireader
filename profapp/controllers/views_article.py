@@ -183,7 +183,6 @@ def get_portal_dict_for_material(portal):
     else:
         ret['publication'] = None
         ret['actions'] = ['publish']
-
     return ret
 
 
@@ -218,6 +217,10 @@ def material_submit_to_portal(json):
     publication = ArticleCompany.get(json['material_id']).clone_for_portal(json['portal_division_id'], action)
 
     return get_portal_dict_for_material(portal)
+
+
+
+
 
 
 # @article_bp.route('/material_details_publications/<string:material_id>/', methods=['POST'])
