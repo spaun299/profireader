@@ -1,6 +1,7 @@
 <!-- TODO: OZ by OZ: move this templates to separate .js file with cached templates -->
 
 {% include 'pager.html' %}
+{% raw %}
 <script type="text/ng-template" id="typeaheadTemplate.html">
     <a class="typeahead-item" href="#">
         <span ng-show="match.model.id" ng-bind-html="match.label | uibTypeaheadHighlight:query"></span>
@@ -15,3 +16,8 @@
     </div>
 </script>
 
+<script type="text/ng-template" id="filemanager.html">
+            <iframe src="{{ src }}"
+                    style="border: none; margin: 0px; padding: 0px; width: 100%; height: 100%"></iframe>
+</script>
+{% endraw %}

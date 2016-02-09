@@ -34,6 +34,8 @@ class Portal(Base, PRBase):
     url_google = Column(TABLE_TYPES['url'])
     url_tweeter = Column(TABLE_TYPES['url'])
     url_linkedin = Column(TABLE_TYPES['url'])
+    # url_vkontakte = Column(TABLE_TYPES['url'])
+
 
     company_owner_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'), unique=True)
     # portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))
@@ -237,6 +239,27 @@ class Portal(Base, PRBase):
         if not 'host' in ret['errors'] and db(Portal, host=self.host).filter(Portal.id != self.id).count():
             ret['warnings']['host'] = 'host already taken by another portal'
 
+
+
+
+        import socket
+        name = self.host
+        valid_IP = ['192.168.0.0/24','127.0.0.0/8' ]
+        try:
+            host = socket.gethostbyname(self.host)
+            x = str(host)
+            if x in valid_IP:
+                print('It\'s ok!')
+                if not x in valid_IP:
+                          print('Wrong Ip-address')
+        except (socket.gaierror, err):
+            print ("cannot resolve hostname: ", name, err)
+
+        if not 'host' in ret['warnings'] and not x in valid_IP:
+            ret['warnings']['host'] = 'Wrong Ip-address'
+
+
+
         grouped = {}
 
         for inddiv, div in enumerate(self.divisions):
@@ -298,6 +321,17 @@ class MemberCompanyPortal(Base, PRBase):
     plan = relationship('MemberCompanyPortalPlan'
                         # , backref='partner_portals'
                         )
+
+    RIGHT_AT_PORTAL = {
+        'MATERIAL_SUBMIT': 2 ** (1 - 1),
+        'PUBLICATION_PUBLISH': 2 ** (2 - 1),
+
+        'PUBLICATION_UNPUBLISH': 2 ** (3 - 1)
+    }
+
+    RIGHT_AT_PORTAL = RIGHT_AT_PORTAL['MATERIAL_SUBMIT']
+
+    RIGHT_AT_PORTAL_FOR_OWN_PORTAL = 0x7fffffffffffffff
 
     def __init__(self, company_id=None, portal=None, company=None, plan=None):
         if company_id and company:

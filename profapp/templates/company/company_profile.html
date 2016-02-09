@@ -21,7 +21,7 @@
 </script>
 <div ng-controller="CompanyProfile">
     <h1 class="nice-title">{{ company.name }}<span></span></h1>
-    {% if 'manage_rights_company' in user_rights %}
+    {% if rights_user_in_company['manage_rights_company'] %}
 {#            <a class="h1-btn" href="{{ url_for('company.update', company_id=company.id) }}" title="Edit company">Edit company</a>#}
             <a class="h1-btn icon icon-draw-pen" href="{{ url_for('company.update', company_id=company.id) }}" title="{{ '{{' }}_('Edit company'){{ '}}' }}">{{ '{{' }}_('Edit company'){{ '}}' }}</a>
         {% endif %}
@@ -31,7 +31,7 @@
     <img pr-no-image="/static/images/company_no_logo.png" pr-image="'{{ company.logo_file_relationship.id }}'"
             height="200" width="200" vspace="10">
 
-    {% if 'manage_rights_company' in user_rights and not company.own_portal %}
+    {% if rights_user_in_company['manage_rights_company'] and not company.own_portal %}
         <a href="{{ url_for('portal.create', company_id=company.id) }}">{{ '{{' }}_('Create Portal'){{ '}}' }}</a>
     {% else %}
         {{ '{{' }}_('portal'){{ '}}' }}:

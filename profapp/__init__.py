@@ -3,6 +3,7 @@ import re
 import json
 
 from flask import Flask, g, request, current_app
+from beaker.middleware import SessionMiddleware
 from authomatic import Authomatic
 from profapp.utils.redirect_url import url_page
 from flask import url_for
@@ -43,7 +44,7 @@ def req(name, allowed=None, default=None, exception=True):
         return None
 
 
-def filter_json(json, *args, NoneTo='', ExceptionOnNotPresent=False, prefix=''):
+def filter_json(json,  NoneTo='', ExceptionOnNotPresent=False, prefix='', *args):
     ret = {}
     req_columns = {}
     req_relationships = {}
@@ -253,16 +254,16 @@ def load_portal_id(app):
     return func
 
 
-def flask_endpoint_to_angular(endpoint, **kwargs):
-    options = {}
-    for kw in kwargs:
-        options[kw] = "{{" + "{0}".format(kwargs[kw]) + "}}"
-    url = url_for(endpoint, **options)
-    import urllib.parse
-
-    url = urllib.parse.unquote(url)
-    url = url.replace('{{', '{{ ').replace('}}', ' }}')
-    return url
+# def flask_endpoint_to_angular(endpoint, **kwargs):
+#     options = {}
+#     for kw in kwargs:
+#         options[kw] = "{{" + "{0}".format(kwargs[kw]) + "}}"
+#     url = url_for(endpoint, **options)
+#     import urllib.parse
+#
+#     url = urllib.parse.unquote(url)
+#     url = url.replace('{{', '{{ ').replace('}}', ' }}')
+#     return url
 
 
 def fileUrl(id, down=False, if_no_file=None):
@@ -344,14 +345,40 @@ def nl2br(value):
 def config_variables():
     variables = g.db.query(Config).filter_by(client_side=1).all()
     ret = {}
+
+    for variable in variables:
+        var_id = variable.id
+        if variable.type == 'int':
+            ret[var_id] = '%s' % (int(variable.value))
+        elif variable.type == 'bool':
+            ret[var_id] = 'false' if int(variable.value) == 0 else 'true'
+        elif variable.type == 'float':
+             ret[var_id] = '%s' % (float(variable.value))
+        elif variable.type == 'timestamp':
+            ret[var_id] = 'new Date(%s)' % (int(variable.value))
+        else:
+            ret[var_id] = '\'' + variable.value + '\''
+    return "<script>\nConfig = {};\n" + ''.join(
+        [("Config['%s']=%s;\n" % (var_id, ret[var_id])) for var_id in ret]) + '</script>'
+
+
+def config_variables():
+    variables = g.db.query(Config).filter_by(server_side=1).all()
+    ret = {}
     for variable in variables:
         var_id = variable.id
         if variable.type == 'int':
             ret[var_id] = '%s' % (int(variable.value),)
         elif variable.type == 'bool':
             ret[var_id] = 'false' if int(variable.value) == 0 else 'true'
+        elif variable.type == 'float':
+             ret[var_id] = '%s' % (float(variable.value))
+        elif variable.type == 'timestamp':
+            ret[var_id] = 'new Date(%s)' % (int(variable.value))
         else:
-            ret[var_id] = '\'' + variable.value + '\''
+            ret[var_id] = '\'' + variable.value.replace('\\','\\\\').replace('\n','\\n').replace('\'','\\\'') + '\''
+
+
     return "<script>\nConfig = {};\n" + ''.join(
         [("Config['%s']=%s;\n" % (var_id, ret[var_id])) for var_id in ret]) + '</script>'
 
@@ -506,7 +533,7 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     csrf.init_app(app)
 
     # read this: http://stackoverflow.com/questions/6036082/call-a-python-function-from-jinja2
-    app.jinja_env.globals.update(flask_endpoint_to_angular=flask_endpoint_to_angular)
+    # app.jinja_env.globals.update(flask_endpoint_to_angular=flask_endpoint_to_angular)
     app.jinja_env.globals.update(raw_url_for=raw_url_for)
     app.jinja_env.globals.update(pre=pre)
     app.jinja_env.globals.update(translates=translates)

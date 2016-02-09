@@ -310,6 +310,8 @@ class Grid:
             for filter in filters:
                 if filter['type'] == 'text':
                     query = query.filter(filter['field'].ilike("%" + filter['value'] + "%"))
+                elif filter['type'] == 'text_multi':
+                    query = query.filter(or_(v.ilike("%" + filter['value'] + "%") for v in filter['field']))
                 elif filter['type'] == 'select':
                     query = query.filter(filter['field'] == filter['value'])
                 elif filter['type'] == 'date_range':
@@ -334,6 +336,25 @@ class PRBase:
 
     def position_unique_filter(self):
         return self.__class__.position != None
+
+    @staticmethod
+    def merge_dicts(*args):
+        ret = {}
+        for d in args:
+            ret.update(d)
+        return ret
+
+    @staticmethod
+    def convert_rights_binary_to_dict(binary_rights, all_rights):
+        return {right_name: True if (binary_rights & right_binary_value) else False for right_name, right_binary_value
+                in all_rights.items()}
+
+    @staticmethod
+    def convert_rights_dict_to_binary(dict_rights, all_rights):
+        ret = 0
+        for right_name, right_binary_value in all_rights.items():
+            ret |= (right_binary_value if (right_name in dict_rights and dict_rights[right_name]) else 0)
+        return ret
 
     # if insert_after_id == False - insert at top
     # if insert_after_id == True - insert at bottom

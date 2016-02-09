@@ -10,8 +10,7 @@ from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDiv
 from ..models.tag import Tag, TagPortal, TagPortalDivision
 from .request_wrapers import ok, check_rights, tos_required
 from ..models.articles import ArticlePortalDivision, ArticleCompany, Article
-from ..models.company import simple_permissions
-from ..models.rights import Right
+from ..models.company import UserCompany
 from profapp.models.rights import RIGHTS
 from ..controllers import errors
 from ..models.pr_base import PRBase, Grid
@@ -424,13 +423,15 @@ def portals_partners_load(json, company_id):
     subquery = Company.subquery_company_partners(company_id, json.get('filter'))
     partners_g, pages, current_page, count = pagination(subquery, subquery_member_portal, **Grid.page_options(json.get('paginationOptions')))
     return {'page': current_page,
-            'grid_data': Company.getListGridDataPortalPartners(partners_g),
+            'grid_data': [{'portal' : {'name':partner.portal.name,'id': partner.portal.id},'link' : partner.portal.host,'company' : Company.get(partner.portal.company_owner_id).name
+                        } for partner in partners_g],
             'total': count,
             'portal': db(Company, id=company_id).one().own_portal.get_client_side_dict(fields='name') if db(Company, id=company_id).one().own_portal else [],
             'portals_partners': [port.get_client_side_dict(fields='name, company_owner_id,id')
                                  for port in Company.get(company_id).get_portals_where_company_is_member()],
             'company_id': company_id,
-            'user_rights': list(g.user.user_rights_in_company(company_id))}
+            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()
+            }
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])
@@ -449,11 +450,10 @@ def companies_partners_load(json, company_id):
     portal = db(Company, id=company_id).one().own_portal
     companies_partners = [comp.get_client_side_dict(fields='company.id, company.name') for comp in
                           portal.company_members] if portal else []
-    user_rights = list(g.user.user_rights_in_company(company_id))
     return {'portal': portal.get_client_side_dict(fields='name') if portal else [],
             'companies_partners': companies_partners,
             'company_id': company_id,
-            'user_rights': user_rights}
+            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()}
 
 
 @portal_bp.route('/search_for_portal_to_join/', methods=['POST'])
@@ -466,34 +466,59 @@ def search_for_portal_to_join(json):
     return portals_partners
 
 
-@portal_bp.route('/publications/<string:company_id>/', methods=['GET'])
+@portal_bp.route('/company/<string:company_id>/publications/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def publications(company_id):
-    return render_template(
-            'portal/portal_publications.html', company=Company.get(company_id),
-            angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js')
+    return render_template('portal/portal_publications.html', company=Company.get(company_id))
 
 
-@portal_bp.route('/publications/<string:company_id>/', methods=['POST'])
+def get_publication_dict(publication):
+    actions_for_statuses = {
+        ArticlePortalDivision.STATUSES['NOT_PUBLISHED']: ['publish', 'delete'],
+        ArticlePortalDivision.STATUSES['PUBLISHED']: ['unpublish'],
+        ArticlePortalDivision.STATUSES['DELETED']: ['undelete']
+    }
+    ret = publication.get_client_side_dict()
+    if ret.get('long'):
+            del ret['long']
+
+    ret['actions'] = actions_for_statuses[ret['status']]
+
+    return ret
+
+@portal_bp.route('/company/<string:company_id>/publications/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([]))
 @ok
 def publications_load(json, company_id):
-    portal = db(Company, id=company_id).one().own_portal.id
-    subquery = ArticlePortalDivision.subquery_portal_articles(portal, json.get('filter'), json.get('sort'))
-    articles, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
-    grid_filters = {
-        'publication_status': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
-        'company': [{'value': company_id, 'label': company} for company_id, company in
-                    ArticlePortalDivision.get_companies_which_send_article_to_portal(portal).items()]
-    }
-    return {'grid_data': Article.getListGridDataPublication(articles),
-            'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
-                             (k, v) in grid_filters.items()},
-            'total': count}
+    company = Company.get(company_id)
+    portal = company.own_portal
+    subquery = ArticlePortalDivision.subquery_portal_articles(portal.id, json.get('filter'), json.get('sort'))
+    publications, pages, current_page ,count = pagination(subquery,**Grid.page_options(json.get('paginationOptions')))
+    # grid_filters = {
+    #     'publication_status':Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+    #     'company': [{'value': company_id, 'label': company} for company_id, company  in
+    #                 ArticlePortalDivision.get_companies_which_send_article_to_portal(portal).items()]
+    # }
+    return {
+        'company': company.get_client_side_dict(),
+        'portal': portal.get_client_side_dict(),
+        'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights(),
+        'grid_data': list(map(get_publication_dict, publications))}
 
+
+@portal_bp.route('/publication_delete_unpublish/', methods=['POST'])
+@ok
+# @check_rights(simple_permissions([]))
+def publication_delete_unpublish(json):
+    action = g.req('action', allowed=['delete', 'unpublish'])
+
+    publication = ArticlePortalDivision.get(json['publication_id'])
+    publication.status = ArticlePortalDivision.STATUSES['NOT_PUBLISHED' if action == 'unpublish' else 'DELETED']
+
+    return get_publication_dict(publication.save())
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
 @tos_required
@@ -513,7 +538,7 @@ def publication_details_load(json, article_id, company_id):
         if article['status'] != ArticlePortalDivision.STATUSES['PUBLISHED'] \
         else ArticlePortalDivision.STATUSES['NOT_PUBLISHED']
     return {'article': article,
-            'user_rights': list(g.user.user_rights_in_company(company_id)),
+            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights(),
             'new_status': new_status,
             'allowed_statuses': allowed_statuses}
 
@@ -549,21 +574,3 @@ def update_article_portal(json, article_id):
 #     return {'portal': portal.name}
 
 
-@portal_bp.route('/submit_to_portal/', methods=['POST'])
-# @login_required
-# @check_rights(simple_permissions([]))
-@ok
-def submit_to_portal(json):
-    # json['tags'] = ['money', 'sex', 'rock and roll']; tag position is important
-
-    article = ArticleCompany.get(json['article']['id'])
-    portal_division_id = json['selected_division']
-    article_portal = article.clone_for_portal(portal_division_id)
-    article.save()
-    portal = article_portal.get_article_owner_portal(portal_division_id=portal_division_id)
-    json['article'] = article_portal.get_client_side_dict(fields=
-                                                          'id, title,short, cr_tm, md_tm, company_id, status, long,'
-                                                          'editor_user_id, company.name|id,portal_article.id,'
-                                                          'portal_article.division.name, portal_article.division.portal.name,portal_article.status')
-    json.update({'portal': portal.name})
-    return json

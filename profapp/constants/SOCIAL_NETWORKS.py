@@ -6,6 +6,7 @@ SOCIAL_NETWORKS = [
     'twitter',
     'microsoft',
     'yahoo',
+    # 'vkontakte'
 ]
 
 SOC_NET_FIELDS = [

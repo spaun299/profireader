@@ -1,15 +1,165 @@
-
-
 {% extends "index_lazy_layout.html" %}
 
-{% block title %}Profireader - Articles{% endblock title %}
+{% block head %}
+    {{ super() }}
+    {% include '_ruslan/partials/_header_files_grid.html' %}
+{% endblock head %}
+
+{% block title %}Profireader - Publications{% endblock title %}
 
 {% block portal_content %}
 
+    <script>
+        function set_local_scope($scope, action, publication, company, portal, rights_user_in_company) {
+
+            $scope.url_delete_unpublish_dialog = '{{ url_for('portal.publication_delete_unpublish')|safe }}';
+
+            $scope.publication = publication;
+            $scope.action = action;
+            $scope.company = company;
+            $scope.portal = portal;
+            $scope.rights_user_in_company = rights_user_in_company;
+        }
+
+        module.controller('publication_delete_unpublish_dialog', function ($scope, $ok, $uibModalInstance, action, publication, company, portal, rights_user_in_company) {
+            $scope.$$translate = {{ translates('publication_delete_unpublish_dialog')|safe }};
+            set_local_scope($scope, action, publication, company, portal, rights_user_in_company);
+
+            $scope.action_do = function (submit_or_publish) {
+                $ok($scope.url_delete_unpublish_dialog + '?action=' + submit_or_publish, {
+                    publication_id: $scope.publication.id
+                }, $uibModalInstance.close)
+            };
+
+            $scope.action_cancel = $uibModalInstance.dismiss;
+        });
+    </script>
+
+    {% raw %}
+    <script type="text/ng-template" id="publication_delete_unpublish_dialog.html">
+        <div class="modal-header">
+            <h3 class="modal-title">{{ _('%(action)s publication from portal') }}</h3>
+        </div>
+        <div class="modal-body">
+            <div ng-if="!rights_user_in_company['PUBLICATION_UNPUBLISH_AT_OWN_PORTAL']">
+                {{ _('sorry you have no permission to %(action)s publication from portal of company `%(portal.name)s` of
+                company `%(company.name)s`') }}
+            </div>
+            <div ng-if="rights_user_in_company['PUBLICATION_UNPUBLISH_AT_OWN_PORTAL']">
+                {{ _('You are going to %(action)s material `%(publication.title)s` at portal `%(portal.name)s`') }}
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" type="button" ng-click="action_do(action)">{{ _('do %(action)s') }}
+            </button>
+            <button class="btn" type="button" ng-click="action_cancel(action)">{{ _('cancel %(action)s') }}</button>
+        </div>
+    </script>
+    {% endraw %}
 
     <script>
-        module.controller('article_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
+
+
+        module.controller('publication_status_dialog', function ($scope, $ok, $uibModalInstance, publication, action, rights_user_in_company) {
+
+            $scope.$$translate = {{ translates('publication_status_dialog')|safe }};
+            {#            $scope.url_publication_change_status = '{{ raw_url_for('article.material_submit_to_portal')|safe }}';#}
+
+            $scope.publication = publication;
+            $scope.action = action;
+            $scope.rights_user_in_company = rights_user_in_company;
+
+            $scope.action_do = function (action) {
+                {#                $ok($scope.url_submit_to_portal + '?action=' + submit_or_publish, {#}
+                {#                    material_id: $scope.article.id,#}
+                {#                    portal_division_id: $scope.selected_division.id,#}
+                {#                    publication_data: {}#}
+                {#                }, $uibModalInstance.close)#}
+
+            };
+
+            $scope.action_cancel = $uibModalInstance.dismiss;
+
+        });
+
+{#        module.controller('publication_status_dialog', function ($scope, $ok, $uibModalInstance, publication, action, rights_user_in_company) {#}
+{##}
+{#            $scope.$$translate = {{ translates('publication_status_dialog')|safe }};#}
+            {#            $scope.url_publication_change_status = '{{ raw_url_for('article.material_submit_to_portal')|safe }}';#}
+{##}
+{#            $scope.publication = publication;#}
+{#            $scope.action = action;#}
+{#            $scope.rights_user_in_company = rights_user_in_company;#}
+{##}
+{#            $scope.action_do = function (action) {#}
+                {#                $ok($scope.url_submit_to_portal + '?action=' + submit_or_publish, {#}
+                {#                    material_id: $scope.article.id,#}
+                {#                    portal_division_id: $scope.selected_division.id,#}
+                {#                    publication_data: {}#}
+                {#                }, $uibModalInstance.close)#}
+{##}
+{#            };#}
+{##}
+{#            $scope.action_cancel = $uibModalInstance.dismiss;#}
+{##}
+{#        });#}
+
+    </script>
+
+    {% raw %}
+    <script type="text/ng-template" id="publication_status_dialog.html">
+        <div class="modal-header">
+            <h3 class="modal-title">{{ _(action + ' material at portal') }}</h3>
+        </div>
+        <div class="modal-body">
+            <div ng-if="!rights_user_in_company['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']">
+                {{ _('sorry you have no permission to submit material in behalf of company `%(company.name)s`')
+                }}
+            </div>
+            <div ng-if="rights_user_in_company['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']">
+                <div ng-if="action=='publish'">{{ _('You are going to publish material `%(article.title)s` at portal
+                    `%(portal.name)s`. Please select division') }}
+                </div>
+                <br/>
+                <div ng-if="action=='publish'" ng-repeat="division in portal.divisions"><label><input
+                        ang-disabled="!division.can_be_published"
+                        name="material_details_publish_dialog_division"
+                        ng-value="division" ng-model="$parent.$parent.$parent.selected_division"
+                        type="radio"> {{ division.name }}</label></div>
+
+                <div ng-if="action=='unpublish'">
+                    {{ _('You are going to unpublish publication `%(article.title)s` from portal `%(portal.name)s`
+                    division
+                    `%(published_at_division.name)s`') }}
+                </div>
+                <hr/>
+                {{ _('You can send message to company') }}<br/>
+                <textarea disabled="disabled" style="width: 100%" ng-model="message"></textarea>
+
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="!selected_division"
+                    type="button" ng-click="action_do('submit')">{{ _('Do submit') }}
+            </button>
+            <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="true"
+                    title="{{ _('Your company has no permission to publish. pls submit') }}"
+                    type="button" ng-click="action_do('publish')">{{ _('Do publish') }}
+            </button>
+            <button ng-if="action=='unpublish'" class="btn btn-primary" type="button" ng-click="action_do()">{{
+                _('Do ' + action) }}
+            </button>
+            <button class="btn btn-warning" type="button" ng-click="action_cancel()">{{ _('Cancel ' + action) }}
+            </button>
+        </div>
+    </script>
+    {% endraw %}
+
+
+    <script>
+        module.controller('article_list', function ($scope, $ok, $sce, $uibModal) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('publications');
+
             $scope.url_details = {{ raw_url_for('portal.publication_details')|safe }};
             $scope.url_search_article = {{ raw_url_for('portal.publications_load')|safe }};
 
@@ -19,49 +169,94 @@
             {% raw %}
             $scope.noData = 'No publications';
 
-            $scope.sendData = function (data) {
-                $scope.loading = true;
+            $scope.sendData = function (data, callback) {
                 $ok($scope.url_search_article({company_id: $scope.own_company_id}), data, function (resp) {
-                    $scope.initGridData = resp;
-                    $scope.applyGridExtarnals(resp);
-                }).finally(function () {
-                    $scope.loading = false;
-                    $scope.load_contr = true;
-                });
+                    $scope.data = resp;
+                    $scope.portal = resp.portal;
+                    $scope.company = resp.company;
+                    $scope.rights_user_in_company = resp.rights_user_in_company;
+                    callback(resp);
+                } );
             };
 
+            $scope.grid_action = function (id, action, row, column_name) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'publication_delete_unpublish_dialog.html',
+                    controller: 'publication_delete_unpublish_dialog',
+                    resolve: {
+                        rights_user_in_company: function () {
+                            return $scope.rights_user_in_company;
+                        },
+                        company: function () {
+                            return $scope.company;
+                        },
+                        portal: function () {
+                            return $scope.portal;
+                        },
+                        publication: function () {
+                            return row;
+                        },
+                        action: function () {
+                            return action;
+                        }
+                    }
+                });
+
+                modalInstance.result.then(function (updated_row) {
+                    debugger;
+                    $scope.grid_change_row($scope.data, updated_row);
+                });
+            }
+
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
-                    gridInit: $scope.sendData,
-                    onRegisterApi: function (gridApi) {
-                        $scope.setGridExtarnals(gridApi)
+                loadGridData: $scope.sendData,
+                columnDefs: [
+                    {
+                        name: 'title',
+                        width: '35%',
+                        type: 'link',
+                        href: 'url_details({company_id:grid.appScope.own_company_id,article_id:row.entity.id})',
+                        classes: 'link',
+                        afilter: {type: 'input'}
                     },
-                    columnDefs: [
-                      { name: 'title', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'Title', width: '35%',
-                          type: 'link',
-                          href: 'url_details({company_id:grid.appScope.own_company_id,article_id:row.entity.id})',
-                          classes: 'link',
-                          filter: {type:'input'}
-                      },
-                      { name: 'date',enableCellEdit: false, displayName: 'Date', filter: {type:'date_range'}},
-                      { name: 'company', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'Company',
-                          filter: {type:'select'}
-                      },
-                      { name: 'publication_status', enableSorting: false,displayName: 'Publication Status', enableCellEdit: false, enableColumnMenu: false,
-                          filter: {type:'select'}
-                      }
-                    ]
-                  });
+                    {
+                        name: 'date', afilter: {type: 'date_range'}
+                    },
+                    {
+                        name: 'company', afilter: {type: 'select'}
+                    },
+                    {
+                        name: 'status', afilter: {type: 'select'}
+                    }
+                    , {
+                        name: 'actions', type: 'actions', onclick: 'grid_action'
+                    }
+                ]
+            });
 
 
-
-        }]);
-    {% endraw %}
+        });
+        {% endraw %}
     </script>
     {% include 'company/company_base_angular.html' %}
     {% raw %}
+
+    <style>
+        .pr-grid-cell-field-type-actions-action-publish {
+            background-color: greenyellow;
+        }
+
+        .pr-grid-cell-field-type-actions-action-unpublish {
+            background-color: #1ab7ea;
+        }
+
+        .pr-grid-cell-field-type-actions-action-delete {
+            background-color: red;
+        }
+    </style>
+
     <div ng-controller="article_list">
-        <div ng-if="!load_contr">{{_('Loading...')}}</div>
-        <div class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1" ></div>
+        <div class="grid" id="grid1" ui-grid-pagination ui-grid="gridOptions1"></div>
     </div>
     {% endraw %}
 

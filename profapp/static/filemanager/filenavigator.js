@@ -18,7 +18,7 @@
             this.ancestors = [root_id];
             this.history = [];
             this.error = '';
-            this.search_len = None;
+            this.search_len = null;
             this.is_search = false;
             this.file_manager_called_for = file_manager_called_for;
         };

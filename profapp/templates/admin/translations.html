@@ -107,14 +107,11 @@
                         $scope.sendData(grid_data);
                     };
 
-                    $scope.sendData = function (grid_data) {
+                    $scope.sendData = function (grid_data, setdatafuctions) {
                         $scope.loading = true;
                         $scope.isSelectedRows = false;
                         $scope.error = '';
-                        return $ok($scope.url_search_translations({}), grid_data, function (resp) {
-                            $scope.initGridData = resp;
-                            $scope.applyGridExtarnals(resp);
-                        }).finally(function () {
+                        $ok($scope.url_search_translations({}), grid_data, setdatafuctions).finally(function () {
                             $scope.loading = false;
                             $scope.load_contr = true;
                         });
@@ -125,48 +122,44 @@
                     };
 
                     $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
-                        gridInit: $scope.sendData,
-                        onRegisterApi: function (gridApi) {
-                            $scope.setGridExtarnals(gridApi)
-                        },
+                        loadGridData: $scope.sendData,
                         columnDefs: [
                             {
                                 name: 'cr_tm', enableCellEdit: false, enableFiltering: false, enableSorting: true,
                                 displayName: 'Creation time'
                             }, {
-                                name: 'ac_tm', enableSorting: true, enableCellEdit: false, enableFiltering: false,
-                                displayName: 'Last accessed'
+                                name: 'ac_tm', enableSorting: true, enableCellEdit: false
                             }, {
-                                name: 'template', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                                name: 'template', enableCellEdit: false, enableColumnMenu: false,
                                 displayName: 'Template',
                                 filter: {type:'select'}
                             }, {
-                                name: 'url', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                                name: 'url', enableCellEdit: false, enableColumnMenu: false,
                                 displayName: 'Url',
                                 filter: {type:'select'}
                             }, {
-                                name: 'name', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, displayName: 'Phrase',
+                                name: 'name', enableCellEdit: false, enableColumnMenu: false, displayName: 'Phrase',
                                 filter: {type:'input'}
                             }, {
-                                name: 'uk', enableSorting: false, enableCellEdit: true, enableColumnMenu: false,
+                                name: 'uk', enableCellEdit: true, enableColumnMenu: false,
                                 type: 'editable',
                                 modal: "grid.appScope.showModalForEditNew(row, col, row.entity[col.field])",
                                 multiple: true,
                                 rule:'rule(row.entity.allow_html)',
                                 filter: {type:'input'}
                             }, {
-                                name: 'en', enableSorting: false, enableCellEdit: true, enableColumnMenu: false,
+                                name: 'en', enableCellEdit: true, enableColumnMenu: false,
                                 type: 'editable',
                                 modal: "grid.appScope.showModalForEditNew(row, col, row.entity[col.field])",
                                 multiple: true,
                                 rule:'rule(row.entity.allow_html)',
                                 filter: {type:'input'}
                             }, {
-                                name: 'allow_html', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                                name: 'allow_html', enableCellEdit: false, enableColumnMenu: false,
                                 displayName: 'Allow HTML',
                                 filter: {type:'input'}
                             }, {
-                                name: 'portal.name', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
+                                name: 'portal.name', enableCellEdit: false, enableColumnMenu: false,
                                 displayName: 'Portal Name',
                                 filter: {type:'input'}
                             }

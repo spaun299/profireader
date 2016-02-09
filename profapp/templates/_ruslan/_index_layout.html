@@ -6,48 +6,45 @@
 
 {% block metas %}
     {{ super() }}
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
 {% endblock metas %}
 
 {% block styles %}
-    {#    {{ super() }}#}
-    {#    <link rel="stylesheet" type="text/css" href="/static/filemanager/angular-filemanager.css">#}
-    {#<link href="{{ url_for('static', filename = 'image_editor/assets/css/bootstrap.min.css') }}" rel="stylesheet">#}
-    {#<link href="{{ url_for('static', filename = 'image_editor/demo/css/main.css') }}" rel="stylesheet">#}
-    {#
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
-    #}
-{#    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.css">#}
-{#    <link rel="stylesheet" href="/static/css/profireader_responsive.css">#}
-{#    <link rel="stylesheet" href="/static/css/profireader.css">#}
-{#    <link rel="stylesheet" href="/static/jquery/smoothness/jquery-ui.css">#}
-{#    <link rel="stylesheet" href="/static/css/oles.css">#}
-{#    <link rel="stylesheet" href="/static/css/icons.css">#}
-{#    <link rel="stylesheet" href="/static/css/andriy-pagination.css">#}
+    <link href="/static/css/_profreader.css" rel="stylesheet">
+    <link href="/static/css/font-awesome.min.css" rel="stylesheet">
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+{#    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">#}
+    <link rel="stylesheet" href="/static/css/icons.css">
 
 {%- endblock styles %}
 
 {%- block head %}
     {{ super() }}
+    <script>
+    var pr_angular_modules = ['ui.bootstrap', 'profireaderdirectives', 'ngSanitize', 'ajaxFormModule', 'profireaderdirectives', 'ngAnimate', 'ngTouch', 'ui.slider'];
+    </script>
+
 
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon"/>
     <link rel="icon" href="/static/favicon.ico" type="image/gif"/>
 
     {{ config_variables()|safe }}
 
-    {#    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>#}
-    {#    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>#}
-
-
-{#    <script src="{{ bootstrap_find_resource('jquery.js', cdn='jquery') }}"></script>#}
     <script src="{{ url_for('static', filename = 'new/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'new/jquery/jquery-ui.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'new/bootstrap/js/bootstrap.js') }}"></script>
     <script src="{{ url_for('static', filename = 'new/angular/angular.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'new/angular-bootstrap/ui-bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'new/angular-bootstrap/ui-bootstrap-tpls.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ajax-validator/ngAjaxValidator.js') }}"></script>
+     <script src="{{ url_for('static', filename = 'angular-ui-slider/slider.js') }}"></script>
+
+    {% include '_ruslan/partials/_header_files_grid.html' %}
+
+
 
 {#    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>#}
     {#    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>#}
@@ -55,7 +52,8 @@
     {#    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.js"></script>#}
 
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular-sanitize.js"></script>
-
+   <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-animate.js"></script>
+      <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-touch.js"></script>
 {#    {% if angular_ui_bootstrap_version %}#}
 {#        <script src="{{ angular_ui_bootstrap_version }}"></script>#}
 {#    {% endif %}#}
@@ -75,19 +73,7 @@
 {#    <script src="/static/js/jquery.smooth-scroll.js"></script>#}
 {#    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>#}
 
-    <!---GRID---->
-    <link rel="styleSheet" href="/static/css/ui-grid.css"/>
-    <script src="/static/js/ui-grid.min.js"></script>
-    <script src="/static/ui-grid/csv.js"></script>
-    <script src="/static/ui-grid/pdfmake.js"></script>
-    <script src="/static/ui-grid/vfs_fonts.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-touch.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-animate.js"></script>
 
-    <!---article---->
-    <script src="{{ url_for('static', filename = 'tinymce.pr/tinymce.jquery.pr.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'new/angular-ui-tinymce/tinymce.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'new/angular-ui-slider/slider.js') }}"></script>
 
     <script>
         {% for message in get_flashed_messages() %}
@@ -102,12 +88,9 @@
     {{ "{" }} 'default': 10, 'change': 250, 'blur': 0 {{ "}" }} {{ "}" }}" {% endblock body_attribs %}
 
 {% block navbar %}
-    {% include 'partials/base_profireader.html' %}
+    {% include '_ruslan/partials/_user_menu.html' %}
 {% endblock navbar %}
 
-{% block portal_base %}
-    {% include 'partials/portal_base_Profireader.html' %}
-{% endblock portal_base %}
 
 {% block content %}
 
@@ -124,5 +107,6 @@
 
 {% block scripts %}
     {% include 'partials/portal_footer_Profireader.html' %}
+    <link href="/static/css/oles.css" rel="stylesheet">
 {% endblock scripts %}
 

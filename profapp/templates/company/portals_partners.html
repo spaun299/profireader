@@ -10,11 +10,13 @@
     {% endblock company_base %}
 
     <script>
-        module.controller('portal_list', ['$scope', '$ok','uiGridConstants','$timeout', function ($scope, $ok, uiGridConstants,$timeout) {
+        module.controller('portal_list', ['$scope', '$ok', 'uiGridConstants', '$timeout', function ($scope, $ok, uiGridConstants, $timeout) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('portals_partners')
             $scope.url_portal_profile = {{ raw_url_for('portal.profile')|safe }};
-            $scope.url_search_for_portal = function () { return( '/portal/search_for_portal_to_join/' ); };
-{#            {{ raw_url_for('portal.search_for_portal_to_join')|safe }};#}
+            $scope.url_search_for_portal = function () {
+                return ( '/portal/search_for_portal_to_join/' );
+            };
+            {#            {{ raw_url_for('portal.search_for_portal_to_join')|safe }};#}
             $scope.url_join = {{ raw_url_for('portal.apply_company')|safe }};
             $scope.partners = {{ raw_url_for('portal.portals_partners')|safe }};
             $scope.load_partners = {{ raw_url_for('portal.portals_partners_load')|safe }};
@@ -26,16 +28,16 @@
             {% raw %}
             $scope.noData = 'No portal partners';
 
-            $scope.myRights = function(){
-                if (!$scope.data || !$scope.data.user_rights) return false;
-
-                for (var i = 0; i < arguments.length; i++) {
-                     if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {
-                         return false;
-                     }
-                }
-                return true;
-            };
+{#            $scope.myRights = function () {#}
+{#                if (!$scope.data || !$scope.data.user_rights) return false;#}
+{##}
+{#                for (var i = 0; i < arguments.length; i++) {#}
+{#                    if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {#}
+{#                        return false;#}
+{#                    }#}
+{#                }#}
+{#                return true;#}
+{#            };#}
 
             $scope.afterSave = function (resp) {
                 window.location.href = $scope.partners({company_id: resp['company_id']})
@@ -60,7 +62,10 @@
                 });
             };
             $scope.joinToPortal = function () {
-                $ok($scope.url_join(), {company_id: $scope.data.company_id, portal_id: $scope.selectedPortal.id}, function (resp) {
+                $ok($scope.url_join(), {
+                    company_id: $scope.data.company_id,
+                    portal_id: $scope.selectedPortal.id
+                }, function (resp) {
                     $scope.data['portals_partners'] = resp['portals_partners'];
                     $scope.all_grid_data['paginationOptions']['page_for_id'] = $scope.selectedPortal.id;
                     $scope.sendData($scope.all_grid_data);
@@ -72,59 +77,55 @@
                 });
             };
 
-           $scope.sendData = function (data) {
+            $scope.sendData = function (data, setdatafuctions) {
                 $scope.loading = true;
-                $ok($scope.load_partners({company_id: $scope.own_company_id}), data, function (resp) {
-                    $scope.initGridData = resp;
-                    $scope.applyGridExtarnals(resp);
-                }).finally(function () {
+                $ok($scope.load_partners({company_id: $scope.own_company_id}), data, setdatafuctions).finally(function () {
                     $scope.loading = false;
                     $scope.load_contr = true;
                 });
             };
 
-            $scope.link = function(link){
-                return 'Http://'+link
+            $scope.link = function (link) {
+                return 'Http://' + link
             };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
-                    gridInit: $scope.sendData,
-                    onRegisterApi: function (gridApi) {
-                        $scope.setGridExtarnals(gridApi)
+                loadGridData: $scope.sendData,
+                showTreeExpandNoChildren: false,
+                columnDefs: [
+                    {
+                        name: 'portal.name', enableColumnMenu: false, width: '35%',
+                        type: 'link',
+                        href: 'url_portal_profile({portal_id: row.entity.portal.id})',
+                        classes: 'link',
+                        filter: {type: 'input'}
                     },
-                    showTreeExpandNoChildren: false,
-                    columnDefs: [
-                      { name: 'portal.name', enableSorting: false,enableCellEdit: false, enableColumnMenu: false, displayName: 'Portal', width: '35%',
-                          type: 'link',
-                          href: 'url_portal_profile({portal_id: row.entity.portal.id})',
-                          classes: 'link',
-                          filter: {type:'input'}
-                      },
-                      { name: 'link', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, displayName: 'Link',
-                          type: 'link',
-                          href: 'link(row.entity.link)',
-                          classes: 'link',
-                          filter: {type:'input'}
-                      },
-                      { name: 'company', enableSorting: false,enableCellEdit: false, enableColumnMenu: false,
-                          displayName: 'Company',filter: {type:'input'}
-                      }
-                    ]
-                  });
+                    {
+                        name: 'link', enableColumnMenu: false,
+                        type: 'link',
+                        href: 'link(row.entity.link)',
+                        classes: 'link',
+                        filter: {type: 'input'}
+                    },
+                    {
+                        name: 'company', enableColumnMenu: false, filter: {type: 'input'}
+                    }
+                ]
+            });
         }]);
-    {% endraw %}
+        {% endraw %}
     </script>
     {% raw %}
     <div ng-init="loadData()" ng-controller="portal_list">
 
-        <span ng-if="myRights('subscribe_to_portals')">
+        <span ng-if="false and myRights('subscribe_to_portals')">
             <h3> {{ _('Join to portal') }} </h3>
             <input typeahead-on-select="onSelect($item, $model, $label)"
-                                                   typeahead-template-url="typeaheadTemplate.html"
-                                                   typeahead-loading="loadingPortals"
-                                                   ng-model="selectedPortal_name"
-                                                   typeahead="portal as portal.name for portal in searchForPortalToJoin($viewValue)"
-                                                   name="portal_id"/>&nbsp;
+                   typeahead-template-url="typeaheadTemplate.html"
+                   typeahead-loading="loadingPortals"
+                   ng-model="selectedPortal_name"
+                   typeahead="portal as portal.name for portal in searchForPortalToJoin($viewValue)"
+                   name="portal_id"/>&nbsp;
             <button class="btn" ng-click="joinToPortal()"
                     ng-class="{'disabled': !selectedPortal || selectedPortal_sending}"
                     ng-disabled="!selectedPortal || selectedPortal_sending">{{ _('join to this portal') }}
@@ -133,17 +134,17 @@
         </span>
         <div>
             <div ng-show="!load_contr">{{_('Loading...')}}</div>
-                <div ng-show="load_contr">
-                    <h3 style="{text-align: center!important;}">
+            <div ng-show="load_contr">
+                <h3 style="{text-align: center!important;}">
                         <span ng-if="initGridData.portals_partners==''">
                             {{_('This company does not subscribed to any portal')}}
                         </span>
-                    </h3>
-                    <h3 style="text-align: center!important;">{{_('This company portals partners')}}</h3>
-                </div>
-            <div class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1" ></div>
+                </h3>
+                <h3 style="text-align: center!important;">{{_('This company portals partners')}}</h3>
+            </div>
+            <div class="grid" id="grid1" ui-grid-edit ui-grid-pagination ui-grid="gridOptions1"></div>
         </div>
     </div>
 
-{% endraw %}
+    {% endraw %}
 {% endblock portal_content %}
