@@ -1338,6 +1338,16 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             groupingShowAggregationMenus: false,
             columnDefs: []
         },
+
+        change_only_one_row_grid: function(data, update_row){
+            $.each(data['grid_data'], function (index, portal_row) {
+                        if (portal_row['id'] === updated_row['id']) {
+                            data['grid_data'][index] = updated_row;
+                        }
+                    });
+            return data
+        },
+
         loadData: function (url, senddata, beforeload, afterload) {
             var scope = this;
             scope.loading = true;

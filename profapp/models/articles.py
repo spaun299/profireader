@@ -636,6 +636,9 @@ class Article(Base, PRBase):
         return articles if articles else []
 
     @staticmethod
+    def get_list_grid_data(data):
+        dict = data.get_client_side_dict(fields='md_tm,title,author,port')
+    @staticmethod
     def getListGridDataMaterials(articles):
         grid_data = []
         for article in articles:

@@ -27,6 +27,7 @@
 
 
             $scope.onSelect = function ($item, $model, $label) {
+                console.log('das')
                 if (!$item || !$item.id) {
                     $scope.selectedCompany_name = '';
                     $scope.selectedCompany = null;
@@ -37,6 +38,7 @@
             };
 
             $scope.searchForCompanyToJoin = function (val) {
+                console.log(val)
 
                 return $ok($scope.url_search_for_company(), {
                     article_id: $scope.data.id,
