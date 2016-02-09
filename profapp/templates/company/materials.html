@@ -33,9 +33,6 @@
             $scope.sendData = function (grid_data, setdatafuctions) {
                 $ok($scope.url_search_article({company_id: $scope.company_id}), grid_data, setdatafuctions)
             };
-            $scope.sendData1 = function(grid_data, setdatafuctions){
-                $ok($scope.url_search({company_id: $scope.company_id}), grid_data, setdatafuctions)
-            }
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                 loadGridData: $scope.sendData,
@@ -65,22 +62,10 @@
                         filter: {type:'multi_select'}
                     },{
                         name: 'publication_status',
-                        afilter: {type: 'select'}
+                        filter: {type: 'multi_select'}
                     },{
                         name: 'publication_visibility',
                         afilter: {type: 'select'}
-                    }
-                ]
-            });
-            $scope.gridOptions2 = $.extend({}, $scope.gridOptions, {
-                loadGridData: $scope.sendData1,
-                columnDefs: [
-                    {
-                        name: 'name',   width: '30%'
-                    },{
-                        name: 'age'
-                    },{
-                        name: 'email', aenableColumnMenu: true
                     }
                 ]
             });
@@ -91,9 +76,9 @@
 
     {% raw %}
     <div ng-controller="materials_list">
+
         <a href="{{ url_material_create({company_id: company_id}) }}">{{ _('Create new material') }}</a>
         <div class="grid" id="grid1" ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
-        <div class="grid" id="grid1"  ui-grid-pagination ui-grid="gridOptions2"></div>
     </div>
     {% endraw %}
 
