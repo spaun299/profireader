@@ -304,7 +304,7 @@ def load(json, company_id=None):
                 company.detach()
             return company.validate(company_id is None)
         else:
-            if json['image']['uploaded']:
+            if json['image'].get('uploaded'):
                 if company_id is None:
                     company.setup_new_company()
                 company.save().get_client_side_dict()
