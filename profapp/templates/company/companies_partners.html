@@ -35,12 +35,12 @@
                         loadGridData: $scope.sendData,
                         columnDefs: [
                             {
-                                name: 'company_logo', type: 'img'
+                                name: 'logo', type: 'img'
                             }, {
                                 name: 'company_name', type: 'link',
-                                href: 'url_company_profile(row.entity.company_id)'
+                                href: 'url_company_profile({company_id: row.entity.company_id})'
                             }, {
-                                name: 'company_rights'
+                                name: 'rights_at_portal',
                             }
                         ]
                     });

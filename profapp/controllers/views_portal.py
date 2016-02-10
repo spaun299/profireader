@@ -455,17 +455,20 @@ def companies_partners(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def companies_partners_load(json, company_id):
-    portal = db(Company, id=company_id).one().own_portal
-    companies_partners = [comp.get_client_side_dict(fields='company.id, company.name') +
-                          {'rights_at_portal': comp.RIGHT_AT_PORTAL, 'logo': File.get(comp.company.logo_file_id).url()
-                          if comp.company.logo_file_id else '/static/images/company_no_logo.png'}
-                          for comp in portal.company_members] if portal else []
-    grid_data = []
-    for field in companies_partners:
-        grid_data.append({'company_id': field['id'], 'company_logo': field['logo'],
-                          'company_name': field['name'], 'company_rights': field['rights_at_portal']})
+    """ RIGHT_AT_PORTAL HARDCODED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! """
+    subquery = db(MemberCompanyPortal).filter(
+        MemberCompanyPortal.portal_id == db(Portal, company_owner_id=company_id).subquery().c.id)
+    partners, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
+    portal = partners[0].portal if partners else db(Company, id=company_id).one().own_portal
+    grid_data = [{'company_id': comp.company.id, 'company_name': comp.company.name,
+                 'rights_at_portal': ['MATERIAL_SUBMIT', 'PUBLICATION_PUBLISH'],
+                  'logo': File.get(comp.company.logo_file_id).url() if comp.company.logo_file_id
+                  else '/static/images/company_no_logo.png'}
+                 for comp in partners] if portal else []
     return {'portal': portal.get_client_side_dict(fields='name') if portal else [],
             'grid_data': grid_data,
+            'total': count,
+            'page': current_page,
             'company_id': company_id,
             'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()}
 
