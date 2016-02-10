@@ -239,12 +239,9 @@ class Portal(Base, PRBase):
         if not 'host' in ret['errors'] and db(Portal, host=self.host).filter(Portal.id != self.id).count():
             ret['warnings']['host'] = 'host already taken by another portal'
 
-
-
-
         import socket
         name = self.host
-        valid_IP = ['192.168.0.0/24','127.0.0.0/8' ]
+        valid_IP = ['192.168.0.0/24', '127.0.0.1', '136.243.204.62']
         try:
             host = socket.gethostbyname(self.host)
             x = str(host)
@@ -252,8 +249,8 @@ class Portal(Base, PRBase):
                 print('It\'s ok!')
                 if not x in valid_IP:
                           print('Wrong Ip-address')
-        except (socket.gaierror, err):
-            print ("cannot resolve hostname: ", name, err)
+        except Exception as e:
+            print("cannot resolve hostname: ", e)
 
         if not 'host' in ret['warnings'] and not x in valid_IP:
             ret['warnings']['host'] = 'Wrong Ip-address'
