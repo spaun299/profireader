@@ -204,3 +204,44 @@ body  {
  .company-logo img{
      margin-right: -15px;
  }
+.user-menu-dropdown ul{
+    border-radius: 0;
+    width: 100%;
+    padding: 0;
+}
+.menu-syte ul{
+    float: right;
+    margin-right: -25px;
+}
+.hamburger-menu span{
+    background-color: #fff;
+}
+@media screen and (max-width: 764px) {
+    .menu-syte ul {
+        float: none;
+        margin-right: 0;
+    }
+    .dropdown-menu {
+        position: static;
+    }
+    body{
+        padding-top: 150px;
+    }
+    .company-portal a{
+        float: none;
+    }
+}
+@media screen and (max-width: 991px){
+    .company-logo{
+        margin-top: 15px;
+        text-align: right;
+    }
+    .company-logo img{
+        margin-right: 0;
+    }
+    .company-portal{
+        margin-top: 40px;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+}
