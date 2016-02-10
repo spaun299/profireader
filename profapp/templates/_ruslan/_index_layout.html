@@ -97,8 +97,9 @@
     {% include 'templates-angular.html' %}
 
     <div class="container widewrapper">
+        {% include 'flashed-messages.html' %}
         {% block portal_content %}
-            {% include 'flashed-messages.html' %}
+
         {% endblock portal_content %}
     </div>
 
