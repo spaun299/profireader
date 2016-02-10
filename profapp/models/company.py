@@ -119,7 +119,8 @@ class Company(Base, PRBase):
                 'message': 'Company name %(name)s already exist. Please choose another name',
                 'data': self.get_client_side_dict()})
 
-        user_company = UserCompany(status=UserCompany.STATUSES['ACTIVE'], rights=UserCompany.RIGHTS_AT_COMPANY_FOR_OWNER)
+        user_company = UserCompany(status=UserCompany.STATUSES['ACTIVE'],
+                                   rights=UserCompany.RIGHTS_AT_COMPANY_FOR_OWNER)
         user_company.employer = self
         g.user.employer_assoc.append(user_company)
         g.user.companies.append(self)
@@ -289,7 +290,6 @@ class UserCompany(Base, PRBase):
     position = Column(TABLE_TYPES['short_name'], default='')
 
     md_tm = Column(TABLE_TYPES['timestamp'])
-    works_since_tm = Column(TABLE_TYPES['timestamp'])
 
     banned = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
 
@@ -307,15 +307,13 @@ class UserCompany(Base, PRBase):
 
     # todo (AA to AA): check handling md_tm
 
-    def __init__(self, user_id=None, company_id=None, status=STATUS.NONACTIVE(), rights=0,
-                 works_since_tm=works_since_tm):
+    def __init__(self, user_id=None, company_id=None, status=STATUS.NONACTIVE(), rights=0):
 
         super(UserCompany, self).__init__()
         self.user_id = user_id
         self.company_id = company_id
         self.status = status
         self._rights = rights
-        self.works_since_tm = works_since_tm
 
     @staticmethod
     def get(user_id=None, company_id=None):
