@@ -4,7 +4,7 @@
 
 {% block head %}
     {{ super() }}
-    {% include '_ruslan/partials/_header_files_grid.html' %}
+
 {% endblock head %}
 
 {% block portal_base %}
@@ -98,7 +98,7 @@
                    uib-typeahead-template-url="typeaheadTemplate.html"
                    uib-typeahead-loading="loadingPortals"
                    ng-model="selectedPortal_name"
-                   uib-typeahead="portal for portal in searchForPortalToJoin($viewValue)"
+                   uib-typeahead="portal as portal.name for portal in searchForPortalToJoin($viewValue)"
                    name="portal_id"/>&nbsp;
             <button class="btn" ng-click="joinToPortal()"
                     ng-class="{'disabled': !selectedPortal || selectedPortal_sending}"

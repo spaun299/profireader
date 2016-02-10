@@ -164,7 +164,7 @@ def material_details(material_id):
 #
 
 def get_portal_dict_for_material(portal, material_id, company_id):
-    ret = portal.get_client_side_dict(fields='id,name,divisions.id|name|portal_division_type_id,own_company.name')
+    ret = portal.get_client_side_dict(fields='id, name, host,divisions.id|name|portal_division_type_id, own_company.name, own_company.id')
     ret['rights_company_at_portal'] = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id']).get_rights(),
     ret['divisions'] = PRBase.get_ordered_dict([d for d in ret['divisions'] if (
         d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
@@ -202,6 +202,7 @@ def material_details_load(json, material_id):
             'grid_filters': {
                 'publication.status': Grid.filter_for_status(ArticlePortalDivision.STATUSES)
             }
+
         }
     }
 
