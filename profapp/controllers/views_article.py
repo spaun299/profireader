@@ -177,11 +177,10 @@ def get_portal_dict_for_material(portal, material_id):
         ret['publication']['division'] = ret['divisions'][ret['publication']['portal_division_id']]
         ret['publication']['counts'] = '0/0/0/0'
         # TODO: OZ by OZ
-        ret['actions'] = ['unpublish']
-        ret['actions'] = []
+        ret['actions'] = ['unpublish', 'edit']
     else:
         ret['publication'] = None
-        ret['actions'] = ['publish']
+        ret['actions'] = ['submit', 'publish', 'edit']
     return ret
 
 

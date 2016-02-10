@@ -290,6 +290,7 @@ class UserCompany(Base, PRBase):
     position = Column(TABLE_TYPES['short_name'], default='')
 
     md_tm = Column(TABLE_TYPES['timestamp'])
+    works_since_tm = Column(TABLE_TYPES['timestamp'])
 
     banned = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
 
@@ -307,13 +308,15 @@ class UserCompany(Base, PRBase):
 
     # todo (AA to AA): check handling md_tm
 
-    def __init__(self, user_id=None, company_id=None, status=STATUS.NONACTIVE(), rights=0):
+    def __init__(self, user_id=None, company_id=None, status=STATUS.NONACTIVE(), rights=0,
+                 works_since_tm=works_since_tm):
 
         super(UserCompany, self).__init__()
         self.user_id = user_id
         self.company_id = company_id
         self.status = status
         self._rights = rights
+        self.works_since_tm = works_since_tm
 
     @staticmethod
     def get(user_id=None, company_id=None):

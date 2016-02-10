@@ -14,7 +14,7 @@
 
     <script>
         module.controller('company_employees_controller', function ($scope, $ok, $timeout) {
-            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('employees');
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_employees');
 
             $scope.$$translate = {{ translates('company_employees_controller')|safe }};
             $scope.company = {{ company.get_client_side_dict(fields = 'id,name')|tojson|safe }};
