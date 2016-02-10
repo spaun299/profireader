@@ -245,9 +245,6 @@ class Portal(Base, PRBase):
         try:
             host = socket.gethostbyname(self.host)
             x = str(host)
-            if x in valid_IP:
-                print('It\'s ok!')
-                if not x in valid_IP:
         except Exception as e:
             print("cannot resolve hostname: ", e)
 
