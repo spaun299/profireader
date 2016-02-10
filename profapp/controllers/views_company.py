@@ -79,25 +79,18 @@ def materials_load(json, company_id):
     materials, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
 
     grid_filters = {
-        'portals': [{'value': portal, 'label': portal} for portal_id, portal in
+        'portal.name': [{'value': portal, 'label': portal} for portal_id, portal in
                     ArticlePortalDivision.get_portals_where_company_send_article(company_id).items()],
         'material_status': Grid.filter_for_status(ArticleCompany.STATUSES),
-        'publication_status': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+        'status': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
         'publication_visibility': Grid.filter_for_status(ArticlePortalDivision.VISIBILITIES)
     }
-
-    return {'grid_data': Article.getListGridDataMaterials(materials),# [{'name':'Steve', 'age': 10, 'email': 'ss@ss.com'}, {'name':'Viktor', 'age': 12, 'email': 'Hs@ss.com'},{'name':'Vova', 'age': 15, 'email': 'H555@ss.com'}]],
+    return {'grid_data': Grid.grid_tuple_to_dict([Article.get_material_grid_data(material) for material in materials]),
             'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
                              (k, v) in grid_filters.items()},
             'total': count
             }
-@company_bp.route('/<string:company_id>/materials/s', methods=['POST'])
-@ok
-def mat(json, company_id):
-    grid_data = [{'name':'Steve', 'age': 10, 'email': 'ss@ss.com'}, {'name':'Viktor', 'age': 12, 'email': 'Hs@ss.com'},{'name':'Vova', 'age': 15, 'email': 'H555@ss.com'}]
-    return {'grid_data': grid_data,
-            'total': len(grid_data)
-            }
+
 
 @company_bp.route('/<string:article_portal_division_id>/', methods=['POST'])
 @login_required

@@ -1146,8 +1146,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
                 if (col[i].type === 'link') {
                     var link = 'grid.appScope.' + col[i].href;
-                    scope.hideGridLinkIf = col[i].hideIf;
-                    gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}"><a ng-if="grid.appScope.hideGridLinkIf !== COL_FIELD" href="{{' + link + '}}" ng-bind="COL_FIELD"></a><div ng-if="grid.appScope.hideGridLinkIf === COL_FIELD">{{ COL_FIELD }}</div></div>'
+                    gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}"><a href="{{' + link + '}}" ng-bind="COL_FIELD"></a></div>'
                 } else if (col[i].type === 'img') {
                     gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
                 } else if (col[i].type === 'actions') {
@@ -1344,15 +1343,6 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             groupingShowGroupingMenus: false,
             groupingShowAggregationMenus: false,
             columnDefs: []
-        },
-
-        change_only_one_row_grid: function(data, update_row){
-            $.each(data['grid_data'], function (index, portal_row) {
-                        if (portal_row['id'] === updated_row['id']) {
-                            data['grid_data'][index] = updated_row;
-                        }
-                    });
-            return data
         },
 
         loadData: function (url, senddata, beforeload, afterload) {

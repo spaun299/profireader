@@ -106,6 +106,7 @@
                 $ok('', data, function (resp) {
                     callback(resp.portals);
                     $scope.data = resp;
+                    console.log($scope)
                 }).finally();
 
             };
