@@ -138,9 +138,9 @@
             };
 
             $scope.time_out = function () {
-                $scope.timer = True;
+                $scope.timer = true;
                 $timeout(function () {
-                    $scope.timer = False
+                    $scope.timer = false
                 }, 2000);
             };
 

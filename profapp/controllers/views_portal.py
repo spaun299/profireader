@@ -3,6 +3,7 @@ from flask import render_template, g, flash, redirect, url_for, jsonify
 from ..models.company import Company
 from flask.ext.login import current_user, login_required
 from ..models.portal import PortalDivisionType
+from ..models.files import File
 from ..models.translate import TranslateTemplate
 from utils.db_utils import db
 from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDivision, \
@@ -92,7 +93,8 @@ def create_save(json, create_or_update, company_id):
         if action == 'save':
             return portal.setup_created_portal(g.filter_json(json_portal, 'logo_file_id')).save().get_client_side_dict()
         else:
-            return portal.validate(create_or_update == 'insert')
+            print(action)
+            return portal.validate(create_or_update == 'create')
 
 
 # member_company = Portal.companies
@@ -419,14 +421,20 @@ def portals_partners(company_id):
 @ok
 def portals_partners_load(json, company_id):
     subquery_member_portal = db(MemberCompanyPortal, portal_id=json.get('getPageOfId'),
-                                    company_id=company_id).one().id if json.get('getPageOfId') else None
+                                company_id=company_id).one().id if json.get('getPageOfId') else None
     subquery = Company.subquery_company_partners(company_id, json.get('filter'))
-    partners_g, pages, current_page, count = pagination(subquery, subquery_member_portal, **Grid.page_options(json.get('paginationOptions')))
+    partners_g, pages, current_page, count = pagination(subquery, subquery_member_portal,
+                                                        **Grid.page_options(json.get('paginationOptions')))
     return {'page': current_page,
-            'grid_data': [{'portal' : {'name':partner.portal.name,'id': partner.portal.id},'link' : partner.portal.host,'company' : Company.get(partner.portal.company_owner_id).name
-                        } for partner in partners_g],
+            'grid_data': [{'portal_name': partner.portal.name,
+                           'portal_logo': File.get(partner.portal.logo_file_id).url() if partner.portal.logo_file_id
+                           else '/static/images/company_no_logo.png',
+                           'portal_id': partner.portal.id, 'link': partner.portal.host,
+                           'company_name': Company.get(partner.portal.company_owner_id).name}
+                          for partner in partners_g],
             'total': count,
-            'portal': db(Company, id=company_id).one().own_portal.get_client_side_dict(fields='name') if db(Company, id=company_id).one().own_portal else [],
+            'portal': db(Company, id=company_id).one().own_portal.get_client_side_dict(fields='name')
+            if db(Company, id=company_id).one().own_portal else [],
             'portals_partners': [port.get_client_side_dict(fields='name, company_owner_id,id')
                                  for port in Company.get(company_id).get_portals_where_company_is_member()],
             'company_id': company_id,
@@ -447,11 +455,20 @@ def companies_partners(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def companies_partners_load(json, company_id):
-    portal = db(Company, id=company_id).one().own_portal
-    companies_partners = [comp.get_client_side_dict(fields='company.id, company.name') for comp in
-                          portal.company_members] if portal else []
+    """ RIGHT_AT_PORTAL HARDCODED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! """
+    subquery = db(MemberCompanyPortal).filter(
+        MemberCompanyPortal.portal_id == db(Portal, company_owner_id=company_id).subquery().c.id)
+    partners, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
+    portal = partners[0].portal if partners else db(Company, id=company_id).one().own_portal
+    grid_data = [{'company_id': comp.company.id, 'company_name': comp.company.name,
+                 'rights_at_portal': ['MATERIAL_SUBMIT', 'PUBLICATION_PUBLISH'],
+                  'logo': File.get(comp.company.logo_file_id).url() if comp.company.logo_file_id
+                  else '/static/images/company_no_logo.png'}
+                 for comp in partners] if portal else []
     return {'portal': portal.get_client_side_dict(fields='name') if portal else [],
-            'companies_partners': companies_partners,
+            'grid_data': grid_data,
+            'total': count,
+            'page': current_page,
             'company_id': company_id,
             'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()}
 

@@ -201,11 +201,11 @@
         <h1 class="nice-title">{{ _('Join also to company') }}<span></span></h1>
         <br/>
 
-        <input typeahead-on-select="onSelect($item, $model, $label)"
-               typeahead-template-url="typeaheadTemplate.html"
-               typeahead-loading="loadingCompanies"
+        <input uib-typeahead-on-select="onSelect($item, $model, $label)"
+               uib-typeahead-template-url="typeaheadTemplate.html"
+               uib-typeahead-loading="loadingCompanies"
                ng-model="selectedCompany_name"
-               typeahead="company as company.name for company in searchForCompanyToJoin($viewValue)"
+               uib-typeahead="company as company.name for company in searchForCompanyToJoin($viewValue)"
                name="company_id"/>&nbsp;
         <button class="btn" ng-click="joinToCompany()"
                 ng-class="{'disabled': !selectedCompany || selectedCompany_sending}"

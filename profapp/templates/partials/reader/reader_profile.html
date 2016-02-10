@@ -1,4 +1,11 @@
-{% extends "index_layout_new.html" %}
+{% extends "index_lazy_layout.html" %}
+
+
+{% block head %}
+    {{ super() }}
+    {% include '_ruslan/partials/_header_files_grid.html' %}
+{% endblock head %}
+
 {% block title %}{{ _('Profireader reader profile') }}{% endblock title %}
 
 {% block portal_content %}
@@ -20,21 +27,13 @@ module.controller('grid_reader_modal', function ($scope, $uibModalInstance, list
               };
         });
 
-module.controller('grid_reader', ['$scope', '$uibModal', '$ok', '$sce', 'uiGridConstants', '$timeout',
-    function ($scope, $uibModal, $ok, $sce, uiGridConstants, $timeout) {
+module.controller('grid_reader', function ($scope, $uibModal, $ok, $sce, uiGridConstants, $timeout) {
         $scope.url_search_translations = {{ raw_url_for('reader.profile')|safe }}
         $scope.reader_edit_profile = {{ raw_url_for('reader.edit_portal_subscription')|safe }};
         {% raw %}
-        $scope.sendData = function (grid_data) {
-                        $scope.loading = true;
-                        return $ok($scope.url_search_translations({}), grid_data, function (resp) {
-                            $scope.initGridData = resp;
-                            $scope.applyGridExtarnals(resp);
-                        }).finally(function () {
-                            $scope.loading = false;
-                            $scope.load_contr = true
-                        });
-                    };
+        $scope.sendData = function (grid_data, callback) {
+            return $ok($scope.url_search_translations({}), grid_data, callback);
+            };
         $scope.portal_link = function(link){
             return 'http://' + link;
         };
@@ -55,47 +54,35 @@ $scope.showModalForEditNew = function () {
                         });
                     };
         $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
-                        gridInit: $scope.sendData,
-                        onRegisterApi: function (gridApi) {
-                            $scope.setGridExtarnals(gridApi)
-                        },
+                        loadGridData: $scope.sendData,
                         columnDefs: [
                             {
-                                name: 'portal_logo', enableCellEdit: false, enableFiltering: false, enableSorting: false,
-                                displayName: "Logo",
-                                type: 'img'
+                                name: 'portal_logo', type: 'img'
                             }, {
-                                name: 'portal_name', enableSorting: false, enableCellEdit: false,
-                                displayName: 'Portal', filter: {type: 'input'}, type: 'link',
+                                name: 'portal_name', filter: {type: 'input'}, type: 'link',
                                 href: 'portal_link(row.entity.portal_host)'
                             }, {
-                                name: 'package_name', enableSorting: false, enableColumnMenu: false, enableFiltering: false,
-                                displayName: 'Package',
-                                type: 'show_modal',
+                                name: 'package_name', type: 'show_modal',
                                 modal: "grid.appScope.showModalForEditNew(row, col, row.entity[col.field])",
                                 filter: {type: 'input'}
                             }, {
-                                name: 'start_tm', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
-                                displayName: 'Start time',
-                                filter: {type: 'date_range'}
+                                name: 'start_tm', filter: {type: 'date_range'}
                             }, {
-                                name: 'end_tm', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false,
-                                displayName: 'End time'
-                            }, {
-                                name: 'article_remains', enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false,
-                                displayName: 'Article remains'
+                                name: 'end_tm'
                             },
-                            {name: 'configure', displayName: 'Edit', type: 'link', href: 'reader_edit_profile({reader_portal_id:row.entity.user_portal_reader_id})',
-                                enableSorting: false, enableCellEdit: false, enableColumnMenu: false, enableFiltering: false}
+                            {
+                                name: 'article_remains'
+                            },
+                            {name: 'configure', type: 'link', href: 'reader_edit_profile({reader_portal_id:row.entity.user_portal_reader_id})'}
                         ]
                     });
         {% endraw %}
-    }])
+    })
 </script>
 {% raw %}
    <div ng-controller="grid_reader">
-        <div class="grid" id="grid1" ui-grid-pagination ui-grid-edit ui-grid="gridOptions1"></div>
-        <a ng-show="load_contr && !areAllEmpty(datas.grid_data)" class="btn btn-danger"
+        <div class="grid" id="grid1" ui-grid-pagination ui-grid="gridOptions1"></div>
+        <a ng-show="!areAllEmpty(datas.grid_data)" class="btn btn-danger"
            ng-class="{'disabled': ( isSelectedRows === false )}" style="text-align: center"
            ng-click="showModalDelete()">Delete selected rows</a>
     </div>

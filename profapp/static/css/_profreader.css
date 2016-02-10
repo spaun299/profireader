@@ -34,12 +34,11 @@ body  {
 
 .profile-thumbnail {
     position: relative;
-
+    float:left;
     /*border: 3px #ccc solid;*/
     width: 200px;
     height: 200px;
     /*background-size: contain;*/
-
     background: center center no-repeat;
     background-size: 200px 200px;
     transition: background-size 0.3s ease-in;
@@ -56,11 +55,13 @@ body  {
 .form.info .img-upload-form {
     display: block;
     position: absolute;
-
-    top: 240px;
-    left: 10px;
-
     width: 200px;
+}
+.form.info .img-upload-form form{
+    top: 240px;
+    left: -50px;
+    padding-left: 50px!important;
+    z-index: 1;
 }
 
 .form.info .img-upload-form input {
@@ -89,6 +90,11 @@ body  {
 }
 
 .profile-thumbnail .control {
+    position: relative;
+    bottom: -210px;
+    left: -10px;
+    z-index: 1;
+    /*background: rgba(255, 255, 255, 0.9);*/
     font-size: 12px;
     width: 200px;
     padding: 0;
@@ -120,9 +126,13 @@ body  {
     width: auto;
 }
 
+.profile-thumbnail .control form {
+    padding-left: 0!important;
+}
+
 .form {
     position: relative;
-    padding: 10px 10px 10px 100px;
+    padding: 10px 10px 10px 10px;
     margin-bottom: 20px;
 }
 
@@ -131,7 +141,7 @@ body  {
     padding: 0;
     margin-bottom: 0;
     border: none;
-    padding-left: 200px;
+    padding-left: 250px;
     background: transparent;
 }
 
@@ -181,6 +191,17 @@ body  {
     padding-right: 15px;
     padding-bottom: 15px;
 }
+
+.menu-company .selected{
+    color: #fff;
+    text-decoration: none;
+    background-color: #18BCA2;
+    padding-top: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-bottom: 15px;
+}
+
 .about-company a{
     color: #333;
 }

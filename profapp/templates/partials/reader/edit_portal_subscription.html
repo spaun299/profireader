@@ -1,4 +1,10 @@
-{% extends "index_layout_new.html" %}
+{% extends "index_lazy_layout.html" %}
+
+
+{% block head %}
+    {{ super() }}
+    {% include '_ruslan/partials/_header_files_grid.html' %}
+{% endblock head %}
 {% block title %}{{ _('Profireader reader edit') }}{% endblock title %}
 
 {% block portal_content %}
