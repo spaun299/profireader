@@ -19,6 +19,7 @@ import urllib.parse
 import collections
 import http.cookies
 
+
 def parent_folder(func):
     @wraps(func)
     def function_parent_folder(json, *args, **kwargs):
@@ -50,7 +51,7 @@ def filemanager():
         # Company.get_emploees(['can_read', 'can_write'], status = ['active','banned'])
         # similar function User.get_emploers ...
         if user_company.has_rights(UserCompany.RIGHT_AT_COMPANY['FILES_BROWSE']):
-            library.append({'id':user_company.employer.journalist_folder_file_id,
+            library.append({'id': user_company.employer.journalist_folder_file_id,
             'name': "%s files" % (user_company.employer.name,), 'icon': ''})
             if user_company.employer.journalist_folder_file_id == last_root_id:
                 last_visit_root_n = user_company.employer.name + " files"
@@ -68,7 +69,8 @@ def filemanager():
         last_visit_root_n = root.name + " files"
         last_root_id = root.journalist_folder_file_id
     err = True if len(library) == 0 else False
-    return render_template('filemanager.html', library=library, err=err, last_visit_root=last_visit_root_n,last_root_id=last_root_id,
+    return render_template('filemanager.html', library=library, err=err, last_visit_root=last_visit_root_n,
+                           last_root_id=last_root_id,
                            file_manager_called_for=file_manager_called_for,
                            file_manager_on_action=file_manager_on_action,
                            file_manager_default_action=file_manager_default_action)
@@ -103,6 +105,7 @@ def createdir(json, parent_id=None):
                           root_folder_id=request.json['params']['root_id'],
                           parent_id=request.json['params']['folder_id'])
 
+
 @filemanager_bp.route('/properties/', methods=['POST'])
 @ok
 def set_properties(json):
@@ -133,14 +136,17 @@ def cut(json):
     file = File.get(request.json['params']['id'])
     return File.move_to(file, request.json['params']['folder_id'])
 
+
 @filemanager_bp.route('/auto_remove/', methods=['POST'])
 @ok
 def auto_remove(json):
     return File.auto_remove(json.get('name'), json.get('folder_id'))
 
+
 @filemanager_bp.route('/remove/<string:file_id>', methods=['POST'])
 def remove(file_id):
     return File.remove(file_id)
+
 
 @filemanager_bp.route('/uploader/', methods=['GET', 'POST'])
 @filemanager_bp.route('/uploader/<string:company_id>', methods=['GET', 'POST'])
@@ -166,7 +172,8 @@ def send(parent_id):
         root = parent.id
     data = request.form
     uploaded_file = request.files['file']
-    name = File.get_unique_name(urllib.parse.unquote(uploaded_file.filename).replace('"','_').replace('*','_').replace('/','_').replace('\\','_'), data.get('ftype'), parent.id)
+    name = File.get_unique_name(urllib.parse.unquote(uploaded_file.filename).replace(
+        '"', '_').replace('*', '_').replace('/', '_').replace('\\', '_'), data.get('ftype'), parent.id)
     company = db(Company, journalist_folder_file_id=root).one()
     if re.match('^video/.*', data.get('ftype')):
         body = {'title': file.filename,
