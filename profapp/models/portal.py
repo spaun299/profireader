@@ -197,16 +197,16 @@ class Portal(Base, PRBase):
         for division in self.divisions:
             if division.portal_division_type_id == 'company_subportal':
                 PortalDivisionSettingsCompanySubportal(
-                    member_company_portal=division.settings['member_company_portal'],
-                    portal_division=division).save()
+                        member_company_portal=division.settings['member_company_portal'],
+                        portal_division=division).save()
 
         if logo_file_id:
             originalfile = File.get(logo_file_id)
             if originalfile:
                 self.logo_file_id = originalfile.copy_file(
-                    company_id=self.company_owner_id,
-                    parent_folder_id=self.own_company.system_folder_file_id,
-                    article_portal_division_id=None).save().id
+                        company_id=self.company_owner_id,
+                        parent_folder_id=self.own_company.system_folder_file_id,
+                        article_portal_division_id=None).save().id
         return self
 
     def get_value_from_config(self, key=None, division_name=None):
@@ -245,17 +245,11 @@ class Portal(Base, PRBase):
         try:
             host = socket.gethostbyname(self.host)
             x = str(host)
-            if x in valid_IP:
-                print('It\'s ok!')
-                if not x in valid_IP:
-                          print('Wrong Ip-address')
         except Exception as e:
             print("cannot resolve hostname: ", e)
 
         if not 'host' in ret['warnings'] and not x in valid_IP:
             ret['warnings']['host'] = 'Wrong Ip-address'
-
-
 
         grouped = {}
 
@@ -298,9 +292,21 @@ class Portal(Base, PRBase):
 
 class MemberCompanyPortal(Base, PRBase):
     __tablename__ = 'member_company_portal'
+
+    RIGHT_AT_PORTAL = {
+        'PUBLICATION_PUBLISH': 2 ** (1 - 1),
+        'PUBLICATION_UNPUBLISH': 2 ** (2 - 1),
+        'PUBLICATION_EDIT': 2 ** (3 - 1)
+    }
+
+    RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL['PUBLICATION_UNPUBLISH'] | RIGHT_AT_PORTAL['PUBLICATION_EDIT']
+
+    RIGHT_AT_PORTAL_FOR_OWN_PORTAL = 0x7fffffffffffffff
+
     id = Column(TABLE_TYPES['id_profireader'], nullable=False, primary_key=True)
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'))
     portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
+    rights_company_at_portal = Column(TABLE_TYPES['bigint'], default=RIGHT_AT_PORTAL_DEFAULT, nullable=False)
 
     member_company_portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))
 
@@ -318,17 +324,6 @@ class MemberCompanyPortal(Base, PRBase):
     plan = relationship('MemberCompanyPortalPlan'
                         # , backref='partner_portals'
                         )
-
-    RIGHT_AT_PORTAL = {
-        'MATERIAL_SUBMIT': 2 ** (1 - 1),
-        'PUBLICATION_PUBLISH': 2 ** (2 - 1),
-
-        'PUBLICATION_UNPUBLISH': 2 ** (3 - 1)
-    }
-
-    RIGHT_AT_PORTAL = RIGHT_AT_PORTAL['MATERIAL_SUBMIT']
-
-    RIGHT_AT_PORTAL_FOR_OWN_PORTAL = 0x7fffffffffffffff
 
     def __init__(self, company_id=None, portal=None, company=None, plan=None):
         if company_id and company:
@@ -348,25 +343,32 @@ class MemberCompanyPortal(Base, PRBase):
                                      plan=db(MemberCompanyPortalPlan).first()))
         g.db.flush()
 
-    # @staticmethod
-    # def show_companies_on_my_portal(company_id):
-    #     """Return all companies partners at portal"""
-    #     portal = Portal().own_portal(company_id).companies
-    #     return portal
+    @staticmethod
+    def get(portal_id=None, company_id=None):
+        return db(MemberCompanyPortal).filter_by(portal_id=portal_id, company_id=company_id).one()
 
-    # @staticmethod
-    # def subquery_company_partners(company_id, search_text, **kwargs):
-    #     sub_query = db(MemberCompanyPortal, company_id=company_id)
-    #     if search_text:
-    #         sub_query = sub_query.join(MemberCompanyPortal.portal)
-    #         if 'portal' in search_text:
-    #             sub_query = sub_query.filter(Portal.name.ilike("%" + search_text['portal'] + "%"))
-    #         if 'company' in search_text:
-    #             sub_query = sub_query.join(MemberCompanyPortal.company)
-    #             sub_query = sub_query.filter(Company.name.ilike("%" + search_text['company'] + "%"))
-    #         if 'link' in search_text:
-    #             sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
-    #     return sub_query
+    def get_rights(self):
+        return PRBase.convert_rights_binary_to_dict(self.rights_company_at_portal, self.RIGHT_AT_PORTAL)
+
+        # @staticmethod
+        # def show_companies_on_my_portal(company_id):
+        #     """Return all companies partners at portal"""
+        #     portal = Portal().own_portal(company_id).companies
+        #     return portal
+
+        # @staticmethod
+        # def subquery_company_partners(company_id, search_text, **kwargs):
+        #     sub_query = db(MemberCompanyPortal, company_id=company_id)
+        #     if search_text:
+        #         sub_query = sub_query.join(MemberCompanyPortal.portal)
+        #         if 'portal' in search_text:
+        #             sub_query = sub_query.filter(Portal.name.ilike("%" + search_text['portal'] + "%"))
+        #         if 'company' in search_text:
+        #             sub_query = sub_query.join(MemberCompanyPortal.company)
+        #             sub_query = sub_query.filter(Company.name.ilike("%" + search_text['company'] + "%"))
+        #         if 'link' in search_text:
+        #             sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
+        #     return sub_query
 
 
 class ReaderUserPortalPlan(Base, PRBase):
@@ -436,7 +438,6 @@ class PortalDivision(Base, PRBase):
 
     settings = None
 
-
     def __init__(self, portal=portal,
                  portal_division_type_id=portal_division_type_id,
                  name='',
@@ -463,15 +464,15 @@ class PortalDivision(Base, PRBase):
         from .articles import ArticlePortalDivision
 
         return and_(ArticlePortalDivision.portal_division_id.in_(
-            db(PortalDivision.id, portal_id=portal.id)),
-            ArticlePortalDivision.status ==
-            ArticlePortalDivision.STATUSES['PUBLISHED'])
+                db(PortalDivision.id, portal_id=portal.id)),
+                ArticlePortalDivision.status ==
+                ArticlePortalDivision.STATUSES['PUBLISHED'])
 
     @orm.reconstructor
     def init_on_load(self):
         if self.portal_division_type_id == 'company_subportal':
             self.settings = db(PortalDivisionSettingsCompanySubportal).filter_by(
-                portal_division_id=self.id).one()
+                    portal_division_id=self.id).one()
 
     def get_client_side_dict(self, fields='id|name',
                              more_fields=None):
@@ -597,7 +598,7 @@ class UserPortalReader(Base, PRBase):
     def get_portals_for_user():
         portals = db(Portal).filter(~(Portal.id.in_(db(UserPortalReader.portal_id, user_id=g.user_dict['id'])))).all()
         for portal in portals:
-            yield (portal.id, portal.name, )
+            yield (portal.id, portal.name,)
 
     @staticmethod
     def get_portals_and_plan_info_for_user(user_id, page, items_per_page, filter_params):
@@ -607,9 +608,8 @@ class UserPortalReader(Base, PRBase):
 
         for upr in query:
             yield dict(id=upr.id, portal_id=upr.portal_id, status=upr.status, start_tm=upr.start_tm,
-                       portal_logo=File.get(upr.portal.logo_file_id).url() if upr.portal.logo_file_id
-                       else '/static/images/company_no_logo.png',
-                       end_tm=upr.end_tm if upr.end_tm > datetime.datetime.utcnow() else 'Expired at '+upr.end_tm,
+                       portal_logo=File.get(upr.portal.logo_file_id).url() if upr.portal.logo_file_id else '',
+                       end_tm=upr.end_tm if upr.end_tm > datetime.datetime.utcnow() else 'Expired at ' + upr.end_tm,
                        plan_id=upr.portal_plan_id,
                        plan_name=db(ReaderUserPortalPlan.name, id=upr.portal_plan_id).one()[0],
                        portal_name=upr.portal.name, portal_host=upr.portal.host, amount=upr.amount,
@@ -646,5 +646,5 @@ class ReaderDivision(Base, PRBase):
         """ :param tuple_or_list, first param from 'show_divisions_and_comments_numeric',
         second True or False """
         self._show_division_and_comments = self.show_division_and_comments_numeric_all & reduce(
-            lambda x, y: int(x)+int(y), list(map(lambda item: self.show_division_and_comments_numeric[item[0]],
-                                                 filter(lambda item: item[1], tuple_or_list))), 0)
+                lambda x, y: int(x) + int(y), list(map(lambda item: self.show_division_and_comments_numeric[item[0]],
+                                                       filter(lambda item: item[1], tuple_or_list))), 0)
