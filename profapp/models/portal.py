@@ -239,12 +239,9 @@ class Portal(Base, PRBase):
         if not 'host' in ret['errors'] and db(Portal, host=self.host).filter(Portal.id != self.id).count():
             ret['warnings']['host'] = 'host already taken by another portal'
 
-
-
-
         import socket
         name = self.host
-        valid_IP = ['192.168.0.0/24','127.0.0.0/8' ]
+        valid_IP = ['192.168.0.0/24', '127.0.0.1', '136.243.204.62']
         try:
             host = socket.gethostbyname(self.host)
             x = str(host)
@@ -252,8 +249,8 @@ class Portal(Base, PRBase):
                 print('It\'s ok!')
                 if not x in valid_IP:
                           print('Wrong Ip-address')
-        except (socket.gaierror, err):
-            print ("cannot resolve hostname: ", name, err)
+        except Exception as e:
+            print("cannot resolve hostname: ", e)
 
         if not 'host' in ret['warnings'] and not x in valid_IP:
             ret['warnings']['host'] = 'Wrong Ip-address'
@@ -610,7 +607,8 @@ class UserPortalReader(Base, PRBase):
 
         for upr in query:
             yield dict(id=upr.id, portal_id=upr.portal_id, status=upr.status, start_tm=upr.start_tm,
-                       portal_logo=File.get(upr.portal.logo_file_id).url() if upr.portal.logo_file_id else '',
+                       portal_logo=File.get(upr.portal.logo_file_id).url() if upr.portal.logo_file_id
+                       else '/static/images/company_no_logo.png',
                        end_tm=upr.end_tm if upr.end_tm > datetime.datetime.utcnow() else 'Expired at '+upr.end_tm,
                        plan_id=upr.portal_plan_id,
                        plan_name=db(ReaderUserPortalPlan.name, id=upr.portal_plan_id).one()[0],
@@ -627,8 +625,9 @@ class ReaderDivision(Base, PRBase):
     _show_division_and_comments = Column(TABLE_TYPES['int'])
     user_portal_reader = relationship('UserPortalReader', back_populates='show_divisions_and_comments')
     portal_division = relationship('PortalDivision', uselist=False)
-    show_division_and_comments_numeric = dict(show_articles=1, show_comments=2, show_favorite_comments=4,
-                                               show_liked_comments=8)
+    show_division_and_comments_numeric = {name: 2 ** index for index, name in
+                                          enumerate(['show_articles', 'show_comments', 'show_favorite_comments',
+                                                     'show_liked_comments'])}
     show_division_and_comments_numeric_all = reduce(lambda x, y: x+y, show_division_and_comments_numeric.values())
 
     def __init__(self, user_portal_reader=None, portal_division=None):
@@ -639,15 +638,8 @@ class ReaderDivision(Base, PRBase):
 
     @property
     def show_divisions_and_comments(self):
-        binary_data = bin(self._show_division_and_comments).replace('0b', '')
-        while len(binary_data) < 4:
-            binary_data = '0'+binary_data
-        show_division_and_comments_all = ['show_articles', 'show_comments',
-                                          'show_favorite_comments', 'show_liked_comments']
-        show_division_and_comments_return = []
-        for count, pos in enumerate(binary_data):
-            show_division_and_comments_return.append([show_division_and_comments_all[int(count)], True if int(pos) else False])
-        return show_division_and_comments_return
+        return [[sn, True if self._show_division_and_comments & 2 ** ind else False] for ind, sn in
+                enumerate(['show_articles', 'show_comments', 'show_favorite_comments', 'show_liked_comments'])]
 
     @show_divisions_and_comments.setter
     def show_divisions_and_comments(self, tuple_or_list):

@@ -1,7 +1,10 @@
 {% extends "index_lazy_layout.html" %}
+
 {% block title %}Profireader{% endblock title %}
+
 {% block head %}
     {{ super() }}
+    {% include '_ruslan/partials/_header_files_grid.html' %}
 {% endblock head %}
 
 {% block portal_base %}
@@ -14,46 +17,41 @@
     {% endblock company_base %}
 
     <script>
-        module.controller('portal_list', ['$scope', '$ok', function ($scope, $ok) {
-            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_partners')
+    module.controller('grid_companiess', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce)  {
+        $scope.url_companies_partners = '{{ url_for('portal.companies_partners_load', company_id=company.id)
+         }}';
+        $scope.url_company_profile = {{ raw_url_for('company.profile')|safe }};
 
-            $scope.url_company_profile = {{ raw_url_for('company.profile')|safe }};
-
-            $scope.url_join = {{ raw_url_for('portal.apply_company')|safe }};
-
-{#            $scope.myRights = function () {#}
-{#                if (!$scope.data || !$scope.data.user_rights) return false;#}
-{#                for (var i = 0; i < arguments.length; i++) {#}
-{#                    if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {#}
-{#                        return false;#}
-{#                    }#}
-{#                }#}
-{#                return true;#}
-{#            };#}
-
-            $scope.$$translate = {{ translates('portal_list')|safe }};
-
-            $scope.afterSave = function (resp) {
-                window.location.href = $scope.partners({company_id: resp['company_id']})
+        {% raw %}
+        $scope.sendData = function (grid_data, callback) {
+            return $ok($scope.url_companies_partners, grid_data, callback);
             };
-        }]);
+
+        $scope.portal_link = function(link){
+            return 'http://' + link;
+        };
+
+        $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+                        loadGridData: $scope.sendData,
+                        columnDefs: [
+                            {
+                                name: 'logo', type: 'img'
+                            }, {
+                                name: 'company_name', type: 'link',
+                                href: 'url_company_profile({company_id: row.entity.company_id})'
+                            }, {
+                                name: 'rights_at_portal',
+                            }
+                        ]
+                    });
+        {% endraw %}
+    }])
     </script>
 
     {% raw %}
-    <div ng-init="loadData()" ng-controller="portal_list">
-        <div ng-if="data.portal==''">
-            <h3>{{_('This company does not have portal')}}</h3>
+
+       <div ng-controller="grid_companiess">
+        <div class="grid" id="grid1" ui-grid-pagination ui-grid="gridOptions1"></div>
         </div>
-
-        <div ng-if=" data.portal != '' ">
-
-                <span ng-repeat="company in data.companies_partners">
-                    <span ang-if="company.company.id != data.company_id">
-                        <a href="{{ url_company_profile({company_id: company.company.id}) }}">{{ company.company.name }}</a>
-                    </span>
-               </span>
-        </div>
-
-    </div>
     {% endraw %}
 {% endblock portal_content %}

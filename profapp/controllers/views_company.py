@@ -141,7 +141,7 @@ def profile(company_id):
 
     return render_template('company/company_profile.html',
                            company=db(Company, id=company_id).one(),
-                           rights_user_in_company = UserCompany.get(company_id=company_id).get_rights()
+                           rights_user_in_company=UserCompany.get(company_id=company_id).get_rights()
                            )
 
 
@@ -297,7 +297,7 @@ def load(json, company_id=None):
                 company.detach()
             return company.validate(company_id is None)
         else:
-            if json['image']['uploaded']:
+            if json['image'].get('uploaded'):
                 if company_id is None:
                     company.setup_new_company()
                 company.save().get_client_side_dict()
