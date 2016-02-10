@@ -28,16 +28,16 @@
             {% raw %}
             $scope.noData = 'No portal partners';
 
-{#            $scope.myRights = function () {#}
-{#                if (!$scope.data || !$scope.data.user_rights) return false;#}
-{##}
-{#                for (var i = 0; i < arguments.length; i++) {#}
-{#                    if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {#}
-{#                        return false;#}
-{#                    }#}
-{#                }#}
-{#                return true;#}
-{#            };#}
+       //     $scope.myRights = function () {
+         //       if (!$scope.data || !$scope.data.user_rights) return false;
+//
+         //       for (var i = 0; i < arguments.length; i++) {
+         //           if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {
+         //               return false;
+         //           }
+         //       }
+        //        return true;
+        //    };
 
             $scope.afterSave = function (resp) {
                 window.location.href = $scope.partners({company_id: resp['company_id']})

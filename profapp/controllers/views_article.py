@@ -164,7 +164,7 @@ def material_details(material_id):
 #
 
 def get_portal_dict_for_material(portal, material_id):
-    ret = portal.get_client_side_dict(fields='id, name, divisions.id|name|portal_division_type_id, own_company.name')
+    ret = portal.get_client_side_dict(fields='id, name, host,divisions.id|name|portal_division_type_id, own_company.name, own_company.id')
     ret['divisions'] = PRBase.get_ordered_dict([d for d in ret['divisions'] if (
         d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
     publication_in_portal = db(ArticlePortalDivision).filter_by(article_company_id=material_id).filter(
@@ -173,7 +173,7 @@ def get_portal_dict_for_material(portal, material_id):
 
     if publication_in_portal:
         ret['publication'] = publication_in_portal.get_client_side_dict(
-                'position,title,status,visibility,portal_division_id,publishing_tm')
+                'id,position,title,status,visibility,portal_division_id,publishing_tm')
         ret['publication']['division'] = ret['divisions'][ret['publication']['portal_division_id']]
         ret['publication']['counts'] = '0/0/0/0'
         # TODO: OZ by OZ
