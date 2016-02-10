@@ -375,19 +375,19 @@ class ArticleCompany(Base, PRBase):
     @staticmethod
     def subquery_company_materials(company_id=None, filters=None, sorts=None):
         sub_query = db(ArticleCompany, company_id=company_id)
-        list_filters = [];
+        list_filters = []
         list_sorts = []
-        if 'publication_status' in filters or 'portals' in filters:
+        if 'status' in filters or 'portal.name' in filters:
             sub_query = sub_query.join(ArticlePortalDivision,
                                        ArticlePortalDivision.article_company_id == ArticleCompany.id)
-            if 'publication_status' in filters:
-                list_filters.append({'type': 'multiselect', 'value': filters['publication_status'],
+            if 'status' in filters:
+                list_filters.append({'type': 'multiselect', 'value': filters['status'],
                                      'field': ArticlePortalDivision.status})
-            if 'portals' in filters:
+            if 'portal.name' in filters:
                 sub_query = sub_query.join(PortalDivision,
                                            PortalDivision.id == ArticlePortalDivision.portal_division_id).join(Portal,
                                                                                                                Portal.id == PortalDivision.portal_id)
-                list_filters.append({'type': 'multiselect', 'value': filters['portals'], 'field': Portal.name})
+                list_filters.append({'type': 'multiselect', 'value': filters['portal.name'], 'field': Portal.name})
         if 'md_tm' in filters:
             list_filters.append({'type': 'date_range', 'value': filters['md_tm'], 'field': ArticleCompany.md_tm})
         if 'title' in filters:
@@ -397,10 +397,10 @@ class ArticleCompany(Base, PRBase):
                                        User.id == ArticleCompany.editor_user_id)
             list_filters.append({'type': 'text_multi', 'value': filters['title_author'],
                                  'field': [ArticleCompany.title, User.profireader_name]})
-        if 'author' in filters:
+        if 'editor.profireader_name' in filters:
             sub_query = sub_query.join(User,
                                        User.id == ArticleCompany.editor_user_id)
-            list_filters.append({'type': 'text', 'value': filters['author'], 'field': User.profireader_name})
+            list_filters.append({'type': 'text', 'value': filters['editor.profireader_name'], 'field': User.profireader_name})
         if 'md_tm' in sorts:
             list_sorts.append({'type': 'date', 'value': sorts['md_tm'], 'field': ArticleCompany.md_tm})
         else:

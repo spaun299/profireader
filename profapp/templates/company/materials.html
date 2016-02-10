@@ -50,7 +50,7 @@
                     },{
                         name: 'editor.profireader_name', category:"searching"
                     },{
-                        name: 'md_tm', aenableColumnMenu: true,
+                        name: 'md_tm',enableCellEdit: true,
                         afilter: {type: 'date_range'}
                     },{
                         name: 'portal.name', type: 'link',
@@ -75,7 +75,7 @@
     <div ng-controller="materials_list">
 
         <a href="{{ url_material_create({company_id: company_id}) }}">{{ _('Create new material') }}</a>
-        <div class="grid" id="grid1" ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
+        <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
     </div>
     {% endraw %}
 
