@@ -1,4 +1,4 @@
-{% extends "index_layout.html" %}
+{% extends "index_lazy_layout.html" %}
 {% block title %}Profireader - {{ current_user.profireader_name }}{% endblock title %}
 {% block head %}
     {{ super() }}
@@ -37,7 +37,7 @@
         {#<img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=256) }}"><br>#}
 
 
-        <div class="profile-thumbnail" style="background-image: url('{{ user.profireader_avatar_url }}');">
+        <div class="profile-thumbnail" style="background-image: url('{{ user.profireader_small_avatar_url }}')">
             <div class="control">
                 <a ng-click="mySwitch = !mySwitch">
                     <span ng-hide="mySwitch">[{{ '{{' }}_('upload picture'){{ '}}' }}]</span><span ng-show="mySwitch">[{{ '{{' }}_('hide'){{ '}}' }}]</span>

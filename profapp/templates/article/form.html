@@ -1,5 +1,10 @@
 {% extends "index_lazy_layout.html" %}
 
+{% block head %}
+    {{ super() }}
+    {% include '_ruslan/partials/_header_files_articles.html' %}
+{% endblock head %}
+
 {% block portal_content %}
 
     {% block company_base %}
@@ -256,9 +261,9 @@
                 <div ng-model="data.image" pr-cropper="cropper" pr-company-id="{{ data.article.company.id }}"></div>
             </div>
 
-
+{% endraw %}
             <div ng-if="data.article.division" class="update_col1">
-                <!-- TODO: VH BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line, and move this layout in some angular template (e.g. 'datetimepicker.html') -->
+                <!-- TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line, and move this layout in some angular template (e.g. 'datetimepicker.html') -->
                 {{ _('Select publication date and time') }}<br/>
                 <input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup
                        ng-model="data.article.publishing_tm" ng-required="true"
@@ -278,6 +283,7 @@
                 </div>
 
             </div>
+{% raw %}
 
 
             <div class="update_col1">

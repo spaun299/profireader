@@ -16,6 +16,7 @@
     <link href="/static/css/_profreader.css" rel="stylesheet">
     <link href="/static/css/font-awesome.min.css" rel="stylesheet">
     <link href="/static/css/bootstrap.css" rel="stylesheet">
+{#    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">#}
     <link rel="stylesheet" href="/static/css/icons.css">
 
 {%- endblock styles %}
@@ -40,6 +41,8 @@
     <script src="{{ url_for('static', filename = 'new/angular-bootstrap/ui-bootstrap-tpls.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ajax-validator/ngAjaxValidator.js') }}"></script>
      <script src="{{ url_for('static', filename = 'angular-ui-slider/slider.js') }}"></script>
+
+    {% include '_ruslan/partials/_header_files_grid.html' %}
 
 
 

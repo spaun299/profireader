@@ -466,34 +466,59 @@ def search_for_portal_to_join(json):
     return portals_partners
 
 
-@portal_bp.route('/publications/<string:company_id>/', methods=['GET'])
+@portal_bp.route('/company/<string:company_id>/publications/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def publications(company_id):
-    return render_template(
-            'portal/portal_publications.html', company=Company.get(company_id),
-            angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js')
+    return render_template('portal/portal_publications.html', company=Company.get(company_id))
 
 
-@portal_bp.route('/publications/<string:company_id>/', methods=['POST'])
+def get_publication_dict(publication):
+    actions_for_statuses = {
+        ArticlePortalDivision.STATUSES['NOT_PUBLISHED']: ['publish', 'delete'],
+        ArticlePortalDivision.STATUSES['PUBLISHED']: ['unpublish'],
+        ArticlePortalDivision.STATUSES['DELETED']: ['undelete']
+    }
+    ret = publication.get_client_side_dict()
+    if ret.get('long'):
+            del ret['long']
+
+    ret['actions'] = actions_for_statuses[ret['status']]
+
+    return ret
+
+@portal_bp.route('/company/<string:company_id>/publications/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([]))
 @ok
 def publications_load(json, company_id):
-    portal = db(Company, id=company_id).one().own_portal.id
-    subquery = ArticlePortalDivision.subquery_portal_articles(portal, json.get('filter'), json.get('sort'))
-    articles, pages, current_page ,count = pagination(subquery,**Grid.page_options(json.get('paginationOptions')))
-    grid_filters = {
-        'publication_status':Grid.filter_for_status(ArticlePortalDivision.STATUSES),
-        'company': [{'value': company_id, 'label': company} for company_id, company  in
-                    ArticlePortalDivision.get_companies_which_send_article_to_portal(portal).items()]
-    }
-    return {'grid_data': Article.getListGridDataPublication(articles),
-            'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
-                             (k, v) in grid_filters.items()},
-            'total': count}
+    company = Company.get(company_id)
+    portal = company.own_portal
+    subquery = ArticlePortalDivision.subquery_portal_articles(portal.id, json.get('filter'), json.get('sort'))
+    publications, pages, current_page ,count = pagination(subquery,**Grid.page_options(json.get('paginationOptions')))
+    # grid_filters = {
+    #     'publication_status':Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+    #     'company': [{'value': company_id, 'label': company} for company_id, company  in
+    #                 ArticlePortalDivision.get_companies_which_send_article_to_portal(portal).items()]
+    # }
+    return {
+        'company': company.get_client_side_dict(),
+        'portal': portal.get_client_side_dict(),
+        'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights(),
+        'grid_data': list(map(get_publication_dict, publications))}
 
+
+@portal_bp.route('/publication_delete_unpublish/', methods=['POST'])
+@ok
+# @check_rights(simple_permissions([]))
+def publication_delete_unpublish(json):
+    action = g.req('action', allowed=['delete', 'unpublish', 'undelete'])
+
+    publication = ArticlePortalDivision.get(json['publication_id'])
+    publication.status = ArticlePortalDivision.STATUSES['DELETED' if action == 'delete' else 'NOT_PUBLISHED']
+
+    return get_publication_dict(publication.save())
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
 @tos_required

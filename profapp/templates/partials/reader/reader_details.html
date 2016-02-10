@@ -4,6 +4,7 @@
 
 {% block portal_content %}
 {% include 'partials/reader/head.html' %}
+
 <script>
 var favorite = {{ favorite|tojson }};
 function add_delete_favorite(boolean){

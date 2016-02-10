@@ -55,16 +55,15 @@ import time
 #             'total': subquery.count()}
 
 
-@article_bp.route('/material_create/<string:company_id>/', methods=['GET'])
 @article_bp.route('/material_update/<string:material_id>/', methods=['GET'])
 @article_bp.route('/publication_update/<string:publication_id>/', methods=['GET'])
+@article_bp.route('/material_create/company/<string:company_id>/', methods=['GET'])
 @tos_required
 def article_show_form(material_id=None, publication_id=None, company_id=None):
     company = Company.get(company_id if company_id else (
         ArticlePortalDivision.get(publication_id) if publication_id else ArticleCompany.get(material_id)).company.id)
-    return render_template('article/form.html',
-                           material_id=material_id, company_id=company_id, publication_id=publication_id,
-                           company=company)
+    return render_template('article/form.html', material_id=material_id, company_id=company_id,
+                           publication_id=publication_id, company=company)
 
 
 @article_bp.route('/material_update/<string:material_id>/', methods=['POST'])
@@ -164,11 +163,11 @@ def material_details(material_id):
 # def format_material_published(publication, portal):
 #
 
-def get_portal_dict_for_material(portal):
+def get_portal_dict_for_material(portal, material_id):
     ret = portal.get_client_side_dict(fields='id, name, divisions.id|name|portal_division_type_id, own_company.name')
     ret['divisions'] = PRBase.get_ordered_dict([d for d in ret['divisions'] if (
         d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
-    publication_in_portal = db(ArticlePortalDivision).filter(
+    publication_in_portal = db(ArticlePortalDivision).filter_by(article_company_id=material_id).filter(
             ArticlePortalDivision.portal_division_id.in_(
                     [div_id for div_id, div in ret['divisions'].items()])).first()
 
@@ -177,13 +176,12 @@ def get_portal_dict_for_material(portal):
                 'position,title,status,visibility,portal_division_id,publishing_tm')
         ret['publication']['division'] = ret['divisions'][ret['publication']['portal_division_id']]
         ret['publication']['counts'] = '0/0/0/0'
-# TODO: OZ by OZ
+        # TODO: OZ by OZ
         ret['actions'] = ['unpublish']
         ret['actions'] = []
     else:
         ret['publication'] = None
         ret['actions'] = ['publish']
-
     return ret
 
 
@@ -192,7 +190,7 @@ def get_portal_dict_for_material(portal):
 def material_details_load(json, material_id):
     article = ArticleCompany.get(material_id)
 
-    portals = [get_portal_dict_for_material(p) for p in
+    portals = [get_portal_dict_for_material(p, material_id) for p in
                Company.get(article.company_id).get_portals_where_company_is_member()]
 
     return {
@@ -217,7 +215,7 @@ def material_submit_to_portal(json):
 
     publication = ArticleCompany.get(json['material_id']).clone_for_portal(json['portal_division_id'], action)
 
-    return get_portal_dict_for_material(portal)
+    return get_portal_dict_for_material(portal, json['material_id'])
 
 
 # @article_bp.route('/material_details_publications/<string:material_id>/', methods=['POST'])

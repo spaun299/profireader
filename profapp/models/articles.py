@@ -659,29 +659,6 @@ class Article(Base, PRBase):
                                       'level': False})
         return grid_data
 
-    @staticmethod
-    def getListGridDataPublication(articles):
-        publications = []
-        for a in articles:
-            a = a.get_client_side_dict()
-            if a.get('long'):
-                del a['long']
-            publications.append(a)
-        grid_data = []
-        for article in publications:
-            allowed_statuses = []
-            art_stats = []
-            for s in art_stats:
-                allowed_statuses.append({'id': s, 'value': s})
-            port = article['company']['name'] if article['company']['name'] else 'Not sent to any company yet'
-            grid_data.append({'date': article['publishing_tm'],
-                              'title': article['title'],
-                              'company': port,
-                              'publication_status': article['status'],
-                              'id': str(article['id']),
-                              'level': True,
-                              'allowed_status': allowed_statuses})
-        return grid_data
 
     @staticmethod
     def getListGridDataArticles(articles):

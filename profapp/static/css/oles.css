@@ -257,5 +257,26 @@
 
 .pr-grid-cell-field-type-actions-action {
     padding: 0px 2px;
+    margin: 0px 2px;
 }
 
+.modal-filemanager-fullscreen {
+    width: 95%;
+    height: 95%;
+}
+
+.modal-filemanager-halfscreen {
+    margin-top: 10%;
+    width: 80%;
+    height: 80%;
+}
+
+.modal-filemanager-fullscreen .modal-content {
+    width: 100%;
+    height: 100%;
+}
+
+.modal-filemanager-halfscreen .modal-content {
+    width: 100%;
+    height: 100%;
+}
