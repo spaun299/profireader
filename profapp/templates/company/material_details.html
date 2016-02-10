@@ -57,11 +57,41 @@
                     `%(portal.name)s`. Please select division') }}
                 </div>
                 <br/>
-                <div ng-if="action=='publish'" ng-repeat="division in portal.divisions"><label><input
-                        ang-disabled="!division.can_be_published"
-                        name="material_details_publish_dialog_division"
-                        ng-value="division" ng-model="$parent.$parent.$parent.selected_division"
-                        type="radio"> {{ division.name }}</label></div>
+                <div ng-if="action=='publish'">
+                    <div ng-repeat="division in portal.divisions"><label><input
+                            ang-disabled="!division.can_be_published"
+                            name="material_details_publish_dialog_division"
+                            ng-value="division" ng-model="$parent.$parent.$parent.selected_division"
+                            type="radio"> {{ division.name }}</label></div>
+
+                    {{ _('Select publication date and time') }}<br/>
+                    <!-- TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line, and move this layout in some angular template (e.g. 'datetimepicker.html') -->
+                    <input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup
+                           ng-model="article.publishing_tm" ng-required="true"
+                           datepicker-options="dateOptions" close-text="Close"/><span class="input-group-btn"></span>
+                    <uib-timepicker ng-if="0"
+                                    ng-model="article.publishing_tm" hour-step="1" minute-step="1"
+                                    show-meridian="ismeridian"></uib-timepicker>
+                    <div ng-if="selected_division.portal_division_type_id === 'events'">
+                        {{ _('Select event date and time') }}<br/>
+                        <!-- TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line, and move this layout in some angular template (e.g. 'datetimepicker.html') -->
+                        <input style="width: 15em; display: inline" type="date" class="form-control"
+                               uib-datepicker-popup
+                               ng-model="article.event_tm" ng-required="true"
+                               datepicker-options="dateOptions" close-text="Close"/><span
+                            class="input-group-btn"></span>
+                        <uib-timepicker ng-if="0"
+                                        ng-model="article.event_tm" hour-step="1" minute-step="1"
+                                        show-meridian="ismeridian"></uib-timepicker>
+                    </div>
+                    {{ _('Select publication priority') }}<br/>
+
+                    <div style="width: 20em" ui-slider min="{{ data.portal_division.min }}"
+                         max="{{ data.portal_division.max }}" step="1" ng-model="data.portal_division.current"></div>
+                    <div class="nowrap">
+                        <span>{{ ArticlePositionTitle() }}</span>
+                    </div>
+                </div>
 
                 <div ng-if="action=='unpublish'">
                     {{ _('You are going to unpublish publication `%(article.title)s` from portal `%(portal.name)s`

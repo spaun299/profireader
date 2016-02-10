@@ -76,7 +76,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     iferror(result, error_code)
                 }
                 else {
-                    add_message(result, 'danger');
+                    // add_message(result, 'danger');
                 }
             }
 
@@ -1149,6 +1149,8 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}"><a href="{{' + link + '}}" ng-bind="COL_FIELD"></a></div>'
                 } else if (col[i].type === 'img') {
                     gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
+                }else if(col[i].type === 'show_modal') {
+                    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="'+classes_for_row+'" title="{{ COL_FIELD }}"><a ng-click="'+col[i].modal+'" ng-bind="COL_FIELD"></a></div>'
                 } else if (col[i].type === 'actions') {
                     gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><button ' +
                         'class="btn pr-grid-cell-field-type-actions-action pr-grid-cell-field-type-actions-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.' + col[i]['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col[i]['name'] + '\')" title="{{ grid.appScope._(\'grid action \' + action_name) }}">{{ grid.appScope._(\'grid action \' + action_name) }}</button></div>'
