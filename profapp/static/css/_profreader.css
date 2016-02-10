@@ -181,6 +181,17 @@ body  {
     padding-right: 15px;
     padding-bottom: 15px;
 }
+
+.menu-company .selected{
+    color: #fff;
+    text-decoration: none;
+    background-color: #18BCA2;
+    padding-top: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-bottom: 15px;
+}
+
 .about-company a{
     color: #333;
 }
