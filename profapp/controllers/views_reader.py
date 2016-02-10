@@ -10,6 +10,7 @@ from .request_wrapers import ok
 from utils.db_utils import db
 import datetime
 from ..models.files import File
+from collections import OrderedDict
 
 
 @reader_bp.route('/details_reader/<string:article_portal_division_id>')
@@ -153,14 +154,16 @@ def edit_portal_subscription(reader_portal_id):
 @reader_bp.route('/edit_portal_subscription/<string:reader_portal_id>', methods=['POST'])
 @ok
 def edit_portal_subscription_load(json, reader_portal_id):
-    user_portal_reader = db(UserPortalReader, id=reader_portal_id).one()
-    divisions = list(map(lambda div_and_com: {'name': div_and_com.portal_division.name,
-                                              'division_id': div_and_com.division_id,
-                                              'show_divisions_and_comments': list(
-                                                  map(lambda args: (args[0], args[1]),
-                                                      div_and_com.show_divisions_and_comments))},
-                         user_portal_reader.show_divisions_and_comments))
-    return {'divisions': divisions, 'reader_portal_id': reader_portal_id}
+    if request.args.get('action') == 'load':
+        user_portal_reader = db(UserPortalReader, id=reader_portal_id).one()
+        divisions = sorted(list(map(lambda div_and_com: {'name': div_and_com.portal_division.name,
+                                                         'division_id': div_and_com.division_id,
+                                                         'show_divisions_and_comments': list(
+                                                             map(lambda args: (args[0], args[1]),
+                                                                 div_and_com.show_divisions_and_comments))},
+                                    user_portal_reader.show_divisions_and_comments)), key=lambda items: items['name'])
+        return {'divisions': divisions, 'reader_portal_id': reader_portal_id}
+    return
 
 
 @reader_bp.route('/edit_profile_submit/<string:reader_portal_id>', methods=['POST'])

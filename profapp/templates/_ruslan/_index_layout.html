@@ -24,7 +24,7 @@
 {%- block head %}
     {{ super() }}
     <script>
-    var pr_angular_modules = ['ui.bootstrap', 'profireaderdirectives', 'ngSanitize', 'ajaxFormModule', 'profireaderdirectives', 'ngAnimate', 'ngTouch', 'ui.slider'];
+    var pr_angular_modules = ['ui.bootstrap', 'profireaderdirectives', 'ngSanitize', 'ajaxFormModule', 'ngAnimate', 'ngTouch', 'ui.slider'];
     </script>
 
 
@@ -42,7 +42,7 @@
     <script src="{{ url_for('static', filename = 'angular-ajax-validator/ngAjaxValidator.js') }}"></script>
      <script src="{{ url_for('static', filename = 'angular-ui-slider/slider.js') }}"></script>
 
-    {% include '_ruslan/partials/_header_files_grid.html' %}
+{#    {% include '_ruslan/partials/_header_files_grid.html' %}#}
 
 
 
