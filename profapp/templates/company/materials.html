@@ -19,7 +19,6 @@
             $scope.$$translate = {{ translates('materials_list')|safe }};
 
             $scope.url_search_article = {{ raw_url_for('company.materials_load')|safe }};
-            $scope.url_search = {{ raw_url_for('company.mat')|safe }};
 
             $scope.url_material_details = {{ raw_url_for('article.material_details')|safe }};
             $scope.url_material_create = {{ raw_url_for('article.article_show_form')|safe }};
@@ -36,7 +35,6 @@
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                 loadGridData: $scope.sendData,
-                loadUrl:$scope.url_search({company_id: $scope.company_id}),
                 category: [{
                     name: 'searching',
                     field: 'title_author',
@@ -50,18 +48,17 @@
                         type: 'link',
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
                     },{
-                        name: 'author', category:"searching"
+                        name: 'editor.profireader_name', category:"searching"
                     },{
                         name: 'md_tm', aenableColumnMenu: true,
                         afilter: {type: 'date_range'}
                     },{
-                        name: 'portals', type: 'link',
+                        name: 'portal.name', type: 'link',
                         href: 'url_edit_article_portal({article_portal_division_id: row.entity.id})',
-                        hideIf: 'not sent',
                         classes: 'link',
                         filter: {type:'multi_select'}
                     },{
-                        name: 'publication_status',
+                        name: 'status',
                         filter: {type: 'multi_select'}
                     },{
                         name: 'publication_visibility',

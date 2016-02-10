@@ -636,58 +636,12 @@ class Article(Base, PRBase):
         return articles if articles else []
 
     @staticmethod
-    def getListGridDataMaterials(articles):
-        grid_data = []
-        for article in articles:
-            port = 'not sent' if len(article.portal_article) == 0 else ''
-            grid_data.append({'md_tm': article.md_tm,
-                              'title': article.title,
-                              'author': article.editor.profireader_name,
-                              'portals': port,
-                              'publication_status': '',
-                              'id': str(article.id),
-                              'level': True})
-            if article.portal_article:
-                i = 0
-                for portal in article.portal_article:
-                    grid_data.append({'md_tm': '',
-                                      'title': '',
-                                      'portals': portal.portal.name,
-                                      'publication_status': portal.status,
-                                      'material_status': '',
-                                      'id': portal.id,
-                                      'level': False})
-        return grid_data
+    def get_material_grid_data(material):
+        dict = material.get_client_side_dict(fields='md_tm,title,editor.profireader_name,id')
+        dict.update({'portal.name':None if len(material.portal_article) == 0 else '', 'level':True})
+        list = [portal.get_client_side_dict(fields='portal.name,status, id') for portal in material.portal_article]
+        return dict, list
 
-
-    @staticmethod
-    def getListGridDataArticles(articles):
-        articles_drid_data = []
-        for (article, time) in articles:
-            companies_for_article = ArticleCompany.get_companies_for_article(article.id)
-            article_dict = article.get_client_side_dict()
-            capm = '' if len(companies_for_article) > 0 else 'Not sent to any company yet'
-            st = '' if len(article_dict['submitted_versions']) > 0 else 'Not sent'
-            article_dict['md_tm'] = time
-            articles_drid_data.append({'date': article_dict['md_tm'],
-                                       'title': article_dict['mine_version']['title'],
-                                       'company': capm,
-                                       'status': st,
-                                       'id': str(article_dict['id']),
-                                       'level': True})
-            if companies_for_article:
-                i = 0
-                for child in companies_for_article:
-                    st = article_dict['submitted_versions'][i]['status'] if len(
-                            article_dict['submitted_versions']) > 0 else 'Not sent'
-                    articles_drid_data.append({'date': '',
-                                               'title': '',
-                                               'company': child['name'],
-                                               'status': st,
-                                               'id': '',
-                                               'level': False})
-                    i += 1
-        return articles_drid_data
         # for article in articles:
         #     article.possible_new_statuses = ARTICLE_STATUS_IN_COMPANY.\
         #         can_user_change_status_to(article.status)
