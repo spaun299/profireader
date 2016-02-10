@@ -62,9 +62,8 @@ import time
 def article_show_form(material_id=None, publication_id=None, company_id=None):
     company = Company.get(company_id if company_id else (
         ArticlePortalDivision.get(publication_id) if publication_id else ArticleCompany.get(material_id)).company.id)
-    return render_template('article/form.html',
-                           material_id=material_id, company_id=company_id, publication_id=publication_id,
-                           company=company)
+    return render_template('article/form.html', material_id=material_id, company_id=company_id,
+                           publication_id=publication_id, company=company)
 
 
 @article_bp.route('/material_update/<string:material_id>/', methods=['POST'])

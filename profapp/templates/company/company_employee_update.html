@@ -23,7 +23,6 @@
     <div ng-controller="company_employee_update">
         <div af af-after-save="after_save" af-watch="data.employment" ng-model="data">
             <h2>
-                {{ data.employer.logo_file_id }}
                 <img class="person-small-cover" pr-image
                      pr-no-image="{{ data.employee.profireader_small_avatar_url }}"/>
                 <img class="logo-small-cover" pr-image="data.employer.logo_file_id"/>

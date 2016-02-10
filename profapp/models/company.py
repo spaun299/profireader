@@ -307,8 +307,6 @@ class UserCompany(Base, PRBase):
 
     # todo (AA to AA): check handling md_tm
 
-
-
     def __init__(self, user_id=None, company_id=None, status=STATUS.NONACTIVE(), rights=0,
                  works_since_tm=works_since_tm):
 
