@@ -186,8 +186,12 @@
                 columnDefs: [
                     {
                         name: 'own_company.name', width: '13%', afilter: {type: 'input'}
-                    },
-                    {
+                    }
+                    ,{
+                        name: 'actions', type: 'actions', onclick: 'grid_action', width: '50%'
+
+                    }
+                    , {
                         name: 'name', width: '13%', type: 'link',
                         href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
                     }
@@ -216,10 +220,7 @@
                     , {
                         name: 'publication.visibility', width: '10%'
                     }
-                    , {
-                        name: 'actions', type: 'actions', onclick: 'grid_action', width: '10%'
 
-                    }
                 ]
             });
 
