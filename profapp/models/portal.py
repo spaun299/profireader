@@ -628,7 +628,7 @@ class ReaderDivision(Base, PRBase):
     user_portal_reader = relationship('UserPortalReader', back_populates='show_divisions_and_comments')
     portal_division = relationship('PortalDivision', uselist=False)
     show_division_and_comments_numeric = dict(show_articles=1, show_comments=2, show_favorite_comments=4,
-                                               show_liked_comments=8)
+                                              show_liked_comments=8)
     show_division_and_comments_numeric_all = reduce(lambda x, y: x+y, show_division_and_comments_numeric.values())
 
     def __init__(self, user_portal_reader=None, portal_division=None):
@@ -645,9 +645,10 @@ class ReaderDivision(Base, PRBase):
         show_division_and_comments_all = ['show_articles', 'show_comments',
                                           'show_favorite_comments', 'show_liked_comments']
         show_division_and_comments_return = []
-        for count, pos in enumerate(binary_data):
-            show_division_and_comments_return.append([show_division_and_comments_all[int(count)], True if int(pos) else False])
-        return show_division_and_comments_return
+        for count, pos in enumerate(binary_data, start=1):
+            show_division_and_comments_return.append(
+                [show_division_and_comments_all[-int(count)], True if int(pos) else False])
+        return reversed(show_division_and_comments_return)
 
     @show_divisions_and_comments.setter
     def show_divisions_and_comments(self, tuple_or_list):

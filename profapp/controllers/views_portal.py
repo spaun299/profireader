@@ -513,10 +513,10 @@ def publications_load(json, company_id):
 @ok
 # @check_rights(simple_permissions([]))
 def publication_delete_unpublish(json):
-    action = g.req('action', allowed=['delete', 'unpublish'])
+    action = g.req('action', allowed=['delete', 'unpublish', 'undelete'])
 
     publication = ArticlePortalDivision.get(json['publication_id'])
-    publication.status = ArticlePortalDivision.STATUSES['NOT_PUBLISHED' if action == 'unpublish' else 'DELETED']
+    publication.status = ArticlePortalDivision.STATUSES['DELETED' if action == 'delete' else 'NOT_PUBLISHED']
 
     return get_publication_dict(publication.save())
 
