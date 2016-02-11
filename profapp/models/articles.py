@@ -41,6 +41,7 @@ class ArticlePortalDivision(Base, PRBase):
     keywords = Column(TABLE_TYPES['keywords'], nullable=False)
     md_tm = Column(TABLE_TYPES['timestamp'])
     publishing_tm = Column(TABLE_TYPES['timestamp'])
+    event_tm = Column(TABLE_TYPES['timestamp'])
     position = Column(TABLE_TYPES['position'])
     read_count = Column(TABLE_TYPES['int'], default=0)
 
@@ -164,7 +165,7 @@ class ArticlePortalDivision(Base, PRBase):
         # self.portal_id = portal_id
 
     def get_client_side_dict(self, fields='id|image_file_id|read_count|title|subtitle|short|long_stripped|'
-                                          'image_file_id|position|keywords|cr_tm|md_tm|status|visibility|publishing_tm, '
+                                          'image_file_id|position|keywords|cr_tm|md_tm|status|visibility|publishing_tm|event_tm, '
                                           'company.id|name, division.id|name, portal.id|name|host',
                              more_fields=None):
         return self.to_dict(fields, more_fields)

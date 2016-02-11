@@ -177,11 +177,14 @@ def get_portal_dict_for_material(portal, material_id, company_id):
                 'id,position,title,status,visibility,portal_division_id,publishing_tm')
         ret['publication']['division'] = ret['divisions'][ret['publication']['portal_division_id']]
         ret['publication']['counts'] = '0/0/0/0'
-        # TODO: OZ by OZ
-        ret['actions'] = ['unpublish', 'edit']
+
+        if ret['publication']['status'] == ArticlePortalDivision.STATUSES['NOT_PUBLISHED']:
+            ret['actions'] = ['edit', 'republish']
+        if ret['publication']['status'] == ArticlePortalDivision.STATUSES['PUBLISHED']:
+            ret['actions'] = ['edit', 'republish', 'unpublish']
     else:
         ret['publication'] = None
-        ret['actions'] = ['submit', 'publish', 'edit']
+        ret['actions'] = ['submit_and_publish']
     return ret
 
 
@@ -207,10 +210,10 @@ def material_details_load(json, material_id):
     }
 
 
-@article_bp.route('/material_submit_to_portal/', methods=['POST'])
+@article_bp.route('/submit_publish/', methods=['POST'])
 # @check_rights(simple_permissions([]))
 @ok
-def material_submit_to_portal(json):
+def submit_publish(json):
     action = g.req('action', allowed=['submit', 'publish'])
     portal = PortalDivision.get(json['portal_division_id']).portal
     material = ArticleCompany.get(json['material_id'])
