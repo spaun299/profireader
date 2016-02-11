@@ -192,6 +192,11 @@ body  {
     padding-bottom: 15px;
 }
 
+.navbar-collapse .selected{
+    color: #18bc9c;
+    text-decoration: underline;
+}
+
 .menu-company .selected{
     color: #fff;
     text-decoration: none;
