@@ -265,12 +265,7 @@
 {#            <div ng-if="data.article.division" class="update_col1">#}
 {#                <!-- TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line, and move this layout in some angular template (e.g. 'datetimepicker.html') -->#}
 {#                {{ _('Select publication date and time') }}<br/>#}
-{#                <input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup#}
-{#                       ng-model="data.article.publishing_tm" ng-required="true"#}
-{#                       datepicker-options="dateOptions" close-text="Close"/><span class="input-group-btn"></span>#}
-{#                <uib-timepicker ng-if="0"#}
-{#                                ng-model="data.article.publishing_tm" hour-step="1" minute-step="1"#}
-{#                                show-meridian="ismeridian"></uib-timepicker>#}
+{#            <div pr-datepicker ng-model="material_or_publication.event_tm"></div>#}
 {#            </div>#}
 {##}
 {#            <div ng-if="data.article.division" class="update_col1">#}
