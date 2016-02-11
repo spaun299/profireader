@@ -343,18 +343,6 @@ def load(json, company_id=None):
 #     return {}
 
 
-@company_bp.route('/subscribe/<string:company_id>/')
-@tos_required
-@login_required
-# @check_rights(simple_permissions([]))
-def subscribe(company_id):
-    company_role = UserCompany(user_id=g.user_dict['id'],
-                               company_id=company_id,
-                               status=STATUS.NONACTIVE())
-    company_role.subscribe_to_company().save()
-
-    return redirect(url_for('company.profile', company_id=company_id))
-
 
 @company_bp.route('/search_for_company_to_join/', methods=['POST'])
 @login_required
@@ -388,10 +376,23 @@ def send_article_to_user(json):
 # @check_rights(simple_permissions([]))
 def join_to_company(json, company_id):
     company_role = UserCompany(user_id=g.user_dict['id'],
-                               company_id=json['company_id'],
-                               status=STATUS.NONACTIVE())
+                               company_id=json.get('company_id'),
+                               status=UserCompany.STATUSES['APPLICANT'])
     company_role.subscribe_to_company().save()
     return {'companies': [employer.get_client_side_dict() for employer in current_user.employers]}
+
+
+@company_bp.route('/subscribe/<string:company_id>/')
+@tos_required
+@login_required
+# @check_rights(simple_permissions([]))
+def subscribe(company_id):
+    company_role = UserCompany(user_id=g.user_dict['id'],
+                               company_id=company_id,
+                               status=UserCompany.STATUSES['APPLICANT'])
+    company_role.subscribe_to_company().save()
+
+    return redirect(url_for('company.profile', company_id=company_id))
 
 
 @company_bp.route('/add_subscriber/', methods=['POST'])
@@ -423,7 +424,7 @@ def fire_employee():
     data = request.form
     UserCompany.change_status_employee(company_id=data.get('company_id'),
                                        user_id=data.get('user_id'),
-                                       status=STATUS.DELETED())
+                                       status=UserCompany.STATUSES['FIRED'])
     return redirect(url_for('company.employees', company_id=data.get('company_id')))
 
 
@@ -432,7 +433,7 @@ def fire_employee():
 def unsuspend(user_id, company_id):
     UserCompany.change_status_employee(user_id=user_id,
                                        company_id=company_id,
-                                       status=STATUS.ACTIVE())
+                                       status=UserCompany.STATUSES['ACTIVE'])
     return redirect(url_for('company.employees', company_id=company_id))
 
 

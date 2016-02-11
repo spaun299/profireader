@@ -243,6 +243,11 @@ body  {
 .hamburger-menu span{
     background-color: #fff;
 }
+
+.input-group .dropdown-menu{
+    display: none !important;
+}
+
 .join-company{
     margin-top: 50px;
 }
