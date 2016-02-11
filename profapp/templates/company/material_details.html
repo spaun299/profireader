@@ -13,27 +13,32 @@
 
     <script>
 
-        module.controller('material_details_publish_dialog', function ($scope, $ok, $uibModalInstance, article, company, action, portal, published_at_division, rights_user_in_company, rights_company_at_portal) {
+        module.controller('submit_publish_dialog', function ($scope, $ok, $uibModalInstance,
+                                                             material_or_publication, company, action, portal, published_at_division, rights_user_in_company, rights_company_at_portal) {
 
-            $scope.$$translate = {{ translates('material_details_publish_dialog')|safe }};
-            $scope.url_submit_to_portal = '{{ url_for('article.material_submit_to_portal')|safe }}';
+            $scope.$$translate = {{ translates('submit_publish_dialog')|safe }};
+            $scope.url_submit_to_portal = '{{ url_for('article.submit_publish')|safe }}';
 
             $scope.selected_division = null;
             $scope.portal = portal;
-            $scope.article = article;
+            $scope.material_or_publication = material_or_publication;
             $scope.action = action;
+            $scope.material_or_publication = material_or_publication;
             $scope.company = company;
+            $scope.object_name = (action === 'republish') ? 'publication' : 'material';
             $scope.rights_user_in_company = rights_user_in_company;
             $scope.rights_company_at_portal = rights_company_at_portal;
             $scope.published_at_division = published_at_division;
 
-            $scope.action_do = function (submit_or_publish) {
-                $ok($scope.url_submit_to_portal + '?action=' + submit_or_publish, {
+            $scope.can_submit = $scope.object_name === 'publication' || $scope.rights_user_in_company['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'];
+            $scope.can_publish = $scope.rights_company_at_portal['PUBLICATION_PUBLISH'];
+
+            $scope.action_do = function () {
+                $ok($scope.url_submit_to_portal + '?action=' + action, {
                     material_id: $scope.article.id,
                     portal_division_id: $scope.selected_division.id,
                     publication_data: {}
                 }, $uibModalInstance.close)
-
             };
 
             $scope.action_cancel = $uibModalInstance.dismiss;
@@ -43,77 +48,47 @@
     </script>
 
     {% raw %}
-    <script type="text/ng-template" id="material_details_publish_dialog.html">
+    <script type="text/ng-template" id="submit_publish_dialog.html">
         <div class="modal-header">
-            <h3 class="modal-title">{{ _(action + ' material at portal') }}</h3>
+            <h3 class="modal-title">{{ _(action + ' ' + object_name + ' at portal') }}</h3>
         </div>
         <div class="modal-body">
-            <div ng-if="!rights_user_in_company['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']">
-                {{ _('sorry you have no permission to submit material in behalf of company `%(company.name)s`')
-                }}
+            <div ng-if="!can_submit">
+                {{ _('sorry you have no permission to submit material in behalf of company `%(company.name)s`') }}
             </div>
-            <div ng-if="rights_user_in_company['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']">
-                <div ng-if="action=='publish'">{{ _('You are going to publish material `%(article.title)s` at portal
-                    `%(portal.name)s`. Please select division') }}
-                </div>
+            <div ng-if="can_submit">
+                {{ _('You are going to ' + action + ' ' + object_name + ' `%(material_or_publication.title)s` at portal
+                `%(portal.name)s`') }}<br/>
                 <br/>
-                <div ng-if="action=='publish'">
-                    <div ng-repeat="division in portal.divisions"><label><input
-                            ang-disabled="!division.can_be_published"
-                            name="material_details_publish_dialog_division"
-                            ng-value="division" ng-model="$parent.$parent.$parent.selected_division"
-                            type="radio"> {{ division.name }}</label></div>
+                <div ng-repeat="division in portal.divisions"><label><input
+                        ang-disabled="!division.can_be_published"
+                        name="material_details_publish_dialog_division"
+                        ng-value="division" ng-model="$parent.selected_division"
+                        type="radio"> {{ division.name }}</label></div>
 
-                    {{ _('Select publication date and time') }}<br/>
-                    <!-- TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line, and move this layout in some angular template (e.g. 'datetimepicker.html') -->
-                    <input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup
-                           ng-model="article.publishing_tm" ng-required="true"
-                           datepicker-options="dateOptions" close-text="Close"/><span class="input-group-btn"></span>
-                    <uib-timepicker ng-if="0"
-                                    ng-model="article.publishing_tm" hour-step="1" minute-step="1"
-                                    show-meridian="ismeridian"></uib-timepicker>
-                    <div ng-if="selected_division.portal_division_type_id === 'events'">
-                        {{ _('Select event date and time') }}<br/>
-                        <!-- TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line, and move this layout in some angular template (e.g. 'datetimepicker.html') -->
-                        <input style="width: 15em; display: inline" type="date" class="form-control"
-                               uib-datepicker-popup
-                               ng-model="article.event_tm" ng-required="true"
-                               datepicker-options="dateOptions" close-text="Close"/><span
-                            class="input-group-btn"></span>
-                        <uib-timepicker ng-if="0"
-                                        ng-model="article.event_tm" hour-step="1" minute-step="1"
-                                        show-meridian="ismeridian"></uib-timepicker>
-                    </div>
-                    {{ _('Select publication priority') }}<br/>
-
-                    <div style="width: 20em" ui-slider min="{{ data.portal_division.min }}"
-                         max="{{ data.portal_division.max }}" step="1" ng-model="data.portal_division.current"></div>
-                    <div class="nowrap">
-                        <span>{{ ArticlePositionTitle() }}</span>
+                {{ _('Select publication date and time') }}<br/>
+                <div pr-datepicker ng-model="material_or_publication.publishing_tm"></div>
+                <div ng-if="selected_division.portal_division_type_id === 'events'">
+                    {{ _('Select event date and time') }}<br/>
+                    <div pr-datepicker ng-model="material_or_publication.event_tm"></div>
+                </div>
+                <div ng-if="object_name === 'material'">
+                    <hr/>
+                    <label ng-class="{disabled: !can_publish}"><input ng-disabled="!can_publish" type="checkbox">&nbsp;{{
+                        _('also publish material') }}</label>
+                    <div ng-if="!can_publish">
+                        {{ _('Sorry, you company `%(company.name)s` have no permission to publish at portal
+                        %(portal.name)s') }}<br/>
+                        {{ _('You can send message to company') }}<br/>
+                        <textarea disabled="disabled" style="width: 100%" ng-model="message"></textarea>
                     </div>
                 </div>
-
-                <div ng-if="action=='unpublish'">
-                    {{ _('You are going to unpublish publication `%(article.title)s` from portal `%(portal.name)s`
-                    division
-                    `%(published_at_division.name)s`') }}
-                </div>
-                <hr/>
-                {{ _('You can send message to company') }}<br/>
-                <textarea disabled="disabled" style="width: 100%" ng-model="message"></textarea>
 
             </div>
         </div>
         <div class="modal-footer">
             <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="!selected_division"
                     type="button" ng-click="action_do('submit')">{{ _('Do submit') }}
-            </button>
-            <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="true"
-                    title="{{ _('Your company has no permission to publish. pls submit') }}"
-                    type="button" ng-click="action_do('publish')">{{ _('Do publish') }}
-            </button>
-            <button ng-if="action=='unpublish'" class="btn btn-primary" type="button" ng-click="action_do()">{{
-                _('Do ' + action) }}
             </button>
             <button class="btn btn-warning" type="button" ng-click="action_cancel()">{{ _('Cancel ' + action) }}
             </button>
@@ -154,7 +129,7 @@
     {% raw %}
     <script type="text/ng-template" id="material_details_unpublish_dialog.html">
         <div class="modal-header">
-                <h3 class="modal-title">{{ _('unpublish publication from portal') }}</h3>
+            <h3 class="modal-title">{{ _('unpublish publication from portal') }}</h3>
         </div>
         <div ng-if="company && company.id === portal.own_company.id && !rights_user_in_company['PUBLICATION_UNPUBLISH_AT_OWN_PORTAL']">
             <!--             OWN company and DON'T have rights to to unpublish -->
@@ -186,100 +161,86 @@
         </div>
         {% endraw %}
 
-{#        <div ng-if="company && company.id === portal.own_company.id">#}
-{#            <div ng-if="!rights_user_in_company['PUBLICATION_UNPUBLISH_AT_OWN_PORTAL']">#}
-{#                <div class="modal-body">#}
-{#                    {{ _('sorry your have no permission in your company `%(company.name)s`' to unpublish publication#}
-{#                    from portal `%(portal.name)s`'. But you can send request to company administrator to do that) }}#}
-{#                    <textarea disabled="" style="width: 100%" ng-model="message"></textarea>#}
-{#                </div>#}
-{##}
-{#                <div class="modal-footer">#}
-{#                    <button nclass="btn btn-danger" type="button" ng-click="action_do(action)">{{_('Request#}
-{#                        unpublishing') }}#}
-{#                    </button>#}
-{#                    <button nclass="btn btn-danger" type="button" ng-click="action_cancel()">{{_('Cancel unpublishing')#}
-{#                        }}#}
-{#                    </button>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-{##}
-{##}
-{#        <div ng-if="!rights_company_at_portal['UNPUBLISH_FROM_PORTAL']">#}
-{#            {{ _('sorry your company `%(company.name)s` have no permission to unpublish publication from portal#}
-{#            `%(portal.name)s`') }}#}
-{#        </div>#}
-{#        <div ng-if="!rights_user_in_company['UNPUBLISH_FROM_PORTAL']">#}
-{#            {{ _('sorry your company `%(company.name)s` have no permission to unpublish publication from portal#}
-{#            `%(portal.name)s`') }}#}
-{#        </div>#}
-{#        <div ng-if="rights_user_in_company['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']">#}
-{#            <div ng-if="action=='publish'">{{ _('You are going to publish material `%(article.title)s` at portal#}
-{#                `%(portal.name)s`. Please select division') }}#}
-{#            </div>#}
-{#            <br/>#}
-{#            <div ng-if="action=='publish'">#}
-{#                <div ng-repeat="division in portal.divisions"><label><input#}
-{#                        ang-disabled="!division.can_be_published"#}
-{#                        name="material_details_publish_dialog_division"#}
-{#                        ng-value="division" ng-model="$parent.$parent.$parent.selected_division"#}
-{#                        type="radio"> {{ division.name }}</label></div>#}
-{##}
-{#                {{ _('Select publication date and time') }}<br/>#}
-{#                <!-- TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line, and move this layout in some angular template (e.g. 'datetimepicker.html') -->#}
-{#                <input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup#}
-{#                       ng-model="article.publishing_tm" ng-required="true"#}
-{#                       datepicker-options="dateOptions" close-text="Close"/><span class="input-group-btn"></span>#}
-{#                <uib-timepicker ng-if="0"#}
-{#                                ng-model="article.publishing_tm" hour-step="1" minute-step="1"#}
-{#                                show-meridian="ismeridian"></uib-timepicker>#}
-{#                <div ng-if="selected_division.portal_division_type_id === 'events'">#}
-{#                    {{ _('Select event date and time') }}<br/>#}
-{#                    <!-- TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line, and move this layout in some angular template (e.g. 'datetimepicker.html') -->#}
-{#                    <input style="width: 15em; display: inline" type="date" class="form-control"#}
-{#                           uib-datepicker-popup#}
-{#                           ng-model="article.event_tm" ng-required="true"#}
-{#                           datepicker-options="dateOptions" close-text="Close"/><span#}
-{#                        class="input-group-btn"></span>#}
-{#                    <uib-timepicker ng-if="0"#}
-{#                                    ng-model="article.event_tm" hour-step="1" minute-step="1"#}
-{#                                    show-meridian="ismeridian"></uib-timepicker>#}
-{#                </div>#}
-{#                {{ _('Select publication priority') }}<br/>#}
-{##}
-{#                <div style="width: 20em" ui-slider min="{{ data.portal_division.min }}"#}
-{#                     max="{{ data.portal_division.max }}" step="1" ng-model="data.portal_division.current"></div>#}
-{#                <div class="nowrap">#}
-{#                    <span>{{ ArticlePositionTitle() }}</span>#}
-{#                </div>#}
-{#            </div>#}
-{##}
-{#            <div ng-if="action=='unpublish'">#}
-{#                {{ _('You are going to unpublish publication `%(article.title)s` from portal `%(portal.name)s`#}
-{#                division#}
-{#                `%(published_at_division.name)s`') }}#}
-{#            </div>#}
-{#            <hr/>#}
-{#            {{ _('You can send message to company') }}<br/>#}
-{#            <textarea disabled="disabled" style="width: 100%" ng-model="message"></textarea>#}
-{##}
-{#        </div>#}
-{#        </div>#}
-{#        <div class="modal-footer">#}
-{#            <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="!selected_division"#}
-{#                    type="button" ng-click="action_do('submit')">{{ _('Do submit') }}#}
-{#            </button>#}
-{#            <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="true"#}
-{#                    title="{{ _('Your company has no permission to publish. pls submit') }}"#}
-{#                    type="button" ng-click="action_do('publish')">{{ _('Do publish') }}#}
-{#            </button>#}
-{#            <button ng-if="action=='unpublish'" class="btn btn-primary" type="button" ng-click="action_do()">{{#}
-{#                _('Do ' + action) }}#}
-{#            </button>#}
-{#            <button class="btn btn-warning" type="button" ng-click="action_cancel()">{{ _('Cancel ' + action) }}#}
-{#            </button>#}
-{#        </div>#}
+        {#        <div ng-if="company && company.id === portal.own_company.id">#}
+        {#            <div ng-if="!rights_user_in_company['PUBLICATION_UNPUBLISH_AT_OWN_PORTAL']">#}
+        {#                <div class="modal-body">#}
+        {#                    {{ _('sorry your have no permission in your company `%(company.name)s`' to unpublish publication#}
+        {#                    from portal `%(portal.name)s`'. But you can send request to company administrator to do that) }}#}
+        {#                    <textarea disabled="" style="width: 100%" ng-model="message"></textarea>#}
+        {#                </div>#}
+        {##}
+        {#                <div class="modal-footer">#}
+        {#                    <button nclass="btn btn-danger" type="button" ng-click="action_do(action)">{{_('Request#}
+        {#                        unpublishing') }}#}
+        {#                    </button>#}
+        {#                    <button nclass="btn btn-danger" type="button" ng-click="action_cancel()">{{_('Cancel unpublishing')#}
+        {#                        }}#}
+        {#                    </button>#}
+        {#                </div>#}
+        {#            </div>#}
+        {#        </div>#}
+        {##}
+        {##}
+        {#        <div ng-if="!rights_company_at_portal['UNPUBLISH_FROM_PORTAL']">#}
+        {#            {{ _('sorry your company `%(company.name)s` have no permission to unpublish publication from portal#}
+        {#            `%(portal.name)s`') }}#}
+        {#        </div>#}
+        {#        <div ng-if="!rights_user_in_company['UNPUBLISH_FROM_PORTAL']">#}
+        {#            {{ _('sorry your company `%(company.name)s` have no permission to unpublish publication from portal#}
+        {#            `%(portal.name)s`') }}#}
+        {#        </div>#}
+        {#        <div ng-if="rights_user_in_company['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']">#}
+        {#            <div ng-if="action=='publish'">{{ _('You are going to publish material `%(article.title)s` at portal#}
+        {#                `%(portal.name)s`. Please select division') }}#}
+        {#            </div>#}
+        {#            <br/>#}
+        {#            <div ng-if="action=='publish'">#}
+        {#                <div ng-repeat="division in portal.divisions"><label><input#}
+        {#                        ang-disabled="!division.can_be_published"#}
+        {#                        name="material_details_publish_dialog_division"#}
+        {#                        ng-value="division" ng-model="$parent.$parent.$parent.selected_division"#}
+        {#                        type="radio"> {{ division.name }}</label></div>#}
+        {##}
+        {#                {{ _('Select publication date and time') }}<br/>#}
+        {#            <div pr-datepicker ng-model="material_or_publication.event_tm"></div>#}
+        {#                <div ng-if="selected_division.portal_division_type_id === 'events'">#}
+        {#                    {{ _('Select event date and time') }}<br/>#}
+        {#            <div pr-datepicker ng-model="material_or_publication.event_tm"></div>#}
+        {#                </div>#}
+        {#                {{ _('Select publication priority') }}<br/>#}
+        {##}
+        {#                <div style="width: 20em" ui-slider min="{{ data.portal_division.min }}"#}
+        {#                     max="{{ data.portal_division.max }}" step="1" ng-model="data.portal_division.current"></div>#}
+        {#                <div class="nowrap">#}
+        {#                    <span>{{ ArticlePositionTitle() }}</span>#}
+        {#                </div>#}
+        {#            </div>#}
+        {##}
+        {#            <div ng-if="action=='unpublish'">#}
+        {#                {{ _('You are going to unpublish publication `%(article.title)s` from portal `%(portal.name)s`#}
+        {#                division#}
+        {#                `%(published_at_division.name)s`') }}#}
+        {#            </div>#}
+        {#            <hr/>#}
+        {#            {{ _('You can send message to company') }}<br/>#}
+        {#            <textarea disabled="disabled" style="width: 100%" ng-model="message"></textarea>#}
+        {##}
+        {#        </div>#}
+        {#        </div>#}
+        {#        <div class="modal-footer">#}
+        {#            <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="!selected_division"#}
+        {#                    type="button" ng-click="action_do('submit')">{{ _('Do submit') }}#}
+        {#            </button>#}
+        {#            <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="true"#}
+        {#                    title="{{ _('Your company has no permission to publish. pls submit') }}"#}
+        {#                    type="button" ng-click="action_do('publish')">{{ _('Do publish') }}#}
+        {#            </button>#}
+        {#            <button ng-if="action=='unpublish'" class="btn btn-primary" type="button" ng-click="action_do()">{{#}
+        {#                _('Do ' + action) }}#}
+        {#            </button>#}
+        {#            <button class="btn btn-warning" type="button" ng-click="action_cancel()">{{ _('Cancel ' + action) }}#}
+        {#            </button>#}
+        {#        </div>#}
         {% raw %}
     </script>
     {% endraw %}
@@ -288,7 +249,7 @@
     <script>
 
 
-        module.controller('material_details', ['$scope', '$ok', '$uibModal', '$timeout', function ($scope, $ok, $uibModal, $timeout) {
+        module.controller('material_details', function ($scope, $ok, $uibModal, $timeout) {
             $scope.$$translate = {{ translates('material_details')|safe }};
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
             $scope.url_search_for_user = {{ raw_url_for('company.search_for_user')|safe }};
@@ -297,12 +258,12 @@
             $scope.url_front_publication_details = {{ raw_url_for('front.details')|safe }};
             $scope.url_front_publication_division = {{ raw_url_for('front.division')|safe }};
 
-            $scope.url_front_publication_division_host = function(division_name, host) {
-                return division_name?('//' + host + $scope.url_front_publication_division({division_name: division_name})):'';
+            $scope.url_front_publication_division_host = function (division_name, host) {
+                return division_name ? ('//' + host + $scope.url_front_publication_division({division_name: division_name})) : '';
             }
 
-            $scope.url_front_publication_details_host = function(publication_id, host) {
-                return publication_id?('//' + host + $scope.url_front_publication_details({article_portal_division_id: publication_id})):'';
+            $scope.url_front_publication_details_host = function (publication_id, host) {
+                return publication_id ? ('//' + host + $scope.url_front_publication_details({article_portal_division_id: publication_id})) : '';
             }
 
 
@@ -327,62 +288,92 @@
                     return;
                 }
 
-
-                if (action === 'unpublish') {
+                if (action === 'republish' || action === 'submit_and_publish') {
                     var modalInstance = $uibModal.open({
-                        templateUrl: 'material_details_unpublish_dialog.html',
-                        controller: 'material_details_unpublish_dialog',
+                        templateUrl: 'submit_publish_dialog.html',
+                        controller: 'submit_publish_dialog',
                         resolve: {
-                            publication: function () {
-                                return row['publication'];
+                            material_or_publication: function () {
+                                return action === 'republish' ? row['publication'] : $scope.data['material'];
                             },
-                            published_at_division: function () {
-                                return row['publication'] ? row['publication']['division'] : null;
+                            action: function () {
+                                return action;
                             },
                             portal: function () {
                                 return row;
                             },
-                            rights_user_in_company: function () {
-                                return $scope.data.rights_user_in_company;
+                            rights_company_at_portal: function () {
+                                return (action === 'republish') ? row['rights_company_at_portal'] : {};
+                            },
+                            published_at_division: function () {
+                                return (action === 'republish') ? row['publication']['division'] : null;
                             },
                             company: function () {
                                 return $scope.data.company;
                             },
-                            rights_company_at_portal: function () {
-                                return {};
+                            rights_user_in_company: function () {
+                                return $scope.data.rights_user_in_company;
                             }
                         }
                     });
                 }
 
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'material_details_publish_dialog.html',
-                    controller: 'material_details_publish_dialog',
-                    resolve: {
-                        article: function () {
-                            return row['publication'] ? row['publication'] : $scope.data['material'];
-                        },
-                        action: function () {
-                            return action;
-                        },
-                        published_at_division: function () {
-                            return row['publication'] ? row['publication']['division'] : null;
-                        },
-                        portal: function () {
-                            return row;
-                        },
-                        rights_user_in_company: function () {
-                            return $scope.data.rights_user_in_company;
-                        },
-                        company: function () {
-                            return $scope.data.company;
-                        },
-                        rights_company_at_portal: function () {
-                            return {};
-                        }
-                    }
-                });
 
+                {#                if (action === 'unpublish') {#}
+                {#                    var modalInstance = $uibModal.open({#}
+                {#                        templateUrl: 'material_details_unpublish_dialog.html',#}
+                {#                        controller: 'material_details_unpublish_dialog',#}
+                {#                        resolve: {#}
+                {#                            publication: function () {#}
+                {#                                return row['publication'];#}
+                {#                            },#}
+                {#                            published_at_division: function () {#}
+                {#                                return row['publication'] ? row['publication']['division'] : null;#}
+                {#                            },#}
+                {#                            portal: function () {#}
+                {#                                return row;#}
+                {#                            },#}
+                {#                            rights_user_in_company: function () {#}
+                {#                                return $scope.data.rights_user_in_company;#}
+                {#                            },#}
+                {#                            company: function () {#}
+                {#                                return $scope.data.company;#}
+                {#                            },#}
+                {#                            rights_company_at_portal: function () {#}
+                {#                                return {};#}
+                {#                            }#}
+                {#                        }#}
+                {#                    });#}
+                {#                }#}
+                {##}
+                {#                var modalInstance = $uibModal.open({#}
+                {#                    templateUrl: 'material_details_publish_dialog.html',#}
+                {#                    controller: 'material_details_publish_dialog',#}
+                {#                    resolve: {#}
+                {#                        article: function () {#}
+                {#                            return row['publication'] ? row['publication'] : $scope.data['material'];#}
+                {#                        },#}
+                {#                        action: function () {#}
+                {#                            return action;#}
+                {#                        },#}
+                {#                        published_at_division: function () {#}
+                {#                            return row['publication'] ? row['publication']['division'] : null;#}
+                {#                        },#}
+                {#                        portal: function () {#}
+                {#                            return row;#}
+                {#                        },#}
+                {#                        rights_user_in_company: function () {#}
+                {#                            return $scope.data.rights_user_in_company;#}
+                {#                        },#}
+                {#                        company: function () {#}
+                {#                            return $scope.data.company;#}
+                {#                        },#}
+                {#                        rights_company_at_portal: function () {#}
+                {#                            return {};#}
+                {#                        }#}
+                {#                    }#}
+                {#                });#}
+                {##}
                 modalInstance.result.then(function (updated_row) {
                     $scope.grid_change_row($scope.data.portals, updated_row);
                 });
@@ -431,7 +422,7 @@
                 ]
             });
 
-        }]);
+        });
     </script>
 
     <style>
