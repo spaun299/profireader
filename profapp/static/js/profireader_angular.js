@@ -1361,7 +1361,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     scope.isSelectedRows = gridApi.selection.getSelectedRows().length !== 0;
                 });
             }
-        }
+
         },
         gridOptions: {
             onRegisterApi: function (gridApi) {

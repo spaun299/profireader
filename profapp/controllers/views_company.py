@@ -160,6 +160,7 @@ def employees_load(json, company_id):
     employees_list = [
         PRBase.merge_dicts(employment.employee.get_client_side_dict(), employment.get_client_side_dict())
         for employment in company.employee_assoc]
+    print(employees_list)
 
     return {
         'company': company.get_client_side_dict(fields='id,name'),
