@@ -293,13 +293,23 @@
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
             $scope.url_search_for_user = {{ raw_url_for('company.search_for_user')|safe }};
             $scope.url_update_material = {{ raw_url_for('article.article_show_form')|safe }};
+            $scope.url_company = {{ raw_url_for('company.profile')|safe }};
+            $scope.url_front_publication_details = {{ raw_url_for('front.details')|safe }};
+            $scope.url_front_publication_division = {{ raw_url_for('front.division')|safe }};
+
+            $scope.url_front_publication_division_host = function(division_name, host) {
+                return division_name?('//' + host + $scope.url_front_publication_division({division_name: division_name})):'';
+            }
+
+            $scope.url_front_publication_details_host = function(publication_id, host) {
+                return publication_id?('//' + host + $scope.url_front_publication_details({article_portal_division_id: publication_id})):'';
+            }
 
 
             $scope.loadMaterialDetails = function (data, callback) {
                 $ok('', data, function (resp) {
                     callback(resp.portals);
                     $scope.data = resp;
-                    console.log($scope)
                 }).finally();
 
             };
@@ -390,16 +400,16 @@
                     }
                     , {
                         name: 'name', width: '13%', type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
+                        href: 'url_company({company_id:row.entity.own_company.id})'
                     }
                     , {
                         name: 'publication.division.name', width: '12%', type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
+                        href: 'url_front_publication_division_host(row.entity.publication.division.name, row.entity.host)'
                     }
 
                     , {
                         name: 'publication.title', width: '12%', type: 'link',
-                        href: 'url_material_details({company_id:grid.appScope.company_id,material_id:row.entity.id})'
+                        href: 'url_front_publication_details_host(row.entity.publication.id, row.entity.host)'
                     }
                     , {
                         name: 'publication.position', width: '3%'

@@ -44,6 +44,7 @@ def filemanager():
     # {'name': 'My personal files',
     # 'icon': current_user.gravatar(size=18)}}
     library = []
+    print('ds')
     for user_company in g.user.employer_assoc:
         # TODO VK by OZ: we need function that get all emploees with specific right
         # Company.get_emploees('can_read', status = 'active')
