@@ -69,6 +69,7 @@
                         </a>
 
                          <ul class="dropdown-menu">
+                             <li ng-show="user.id"><a href="{{ url_user_profile({user_id:user.id}) }}">{{ _('Profile') }}</a></li>
                              <li ng-show="user.id" ><a href="{{ url_auth_logout() }}" >{{_('Log Out') }}</a></li>
                              <li ng-show="!user.id" class="dropdown-link"><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=login' }}">{{_('Log In') }}</a></li>
                              <li ng-show="!user.id" class="dropdown-link"><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=signup' }}">{{_('Sign Up') }}</a></li>

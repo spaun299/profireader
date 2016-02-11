@@ -2,6 +2,9 @@ body  {
   padding-top: 100px;
 
 }
+.border-radius{
+    border-radius: 0;
+}
 .nav-bg{
     background-color: #101010;
     padding-bottom: 10px;
@@ -19,7 +22,24 @@ body  {
 .container .navbar-header .navbar-brand {
     padding: 10px 0px;
 }
-
+.user-menu-dropdown ul{
+    border-radius: 0;
+    width: 100%;
+    padding: 0;
+}
+.menu-syte a{
+    color: #fff;
+}
+.menu-syte a:hover{
+    transition: all 0.2s ease-out;;
+}
+.menu-syte ul{
+    float: right;
+    margin-right: -25px;
+}
+.hamburger-menu span{
+    background-color: #fff;
+}
 
 .prof_login {
 	font-size: 18px !important;
@@ -176,21 +196,6 @@ body  {
 /*.navbar ul .fa {*/
 	/*font-size: 150%;*/
 /*}*/
-.menu-company a{
-    color: #333;
-    padding-right: 15px;
-    padding-left: 15px;
-}
-.menu-company a:hover{
-    color: #fff;
-    text-decoration: none;
-    background-color: #18BCA2;
-    transition: all 0.2s ease-out;
-    padding-top: 15px;
-    padding-left: 15px;
-    padding-right: 15px;
-    padding-bottom: 15px;
-}
 
 .navbar-collapse .selected{
     color: #18bc9c;
