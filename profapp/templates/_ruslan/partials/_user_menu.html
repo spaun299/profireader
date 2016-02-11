@@ -1,6 +1,7 @@
 <script>
 
     module.controller('UserLoginController', ['$scope', '$uibModal', '$ok', '$timeout', function ($scope, $uibModal, $ok, $timeout) {
+
         $scope.user = {{ g.user_dict|tojson|safe }};
 
         $scope.tos = function () {
@@ -25,8 +26,13 @@
         $scope.open_filemanager = function () {
             window.location.href = '/filemanager/';
         };
-        $scope.selected_company_menu = '';
-        $scope.set_selected_company_menu = function (menu_item) {
+        $scope.selected_user_menu = '';
+        $scope.set_selected_user_menu = function (menu_item) {
+            $timeout(function () {
+                $scope.selected_company_menu = menu_item;
+            }, 0);
+        }
+        $scope.setSelected = function(prop){
             $timeout(function () {
                 $scope.selected_company_menu = menu_item;
             }, 0);
@@ -51,11 +57,11 @@
 
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul>
-                   <li><a href="{{ url_list_reader() }}" title="Стрічка читача"><i class="fa fa-newspaper-o"></i></a></li>
-                   <li><a href="#" title="Всі повідомлення"><i class="fa fa-envelope-o"></i></a></li>
-                   <li><a href="{{ url_company_show() }}" title="Компанії"><i class="fa fa-building-o"></i></a></li>
-                   <li><a href="#" ng-click="open_filemanager()" title="Менеджер файлів"><i class="fa fa-folder-open-o"></i></a></li>
-                   <li><a href="{{ url_general_help() }}" title="Інформація"><i class="fa fa-info"></i></a></li>
+                   <li ng-click="setSelected()"><a href="{{ url_list_reader() }}" title="Стрічка читача" ng-class="{'selected': selected_user_menu == 'line_readers'}" ><i class="fa fa-newspaper-o"></i></a></li>
+                   <li><a href="#" title="Всі повідомлення" ng-class="{'selected': selected_company_menu == 'messages'}"><i class="fa fa-envelope-o"></i></a></li>
+                   <li><a href="{{ url_company_show() }}" title="Компанії" ng-class="{'selected': selected_company_menu == 'companies'}"><i class="fa fa-building-o"></i></a></li>
+                   <li><a href="#" ng-click="open_filemanager()" title="Менеджер файлів" ng-class="{'selected': selected_company_menu == 'file_manager'}"><i class="fa fa-folder-open-o"></i></a></li>
+                   <li><a href="{{ url_general_help() }}" title="Інформація" ng-class="{'selected': selected_company_menu == 'info'}"><i class="fa fa-info"></i></a></li>
 
                     <li ng-show="user.id" role="presentation" class="dropdown user-menu-dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" href="{{ url_user_profile({user_id: 'user.id'}) }}" role="button" aria-haspopup="true" aria-expanded="false">
