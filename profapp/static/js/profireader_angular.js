@@ -68,6 +68,22 @@ function quoteattr(s, preserveCR) {
 
 
 angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip'])
+    .factory('$publish', ['$http', '$uibModal', function ($http, $uibModal) {
+        return function (dict) {
+            var bb = _.map(dict, function (dict_el) {
+                    return function () {
+                        return dict_el
+                    }
+                });
+            console.log(dict, bb);
+            var modalInstance = $uibModal.open({
+                templateUrl: 'submit_publish_dialog.html',
+                controller: 'submit_publish_dialog',
+                resolve: bb
+            });
+            return modalInstance;
+        }
+    }])
     .factory('$ok', ['$http', function ($http) {
         return function (url, data, ifok, iferror, translate, disableonsubmid) {
             //console.log($scope);
@@ -292,10 +308,10 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             restrict: 'A',
             template: function (ele, attrs) {
 // TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line
-                return '<div><input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup\
+                return '<span><input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup\
                ng-model="' + attrs.ngModel + '" ng-required="true"\
                datepicker-options="dateOptions" close-text="Close"/><span class="input-group-btn"></span>\
-               </div>';
+               </span>';
             }
         }
     })
@@ -621,6 +637,69 @@ module.config(function ($provide) {
             return $delegate(constructor, locals, later, indent);
         };
     });
+});
+
+module.controller('submit_publish_dialog', function ($scope, $ok, $uibModalInstance,
+                                                     material_or_publication, company, action, portal, published_at_division, rights_user_in_company, rights_company_at_portal) {
+
+    //$scope.$$translate = {{ translates('submit_publish_dialog')|safe }};
+    //$scope.url_submit_to_portal = '{{ url_for('article.submit_publish')|safe }}';
+
+    $scope.selected_division = null;
+    $scope.portal = portal;
+    $scope.action = action;
+    $scope.material_or_publication = material_or_publication;
+    $scope.company = company;
+    $scope.object_name = (action === 'republish') ? 'publication' : 'material';
+    $scope.rights_user_in_company = rights_user_in_company;
+    $scope.rights_company_at_portal = rights_company_at_portal;
+    $scope.published_at_division = published_at_division;
+
+    $scope.can_submit = $scope.object_name === 'publication' || $scope.rights_user_in_company['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'];
+    $scope.can_publish = $scope.rights_company_at_portal['PUBLICATION_PUBLISH'];
+
+
+    $scope.action_do = function () {
+        $ok($scope.url_submit_to_portal + '?action=' + action, {
+            material_id: $scope.article.id,
+            portal_division_id: $scope.selected_division.id,
+            publication_data: {}
+        }, $uibModalInstance.close)
+    };
+
+    $scope.action_cancel = $uibModalInstance.dismiss;
+
+
+    $scope.is_selection_division_event = function () {
+        if (!$scope.material_or_publication.portal_division_id) return false;
+        if (!$scope.portal.divisions[$scope.material_or_publication.portal_division_id]) return false;
+
+        return ($scope.portal.divisions[$scope.material_or_publication.portal_division_id]['portal_division_type_id'] === 'events');
+
+    }
+
+    $scope.valid = function () {
+        $scope.validation = {'errors': {}, 'warnings': {}};
+
+        if (!$scope.material_or_publication.publishing_tm) {
+            $scope.validation['errors']['publishing_tm'] = $scope._('Please select publication date');
+        }
+
+        if (!$scope.material_or_publication.portal_division_id) {
+            $scope.validation['errors']['portal_division_id'] = $scope._('Please select portal division');
+        }
+
+        if ($scope.is_selection_division_event()) {
+            if (!$scope.material_or_publication.event_tm) {
+                $scope.validation['errors']['event_tm'] = $scope._('Please select event time');
+            }
+            else if ($scope.material_or_publication.event_tm.getTime() <= (new Date()).getTime()) {
+                $scope.validation['warnings']['event_tm'] = $scope._('Event in the past');
+            }
+        }
+        return areAllEmpty($scope.validation['errors']);
+    }
+
 });
 
 module.controller('filemanagerCtrl', ['$scope', '$uibModalInstance', 'file_manager_called_for', 'file_manager_on_action',

@@ -45,8 +45,8 @@ class ArticlePortalDivision(Base, PRBase):
     position = Column(TABLE_TYPES['position'])
     read_count = Column(TABLE_TYPES['int'], default=0)
 
-    status = Column(TABLE_TYPES['status'], default='NOT_PUBLISHED')
-    STATUSES = {'NOT_PUBLISHED': 'NOT_PUBLISHED', 'PUBLISHED': 'PUBLISHED', 'DELETED': 'DELETED'}
+    status = Column(TABLE_TYPES['status'], default='SUBMITTED')
+    STATUSES = {'SUBMITTED': 'SUBMITTED', 'UNPUBLISHED': 'UNPUBLISHED', 'PUBLISHED': 'PUBLISHED', 'DELETED': 'DELETED'}
 
     visibility = Column(TABLE_TYPES['status'], default='REGISTERED')
     VISIBILITIES = {'OPEN': 'OPEN', 'REGISTERED': 'REGISTERED', 'PAYED': 'PAYED', 'CONFIDENTIAL': 'CONFIDENTIAL'}
@@ -401,7 +401,8 @@ class ArticleCompany(Base, PRBase):
         if 'editor.profireader_name' in filters:
             sub_query = sub_query.join(User,
                                        User.id == ArticleCompany.editor_user_id)
-            list_filters.append({'type': 'text', 'value': filters['editor.profireader_name'], 'field': User.profireader_name})
+            list_filters.append(
+                    {'type': 'text', 'value': filters['editor.profireader_name'], 'field': User.profireader_name})
         if 'md_tm' in sorts:
             list_sorts.append({'type': 'date', 'value': sorts['md_tm'], 'field': ArticleCompany.md_tm})
         else:
@@ -639,7 +640,7 @@ class Article(Base, PRBase):
     @staticmethod
     def get_material_grid_data(material):
         dict = material.get_client_side_dict(fields='md_tm,title,editor.profireader_name,id')
-        dict.update({'portal.name':None if len(material.portal_article) == 0 else '', 'level':True})
+        dict.update({'portal.name': None if len(material.portal_article) == 0 else '', 'level': True})
         list = [portal.get_client_side_dict(fields='portal.name,status, id') for portal in material.portal_article]
         return dict, list
 
