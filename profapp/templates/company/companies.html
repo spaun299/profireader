@@ -13,7 +13,7 @@
 
     <script xmlns="http://www.w3.org/1999/html">
         module.controller('companies_list', ['$scope', '$ok','$timeout', function ($scope, $ok, $timeout) {
-            angularControllerFunction('UserLoginController', 'set_selected_user_menu')('companies')
+            angularControllerFunction('UserLoginController', 'set_selected_user_menu')('companies_list')
             $scope.url_company_profile = {{ raw_url_for('company.profile')|safe }};
             $scope.url_portal_profile = {{ raw_url_for('portal.profile')|safe }};
             $scope.url_search_for_company = {{ raw_url_for('company.search_for_company_to_join')|safe }};
@@ -25,7 +25,7 @@
             $scope.selectedCompany_sending = false;
 
             $scope.createCompany = function(){
-                window.location.href = '{{ url_for('company.update')|safe }}'
+                window.location.href = '{{ url_for('company.profile')|safe }}'
             };
             $scope.goToPortal = function(portal_id){
                 window.location.href = $scope.url_portal_profile({portal_id:portal_id})
@@ -56,11 +56,9 @@
                 $ok($scope.url_join({company_id: company_id}), {company_id: company_id},function (resp) {
                     $scope.selectedCompany = null;
                     $scope.selectedCompany_name = null;
-                    console.log($scope.data, 'd')
                     $scope.data['companies'] = resp['companies'];
                     {#TODO OZ BY VK: javascript error                #}
                     $timeout(function () {
-                        console.log($scope.data)
                         scrool($('#joined_company_' + resp['companies']['id']), {
                             afterScroll: function () {
                                 highlight($('#joined_company_' + resp['companies']['id']));
@@ -107,7 +105,7 @@
                     <h3>Oops! Nothing found!</h3>
                 </div>
             </div>
-        <div class="list_search_company" ng-repeat="company in company_list" ng-if="selectedCompany_name">
+        <div class="list_search_company" ng-repeat="company in company_list | limitTo:10" ng-if="selectedCompany_name">
             <div class="row search-result thumbnail">
                 <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12 photo-search">
                     <a href="{{ url_company_profile({company_id: company.id}) }}" class="thumbnail">
