@@ -138,9 +138,11 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
         return {
             restrict: 'A',
             require: 'ngModel',
-            link: function (scope, element, attrs, model) {
 
+            link: function (scope, element, attrs, model) {
                 element.html($templateCache.get('cropper.html'));
+
+                console.log(model)
 
                 $compile(element.contents())(scope);
 
@@ -166,6 +168,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 };
 
                 var $image = $('img', element);
+                console.log($image)
                 var $inputImage = $('input', element);
 
                 var URL = window.URL || window.webkitURL;
@@ -210,6 +213,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 };
 
                 var restartCropper = function () {
+
                     $image.cropper('destroy');
                     if (model.$modelValue.uploaded) {
                         $image.attr('src', model.$modelValue.image_file_id);
