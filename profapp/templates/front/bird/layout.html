@@ -2,15 +2,30 @@
 <html lang="{{ lang }}">
 <head>
     {% include 'front/bird/head.html' %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
 </head>
 
 <body {% if member_company %}
     class="member-company"
 {% endif %}>
+
+<script>
+    window.addEventListener("message", function (messageevent) {
+        $.cookie('beaker.session.id', messageevent.data);
+{#        window.location.reload();#}
+    }, false);
+    function sso(new_session_id) {
+        $.cookie('beaker.session.id', new_session_id);
+    }
+
+    $('body').prepend('<iframe src="http://profireader.com/tools/SSO/'+profi_cookie+'/"></iframe>');
+</script>
+
+
+
 {% include 'front/bird/nav.html' %}
 <br/>
 <br/>
-
 <div class="container">
 
     <div class="row site-content">

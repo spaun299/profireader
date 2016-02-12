@@ -4,6 +4,9 @@ from .request_wrapers import ok
 from ..models.translate import TranslateTemplate
 
 
+
+
+
 # @tools_bp.route('/translate/', methods=['POST'])
 # @ok
 # def translate(json):
@@ -21,6 +24,12 @@ def save_translate(json):
 @ok
 def update_last_accessed(json):
     return TranslateTemplate.update_last_accessed(json['template'], json['phrase'])
+
+@tools_bp.route('/SSO/<string:local_cookie>/', methods=['GET'])
+def SSO(local_cookie, profi_cookie):
+    return render_template('tools/sso.html', local_cookie = local_cookie, profi_cookie= request.cookies.get('beaker.session.id'))
+
+
 
 @tools_bp.route('/change_allowed_html/', methods=['POST'])
 @ok

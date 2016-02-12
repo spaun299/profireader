@@ -485,6 +485,33 @@ class AnonymousUser(AnonymousUserMixin):
     def __repr__(self):
         return "<User(id = %r)>" % self.id
 
+import http.cookies,  datetime, uuid
+ck = http.cookies.SimpleCookie()
+
+ck['session'] = str(uuid.uuid4())
+ck['session']['domain'] = 'profireader.com/'
+ck['session']['path'] = '/'
+expires = datetime.datetime.utcnow() + datetime.timedelta(minutes=1) # expires in 3 hours
+ck['session']['expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
+
+print (ck)
+
+# import http.cookies
+# import datetime
+# import random
+#
+# expiration = datetime.datetime.now() + datetime.timedelta(hours=3)
+# cookie = http.cookies.SimpleCookie()
+# cookie["session"] = random.randint(10000000,1000000000)
+# cookie["session"]["domain"] = "profireader.com"
+# cookie["session"]["path"] = "/"
+# cookie["session"]["expires"] = \
+#   expiration.strftime("%a, %d-%b-%Y %H:%M:%S PST")
+#
+# print ("Content-type: text/plain")
+# print (cookie.output())
+# print
+# print ("Cookie set with: " + cookie.output())
 
 login_manager.anonymous_user = AnonymousUser
 
