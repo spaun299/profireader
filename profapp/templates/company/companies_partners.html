@@ -38,10 +38,9 @@
                                 name: 'logo', type: 'img'
                             }, {
                                 name: 'company_name', type: 'link',
-                                href: 'url_company_profile({company_id: row.entity.company_id})'
-                            }, {
-                                name: 'rights_at_portal',
-                            }
+                                href: 'url_company_profile({company_id: row.entity.id})'
+                            },
+                            {name: 'rights', width: '300', type: 'icons', afilter: {type: 'input'}}
                         ]
                     });
         {% endraw %}

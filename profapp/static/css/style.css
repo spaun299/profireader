@@ -8,4 +8,10 @@
   float: right;
   margin-top: 2px;
 }
+/*footer*/
+.footer-layout {
+  background-color: #101010;
+  color: #fff;
+  font-weight: 200;
+}
 /*# sourceMappingURL=style.css.map */
