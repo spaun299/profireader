@@ -1,4 +1,4 @@
-{% extends "index_layout.html" %}
+{% extends "_ruslan/_index_layout.html" %}
 {% block title %}Profireader{% endblock title %}
 {% block head %}
     {{ super() }}
@@ -19,7 +19,7 @@
             $scope.data = {};
             $scope.company_id = '{{ company.id }}';
             $scope.user_have_company = '{{ user_comp }}'=== 'True'? true: null;
-            $scope.cropper_for_copmany = true
+            $scope.cropper_for_copmany = true;
 
             $scope.cancel = function () {
                 window.location.href = $scope.url_back();
@@ -41,7 +41,6 @@
             $scope.afterLoad = function (resp, deff) {
                 deff(resp);
                 $scope.logo_file_url = fileUrl(resp['logo_file_id']);
-                console.log($scope.logo_file_id)
             };
 
 

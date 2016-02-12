@@ -253,7 +253,17 @@ def update_rights():
 
 
 @company_bp.route('/create/', methods=['GET'])
-@company_bp.route('/edit/<string:company_id>/', methods=['GET'])
+@tos_required
+@login_required
+# @check_rights(simple_permissions([]))
+def update(company_id=None):
+    user_companies = [user_comp for user_comp in current_user.employer_assoc]
+    user_have_comp = True if len(user_companies) > 0 else False
+    company = db(Company, id=company_id).first()
+    return render_template('company/company_edit.html', company_id=company_id, user_comp=user_have_comp,
+                           company_name=company.name if company else '',
+                           company=company if company else {})
+
 @company_bp.route('/profile/<string:company_id>/', methods=['GET'])
 @tos_required
 @login_required
@@ -268,8 +278,8 @@ def profile(company_id=None):
                            company=company)
 
 
+
 @company_bp.route('/create/', methods=['POST'])
-@company_bp.route('/edit/<string:company_id>/', methods=['POST'])
 @company_bp.route('/profile/<string:company_id>/', methods=['POST'])
 @login_required
 @ok
