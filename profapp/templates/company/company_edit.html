@@ -41,6 +41,7 @@
             $scope.afterLoad = function (resp, deff) {
                 deff(resp);
                 $scope.logo_file_url = fileUrl(resp['logo_file_id']);
+                console.log($scope.logo_file_id)
             };
 
 

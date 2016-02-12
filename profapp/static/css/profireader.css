@@ -193,7 +193,6 @@ a {
 a:hover,
 a:focus {
     text-decoration: none;
-    color: #5b6268;
 }
 
 h1 {
@@ -235,7 +234,7 @@ h2 {
 }
 
 h3 {
-    font-size: 18px;
+    /*font-size: 18px;*/
     line-height: 18px;
     font-weight: normal;
     font-family: 'Open Sans', sans-serif;
@@ -1630,14 +1629,13 @@ fieldset[disabled] .btn-tales-two.active {
 .top-style-line {
     height: 3px;
     background: #481a1c; /* Old browsers */
-    background: -moz-linear-gradient(left, #481A1C 0%, #cd2027 100%); /* FF3.6+ */
-    background: -webkit-gradient(linear, left top, right top, color-stop(0%, #481A1C), color-stop(100%, #cd2027)); /* Chrome,Safari4+ */
-    background: -webkit-linear-gradient(left, #481A1C 0%, #cd2027 100%); /* Chrome10+,Safari5.1+ */
-    background: -o-linear-gradient(left, #481A1C 0%, #cd2027 100%); /* Opera 11.10+ */
-    background: -ms-linear-gradient(left, #481A1C 0%, #cd2027 100%); /* IE10+ */
-    background: linear-gradient(to right, #481A1C 0%, #cd2027 100%); /* W3C */
+    background: -moz-linear-gradient(left, #18BCAB 0%, #119C8D 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, right top, color-stop(0%, #18BCAB), color-stop(100%, #119C8D)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(left, #18BCAB 0%, #119C8D 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(left, #18BCAB 0%, #119C8D 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(left, #18BCAB 0%, #119C8D 100%); /* IE10+ */
+    background: linear-gradient(to right, #18BCAB 0%, #119C8D 100%); /* W3C */
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#481A1C', endColorstr='#cd2027', GradientType=1); /* IE6-9 */
-
 }
 
 .navbar-default {
@@ -1653,12 +1651,9 @@ a {
     color: #3E090B;
 }
 
-a:hover {
-    color: #8A2121;
-}
 
 input {
-    width: 300px;
+    width: 100%;
     /*margin: 3px;*/
     padding: 1px 3px;
 }
@@ -1909,6 +1904,7 @@ form {
     cursor: pointer;
 }
 
+
 .profile-thumbnail .control a:hover {
     background: #fff;
 }
@@ -2027,7 +2023,7 @@ a.title-btn {
 }
 
 .login-by:hover {
-    border-color: #ca2027;
+    border-color: #18BCAB;
 }
 
 .login-by:hover span {
@@ -2074,20 +2070,22 @@ a.title-btn {
     padding: 10px 15px;
     font-size: 16px;
     margin-bottom: -1px;
-    color: #ca2027;
+    color: #119C8D;
 }
-
 .tab.actual {
     border: 1px #ccc solid;
-    border-bottom: 1px #eee solid !important;
-    background-color: #eee;
+    border-bottom: 1px #fff solid !important;
+    background-color: #fff;
     color: #555;
 }
-
+.tab:hover{
+    color: #18BCAB;
+}
 .auth-form {
-    padding-top: 15px;
-    width: 340px;
+    padding-top: 30px;
     margin: 0 auto;
+    display: block;
+    float: none;
 }
 
 .auth-form h3 {
@@ -2100,19 +2098,19 @@ a.title-btn {
 
 .auth-form input[type="submit"] {
     border: none;
-    background: #555;
+    background: #18BCAB;
     color: #eee;
     padding: 15px;
     text-align: center;
 }
 
 .auth-form input[type="submit"]:hover {
-    background: #ca2027;
+    background: #119C8D;
     color: #fff;
 }
 
 .content-block {
-    background: #eee;
+    background: #fff;
     border: 1px solid #ccc;
     padding: 15px;
     margin-top: -1px;

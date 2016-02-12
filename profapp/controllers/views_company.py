@@ -46,9 +46,6 @@ def show():
     return render_template('company/companies.html')
 
 
-from sqlalchemy import and_
-
-
 @company_bp.route('/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([]))
@@ -56,10 +53,8 @@ from sqlalchemy import and_
 def load_companies(json):
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     return {'companies': [usr_cmp.employer.get_client_side_dict() for usr_cmp in user_companies
-                          if usr_cmp.status == STATUS.ACTIVE()],
-            'non_active_user_company_status': [usr_cmp.employer.get_client_side_dict() for
-                                               usr_cmp in user_companies if usr_cmp.status
-                                               != STATUS.ACTIVE()],
+                          ],
+
             'user_id': g.user_dict['id']}
 
 
@@ -68,8 +63,7 @@ def load_companies(json):
 @login_required
 # @check_rights(simple_permissions([]))
 def materials(company_id):
-    return render_template('company/materials.html', company=db(Company, id=company_id).one(),
-                           angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js')
+    return render_template('company/materials.html', company=db(Company, id=company_id).one())
 
 
 @company_bp.route('/<string:company_id>/materials/', methods=['POST'])
@@ -79,13 +73,13 @@ def materials_load(json, company_id):
     materials, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
 
     grid_filters = {
-        'portals': [{'value': portal, 'label': portal} for portal_id, portal in
+        'portal.name': [{'value': portal, 'label': portal} for portal_id, portal in
                     ArticlePortalDivision.get_portals_where_company_send_article(company_id).items()],
         'material_status': Grid.filter_for_status(ArticleCompany.STATUSES),
-        'publication_status': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+        'status': Grid.filter_for_status(ArticlePortalDivision.STATUSES),
         'publication_visibility': Grid.filter_for_status(ArticlePortalDivision.VISIBILITIES)
     }
-    return {'grid_data': Article.getListGridDataMaterials(materials),
+    return {'grid_data': Grid.grid_tuple_to_dict([Article.get_material_grid_data(material) for material in materials]),
             'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
                              (k, v) in grid_filters.items()},
             'total': count
@@ -137,16 +131,18 @@ def update_material_status(json, company_id, article_id):
             'status': 'ok'}
 
 
-@company_bp.route('/profile/<string:company_id>/')
-@tos_required
-@login_required
-# @check_rights(simple_permissions(['manage_rights_company']))
-def profile(company_id):
-
-    return render_template('company/company_profile.html',
-                           company=db(Company, id=company_id).one(),
-                           rights_user_in_company = UserCompany.get(company_id=company_id).get_rights()
-                           )
+# @company_bp.route('/profile/<string:company_id>/')
+# @tos_required
+# @login_required
+# # @check_rights(simple_permissions(['manage_rights_company']))
+# def profile(company_id):
+#     user_companies = [user_comp for user_comp in current_user.employer_assoc]
+#     user_have_comp = True if len(user_companies) > 0 else False
+#     return render_template('company/company_profile.html',
+#                            company=db(Company, id=company_id).one(),
+#                            rights_user_in_company=UserCompany.get(company_id=company_id).get_rights(),
+#                            user_company = user_have_comp
+#                            )
 
 
 @company_bp.route('/<string:company_id>/employees/', methods=['GET'])
@@ -257,20 +253,23 @@ def update_rights():
 
 @company_bp.route('/create/', methods=['GET'])
 @company_bp.route('/edit/<string:company_id>/', methods=['GET'])
+@company_bp.route('/profile/<string:company_id>/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
-def update(company_id=None):
+def profile(company_id=None):
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     user_have_comp = True if len(user_companies) > 0 else False
     company = db(Company, id=company_id).first()
-    return render_template('company/company_edit.html', company_id=company_id, user_comp=user_have_comp,
+    return render_template('company/company_profile.html', company_id=company_id, user_comp=user_have_comp,
                            company_name=company.name if company else '',
-                           company=company if company else {})
+                           rights_user_in_company=UserCompany.get(company_id=company_id).get_rights(),
+                           company=company)
 
 
 @company_bp.route('/create/', methods=['POST'])
 @company_bp.route('/edit/<string:company_id>/', methods=['POST'])
+@company_bp.route('/profile/<string:company_id>/', methods=['POST'])
 @login_required
 @ok
 def load(json, company_id=None):
@@ -301,7 +300,7 @@ def load(json, company_id=None):
                 company.detach()
             return company.validate(company_id is None)
         else:
-            if json['image']['uploaded']:
+            if json['image'].get('uploaded'):
                 if company_id is None:
                     company.setup_new_company()
                 company.save().get_client_side_dict()
@@ -349,18 +348,6 @@ def load(json, company_id=None):
 #     return {}
 
 
-@company_bp.route('/subscribe/<string:company_id>/')
-@tos_required
-@login_required
-# @check_rights(simple_permissions([]))
-def subscribe(company_id):
-    company_role = UserCompany(user_id=g.user_dict['id'],
-                               company_id=company_id,
-                               status=STATUS.NONACTIVE())
-    company_role.subscribe_to_company().save()
-
-    return redirect(url_for('company.profile', company_id=company_id))
-
 
 @company_bp.route('/search_for_company_to_join/', methods=['POST'])
 @login_required
@@ -394,10 +381,23 @@ def send_article_to_user(json):
 # @check_rights(simple_permissions([]))
 def join_to_company(json, company_id):
     company_role = UserCompany(user_id=g.user_dict['id'],
-                               company_id=json['company_id'],
-                               status=STATUS.NONACTIVE())
+                               company_id=json.get('company_id'),
+                               status=UserCompany.STATUSES['APPLICANT'])
     company_role.subscribe_to_company().save()
     return {'companies': [employer.get_client_side_dict() for employer in current_user.employers]}
+
+
+@company_bp.route('/subscribe/<string:company_id>/')
+@tos_required
+@login_required
+# @check_rights(simple_permissions([]))
+def subscribe(company_id):
+    company_role = UserCompany(user_id=g.user_dict['id'],
+                               company_id=company_id,
+                               status=UserCompany.STATUSES['APPLICANT'])
+    company_role.subscribe_to_company().save()
+
+    return redirect(url_for('company.profile', company_id=company_id))
 
 
 @company_bp.route('/add_subscriber/', methods=['POST'])
@@ -429,7 +429,7 @@ def fire_employee():
     data = request.form
     UserCompany.change_status_employee(company_id=data.get('company_id'),
                                        user_id=data.get('user_id'),
-                                       status=STATUS.DELETED())
+                                       status=UserCompany.STATUSES['FIRED'])
     return redirect(url_for('company.employees', company_id=data.get('company_id')))
 
 
@@ -438,7 +438,7 @@ def fire_employee():
 def unsuspend(user_id, company_id):
     UserCompany.change_status_employee(user_id=user_id,
                                        company_id=company_id,
-                                       status=STATUS.ACTIVE())
+                                       status=UserCompany.STATUSES['ACTIVE'])
     return redirect(url_for('company.employees', company_id=company_id))
 
 

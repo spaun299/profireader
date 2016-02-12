@@ -111,7 +111,7 @@
                         $scope.loading = true;
                         $scope.isSelectedRows = false;
                         $scope.error = '';
-                        return $ok($scope.url_search_translations({}), grid_data, setdatafuctions).finally(function () {
+                        $ok($scope.url_search_translations({}), grid_data, setdatafuctions).finally(function () {
                             $scope.loading = false;
                             $scope.load_contr = true;
                         });

@@ -3,6 +3,7 @@ from flask import render_template, g, flash, redirect, url_for, jsonify
 from ..models.company import Company
 from flask.ext.login import current_user, login_required
 from ..models.portal import PortalDivisionType
+from ..models.files import File
 from ..models.translate import TranslateTemplate
 from utils.db_utils import db
 from ..models.portal import MemberCompanyPortal, Portal, PortalLayout, PortalDivision, \
@@ -92,7 +93,8 @@ def create_save(json, create_or_update, company_id):
         if action == 'save':
             return portal.setup_created_portal(g.filter_json(json_portal, 'logo_file_id')).save().get_client_side_dict()
         else:
-            return portal.validate(create_or_update == 'insert')
+            print(action)
+            return portal.validate(create_or_update == 'create')
 
 
 # member_company = Portal.companies
@@ -419,14 +421,20 @@ def portals_partners(company_id):
 @ok
 def portals_partners_load(json, company_id):
     subquery_member_portal = db(MemberCompanyPortal, portal_id=json.get('getPageOfId'),
-                                    company_id=company_id).one().id if json.get('getPageOfId') else None
+                                company_id=company_id).one().id if json.get('getPageOfId') else None
     subquery = Company.subquery_company_partners(company_id, json.get('filter'))
-    partners_g, pages, current_page, count = pagination(subquery, subquery_member_portal, **Grid.page_options(json.get('paginationOptions')))
+    partners_g, pages, current_page, count = pagination(subquery, subquery_member_portal,
+                                                        **Grid.page_options(json.get('paginationOptions')))
     return {'page': current_page,
-            'grid_data': [{'portal' : {'name':partner.portal.name,'id': partner.portal.id},'link' : partner.portal.host,'company' : Company.get(partner.portal.company_owner_id).name
-                        } for partner in partners_g],
+            'grid_data': [{'portal_name': partner.portal.name,
+                           'portal_logo': File.get(partner.portal.logo_file_id).url() if partner.portal.logo_file_id
+                           else '/static/images/company_no_logo.png',
+                           'portal_id': partner.portal.id, 'link': partner.portal.host,
+                           'company_name': Company.get(partner.portal.company_owner_id).name}
+                          for partner in partners_g],
             'total': count,
-            'portal': db(Company, id=company_id).one().own_portal.get_client_side_dict(fields='name') if db(Company, id=company_id).one().own_portal else [],
+            'portal': db(Company, id=company_id).one().own_portal.get_client_side_dict(fields='name')
+            if db(Company, id=company_id).one().own_portal else [],
             'portals_partners': [port.get_client_side_dict(fields='name, company_owner_id,id')
                                  for port in Company.get(company_id).get_portals_where_company_is_member()],
             'company_id': company_id,
@@ -447,11 +455,20 @@ def companies_partners(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def companies_partners_load(json, company_id):
-    portal = db(Company, id=company_id).one().own_portal
-    companies_partners = [comp.get_client_side_dict(fields='company.id, company.name') for comp in
-                          portal.company_members] if portal else []
+    """ RIGHT_AT_PORTAL HARDCODED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! """
+    subquery = db(MemberCompanyPortal).filter(
+        MemberCompanyPortal.portal_id == db(Portal, company_owner_id=company_id).subquery().c.id)
+    partners, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
+    portal = partners[0].portal if partners else db(Company, id=company_id).one().own_portal
+    grid_data = [{'company_id': comp.company.id, 'company_name': comp.company.name,
+                 'rights_at_portal': ['MATERIAL_SUBMIT', 'PUBLICATION_PUBLISH'],
+                  'logo': File.get(comp.company.logo_file_id).url() if comp.company.logo_file_id
+                  else '/static/images/company_no_logo.png'}
+                 for comp in partners] if portal else []
     return {'portal': portal.get_client_side_dict(fields='name') if portal else [],
-            'companies_partners': companies_partners,
+            'grid_data': grid_data,
+            'total': count,
+            'page': current_page,
             'company_id': company_id,
             'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()}
 
@@ -466,34 +483,60 @@ def search_for_portal_to_join(json):
     return portals_partners
 
 
-@portal_bp.route('/publications/<string:company_id>/', methods=['GET'])
+@portal_bp.route('/company/<string:company_id>/publications/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def publications(company_id):
-    return render_template(
-            'portal/portal_publications.html', company=Company.get(company_id),
-            angular_ui_bootstrap_version='//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js')
+    return render_template('portal/portal_publications.html', company=Company.get(company_id))
 
 
-@portal_bp.route('/publications/<string:company_id>/', methods=['POST'])
+def get_publication_dict(publication):
+    actions_for_statuses = {
+        ArticlePortalDivision.STATUSES['SUBMITTED']: ['publish', 'delete'],
+        ArticlePortalDivision.STATUSES['PUBLISHED']: ['unpublish', 'republish', 'delete'],
+        ArticlePortalDivision.STATUSES['UNPUBLISHED']: ['republish', 'delete'],
+        ArticlePortalDivision.STATUSES['DELETED']: ['undelete']
+    }
+    ret = publication.get_client_side_dict()
+    if ret.get('long'):
+            del ret['long']
+
+    ret['actions'] = actions_for_statuses[ret['status']]
+
+    return ret
+
+@portal_bp.route('/company/<string:company_id>/publications/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([]))
 @ok
 def publications_load(json, company_id):
-    portal = db(Company, id=company_id).one().own_portal.id
-    subquery = ArticlePortalDivision.subquery_portal_articles(portal, json.get('filter'), json.get('sort'))
-    articles, pages, current_page ,count = pagination(subquery,**Grid.page_options(json.get('paginationOptions')))
-    grid_filters = {
-        'publication_status':Grid.filter_for_status(ArticlePortalDivision.STATUSES),
-        'company': [{'value': company_id, 'label': company} for company_id, company  in
-                    ArticlePortalDivision.get_companies_which_send_article_to_portal(portal).items()]
-    }
-    return {'grid_data': Article.getListGridDataPublication(articles),
-            'grid_filters': {k: [{'value': None, 'label': TranslateTemplate.getTranslate('', '__-- all --')}] + v for
-                             (k, v) in grid_filters.items()},
-            'total': count}
+    company = Company.get(company_id)
+    portal = company.own_portal
+    subquery = ArticlePortalDivision.subquery_portal_articles(portal.id, json.get('filter'), json.get('sort'))
+    publications, pages, current_page ,count = pagination(subquery,**Grid.page_options(json.get('paginationOptions')))
+    # grid_filters = {
+    #     'publication_status':Grid.filter_for_status(ArticlePortalDivision.STATUSES),
+    #     'company': [{'value': company_id, 'label': company} for company_id, company  in
+    #                 ArticlePortalDivision.get_companies_which_send_article_to_portal(portal).items()]
+    # }
+    return {
+        'company': company.get_client_side_dict(),
+        'portal': portal.get_client_side_dict(),
+        'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights(),
+        'grid_data': list(map(get_publication_dict, publications))}
 
+
+@portal_bp.route('/publication_delete_unpublish/', methods=['POST'])
+@ok
+# @check_rights(simple_permissions([]))
+def publication_delete_unpublish(json):
+    action = g.req('action', allowed=['delete', 'unpublish', 'undelete'])
+
+    publication = ArticlePortalDivision.get(json['publication_id'])
+    publication.status = ArticlePortalDivision.STATUSES['DELETED' if action == 'delete' else 'UNPUBLISHED']
+
+    return get_publication_dict(publication.save())
 
 @portal_bp.route('/publication_details/<string:article_id>/<string:company_id>', methods=['GET'])
 @tos_required
@@ -509,12 +552,9 @@ def publication_details(article_id, company_id):
 def publication_details_load(json, article_id, company_id):
     article = db(ArticlePortalDivision, id=article_id).one().get_client_side_dict()
     allowed_statuses = ArticlePortalDivision.STATUSES.keys()
-    new_status = ArticlePortalDivision.STATUSES['PUBLISHED'] \
-        if article['status'] != ArticlePortalDivision.STATUSES['PUBLISHED'] \
-        else ArticlePortalDivision.STATUSES['NOT_PUBLISHED']
+
     return {'article': article,
             'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights(),
-            'new_status': new_status,
             'allowed_statuses': allowed_statuses}
 
 
@@ -527,9 +567,6 @@ def update_article_portal(json, article_id):
     allowed_statuses = ArticlePortalDivision.STATUSES.keys()
     json['allowed_statuses'] = allowed_statuses
     json['article']['status'] = json.get('new_status')
-    json['new_status'] = ArticlePortalDivision.STATUSES['PUBLISHED'] \
-        if json.get('new_status') != ArticlePortalDivision.STATUSES['PUBLISHED'] \
-        else ArticlePortalDivision.STATUSES['NOT_PUBLISHED']
     return json
 
 
@@ -549,21 +586,3 @@ def update_article_portal(json, article_id):
 #     return {'portal': portal.name}
 
 
-@portal_bp.route('/submit_to_portal/', methods=['POST'])
-# @login_required
-# @check_rights(simple_permissions([]))
-@ok
-def submit_to_portal(json):
-    # json['tags'] = ['money', 'sex', 'rock and roll']; tag position is important
-
-    article = ArticleCompany.get(json['article']['id'])
-    portal_division_id = json['selected_division']
-    article_portal = article.clone_for_portal(portal_division_id)
-    article.save()
-    portal = article_portal.get_article_owner_portal(portal_division_id=portal_division_id)
-    json['article'] = article_portal.get_client_side_dict(fields=
-                                                          'id, title,short, cr_tm, md_tm, company_id, status, long,'
-                                                          'editor_user_id, company.name|id,portal_article.id,'
-                                                          'portal_article.division.name, portal_article.division.portal.name,portal_article.status')
-    json.update({'portal': portal.name})
-    return json

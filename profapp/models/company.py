@@ -47,7 +47,10 @@ class Company(Base, PRBase):
     email = Column(TABLE_TYPES['email'], nullable=False, default='')
     short_description = Column(TABLE_TYPES['text'], nullable=False, default='')
     about = Column(TABLE_TYPES['text'], nullable=False, default='')
-    status = Column(TABLE_TYPES['status'], nullable=False, default=STATUS.ACTIVE())
+
+    STATUSES = {'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED'}
+    status = Column(TABLE_TYPES['status'], nullable=False, default=STATUSES['ACTIVE'])
+
     lat = Column(TABLE_TYPES['float'], nullable=False, default=49.8418907)
     lon = Column(TABLE_TYPES['float'], nullable=False, default=24.0316261)
 
@@ -119,7 +122,8 @@ class Company(Base, PRBase):
                 'message': 'Company name %(name)s already exist. Please choose another name',
                 'data': self.get_client_side_dict()})
 
-        user_company = UserCompany(status=STATUS.ACTIVE(), rights=UserCompany.RIGHTS_AT_COMPANY_FOR_OWNER)
+        user_company = UserCompany(status=UserCompany.STATUSES['ACTIVE'],
+                                   rights=UserCompany.RIGHTS_AT_COMPANY_FOR_OWNER)
         user_company.employer = self
         g.user.employer_assoc.append(user_company)
         g.user.companies.append(self)
@@ -254,7 +258,7 @@ class UserCompany(Base, PRBase):
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'), nullable=False)
 
     status = Column(TABLE_TYPES['status'], default='APPLICANT')
-    STATUSES = {'APPLICANT', 'ACTIVE', 'SUSPENDED', 'FIRED'}
+    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED', 'FIRED': 'FIRED'}
 
     RIGHT_AT_COMPANY = {
         'FILES_BROWSE': 2 ** (4 - 1),
@@ -289,7 +293,7 @@ class UserCompany(Base, PRBase):
     position = Column(TABLE_TYPES['short_name'], default='')
 
     md_tm = Column(TABLE_TYPES['timestamp'])
-    works_since_tm = Column(TABLE_TYPES['timestamp'])
+    # works_since_tm = Column(TABLE_TYPES['timestamp'])
 
     banned = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
 
@@ -307,17 +311,13 @@ class UserCompany(Base, PRBase):
 
     # todo (AA to AA): check handling md_tm
 
-
-
-    def __init__(self, user_id=None, company_id=None, status=STATUS.NONACTIVE(), rights=0,
-                 works_since_tm=works_since_tm):
+    def __init__(self, user_id=None, company_id=None, status=STATUSES['APPLICANT'], rights=0):
 
         super(UserCompany, self).__init__()
         self.user_id = user_id
         self.company_id = company_id
         self.status = status
         self._rights = rights
-        self.works_since_tm = works_since_tm
 
     @staticmethod
     def get(user_id=None, company_id=None):
@@ -332,7 +332,7 @@ class UserCompany(Base, PRBase):
     def get_rights(self):
         return PRBase.convert_rights_binary_to_dict(self._rights, self.RIGHT_AT_COMPANY)
 
-    def get_client_side_dict(self, fields='id,user_id,company_id,works_since_tm,position,status',
+    def get_client_side_dict(self, fields='id,user_id,company_id,position,status',
                              more_fields=None):
         ret = self.to_dict(fields, more_fields)
         ret['rights'] = self.get_rights()
@@ -373,11 +373,11 @@ class UserCompany(Base, PRBase):
         return self
 
     @staticmethod
-    def change_status_employee(company_id, user_id, status=STATUS.SUSPENDED()):
+    def change_status_employee(company_id, user_id, status=STATUSES['SUSPENDED']):
         """This method make status employee in this company suspended"""
         db(UserCompany, company_id=company_id, user_id=user_id). \
             update({'status': status})
-        if status == STATUS.DELETED():
+        if status == UserCompany.STATUSES['FIRED']:
             UserCompany.update_rights(user_id=user_id,
                                       company_id=company_id,
                                       new_rights=()
@@ -390,18 +390,16 @@ class UserCompany(Base, PRBase):
         subscribe to this company. If bool == True(Apply) - update rights to basic rights in company
         and status to active, If bool == False(Reject) - just update status to rejected."""
         if bool == 'True':
-            stat = STATUS.ACTIVE()
-            UserCompany.update_rights(user_id,
-                                      company_id,
-                                      Config.BASE_RIGHT_IN_COMPANY)
+            stat = UserCompany.STATUSES['ACTIVE']
+            UserCompany.update_rights(user_id, company_id, UserCompany.RIGHTS_AT_COMPANY_DEFAULT)
         else:
-            stat = STATUS.REJECTED()
-        db(UserCompany, company_id=company_id, user_id=user_id,
-           status=STATUS.NONACTIVE()).update({'status': stat})
+            stat = UserCompany.STATUSES['REJECTED']
 
-    def has_rights(self, right):
-        return True if self.status == self.STATUSES['ACTIVE'] and right in self.RIGHT_AT_COMPANY \
-            (self.RIGHT_AT_COMPANY[right] & self._rights) else False
+        db(UserCompany, company_id=company_id, user_id=user_id,
+           status=UserCompany.STATUSES['APPLICANT']).update({'status': stat})
+
+    def has_rights(self, binary_right):
+        return True if self.status == self.STATUSES['ACTIVE'] and (binary_right & self._rights) else False
         # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
         # return user_company.rights_set if user_company and user_company.status == STATUS.ACTIVE() and user_company.employer.status == STATUS.ACTIVE() else []
 
