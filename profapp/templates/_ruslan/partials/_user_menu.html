@@ -52,7 +52,7 @@
                  </button>
                 <a class="navbar-brand" href="{{ url_general()}}"><img src="/static/front/img/profi.png"></a>
             </div>
-            <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12 menu-syte">
+            <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12 menu-site">
 
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul>
@@ -62,10 +62,11 @@
                    <li><a href="#" ng-click="open_filemanager()" title="Менеджер файлів" ng-class="{'selected': selected_user_menu == 'file_manager'}"><i class="fa fa-folder-open-o"></i></a></li>
                    <li><a href="{{ url_general_help() }}" title="Інформація" ng-class="{'selected': selected_user_menu == 'info'}"><i class="fa fa-info"></i></a></li>
 
-                    <li ng-show="user.id" role="presentation">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="{{ url_user_profile({user_id: 'user.id'}) }}" role="button" aria-haspopup="true" aria-expanded="false">
-                            <img class="person-small-cover" pr-image="" pr-no-image="{{ user_avatar_url }}"> {{user.name}} <span class="caret"></span>
+                    <li ng-show="user.id" role="presentation" class="menu-profile">
+                        <a href="{{ url_user_profile({user_id:user.id}) }}" role="button" aria-haspopup="true" aria-expanded="false">
+                            <img class="person-small-cover" pr-image="" pr-no-image="{{ user_avatar_url }}"> {{user.name}}
                         </a>
+                        <a class="login-profile" href="{{ url_auth_logout() }}">Log out</a>
 
                          <!--<ul class="dropdown-menu">
                              <li ng-show="user.id"><a href="{{ url_user_profile({user_id:user.id}) }}">{{ _('Profile') }}</a></li>

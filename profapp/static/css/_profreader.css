@@ -1,10 +1,5 @@
-body  {
-  padding-top: 100px;
 
-}
-.border-radius{
-    border-radius: 0;
-}
+
 .nav-bg{
     background-color: #101010;
     padding-bottom: 10px;
@@ -27,19 +22,8 @@ body  {
     width: 100%;
     padding: 0;
 }
-.menu-syte a{
-    color: #fff;
-}
-.menu-syte a:hover{
-    transition: all 0.2s ease-out;;
-}
-.menu-syte ul{
-    float: right;
-    margin-right: -25px;
-}
-.hamburger-menu span{
-    background-color: #fff;
-}
+
+
 
 .prof_login {
 	font-size: 18px !important;
@@ -212,47 +196,6 @@ body  {
     padding-bottom: 15px;
 }
 
-.about-company a{
-    color: #333;
-}
-.about-company a:hover{
-    text-decoration: none;
-    color: #333;
-}
-.company-portal a{
-    color: #525252;
-    float: right;
-    margin-left: 15px;
-    border-bottom: 1px solid #fff;
-}
-.company-portal a:hover{
-    color: #18BC9C;
-    text-decoration: none;
-    border-bottom: 1px solid;
-    transition: all 0.2s ease-out;
-
-}
- .company-logo img{
-     margin-right: -15px;
- }
-.user-menu-dropdown ul{
-    border-radius: 0;
-    width: 100%;
-    padding: 0;
-}
-.menu-syte a{
-    color: #fff;
-}
-.menu-syte a:hover{
-    transition: all 0.2s ease-out;;
-}
-.menu-syte ul{
-    float: right;
-    margin-right: -25px;
-}
-.hamburger-menu span{
-    background-color: #fff;
-}
 
 .input-group .dropdown-menu{
     display: none !important;
@@ -310,10 +253,7 @@ body  {
     background-color: #119C8D;
     border-color: #119C8D;
 }
-.not-found h3{
-    text-align: center;
-    color: #7B7B7B;
-}
+
 .company-list{
     margin-top: 30px;
 }
@@ -340,41 +280,3 @@ body  {
     border-color: #119C8D;
 }
 
-
-/*AUTH users*/
-
-/*footer*/
-.footer-layout{
-    background-color: #101010;
-    color: #fff;
-    font-weight: 200;
-}
-@media screen and (max-width: 764px) {
-    .menu-syte ul {
-        float: none;
-        margin-right: 0;
-    }
-    .dropdown-menu {
-        position: static;
-    }
-    body{
-        padding-top: 150px;
-    }
-    .company-portal a{
-        float: none;
-    }
-}
-@media screen and (max-width: 991px){
-    .company-logo{
-        margin-top: 15px;
-        text-align: right;
-    }
-    .company-logo img{
-        margin-right: 0;
-    }
-    .company-portal{
-        margin-top: 40px;
-        text-align: center;
-        margin-bottom: 15px;
-    }
-}
