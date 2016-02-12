@@ -178,13 +178,16 @@ def get_portal_dict_for_material(portal, material_id, company_id):
         ret['publication']['division'] = ret['divisions'][ret['publication']['portal_division_id']]
         ret['publication']['counts'] = '0/0/0/0'
 
-        if ret['publication']['status'] == ArticlePortalDivision.STATUSES['NOT_PUBLISHED']:
+        if ret['publication']['status'] == ArticlePortalDivision.STATUSES['SUBMITTED']:
+            ret['actions'] = ['edit', 'publish']
+        if ret['publication']['status'] == ArticlePortalDivision.STATUSES['UNPUBLISHED']:
             ret['actions'] = ['edit', 'republish']
         if ret['publication']['status'] == ArticlePortalDivision.STATUSES['PUBLISHED']:
-            ret['actions'] = ['edit', 'republish', 'unpublish']
+            ret['actions'] = ['edit', 'unpublish', 'republish']
+
     else:
         ret['publication'] = None
-        ret['actions'] = ['submit_and_publish']
+        ret['actions'] = ['submit']
     return ret
 
 

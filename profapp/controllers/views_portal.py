@@ -493,8 +493,9 @@ def publications(company_id):
 
 def get_publication_dict(publication):
     actions_for_statuses = {
-        ArticlePortalDivision.STATUSES['NOT_PUBLISHED']: ['publish', 'delete'],
-        ArticlePortalDivision.STATUSES['PUBLISHED']: ['unpublish'],
+        ArticlePortalDivision.STATUSES['SUBMITTED']: ['publish', 'delete'],
+        ArticlePortalDivision.STATUSES['PUBLISHED']: ['unpublish', 'republish', 'delete'],
+        ArticlePortalDivision.STATUSES['UNPUBLISHED']: ['republish', 'delete'],
         ArticlePortalDivision.STATUSES['DELETED']: ['undelete']
     }
     ret = publication.get_client_side_dict()
@@ -533,7 +534,7 @@ def publication_delete_unpublish(json):
     action = g.req('action', allowed=['delete', 'unpublish', 'undelete'])
 
     publication = ArticlePortalDivision.get(json['publication_id'])
-    publication.status = ArticlePortalDivision.STATUSES['DELETED' if action == 'delete' else 'NOT_PUBLISHED']
+    publication.status = ArticlePortalDivision.STATUSES['DELETED' if action == 'delete' else 'UNPUBLISHED']
 
     return get_publication_dict(publication.save())
 
@@ -551,12 +552,9 @@ def publication_details(article_id, company_id):
 def publication_details_load(json, article_id, company_id):
     article = db(ArticlePortalDivision, id=article_id).one().get_client_side_dict()
     allowed_statuses = ArticlePortalDivision.STATUSES.keys()
-    new_status = ArticlePortalDivision.STATUSES['PUBLISHED'] \
-        if article['status'] != ArticlePortalDivision.STATUSES['PUBLISHED'] \
-        else ArticlePortalDivision.STATUSES['NOT_PUBLISHED']
+
     return {'article': article,
             'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights(),
-            'new_status': new_status,
             'allowed_statuses': allowed_statuses}
 
 
@@ -569,9 +567,6 @@ def update_article_portal(json, article_id):
     allowed_statuses = ArticlePortalDivision.STATUSES.keys()
     json['allowed_statuses'] = allowed_statuses
     json['article']['status'] = json.get('new_status')
-    json['new_status'] = ArticlePortalDivision.STATUSES['PUBLISHED'] \
-        if json.get('new_status') != ArticlePortalDivision.STATUSES['PUBLISHED'] \
-        else ArticlePortalDivision.STATUSES['NOT_PUBLISHED']
     return json
 
 
