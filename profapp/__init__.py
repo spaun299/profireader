@@ -30,6 +30,7 @@ from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
 from .models.tools import HtmlHelper
 from .models.pr_base import MLStripper
+import os.path
 
 
 def req(name, allowed=None, default=None, exception=True):
@@ -504,6 +505,23 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     app.before_request(load_user)
     app.before_request(setup_authomatic(app))
     app.before_request(load_portal_id(app))
+
+
+    def add_map_headers_to_less_files(response):
+
+
+        if (request.path and re.search(r'\.css$', request.path)):
+            mapfile = re.sub(r'\.css$', r'.css.map', request.path)
+            if os.path.isfile(os.path.realpath(os.path.dirname(__file__)) + mapfile):
+                response.headers.add('X-Sourcemap', mapfile)
+                # :/packages/ian_accounts-ui-bootstrap-3/a3d4ce536f173c44d48a89e9da63d0f75025b4ec.map
+
+        return response
+
+
+    app.after_request(add_map_headers_to_less_files)
+
+
 
     if apptype == 'front':
         register_blueprints_front(app)
