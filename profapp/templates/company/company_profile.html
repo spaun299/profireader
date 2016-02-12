@@ -13,6 +13,8 @@
     {% block company_base %}
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
+    {% from 'macros.html' import scripts %}
+    {{ scripts(names=['croper']) }}
 <script>
     module.controller('CompanyProfile', ['$scope', function ($scope) {
         angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('home');
@@ -20,18 +22,17 @@
         $scope.$$translate = {{ translates('CompanyProfile')|safe }};
         $scope.company = {{ company.get_client_side_dict()|tojson|safe }};
         $scope.url_back = {{ raw_url_for('company.show')|safe }};
-        $scope.edit = false;
         $scope.data = {};
         $scope.user_have_company = '{{ user_comp }}'=== 'True'? true: null;
         $scope.cropper_for_copmany = true;
         $scope.rights_user_in_company = {{ rights_user_in_company|tojson|safe }};
-
+        $scope.edit = false;
         $scope.go_to_portal = function(host){
             window.location.href = host;
         }
 
         $scope.change = function(){
-               $scope.edit = true;
+               $scope.edit = $scope.rights_user_in_company['COMPANY_EDIT_PROFILE']?true:false;
                $scope.save = true
         };
 
@@ -45,6 +46,7 @@
             };
 
         $scope.afterLoad = function (resp, deff) {
+                $scope.edit_rights = $scope.rights_user_in_company['COMPANY_EDIT_PROFILE']
                 deff(resp);
                 $scope.logo_file_url = fileUrl(resp['logo_file_id']);
             };
@@ -58,25 +60,23 @@
 <div class="container" af
              af-after-save="afterSave"
              af-after-load="afterLoad"
-             ng-model="data" >
-    <div class="row">
+             ng-model="data">
+    <div class="row company">
         <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 image-company-profile">
 
             <img pr-image="company.logo_file_id" alt="image" ng-show="!edit">
-            <div class="update_col1" style="width: 400px;" ng-if="edit">
-                {{ _('Select picture') }}
+            <div style="width: 400px;" ng-if="edit">
                 <div ng-model="data.image" pr-cropper="cropper" pr-company-id="{{ company.id }}"></div>
-                {{ data.image }}
             </div>
         </div>
 
-        <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12 ">
+        <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12 edit-company">
 
                 <button class="btn btn-default go-portal pull-right border-radius" type="button" ng-show="company.own_portal" ng-click="go_to_portal(company.own_portal.host)">{{ _('Portal') }}</button>
                 <button ng-show="save" class="btn btn-default save-profile pull-right border-radius" type="button" ng-click="$af.save(data)"
                    ng-disabled="!$af.isActionAllowed(data, 'save') "
                    >{{ _('Save profile') }}</button>
-                <button class="btn btn-default edit-profile pull-right border-radius" type="button" ng-click="change()">{{ _('Edit profile') }}</button>
+                <button class="btn btn-default edit-profile pull-right border-radius" type="button" ng-click="change()" ng-if="edit_rights">{{ _('Edit profile') }}</button>
 
             <ul class="edit-block" ng-show="!edit">
                 <li ng-show="company.name">Name: {{ company.name }}</li>
@@ -88,9 +88,8 @@
                 <li ng-show="company.email">Email: {{ company.email }}</li>
                 <li ng-show="">Long??</li>
                 <li ng-show="company.own_portal.host">Portal: {{ company.own_portal.host }}</li>
-                <li ng-show="company.short_description" >Description: <span ng-bind="company.short_description"></span></li>
             </ul>
-            <div class="edit-block" ng-if="edit">
+            <div class="edit-block" ng-if="edit" >
                 <div class="col-lg-2">Name:</div>
                  <div class="col-lg-10 edit-data">
                      <input type="text" class="form-control border-radius" value="{{ company.name }}" id="basic-url" aria-describedby="basic-addon3" ng-model="data.name">
@@ -117,7 +116,7 @@
                  </div>
                 <div class="col-lg-2">Email:</div>
                  <div class="col-lg-10 edit-data">
-                     <input type="email" class="form-control border-radius" value="{{ company.email }}" id="basic-url" aria-describedby="basic-addon3" ng-model="data.email">
+                     <input type=text class="form-control border-radius" value="{{ company.email }}" id="basic-url" aria-describedby="basic-addon3" ng-model="data.email">
                  </div>
                 <div class="col-lg-3">Lang and long:</div>
                  <div class="col-lg-4 edit-data">
@@ -126,26 +125,29 @@
                 <div class="col-lg-4 edit-data">
                      <input type="text" class="form-control border-radius" value="{{ company.lon }}" id="basic-url" aria-describedby="basic-addon3" ng-model="data.lon">
                  </div>
-                <div class="col-lg-2">Portal:</div>
-                 <div class="col-lg-10 edit-data">
-                     <input type="text" class="form-control border-radius" value="{{ company.own_portal.host }}" id="basic-url" aria-describedby="basic-addon3">
-                 </div>
             </div>
         </div>
     </div>
-    <div class="row" ng-if="edit">
+    <div ng-if="edit">
+        <h3>Short description:</h3>
+        <textarea ui-tinymce="tinymceImageOptions" ng-model="data.short_description" ng-if="edit"></textarea>
+        <h3>About company:</h3>
+        <textarea ng-if="edit" ui-tinymce="tinymceImageOptions" ng-model="data.about"></textarea>
+    </div>
+    <div class="row" ng-if="!edit && company.short_description">
         <div class="col-lg-12 about-company-text">
             <h3>Short description:</h3>
+            <p ng-bind-html="company.short_description"></p>
         </div>
 
     </div>
-     <textarea ui-tinymce="tinymceImageOptions" ng-model="data.short_description" ng-if="edit"></textarea>
-    <div class="row" ng-if="edit">
+
+    <div class="row" ng-if="!edit && company.about">
         <div class="col-lg-12">
             <h3>About company:</h3>
+            <p ng-bind-html="company.about"></p>
         </div>
     </div>
-    <textarea ng-if="edit" ui-tinymce="tinymceImageOptions" ng-model="data.about"></textarea>
 </div>
 
 </div>
