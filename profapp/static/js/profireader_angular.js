@@ -142,8 +142,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             link: function (scope, element, attrs, model) {
                 element.html($templateCache.get('cropper.html'));
 
-                console.log(model)
-
                 $compile(element.contents())(scope);
 
                 scope.ImageSelected = function (item) {
@@ -168,7 +166,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 };
 
                 var $image = $('img', element);
-                console.log($image)
                 var $inputImage = $('input', element);
 
                 var URL = window.URL || window.webkitURL;
