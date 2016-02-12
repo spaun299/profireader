@@ -460,8 +460,8 @@ def companies_partners_load(json, company_id):
         MemberCompanyPortal.portal_id == db(Portal, company_owner_id=company_id).subquery().c.id)
     partners, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
     portal = partners[0].portal if partners else db(Company, id=company_id).one().own_portal
-    grid_data = [{'company_id': comp.company.id, 'company_name': comp.company.name,
-                 'rights_at_portal': ['MATERIAL_SUBMIT', 'PUBLICATION_PUBLISH'],
+    grid_data = [{'id': comp.company.id, 'company_name': comp.company.name,
+                 'rights': {'MATERIAL_SUBMIT': True,  'PUBLICATION_PUBLISH': True},
                   'logo': File.get(comp.company.logo_file_id).url() if comp.company.logo_file_id
                   else '/static/images/company_no_logo.png'}
                  for comp in partners] if portal else []
