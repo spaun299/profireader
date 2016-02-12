@@ -343,9 +343,12 @@ body  {
 
 /*AUTH users*/
 
-
-
-
+/*footer*/
+.footer-layout{
+    background-color: #101010;
+    color: #fff;
+    font-weight: 200;
+}
 @media screen and (max-width: 764px) {
     .menu-syte ul {
         float: none;

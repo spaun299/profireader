@@ -3,9 +3,26 @@
 var gulp = require('gulp');
 var del = require('del');
 
+var less = require('gulp-less-sourcemap');
+var path = require('path');
+
 // Vars
 var src = 'bower_components/';
-var dst = 'new/'
+var dst = 'new/';
+
+var watch = require('gulp-watch');
+//var ext_replace = require('gulp-ext-replace');
+
+gulp.task('less_compile', function () {
+  gulp.src('./css/*.less')
+    .pipe(less({
+        sourceMap: {
+            sourceMapRootpath: 'css' // Optional absolute or relative path to your LESS files 
+        }
+    }))
+//    .pipe(ext_replace('.css', '.less.css'))
+    .pipe(gulp.dest('./css'));
+});
 
 gulp.task('clean', function (cb) {
 //    del([
@@ -80,8 +97,13 @@ gulp.task('install_bootstrap', function () {
         .pipe(gulp.dest(dst + 'bootstrap/'));
 });
 
+gulp.task('less', ['less_compile'], function() {
+    return gulp.watch('./css/*.less', ['less_compile']);
+});
+
 
 gulp.task('default', ['clean', 'install_fileuploader', 'install_angular', 'install_angular_translate', 'install_angular_cookies', 
 'install_angular_ui_tinymce', 'install_tinymce', 'install_angular_bootstrap', 'install_angular_animate', 'install_cropper',
 'install_slider','install_bootstrap']);
+
 
