@@ -77,12 +77,16 @@
 
     <div class="container" ng-init="loadData()" ng-controller="companies_list">
         <div class="row join-company">
+            <div class="col-lg-3 create-company pull-right">
+                        <button class="btn btn-default" type="button" ng-click='createCompany()'>{{ _('Create new company') }}</button>
+            </div>
             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+
                 <div class="row">
                     <div class="col-lg-3 col-md-3 col-sm-4 col-xs-12">
                         <h3>Join to company</h3>
                     </div>
-                    <div class="col-lg-6 col-md-6 col-sm-5 col-xs-8 search-company">
+                    <div class="col-lg-9 col-md-9 col-sm-8 col-xs-12 search-company">
                         <div class="input-group" style="width: 100%">
                               <input type="text" class="form-control" placeholder="Search for... "
                                      uib-typeahead-on-select="onSelect($item, $model, $label)"
@@ -92,9 +96,7 @@
                                      name="company_id"/>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-4 create-company">
-                        <button class="btn btn-default" type="button" ng-click='createCompany()'>{{ _('Create new company') }}</button>
-                    </div>
+
                 </div>
             </div>
         </div>

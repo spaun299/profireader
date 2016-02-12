@@ -61,6 +61,7 @@
              ng-model="data" >
     <div class="row">
         <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 image-company-profile">
+
             <img pr-image="company.logo_file_id" alt="image" ng-show="!edit">
             <div class="update_col1" style="width: 400px;" ng-if="edit">
                 {{ _('Select picture') }}
@@ -68,6 +69,7 @@
                 {{ data.image }}
             </div>
         </div>
+
         <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12 ">
 
                 <button class="btn btn-default go-portal pull-right border-radius" type="button" ng-show="company.own_portal" ng-click="go_to_portal(company.own_portal.host)">{{ _('Portal') }}</button>

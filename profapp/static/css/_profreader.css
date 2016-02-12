@@ -259,7 +259,7 @@ body  {
 }
 
 .join-company{
-    margin-top: 50px;
+    margin-top: 15px;
 }
 .join-company h3{
     margin-top: 5px;
@@ -339,6 +339,13 @@ body  {
     background-color: #119C8D;
     border-color: #119C8D;
 }
+
+
+/*AUTH users*/
+
+
+
+
 @media screen and (max-width: 764px) {
     .menu-syte ul {
         float: none;
