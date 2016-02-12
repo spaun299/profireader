@@ -29,7 +29,12 @@
     <div class="row">
         <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 image-company-profile">
             <img pr-image="company.logo_file_id" alt="image">
+            <div class="update_col1" style="width: 400px;">
+                {{ _('Select picture') }}
+                <div ng-model="data.image" pr-cropper="cropper" pr-company-id="{{ company_id }}"></div>
+            </div>
         </div>
+
         <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12 ">
 
                 <button class="btn btn-default go-portal pull-right border-radius" type="button">Portal</button>
