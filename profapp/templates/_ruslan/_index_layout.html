@@ -13,14 +13,18 @@
 {% endblock metas %}
 
 {% block styles %}
-    <link href="/static/css/_company.css" rel="stylesheet">
-    <link href="/static/css/_menu-company.css" rel="stylesheet">
-    <link href="/static/css/_profreader.css" rel="stylesheet">
-    <link href="/static/css/style.less" rel="sstylesheet">
+
 
     <link href="/static/css/font-awesome.min.css" rel="stylesheet">
     <link href="/static/css/bootstrap.css" rel="stylesheet">
-{#    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">#}
+
+    <link href="/static/css/_profreader.css" rel="stylesheet">
+    <link href="/static/css/_company.css" rel="stylesheet">
+    <link href="/static/css/_menu-company.css" rel="stylesheet">
+    <link href="/static/css/style.less" rel="sstylesheet">
+
+
+    {#    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">#}
     <link rel="stylesheet" href="/static/css/icons.css">
 
 {%- endblock styles %}
@@ -28,7 +32,7 @@
 {%- block head %}
     {{ super() }}
     <script>
-    var pr_angular_modules = ['ui.bootstrap', 'profireaderdirectives', 'ngSanitize', 'ajaxFormModule', 'ngAnimate', 'ngTouch', 'ui.slider'];
+        var pr_angular_modules = ['ui.bootstrap', 'profireaderdirectives', 'ngSanitize', 'ajaxFormModule', 'ngAnimate', 'ngTouch', 'ui.slider'];
     </script>
 
 
@@ -44,23 +48,23 @@
     <script src="{{ url_for('static', filename = 'new/angular-bootstrap/ui-bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'new/angular-bootstrap/ui-bootstrap-tpls.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'angular-ajax-validator/ngAjaxValidator.js') }}"></script>
-     <script src="{{ url_for('static', filename = 'angular-ui-slider/slider.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'angular-ui-slider/slider.js') }}"></script>
 
-{#    {% include '_ruslan/partials/_header_files_grid.html' %}#}
+    {#    {% include '_ruslan/partials/_header_files_grid.html' %}#}
 
 
 
-{#    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>#}
+    {#    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>#}
     {#    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.2.js"></script>#}
 
     {#    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.js"></script>#}
 
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular-sanitize.js"></script>
-   <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-animate.js"></script>
-      <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-touch.js"></script>
-{#    {% if angular_ui_bootstrap_version %}#}
-{#        <script src="{{ angular_ui_bootstrap_version }}"></script>#}
-{#    {% endif %}#}
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-animate.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-touch.js"></script>
+    {#    {% if angular_ui_bootstrap_version %}#}
+    {#        <script src="{{ angular_ui_bootstrap_version }}"></script>#}
+    {#    {% endif %}#}
     {#<script src="{{ url_for('static', filename = 'image_editor/demo/js/main.js') }}"></script>#}
     {#    <script src="/static/filemanager/angular-filemanager.min.js"></script><!-- Comment if you need to use raw source code -->#}
 
@@ -70,12 +74,12 @@
     <script src="/static/js/underscore-min.js"></script>
 
     <!-- ui-select files -->
-{#    <script src="/static/js/select.js"></script>#}
+    {#    <script src="/static/js/select.js"></script>#}
     <!-- profireader_angular.js uses /static/js/select.js -->
     <script src="/static/js/profireader_angular.js"></script>
 
-{#    <script src="/static/js/jquery.smooth-scroll.js"></script>#}
-{#    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>#}
+    {#    <script src="/static/js/jquery.smooth-scroll.js"></script>#}
+    {#    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>#}
 
 
 
