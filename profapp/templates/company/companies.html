@@ -25,7 +25,7 @@
             $scope.selectedCompany_sending = false;
 
             $scope.createCompany = function(){
-                window.location.href = '{{ url_for('company.update')|safe }}'
+                window.location.href = '{{ url_for('company.profile')|safe }}'
             };
             $scope.goToPortal = function(portal_id){
                 window.location.href = $scope.url_portal_profile({portal_id:portal_id})
