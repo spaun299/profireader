@@ -166,7 +166,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 };
 
                 var $image = $('img', element);
-                console.log($image)
                 var $inputImage = $('input', element);
 
                 var URL = window.URL || window.webkitURL;
