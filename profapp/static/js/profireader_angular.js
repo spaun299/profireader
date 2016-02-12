@@ -126,8 +126,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             link: function (scope, element, attrs, model) {
                 element.html($templateCache.get('cropper.html'));
 
-                console.log(model)
-
                 $compile(element.contents())(scope);
 
                 scope.ImageSelected = function (item) {
