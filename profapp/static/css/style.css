@@ -1,1 +1,11 @@
+.menu-profile a {
+  text-decoration: none;
+}
+.menu-profile .login-profile {
+  background-color: #CA2027;
+  padding: 5px 15px;
+  border-radius: 2px;
+  float: right;
+  margin-top: 2px;
+}
 /*# sourceMappingURL=style.css.map */
