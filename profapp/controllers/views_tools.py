@@ -14,10 +14,19 @@ from ..models.translate import TranslateTemplate
 #     return {'phrase': translation}
 
 
+from flask import make_response
+
+@tools_bp.route('/admin/ips', methods=['GET'])
+def index():
+    resp = make_response(render_template('/admin/ips'))
+
+    resp.set_cookie( request.cookies.get('beaker.session.id', '', max_age=60))
+    return resp
+
+print('ffff')
 @tools_bp.route('/save_translate/', methods=['POST'])
 @ok
 def save_translate(json):
-    print(json)
     return TranslateTemplate.getTranslate(request.json['template'], request.json['phrase'], request.json['url'], request.json['allow_html'])
 
 
@@ -27,7 +36,7 @@ def update_last_accessed(json):
     return TranslateTemplate.update_last_accessed(json['template'], json['phrase'])
 
 @tools_bp.route('/SSO/<string:local_cookie>/', methods=['GET'])
-def SSO(local_cookie, profi_cookie):
+def SSO(local_cookie):
     return render_template('tools/sso.html', local_cookie = local_cookie, profi_cookie= request.cookies.get('beaker.session.id'))
 
 

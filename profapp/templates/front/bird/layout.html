@@ -3,6 +3,7 @@
 <head>
     {% include 'front/bird/head.html' %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+    Set-Cookie: NAME=VALUE; expires=1; path=PATH; domain=profireader.com; secure
 </head>
 
 <body {% if member_company %}
@@ -12,13 +13,10 @@
 <script>
     window.addEventListener("message", function (messageevent) {
         $.cookie('beaker.session.id', messageevent.data);
-{#        window.location.reload();#}
+        window.location.reload();
     }, false);
-    function sso(new_session_id) {
-        $.cookie('beaker.session.id', new_session_id);
-    }
 
-    $('body').prepend('<iframe src="http://profireader.com/tools/SSO/'+profi_cookie+'/"></iframe>');
+    $('body').prepend('<iframe style="positin: absolute; width: 1px; height: 1px; visibility: none; left: -1px;" src="http://profireader.com/tools/SSO/'+$.cookie('beaker.session.id')+'/"></iframe>');
 </script>
 
 

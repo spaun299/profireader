@@ -485,16 +485,9 @@ class AnonymousUser(AnonymousUserMixin):
     def __repr__(self):
         return "<User(id = %r)>" % self.id
 
-import http.cookies,  datetime, uuid
-ck = http.cookies.SimpleCookie()
 
-ck['session'] = str(uuid.uuid4())
-ck['session']['domain'] = 'profireader.com/'
-ck['session']['path'] = '/'
-expires = datetime.datetime.utcnow() + datetime.timedelta(minutes=1) # expires in 3 hours
-ck['session']['expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
-print (ck)
+
 
 # import http.cookies
 # import datetime

@@ -6,6 +6,7 @@ from beaker.middleware import SessionMiddleware
 
 
 
+
 # if __name__ == '__main__':
 parser = argparse.ArgumentParser(description='profireader application type')
 parser.add_argument("apptype", default='profi')
