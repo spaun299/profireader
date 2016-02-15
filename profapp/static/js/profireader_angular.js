@@ -785,7 +785,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                 if (checkboxes) {
                     template += '<div class="checkbox"><label><input class="checkboxInput" type="checkbox" ng-click="checkboxClick($event, getPropertyForObject(option,settings.idProp))" ng-checked="isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp))" /> {{getPropertyForObject(option, settings.displayProp)}}</label></div></a>';
                 } else {
-                    template += '<span data-ng-class="{\'glyphicon glyphicon-ok\': isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp))}"></span> {{getPropertyForObject(option, settings.displayProp)}}</a>';
+                    template += '<span data-ng-class="{\'glyphicon glyphicon-check\': isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp)), \'glyphicon glyphicon-unchecked\': !isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp))}"></span> {{getPropertyForObject(option, settings.displayProp)}}</a>';
                 }
                 template += '</li>';
                 template += '<li role="presentation" ng-show="settings.selectionLimit > 1"><a role="menuitem">{{selectedModel.length}} {{texts.selectionOf}} {{settings.selectionLimit}} {{texts.selectionCount}}</a></li>';
@@ -1632,21 +1632,27 @@ None = null;
 False = false;
 True = true;
 
+$.fn.scrollTo = function () {
+  return this.each(function () {
+    $('html, body').animate({
+       scrollTop: $(this).offset().top
+    }, 1000);
+  });
+}
 
-//TODO: RP by OZ:   pls rewrite this two functions as jquery plugin
-
-function scrool($el, options) {
-    $.smoothScroll($.extend({
-        scrollElement: $el.parent(),
-        scrollTarget: $el
-    }, options ? options : {}));
+function scrool($el, message) {
+    $($el).scrollTo();
+    //$.smoothScroll($.extend({
+    //    scrollElement: $el.parent(),
+    //    scrollTarget: $el
+    //}, options ? options : {}));
 }
 
 function highlight($el) {
-    $el.addClass('highlight');
+    $($el).addClass('highlight');
     setTimeout(function () {
-        $el.removeClass('highlight');
-    }, 500);
+        $($el).removeClass('highlight');
+    }, 3500);
 }
 
 function angularControllerFunction(controller_attr, function_name) {

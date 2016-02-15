@@ -27,8 +27,8 @@
             $scope.createCompany = function(){
                 window.location.href = '{{ url_for('company.update')|safe }}'
             };
-            $scope.goToPortal = function(portal_id){
-                window.location.href = $scope.url_portal_profile({portal_id:portal_id})
+            $scope.goToPortal = function(host){
+                window.location.href = 'http://'+host
             };
 
             $scope.onSelect = function ($item, $model, $label) {
@@ -57,15 +57,10 @@
                     $scope.selectedCompany = null;
                     $scope.selectedCompany_name = null;
                     $scope.data['companies'] = resp['companies'];
-                    {#TODO OZ BY VK: javascript error                #}
                     $timeout(function () {
-                        scrool($('#joined_company_' + resp['companies']['id']), {
-                            afterScroll: function () {
-                                highlight($('#joined_company_' + resp['companies']['id']));
-                            }
-                        });
-                    }, 500);
-
+                        scrool('#joined_company_'+company_id);
+                        highlight('#joined_company_56187294-164b-4001-a603-7614f897601e')
+                    }, 1500);
                 }).finally(function () {
                     $scope.selectedCompany_sending = false;
                 });
@@ -125,8 +120,8 @@
             </div>
         </div>
         <div class="row company-list">
-            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12"><h2>Company list:</h2></div>
-            <div class="col-lg-4 col-md-4 col-sm-6 col-xs-6" ng-repeat="my_employer in data.companies" id="joined_company_{{ my_employer.id }}">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12"><h2 ng-if="data.companies">Company list:</h2><h2 ng-if="!data.companies && !loading">You haven't got any company yet!Create own or join to!</h2></div>
+            <div ng-if="data.companies" class="col-lg-4 col-md-4 col-sm-6 col-xs-6" ng-repeat="my_employer in data.companies" id="joined_company_{{ my_employer.id }}">
                 <div class="thumbnail company-thumbnail" >
                   <img pr-image="my_employer.logo_file_id" alt="image" style="width: 100%">
                   <div class="caption">
@@ -138,7 +133,7 @@
                       <span ng-if="!my_employer.own_portal.host"><b>{{_('Portals')}}: </b>{{_('No')}}</span>
                       <div ng-if="my_employer.own_portal.host">
                             http://{{ my_employer.own_portal.host }}
-                          <button class="btn btn-default" type="button" ng-click="goToPortal(my_employer.own_portal.id)">{{ _("Go to portal") }}</button>
+                          <button class="btn btn-default" type="button" ng-click="goToPortal(my_employer.own_portal.host)">{{ _("Go to portal") }}</button>
                     </div>
 
                   </div>
