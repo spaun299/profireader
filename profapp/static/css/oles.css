@@ -251,6 +251,21 @@
     color: #ff0000;
 }
 
+
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_EDIT {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_UNPUBLISH {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_PUBLISH {
+    background-color: #ff0000;
+    color: #ff0000;
+}
+
+
 .pr-grid-cell-field-type-actions {
     padding: 2px;
 }
