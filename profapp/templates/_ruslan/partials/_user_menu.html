@@ -69,6 +69,7 @@
                         </a>
                         <a class="login-profile" href="{{ url_auth_logout() }}">Log out</a>
 
+
                          <!--<ul class="dropdown-menu">
                              <li ng-show="user.id"><a href="{{ url_user_profile({user_id:user.id}) }}">{{ _('Profile') }}</a></li>
                              <li ng-show="user.id" ><a href="{{ url_auth_logout() }}" >{{_('Log Out') }}</a></li>
@@ -77,7 +78,9 @@
                          </ul>-->
 
                   </li>
-
+                     <li ng-show="!user.id" role="presentation" class="menu-profile">
+                        <a class="login-profile" href="{{ login_url() }}?login_signup=login">Login</a>
+                    </li>
 
                 </ul>
     </div>
