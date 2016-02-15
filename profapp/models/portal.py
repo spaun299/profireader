@@ -310,6 +310,10 @@ class MemberCompanyPortal(Base, PRBase):
 
     member_company_portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))
 
+    status = Column(TABLE_TYPES['status'], default='APPLICANT')
+    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED',
+                'CANCELED': 'CANCELED'}
+
     portal = relationship(Portal
                           # ,back_populates = 'company_members'
                           # , back_populates='member_companies'
@@ -369,6 +373,14 @@ class MemberCompanyPortal(Base, PRBase):
         #         if 'link' in search_text:
         #             sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
         #     return sub_query
+
+    def has_rights(self, binary_right):
+        if self.portal.own_company.id == self.company_id:
+            return True
+        return True if self.status == self.STATUSES['ACTIVE'] and (
+        binary_right & self.rights_company_at_portal) else False
+        # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
+        # return user_company.rights_set if user_company and user_company.status == STATUS.ACTIVE() and user_company.employer.status == STATUS.ACTIVE() else []
 
 
 class ReaderUserPortalPlan(Base, PRBase):
@@ -628,7 +640,7 @@ class ReaderDivision(Base, PRBase):
     show_division_and_comments_numeric = {name: 2 ** index for index, name in
                                           enumerate(['show_articles', 'show_comments', 'show_favorite_comments',
                                                      'show_liked_comments'])}
-    show_division_and_comments_numeric_all = reduce(lambda x, y: x+y, show_division_and_comments_numeric.values())
+    show_division_and_comments_numeric_all = reduce(lambda x, y: x + y, show_division_and_comments_numeric.values())
 
     def __init__(self, user_portal_reader=None, portal_division=None):
         super(ReaderDivision, self).__init__()
