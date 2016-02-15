@@ -67,19 +67,21 @@ function quoteattr(s, preserveCR) {
 }
 
 
+function resolveDictForAngularController(dict) {
+    return _.object(_.map(dict, function (val, key) {
+        return [key, function () {
+            return val
+        }]
+    }))
+}
+
 angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip'])
     .factory('$publish', ['$http', '$uibModal', function ($http, $uibModal) {
         return function (dict) {
-            var bb = _.map(dict, function (dict_el) {
-                    return function () {
-                        return dict_el
-                    }
-                });
-            console.log(dict, bb);
             var modalInstance = $uibModal.open({
                 templateUrl: 'submit_publish_dialog.html',
                 controller: 'submit_publish_dialog',
-                resolve: bb
+                resolve: resolveDictForAngularController(dict)
             });
             return modalInstance;
         }
@@ -142,8 +144,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             link: function (scope, element, attrs, model) {
                 element.html($templateCache.get('cropper.html'));
 
-                console.log(model)
-
                 $compile(element.contents())(scope);
 
                 scope.ImageSelected = function (item) {
@@ -168,7 +168,6 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 };
 
                 var $image = $('img', element);
-                console.log($image)
                 var $inputImage = $('input', element);
 
                 var URL = window.URL || window.webkitURL;
@@ -639,69 +638,6 @@ module.config(function ($provide) {
     });
 });
 
-module.controller('submit_publish_dialog', function ($scope, $ok, $uibModalInstance,
-                                                     material_or_publication, company, action, portal, published_at_division, rights_user_in_company, rights_company_at_portal) {
-
-    //$scope.$$translate = {{ translates('submit_publish_dialog')|safe }};
-    //$scope.url_submit_to_portal = '{{ url_for('article.submit_publish')|safe }}';
-
-    $scope.selected_division = null;
-    $scope.portal = portal;
-    $scope.action = action;
-    $scope.material_or_publication = material_or_publication;
-    $scope.company = company;
-    $scope.object_name = (action === 'republish') ? 'publication' : 'material';
-    $scope.rights_user_in_company = rights_user_in_company;
-    $scope.rights_company_at_portal = rights_company_at_portal;
-    $scope.published_at_division = published_at_division;
-
-    $scope.can_submit = $scope.object_name === 'publication' || $scope.rights_user_in_company['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'];
-    $scope.can_publish = $scope.rights_company_at_portal['PUBLICATION_PUBLISH'];
-
-
-    $scope.action_do = function () {
-        $ok($scope.url_submit_to_portal + '?action=' + action, {
-            material_id: $scope.article.id,
-            portal_division_id: $scope.selected_division.id,
-            publication_data: {}
-        }, $uibModalInstance.close)
-    };
-
-    $scope.action_cancel = $uibModalInstance.dismiss;
-
-
-    $scope.is_selection_division_event = function () {
-        if (!$scope.material_or_publication.portal_division_id) return false;
-        if (!$scope.portal.divisions[$scope.material_or_publication.portal_division_id]) return false;
-
-        return ($scope.portal.divisions[$scope.material_or_publication.portal_division_id]['portal_division_type_id'] === 'events');
-
-    }
-
-    $scope.valid = function () {
-        $scope.validation = {'errors': {}, 'warnings': {}};
-
-        if (!$scope.material_or_publication.publishing_tm) {
-            $scope.validation['errors']['publishing_tm'] = $scope._('Please select publication date');
-        }
-
-        if (!$scope.material_or_publication.portal_division_id) {
-            $scope.validation['errors']['portal_division_id'] = $scope._('Please select portal division');
-        }
-
-        if ($scope.is_selection_division_event()) {
-            if (!$scope.material_or_publication.event_tm) {
-                $scope.validation['errors']['event_tm'] = $scope._('Please select event time');
-            }
-            else if ($scope.material_or_publication.event_tm.getTime() <= (new Date()).getTime()) {
-                $scope.validation['warnings']['event_tm'] = $scope._('Event in the past');
-            }
-        }
-        return areAllEmpty($scope.validation['errors']);
-    }
-
-});
-
 module.controller('filemanagerCtrl', ['$scope', '$uibModalInstance', 'file_manager_called_for', 'file_manager_on_action',
     'file_manager_default_action', 'get_root',
     function ($scope, $uibModalInstance, file_manager_called_for, file_manager_on_action, file_manager_default_action, get_root) {
@@ -788,7 +724,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                 if (checkboxes) {
                     template += '<div class="checkbox"><label><input class="checkboxInput" type="checkbox" ng-click="checkboxClick($event, getPropertyForObject(option,settings.idProp))" ng-checked="isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp))" /> {{getPropertyForObject(option, settings.displayProp)}}</label></div></a>';
                 } else {
-                    template += '<span data-ng-class="{\'glyphicon glyphicon-ok\': isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp))}"></span> {{getPropertyForObject(option, settings.displayProp)}}</a>';
+                    template += '<span data-ng-class="{\'glyphicon glyphicon-check\': isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp)), \'glyphicon glyphicon-unchecked\': !isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp))}"></span> {{getPropertyForObject(option, settings.displayProp)}}</a>';
                 }
                 template += '</li>';
                 template += '<li role="presentation" ng-show="settings.selectionLimit > 1"><a role="menuitem">{{selectedModel.length}} {{texts.selectionOf}} {{settings.selectionLimit}} {{texts.selectionCount}}</a></li>';
@@ -1635,21 +1571,27 @@ None = null;
 False = false;
 True = true;
 
+$.fn.scrollTo = function () {
+  return this.each(function () {
+    $('html, body').animate({
+       scrollTop: $(this).offset().top
+    }, 1000);
+  });
+}
 
-//TODO: RP by OZ:   pls rewrite this two functions as jquery plugin
-
-function scrool($el, options) {
-    $.smoothScroll($.extend({
-        scrollElement: $el.parent(),
-        scrollTarget: $el
-    }, options ? options : {}));
+function scrool($el, message) {
+    $($el).scrollTo();
+    //$.smoothScroll($.extend({
+    //    scrollElement: $el.parent(),
+    //    scrollTarget: $el
+    //}, options ? options : {}));
 }
 
 function highlight($el) {
-    $el.addClass('highlight');
+    $($el).addClass('highlight');
     setTimeout(function () {
-        $el.removeClass('highlight');
-    }, 500);
+        $($el).removeClass('highlight');
+    }, 3500);
 }
 
 function angularControllerFunction(controller_attr, function_name) {

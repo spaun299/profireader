@@ -13,11 +13,12 @@ var dst = 'new/';
 var watch = require('gulp-watch');
 //var ext_replace = require('gulp-ext-replace');
 
+// TODO: OZ by OZ: paths to less files in map files are css/css. that is why we need ./profapp/static/css/css -> /profapp/static/css symlink. fix it
 gulp.task('less_compile', function () {
   gulp.src('./css/*.less')
     .pipe(less({
         sourceMap: {
-            sourceMapRootpath: 'css' // Optional absolute or relative path to your LESS files 
+            sourceMapRootpath: '/static/css' // Optional absolute or relative path to your LESS files
         }
     }))
 //    .pipe(ext_replace('.css', '.less.css'))
@@ -105,5 +106,4 @@ gulp.task('less', ['less_compile'], function() {
 gulp.task('default', ['clean', 'install_fileuploader', 'install_angular', 'install_angular_translate', 'install_angular_cookies', 
 'install_angular_ui_tinymce', 'install_tinymce', 'install_angular_bootstrap', 'install_angular_animate', 'install_cropper',
 'install_slider','install_bootstrap']);
-
 

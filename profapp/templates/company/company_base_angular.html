@@ -25,7 +25,7 @@
 {% raw %}
 <div ng-controller="CompanyMenuController" class="topbar-menu-links">
     <div ng-cloak ng-show="user.id">
-        <div class="row">
+        <div class="row menu-company-inside">
             <div class="col-lg-6 col-md-6 col-sm-6 col-xs-8 menu-company">
                 <a ng-class="{'selected': selected_company_menu == 'materials'}"
                    href="{{ url_company_materials({company_id: company.id}) }}">{{ _('Materials') }}</a>
@@ -41,7 +41,7 @@
                 </div>
                 <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12 company-logo">
                     <a  href="{{ url_company_profile({company_id: company.id}) }}">
-                        <img pr-no-image="/static/images/company_no_logo.png" pr-image="'{{ company.logo_file_relationship.id }}'" style="height: 60px; margin-top: -20px;"/>
+                        <img pr-image="company.logo_file_id " style="height: 60px; margin-top: -20px;"/>
                     </a>
                 </div>
             </div>

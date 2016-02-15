@@ -12,62 +12,6 @@
     {% endblock company_base %}
 
 
-    {% raw %}
-    <script type="text/ng-template" id="submit_publish_dialog.html">
-        <div class="modal-header">
-            <h3 class="modal-title">{{ _(action + ' ' + object_name + ' at portal') }}</h3>
-        </div>
-        <div class="modal-body">
-            <div ng-if="!can_submit">
-                {{ _('sorry you have no permission to submit material in behalf of company `%(company.name)s`') }}
-            </div>
-            <div ng-if="can_submit">
-                {{ _('You are going to ' + action + ' ' + object_name + ' `%(material_or_publication.title)s` at portal
-                `%(portal.name)s`') }}<br/>
-                <br/>
-                {{ _('Portal division') }}<span af-validation-answer="validation:portal_division_id"></span><br/>
-                <div ng-repeat="division in portal.divisions"><label><input
-                        name="material_details_publish_dialog_division"
-                        ng-value="division.id" ng-model="$parent.material_or_publication.portal_division_id"
-                        type="radio"> {{ division.name }}</label></div>
-
-                {{ _('Publication date') }}<span af-validation-answer="validation:publishing_tm"></span><br/>
-                <div pr-datepicker ng-model="material_or_publication.publishing_tm"></div>
-                <div ng-if="material_or_publication.portal_division_id &&
-                portal.divisions[material_or_publication.portal_division_id]['portal_division_type_id'] === 'events'">
-                    {{ _('Event date') }}<span af-validation-answer="validation:event_tm"></span><br/>
-                    <div pr-datepicker ng-model="material_or_publication.event_tm"></div>
-                </div>
-                <div ng-if="object_name === 'material'">
-                    <hr/>
-                    <label ng-class="{disabled: !can_publish}"><input ng-disabled="!can_publish"
-                                                                      ng-model="$parent.$parent.also_publish"
-                                                                      type="checkbox">&nbsp;{{
-                        _('also publish material') }}</label>
-                    <div ng-if="!can_publish">
-                        {{ _('Sorry, you company `%(company.name)s` have no permission to publish at portal
-                        %(portal.name)s') }}<br/>
-                    </div>
-                    {{ _('You can send message to company') }}<br/>
-                    <textarea disabled="disabled" style="width: 100%" ng-model="message"></textarea>
-                </div>
-
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button ng-if="object_name === 'material'" class="btn btn-primary"
-                    ng-disabled="!valid()"
-                    type="button" ng-click="action_do(action)"><span ng-if="!also_publish">{{ _('Do submit') }}</span>
-                <span ng-if="also_publish">{{ _('Do submit & publish') }}</span>
-            </button>
-            <button class="btn btn-warning" type="button" ng-click="action_cancel()">{{ _('Cancel ' + action) }}
-            </button>
-        </div>
-    </script>
-    {% endraw %}
-
-
-
     <script>
 
         module.controller('material_details_unpublish_dialog', function ($scope, $ok, $uibModalInstance, $publish, publication, company, portal, published_at_division, rights_user_in_company, rights_company_at_portal) {
@@ -260,13 +204,10 @@
 
                 if (action === 'republish' || action === 'submit') {
                     var modalInstance = $publish({
-                        material_or_publication: 'republish' ? row['publication'] : $scope.data['material'],
+                        material_or_publication_id: (action === 'submit') ? $scope.data['material']['id'] : row['publication']['id'],
                         action: action,
-                        portal: row,
-                        rights_company_at_portal: (action === 'republish') ? row['rights_company_at_portal'] : {},
-                        published_at_division: (action === 'republish') ? row['publication']['division'] : null,
-                        company: $scope.data.company,
-                        rights_user_in_company: $scope.data.rights_user_in_company
+                        portal_id: row['id'],
+                        company_id: $scope.data.company['id']
                     });
 
                     modalInstance.result.then(function (updated_row) {
