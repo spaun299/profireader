@@ -164,7 +164,7 @@ class ArticlePortalDivision(Base, PRBase):
         self.portal_division_id = portal_division_id
         # self.portal_id = portal_id
 
-    def get_client_side_dict(self, fields='id|image_file_id|read_count|title|subtitle|short|long_stripped|'
+    def get_client_side_dict(self, fields='id|image_file_id|read_count|title|subtitle|short|long_stripped|portal_division_id|'
                                           'image_file_id|position|keywords|cr_tm|md_tm|status|visibility|publishing_tm|event_tm, '
                                           'company.id|name, division.id|name, portal.id|name|host',
                              more_fields=None):
@@ -254,6 +254,27 @@ class ArticlePortalDivision(Base, PRBase):
     def position_unique_filter(self):
         return and_(ArticlePortalDivision.portal_division_id == self.portal_division_id,
                     ArticlePortalDivision.position != None)
+
+    def validate(self, is_new):
+        ret = super().validate(is_new)
+
+        if not self.publishing_tm:
+            ret['errors']['publishing_tm'] = 'Please select publication date'
+
+        if not self.portal_division_id:
+            ret['errors']['portal_division_id'] = 'Please select portal division'
+        else:
+            portalDivision = PortalDivision.get(self.portal_division_id)
+            if portalDivision.portal_division_type_id == 'events':
+                if not self.event_tm:
+                    ret['errors']['event_tm'] = 'Please select event date'
+                elif self.event_tm and datetime.now() > self.event_tm:
+                    ret['warnings']['event_tm'] = 'Event time in past'
+
+        # if not self.event_tm:
+        #     ret['errors']['event_tm'] = 'Please select event date'
+
+        return ret
 
 
 class ArticleCompany(Base, PRBase):
@@ -448,42 +469,42 @@ class ArticleCompany(Base, PRBase):
                                           '://file001.profireader.com/%s/' % (filesintext[old_image_id],))
         return long_text
 
-    def clone_for_portal(self, portal_division_id, action, tag_names=[]):
-
-        article_portal_division = \
-            ArticlePortalDivision(
-                    title=self.title, subtitle=self.subtitle,
-                    short=self.short, long=self.long,
-                    portal_division_id=portal_division_id,
-                    article_company_id=self.id,
-                    keywords=self.keywords,
-            )
-
-        article_portal_division.long = \
-            self.clone_for_portal_images_and_replace_urls(portal_division_id, article_portal_division)
-
-        # TODO (AA to AA): old  tag_portal_division_article should be deleted.
-        # TagPortalDivisionArticle(article_portal_division_id=None, tag_portal_division_id=None, position=None)
-
-        # article_portal_division.portal_division_tags = []
-        #
-        # tags_portal_division_article = []
-        # for i in range(len(tag_names)):
-        #     tag_portal_division_article = TagPortalDivisionArticle(position=i + 1)
-        #     tag_portal_division = \
-        #         g.db.query(TagPortalDivision). \
-        #             select_from(TagPortalDivision). \
-        #             join(Tag). \
-        #             filter(TagPortalDivision.portal_division_id == portal_division_id). \
-        #             filter(Tag.name == tag_names[i]).one()
-        #
-        #     tag_portal_division_article.tag_portal_division = tag_portal_division
-        #     tags_portal_division_article.append(tag_portal_division_article)
-        # article_portal_division.tag_assoc_select = tags_portal_division_article
-
-
-
-        return self
+    # def clone_for_portal(self, portal_division_id, action, tag_names=[]):
+    #
+    #     article_portal_division = \
+    #         ArticlePortalDivision(
+    #                 title=self.title, subtitle=self.subtitle,
+    #                 short=self.short, long=self.long,
+    #                 portal_division_id=portal_division_id,
+    #                 article_company_id=self.id,
+    #                 keywords=self.keywords,
+    #         )
+    #
+    #     article_portal_division.long = \
+    #         self.clone_for_portal_images_and_replace_urls(portal_division_id, article_portal_division)
+    #
+    #     # TODO (AA to AA): old  tag_portal_division_article should be deleted.
+    #     # TagPortalDivisionArticle(article_portal_division_id=None, tag_portal_division_id=None, position=None)
+    #
+    #     # article_portal_division.portal_division_tags = []
+    #     #
+    #     # tags_portal_division_article = []
+    #     # for i in range(len(tag_names)):
+    #     #     tag_portal_division_article = TagPortalDivisionArticle(position=i + 1)
+    #     #     tag_portal_division = \
+    #     #         g.db.query(TagPortalDivision). \
+    #     #             select_from(TagPortalDivision). \
+    #     #             join(Tag). \
+    #     #             filter(TagPortalDivision.portal_division_id == portal_division_id). \
+    #     #             filter(Tag.name == tag_names[i]).one()
+    #     #
+    #     #     tag_portal_division_article.tag_portal_division = tag_portal_division
+    #     #     tags_portal_division_article.append(tag_portal_division_article)
+    #     # article_portal_division.tag_assoc_select = tags_portal_division_article
+    #
+    #
+    #
+    #     return self
 
     def get_article_owner_portal(self, **kwargs):
         return [art_port_div.division.portal for art_port_div in self.portal_article if kwargs][0]

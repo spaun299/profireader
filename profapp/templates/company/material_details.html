@@ -202,7 +202,7 @@
                     return;
                 }
 
-                if (action === 'republish' || action === 'submit') {
+                if (action === 'republish' || action === 'submit' || action === 'publish') {
                     var modalInstance = $publish({
                         material_or_publication_id: (action === 'submit') ? $scope.data['material']['id'] : row['publication']['id'],
                         action: action,
