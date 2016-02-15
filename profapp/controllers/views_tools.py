@@ -14,7 +14,6 @@ from ..models.translate import TranslateTemplate
 @tools_bp.route('/save_translate/', methods=['POST'])
 @ok
 def save_translate(json):
-    print(json)
     return TranslateTemplate.getTranslate(request.json['template'], request.json['phrase'], request.json['url'], request.json['allow_html'])
 
 
