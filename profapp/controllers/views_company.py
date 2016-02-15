@@ -301,7 +301,6 @@ def load(json, company_id=None):
         company_dict.update(image)
         return company_dict
     else:
-        print(rights_user_in_company['EDIT_PORTAL_PROFILE'])
         company.attr(g.filter_json(json, 'about', 'address', 'country', 'email', 'name', 'phone',
                                    'phone2', 'region', 'short_description', 'lon', 'lat'))
         if rights_user_in_company['EDIT_PORTAL_PROFILE']:

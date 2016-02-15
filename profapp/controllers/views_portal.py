@@ -430,7 +430,7 @@ def portals_partners_load(json, company_id):
                            'portal_logo': File.get(partner.portal.logo_file_id).url() if partner.portal.logo_file_id
                            else '/static/images/company_no_logo.png',
                            'portal_id': partner.portal.id, 'link': partner.portal.host,
-                           'company_name': Company.get(partner.portal.company_owner_id).name}
+                           'company_name': Company.get(partner.portal.company_owner_id).name,'rights':partner.get_rights()}
                           for partner in partners_g],
             'total': count,
             'portal': db(Company, id=company_id).one().own_portal.get_client_side_dict(fields='name')
@@ -440,6 +440,14 @@ def portals_partners_load(json, company_id):
             'company_id': company_id,
             'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()
             }
+
+@portal_bp.route('/portals_partners_details/', methods=['GET'])
+@login_required
+@ok
+def portals_partners_load(json):
+    return render_template('company/portal_partner_details.html',
+                           portal=Portal.get(json.get('portal_id')))
+
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])

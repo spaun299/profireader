@@ -1,0 +1,45 @@
+{% extends "index_lazy_layout.html" %}
+
+{% block title %}Employment details{% endblock title %}
+
+{% block portal_content %}
+
+    <script>
+        module.controller('portal_partner_details', function ($scope, $ok) {
+
+            $scope.portal_partner = {{ portal|tojson|safe }};
+
+            $scope.url_portal_partner_update = {{ raw_url_for('portal.portal_partner_update')|safe }};
+
+            $scope.update = function () {
+                window.location.href = $scope.url_portal_partner_update({
+                    'portal_id': $scope.portal_partner.id
+                });
+            }
+
+        });
+    </script>
+    {% raw %}
+
+    <div  ng-controller="portal_partner_details">
+
+        <h2>
+            <img class="person-small-cover" pr-image pr-no-image="{{ employee.profireader_small_avatar_url }}"/>
+            <img class="logo-small-cover" pr-image="employer.logo_file_id"/>
+            {{ _('Employee `%(employee.profireader_name)s` at company `%(employer.name)s`') }}</h2>
+
+        <img pr-image="employer.logo_file_id"/>
+        {{ _('status') }} {{ employment.status }}<br>
+        {{ _('position') }} {{ employment.position }}<br>
+        {{ _('permissions') }}<br>
+        <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in employment.rights">
+            <img src="/static/images/0.gif"
+                 class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ right_name }}"/>
+            {{ right_name }}
+        </div>
+        <button class="btn fr" type="button" ng-click="update()">{{ _('Update employment') }}</button>
+    </div>
+
+    {% endraw %}
+
+{% endblock portal_content %}
