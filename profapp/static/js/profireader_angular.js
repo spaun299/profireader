@@ -1632,30 +1632,23 @@ None = null;
 False = false;
 True = true;
 
-
-//TODO: RP by OZ:   pls rewrite this two functions as jquery plugin
-
-$.fn.scrollView = function () {
+$.fn.scrollTo = function () {
   return this.each(function () {
     $('html, body').animate({
-      scrollTop: $(this).offset().top
+       scrollTop: $(this).offset().top
     }, 1000);
   });
 }
 
-function scrool($el) {
-    $($el).scrollView();
-    //$.smoothScroll($.extend({
-    //    scrollElement: $el.parent(),
-    //    scrollTarget: $el
-    //}, options ? options : {}));
+function scrool($el, message) {
+    $($el).scrollTo();
 }
 
 function highlight($el) {
-    $el.addClass('highlight');
+    $($el).addClass('highlight');
     setTimeout(function () {
-        $el.removeClass('highlight');
-    }, 500);
+        $($el).removeClass('highlight');
+    }, 3500);
 }
 
 function angularControllerFunction(controller_attr, function_name) {

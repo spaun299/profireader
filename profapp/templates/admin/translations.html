@@ -1,7 +1,10 @@
-{% extends "index_lazy_layout.html" %}
+{% extends "_ruslan/_index_layout.html" %}
 
 {% block title %}Profireader - Translations{% endblock title %}
-
+{% block head %}
+    {{ super() }}
+    {% include '_ruslan/partials/_header_files_grid.html' %}
+{% endblock head %}
 {% block portal_content %}
 
 
