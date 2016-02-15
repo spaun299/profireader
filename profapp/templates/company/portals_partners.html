@@ -27,7 +27,7 @@
         $scope.url_join = {{ raw_url_for('portal.apply_company')|safe }};
         $scope.partners = {{ raw_url_for('portal.portals_partners')|safe }};
         $scope.load_partners = {{ raw_url_for('portal.portals_partners_load')|safe }};
-        $scope.url_portal_partners_details = {{ url_for('portal.portals_partners_details')}};
+        $scope.url_portal_partner_details = {{ raw_url_for('portal.portal_partner_details')| safe}};
         $scope.selectedPortal_name = '';
         $scope.selectedPortal = null;
         $scope.selectedPortal_sending = false;
@@ -85,7 +85,8 @@
                                 name: 'portal_name', type: 'link',
                                 href: 'portal_link(row.entity.link)'
                             }, {
-                                name: 'company_name'
+                                name: 'company.name', type: 'link',
+                                href: 'url_portal_partner_details({partner_id: row.entity.company.id, employeer_id:row.entity.employeer_id})'
                             }, {
                                 name: 'status', width: '10%', afilter: {type: 'input'}
                             }, {
