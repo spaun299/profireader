@@ -23,13 +23,12 @@
         $scope.company = {{ company.get_client_side_dict()|tojson|safe }};
         $scope.url_back = {{ raw_url_for('company.show')|safe }};
         $scope.data = {};
-        $scope.user_have_company = '{{ user_comp }}'=== 'True'? true: null;
-        $scope.cropper_for_copmany = true;
         $scope.rights_user_in_company = {{ rights_user_in_company|tojson|safe }};
         $scope.edit = false;
+
         $scope.go_to_portal = function(host){
-            window.location.href = host;
-        }
+            window.location.href = 'http://'+host;
+        };
 
         $scope.change = function(){
                $scope.edit = $scope.rights_user_in_company['COMPANY_EDIT_PROFILE']?true:false;
@@ -43,6 +42,7 @@
                 $scope.edit = false;
                 $scope.save = false;
                 deff(resp);
+                $scope.company = $scope.data_saved;
             };
 
         $scope.afterLoad = function (resp, deff) {
