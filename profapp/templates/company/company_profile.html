@@ -28,8 +28,8 @@
         $scope.rights_user_in_company = {{ rights_user_in_company|tojson|safe }};
         $scope.edit = false;
         $scope.go_to_portal = function(host){
-            window.location.href = host;
-        }
+            window.location.href = 'http://'+host;
+        };
 
         $scope.change = function(){
                $scope.edit = $scope.rights_user_in_company['COMPANY_EDIT_PROFILE']?true:false;
@@ -76,7 +76,7 @@
                 <button ng-show="save" class="btn btn-default save-profile pull-right border-radius" type="button" ng-click="$af.save(data)"
                    ng-disabled="!$af.isActionAllowed(data, 'save') "
                    >{{ _('Save profile') }}</button>
-                <button class="btn btn-default edit-profile pull-right border-radius" type="button" ng-click="change()" ng-if="edit_rights">{{ _('Edit profile') }}</button>
+                <button class="btn btn-default edit-profile pull-right border-radius" type="button" ng-click="change()" ng-if="edit_rights && !save">{{ _('Edit profile') }}</button>
 
             <ul class="edit-block" ng-show="!edit">
                 <li ng-show="company.name">Name: {{ company.name }}</li>

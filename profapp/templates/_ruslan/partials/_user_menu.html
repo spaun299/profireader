@@ -63,8 +63,8 @@
                    <li><a href="{{ url_general_help() }}" title="Інформація" ng-class="{'selected': selected_user_menu == 'info'}"><i class="fa fa-info"></i></a></li>
 
                     <li ng-show="user.id" role="presentation">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="{{ url_user_profile({user_id: 'user.id'}) }}" role="button" aria-haspopup="true" aria-expanded="false">
-                            <img class="person-small-cover" pr-image="" pr-no-image="{{ user_avatar_url }}"> {{user.name}} <span class="caret"></span>
+                        <a class="dropdown-toggle"  href="{{ url_user_profile({user_id: user.id}) }}" role="button" aria-haspopup="true" aria-expanded="false">
+                            <img class="person-small-cover" pr-image="" pr-no-image="{{ user_avatar_url }}"> {{user.name}}
                         </a>
 
                          <!--<ul class="dropdown-menu">
@@ -75,7 +75,7 @@
                          </ul>-->
 
                   </li>
-
+                <li ng-show="user.id" ><a href="{{ url_auth_logout() }}" >{{_('Log Out') }}</a></li>
 
                 </ul>
     </div>

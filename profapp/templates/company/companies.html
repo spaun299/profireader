@@ -59,12 +59,8 @@
                     $scope.data['companies'] = resp['companies'];
                     {#TODO OZ BY VK: javascript error                #}
                     $timeout(function () {
-                        scrool($('#joined_company_' + resp['companies']['id']), {
-                            afterScroll: function () {
-                                highlight($('#joined_company_' + resp['companies']['id']));
-                            }
-                        });
-                    }, 500);
+                        scrool('#joined_company_' + resp['companies']['id']);
+                    }, 1500);
 
                 }).finally(function () {
                     $scope.selectedCompany_sending = false;
