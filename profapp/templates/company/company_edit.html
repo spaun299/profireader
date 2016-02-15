@@ -53,17 +53,23 @@
              af-after-load="afterLoad"
              ng-model="data">
             <div class="row company">
-        <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 image-company-profile">
+                <div class="col-lg-6"><h3>Create a new company</h3></div>
+                <div class="col-lg-6 create-new-company">
+
+                    <button class="btn btn-default save-profile pull-right border-radius" type="button" ng-click="$af.save(data)" ng-disabled="!$af.isActionAllowed(data, 'save') ">{{ _('Save profile') }}</button>
+                </div>
+            </div>
+            <div class="row">
+
+
+        <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 image-company-profile create-img">
             <div style="width: 400px;">
                 <div ng-model="data.image" pr-cropper="cropper"></div>
             </div>
         </div>
 
         <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12 edit-company">
-
-            <button class="btn btn-default save-profile pull-right border-radius" type="button" ng-click="$af.save(data)" ng-disabled="!$af.isActionAllowed(data, 'save') ">{{ _('Save profile') }}</button>
-
-            <div class="edit-block" >
+            <div class="edit-block col-lg-12" >
                 <div class="col-lg-2">Name:</div>
                  <div class="col-lg-10 edit-data">
                      <input type="text" class="form-control border-radius" id="basic-url" aria-describedby="basic-addon3" ng-model="data.name">
@@ -102,6 +108,12 @@
             </div>
         </div>
     </div>
+        </div>
+        <div>
+            <h3>Short description:</h3>
+            <textarea ui-tinymce="tinymceImageOptions" ng-model="data.short_description"></textarea>
+            <h3>About company:</h3>
+            <textarea  ui-tinymce="tinymceImageOptions" ng-model="data.about"></textarea>
         </div>
 
 

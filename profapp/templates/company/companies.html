@@ -132,8 +132,7 @@
                       <p>{{ _((my_employer.author_user_id==data.user_id? ' Type: OWN COMPANY':'JOINED COMPANY') , my_employer) }}</p>
                       <span ng-if="!my_employer.own_portal.host"><b>{{_('Portals')}}: </b>{{_('No')}}</span>
                       <div ng-if="my_employer.own_portal.host">
-                            http://{{ my_employer.own_portal.host }}
-                          <button class="btn btn-default" type="button" ng-click="goToPortal(my_employer.own_portal.host)">{{ _("Go to portal") }}</button>
+                          <button class="btn btn-default" type="button" ng-click="goToPortal(my_employer.own_portal.id)">{{ _("Go to portal") }}</button>
                     </div>
 
                   </div>
