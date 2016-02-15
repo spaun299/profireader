@@ -333,7 +333,7 @@ class Grid:
     def grid_tuple_to_dict(tuple):
         list = []
         for t in tuple:
-            list.extend([t[0]]+t[1])
+            list.extend([t[0]] + t[1])
         return list
 
 
