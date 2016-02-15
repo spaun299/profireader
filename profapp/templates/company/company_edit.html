@@ -48,7 +48,65 @@
     </script>
     {% raw %}
     <div ng-controller="company_create">
-        <div af
+        <div class="container"  af
+             af-after-save="afterSave"
+             af-after-load="afterLoad"
+             ng-model="data">
+            <div class="row company">
+        <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 image-company-profile">
+            <div style="width: 400px;">
+                <div ng-model="data.image" pr-cropper="cropper"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12 edit-company">
+
+            <button class="btn btn-default save-profile pull-right border-radius" type="button" ng-click="$af.save(data)" ng-disabled="!$af.isActionAllowed(data, 'save') ">{{ _('Save profile') }}</button>
+
+            <div class="edit-block" >
+                <div class="col-lg-2">Name:</div>
+                 <div class="col-lg-10 edit-data">
+                     <input type="text" class="form-control border-radius" id="basic-url" aria-describedby="basic-addon3" ng-model="data.name">
+                 </div>
+                <div class="col-lg-2">Country:</div>
+                 <div class="col-lg-10 edit-data">
+                     <input type="text" class="form-control border-radius" id="basic-url" aria-describedby="basic-addon3" ng-model="data.country">
+                 </div>
+                <div class="col-lg-2">Region:</div>
+                 <div class="col-lg-10 edit-data">
+                     <input type="text" class="form-control border-radius" id="basic-url" aria-describedby="basic-addon3" ng-model="data.region">
+                 </div>
+                <div class="col-lg-2">Address:</div>
+                 <div class="col-lg-10 edit-data">
+                     <input type="text" class="form-control border-radius" id="basic-url" aria-describedby="basic-addon3" ng-model="data.address">
+                 </div>
+                <div class="col-lg-2">Phone:</div>
+                 <div class="col-lg-10 edit-data">
+                     <input type="text" class="form-control border-radius" id="basic-url" aria-describedby="basic-addon3" ng-model="data.phone">
+                 </div>
+                <div class="col-lg-2">Fax:</div>
+                 <div class="col-lg-10 edit-data">
+                     <input type="text" class="form-control border-radius" id="basic-url" aria-describedby="basic-addon3" ng-model="data.phone2">
+                 </div>
+                <div class="col-lg-2">Email:</div>
+                 <div class="col-lg-10 edit-data">
+                     <input type=text class="form-control border-radius" id="basic-url" aria-describedby="basic-addon3" ng-model="data.email">
+                 </div>
+                <div class="col-lg-3">Lang and long:</div>
+                 <div class="col-lg-4 edit-data">
+                     <input type="text" class="form-control border-radius" id="basic-url" aria-describedby="basic-addon3"  ng-model="data.lat">
+                 </div>
+                <div class="col-lg-4 edit-data">
+                     <input type="text" class="form-control border-radius" id="basic-url" aria-describedby="basic-addon3" ng-model="data.lon">
+                 </div>
+            </div>
+        </div>
+    </div>
+        </div>
+
+
+
+       <!-- <div af
              af-after-save="afterSave"
              af-after-load="afterLoad"
              ng-model="data">
@@ -99,7 +157,7 @@
                    ng-disabled="!$af.isActionAllowed(data, 'save')"
                    type="submit"
                    value="{{ data.id ? _('save') : _('create') }}"/>
-        </div>
+        </div> -->
     </div>
 
 
