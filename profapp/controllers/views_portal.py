@@ -456,7 +456,6 @@ def portal_partner_details(partner_id, employeer_id):
 def portal_partner_update(employeer_id,partner_id ):
     company = Company.get(partner_id)
     partner = MemberCompanyPortal.get(company.own_portal.id, company_id=company.id)
-    print(partner.company.get_client_side_dict())
     return render_template('company/portal_partner_update.html',
                            partner=partner.company.get_client_side_dict())
 
@@ -477,13 +476,13 @@ def partner_update_load(json, employeer_id, partner_id):
                 'employeer': Company.get(employeer_id).get_client_side_dict(),
                 'rights': partner.get_rights()}
     else:
-        print(partner)
-        # if action == 'validate':
-        #     partner.detach()
-        #     return partner.validate(False)
-        # else:
-        #     partner.save()
-    return partner.get_client_side_dict()
+        partner.set_client_side_dict(json['status'],json['rights'])
+        if action == 'validate':
+            partner.detach()
+            return partner.validate(False)
+        else:
+            partner.save()
+    return partner.get_client_side_dict(fields='id, status, rights_company_at_portal')
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])
 @tos_required
@@ -545,7 +544,7 @@ def get_publication_dict(publication):
     if ret.get('long'):
             del ret['long']
 
-    ret['actions'] = actions_for_statuses[ret['status']]
+    ret['actions'] = publication.get_actions_for_status()
 
     return ret
 

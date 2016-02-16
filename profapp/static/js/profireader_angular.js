@@ -1190,29 +1190,35 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 }
 
                 function generateCellTemplate(col) {
-                    var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + col.type + ' pr-grid-cell-field-name-' + col.name.replace(/\./g, '-') + ' ' + (col.classes ? col.classes : '') + ' ';
+                    var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + (col.type?col.type:'text') + ' pr-grid-cell-field-name-' + col.name.replace(/\./g, '-') + ' ' + (col.classes ? col.classes : '') + ' ';
+                    var prefix_img = '';
+                    if (col.img) {
+                        //var imgwidth = col.imgwidth?col.imgwidth:'2em';
+                        var prefix_img = '<img class="pr-grid-cell-img-prefix" pr-image="row.entity.'+col.img+'"/>';
+                        //classes_for_row += ' pr-grid-cell-with-img '
+                    }
                     switch (col.type) {
                         case 'link':
-                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}"><a href="{{' + 'grid.appScope.' + col.href + '}}" ng-bind="COL_FIELD"></a></div>';
+                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">'+prefix_img+'<a '+(col.target?(' target="'+col.target+'" '):'')+' href="{{' + 'grid.appScope.' + col.href + '}}" ng-bind="COL_FIELD"></a></div>';
                         case 'img':
-                            return '<div class="' + classes_for_row + '" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>';
+                            return '<div class="' + classes_for_row + '" style="text-align:center;">'+prefix_img+'<img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>';
                         case 'show_modal':
-                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}"><a ng-click="' + col.modal + '" ng-bind="COL_FIELD"></a></div>';
+                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">'+prefix_img+'<a ng-click="' + col.modal + '" ng-bind="COL_FIELD"></a></div>';
                         case 'actions':
-                            return '<div class="' + classes_for_row + '"><button ' + 'class="btn pr-grid-cell-field-type-actions-action pr-grid-cell-field-type-actions-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.' + col['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col['name'] + '\')" title="{{ grid.appScope._(\'grid action \' + action_name) }}">{{ grid.appScope._(\'grid action \' + action_name) }}</button></div>';
+                            return '<div class="' + classes_for_row + '">'+prefix_img+'<button ' + 'class="btn pr-grid-cell-field-type-actions-action pr-grid-cell-field-type-actions-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.' + col['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col['name'] + '\')" title="{{ grid.appScope._(action_name + \' grid action\') }}">{{ grid.appScope._(action_name + \' grid action\') }}</button></div>';
                         case 'icons':
-                            return '<div class="' + classes_for_row + '"><img ng-class="{disabled: !icon_enabled}" src="/static/images/0.gif" ' +
+                            return '<div class="' + classes_for_row + '">'+prefix_img+'<img ng-class="{disabled: !icon_enabled}" src="/static/images/0.gif" ' +
                                 'class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ icon_name }}" ng-repeat="(icon_name, icon_enabled) in COL_FIELD" ng-click="grid.appScope.' + col['onclick'] + '(row.entity.id, \'{{ icon_name }}\', row.entity, \'' + col['name'] + '\')" title="{{ grid.appScope._(\'grid icon \' + icon_name) }}"/></div>';
                         case 'editable':
                             if (col.multiple === true && col.rule) {
-                                return '<div class="' + classes_for_row + '" ng-if="grid.appScope.' + col.rule + '=== false" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div><div ng-if="grid.appScope.' + col.rule + '"><div ng-click="' + col.modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>';
+                                return '<div class="' + classes_for_row + '" ng-if="grid.appScope.' + col.rule + '=== false" title="{{ COL_FIELD }}">'+prefix_img+'{{ COL_FIELD }}</div><div ng-if="grid.appScope.' + col.rule + '"><div ng-click="' + col.modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>';
                             }
                             if (col.subtype && col.subtype === 'tinymce') {
-                                return '<div class="' + classes_for_row + '" ng-click="' + col.modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div>';
+                                return '<div class="' + classes_for_row + '" ng-click="' + col.modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>'+prefix_img+'{{ COL_FIELD }}</div>';
                             }
                         //TODO: SS by OZ: what is returned when neither of two above contitions is true?
                         default:
-                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div>';
+                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">'+prefix_img+'{{ COL_FIELD }}</div>';
 
                     }
                 }
@@ -1237,30 +1243,6 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
                 gridApi.grid.options.columnDefs[i].cellTemplate = generateCellTemplate(col[i]);
 
-
-                //if (col[i].type === 'link') {
-                //
-                //
-                //} else if (col[i].type === 'img') {
-                //    //gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
-                //} else if (col[i].type === 'show_modal') {
-                //    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}"><a ng-click="' + col[i].modal + '" ng-bind="COL_FIELD"></a></div>'
-                //} else if (col[i].type === 'actions') {
-                //    //gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><button ' +
-                //    //    'class="btn pr-grid-cell-field-type-actions-action pr-grid-cell-field-type-actions-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.' + col[i]['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col[i]['name'] + '\')" title="{{ grid.appScope._(\'grid action \' + action_name) }}">{{ grid.appScope._(\'grid action \' + action_name) }}</button></div>'
-                //} else if (col[i].type === 'icons') {
-                //    gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><img ng-class="{disabled: !icon_enabled}" src="/static/images/0.gif" ' +
-                //        'class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ icon_name }}" ng-repeat="(icon_name, icon_enabled) in COL_FIELD" ng-click="grid.appScope.' + col[i]['onclick'] + '(row.entity.id, \'{{ icon_name }}\', row.entity, \'' + col[i]['name'] + '\')" title="{{ grid.appScope._(\'grid icon \' + icon_name) }}"/></div>'
-                //} else if (col[i].type === 'editable') {
-                //    if (col[i].multiple === true && col[i].rule) {
-                //        gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" ng-if="grid.appScope.' + col[i].rule + '=== false" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div><div ng-if="grid.appScope.' + col[i].rule + '"><div ng-click="' + col[i].modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>'
-                //    }
-                //    if (col[i].subtype && col[i].subtype === 'tinymce') {
-                //        gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" ng-click="' + col[i].modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div>'
-                //    }
-                //} else {
-                //    gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div>'
-                //}
             }
 
             gridApi.grid['searchItemGrid'] = function (col) {
