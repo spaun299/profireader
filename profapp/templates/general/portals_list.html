@@ -1,36 +1,59 @@
-{% extends "index_layout.html" %}
+{% extends "index_lazy_layout.html" %}
+
 {% block title %}Profireader{% endblock title %}
+
 {% block head %}
     {{ super() }}
     {% include 'partials/empty_page.html' %}
 {% endblock head %}
 
-{% block portal_base %}
-    {% include 'partials/portal_base_Profireader.html' %}
-{% endblock portal_base %}
 {% block portal_content %}
     <script>
-    function load_portals(){
-        var portals_name = [];
-        portals = {{ portals|tojson }};
-        for(var i=0;i<portals.length;i++){
-            portals_name.push({label: portals[i][1], id: portals[i][0]})
-        }
-        $( "#portal_search" ).autocomplete({
-      source: portals_name,
-            select: function(e, ui) {
-                window.location.href = '/subscribe/' + ui.item.id;
-    }
-    });
+        module.controller('portals_list', function ($scope, $ok) {
+            $scope.$$translate = {{ translates('portals_list')|safe }};
+            $scope.search_text = '';
+            $scope.loading = false;
+            $scope.data = [];
 
-    }
-</script>
-           {{ _('Please, subscribe to any portal') }}
-    </br>
-    <label for="portal_search">Search</label>
-    <input id="portal_search" type="text"><script>load_portals()</script>
-          {% for portal in portals %}
-   <h2>{{ portal[1] }}<a href="{{ url_for('reader.reader_subscribe', portal_id=portal[0]) }}"> - Subscribe</a></h2>
-          {% endfor %}
-    {{ __('Presentation text') }}
+            $scope.search_for_portal = function () {
+                if ($scope.loading) {
+                    return false;
+                }
+                $scope.loading = true;
+                $scope.data = [];
+                $ok('', {text: $scope.search_text}, function (resp) {
+                    $scope.data = resp;
+                    $scope.loading = false;
+                })
+            }
+        });
+
+    </script>
+
+    {% raw %}
+    <div ng-controller="portals_list" ng-init="search_for_portal()">
+        <h2>{{ _('Please, subscribe to any portal') }}</h2>
+        </br>
+        {{ _('Search') }} <input ng-model="search_text" ng-change="search_for_portal()" id="portal_search" type="text">
+        <table>
+            <tr ng-repeat="portal in data">
+                <td class="p4px">
+                    <img class="subscribe-portal-logo" pr-image="portal.logo_file_id"/>
+                </td>
+                <td class="p4px">
+                    {{ portal.name }}<br/>
+                    {{ portal.host }}
+                </td>
+                <td class="p4px">
+                    <button class="btn" ng-click="subscribe(portal.id)">{{ _('Subscribe') }}</button>
+                </td>
+
+            </tr>
+
+        </table>
+        <div ng-if="loading">
+            {{ _('Loading...') }}
+        </div>
+    </div>
+    {% endraw %}
 {% endblock portal_content %}

@@ -2,8 +2,13 @@ from flask import render_template, request, session, redirect, url_for, g, flash
 from .blueprints_declaration import general_bp
 from flask.ext.login import login_required
 from ..models.portal import Portal, UserPortalReader, ReaderUserPortalPlan
+from ..models.company import Company
+from ..models.pr_base import Search
 from profapp.controllers.errors import BadDataProvided
-from utils.email import email_send
+from utils.pr_email import email_send
+from .request_wrapers import ok, tos_required
+from utils.db_utils import db
+from sqlalchemy.sql import expression, and_
 
 
 @general_bp.route('help/')
@@ -16,10 +21,17 @@ def index():
     return render_template('general/index.html')
 
 
-@general_bp.route('portals_list/')
+@general_bp.route('portals_list/', methods=['GET'])
 def portals_list():
     portals = [(id, name) for id, name in UserPortalReader.get_portals_for_user()]
     return render_template('general/portals_list.html', portals=portals)
+
+
+@general_bp.route('portals_list/', methods=['POST'])
+@ok
+def portals_list_load(json):
+    ret, page, page2 = Search.search({'class': Portal, 'return_fields': 'default_dict'}, page=1, search_text=json['text'])
+    return ret
 
 
 @general_bp.route('subscribe/')

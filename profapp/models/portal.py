@@ -276,7 +276,7 @@ class Portal(Base, PRBase):
         return ret
 
     def get_client_side_dict(self,
-                             fields='id|name, divisions.*, layout.*, logo_file_id, favicon_file_id, company_owner_id, url_facebook',
+                             fields='id|name|host, divisions.*, layout.*, logo_file_id, favicon_file_id, company_owner_id, url_facebook',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 

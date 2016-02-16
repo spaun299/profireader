@@ -197,10 +197,12 @@ class Search(Base):
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
-            search_params.append(and_(Search.index == db(cls['class'].id).filter(
-                    filter_params).subquery().c.id, Search.text.ilike(
-                    "%" + search_text + "%"), Search.table_name == cls['class'].__tablename__,
-                                      Search.kind.in_(fields)), )
+            class_filter = Search.index == (db(cls['class'].id).filter(filter_params).subquery().c.id if filter_params else db(cls['class'].id).subquery().c.id)
+
+            search_params.append(and_(class_filter, Search.table_name == cls['class'].__tablename__,
+                            Search.kind.in_(fields),
+                            Search.text.ilike(
+                                    "%" + search_text + "%")), )
         subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
                              func.min(Search.table_name).label('table_name'),
@@ -347,7 +349,6 @@ class PRBase:
             return datetime.datetime.strptime(str, "%a, %d %b %Y %H:%M:%S %Z")
         except:
             return None
-
 
     def position_unique_filter(self):
         return self.__class__.position != None

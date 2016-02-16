@@ -302,8 +302,18 @@
     width: 16%;
 }
 
+.subscribe-portal-logo {
+    width: 200px;
+    height: 150px;
+}
+
 .pr-grid-cell-img-prefix {
     height: 100%;
     width: 50px;
     margin-right: 2px;
+}
+
+
+.p4px {
+    padding: 4px;
 }
