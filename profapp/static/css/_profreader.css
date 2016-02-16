@@ -419,4 +419,7 @@
     padding: 15px;
     margin-top: -1px;
 }
-
+.highlight a{
+    color: white!important;
+    background: red;
+}
