@@ -541,7 +541,7 @@ def get_publication_dict(publication):
     if ret.get('long'):
             del ret['long']
 
-    ret['actions'] = actions_for_statuses[ret['status']]
+    ret['actions'] = publication.get_actions_for_status()
 
     return ret
 

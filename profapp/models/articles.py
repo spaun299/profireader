@@ -77,6 +77,16 @@ class ArticlePortalDivision(Base, PRBase):
                                     passive_deletes=True
                                     )
 
+    def get_actions_for_status(self):
+        if self.status == ArticlePortalDivision.STATUSES['SUBMITTED']:
+            return ['edit', 'publish', 'delete']
+        elif self.status == ArticlePortalDivision.STATUSES['UNPUBLISHED']:
+            return ['edit', 'republish', 'delete']
+        elif self.status == ArticlePortalDivision.STATUSES['PUBLISHED']:
+            return ['edit', 'unpublish', 'republish']
+        elif self.status == ArticlePortalDivision.STATUSES['DELETED']:
+            return ['undelete']
+
     def check_favorite_status(self, user_id):
         return db(ReaderArticlePortalDivision, user_id=user_id, article_portal_division_id=self.id,
                   favorite=True).count() > 0

@@ -273,6 +273,8 @@
 .pr-grid-cell-field-type-actions-action {
     padding: 0px 2px;
     margin: 0px 2px;
+    width: 5em;
+    overflow: hidden;
 }
 
 .modal-filemanager-fullscreen {
@@ -298,4 +300,10 @@
 
 .company-logo {
     width: 16%;
+}
+
+.pr-grid-cell-img-prefix {
+    height: 100%;
+    width: 50px;
+    margin-right: 2px;
 }
