@@ -1266,7 +1266,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             gridApi.grid['searchItemGrid'] = function (col) {
                 gridApi.grid.all_grid_data.paginationOptions.pageNumber = 1;
                 gridApi.grid.all_grid_data['filter'][col.field] = col.filter.text;
-                gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'searchItemGrid')
+                gridApi.grid.setGridData(gridApi.grid.all_grid_data)
             };
 
             gridApi.grid['setGridData'] = function (all_grid_data) {

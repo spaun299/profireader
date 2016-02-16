@@ -11,7 +11,7 @@
 
             $scope.after_save = function () {
                 window.location.href = $scope.url_portal_partner_details({
-                    'partner_id': $scope.data.partner.id,
+                    'partner_id': $scope.data.partner.own_portal.id,
                     'employeer_id': $scope.data.employeer.id
                 });
             }
