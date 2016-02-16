@@ -78,6 +78,9 @@ $scope.showModalForEditNew = function () {
                     });
         {% endraw %}
     })
+    $(document).ready(function(){
+        addToMenu_Selected('profile')
+    });
 </script>
 {% raw %}
    <div ng-controller="grid_reader">

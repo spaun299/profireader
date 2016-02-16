@@ -3,16 +3,48 @@ body {
   padding-top: 100px;
 }
 .bg-index {
-  background-image: url("../images/auth.jpg");
+  background-image: url("../images/auth6.jpg");
   background-size: cover;
-  min-height: 100vh;
+  min-height: 50vh;
   margin-top: -100px;
 }
+.bg-index h2 {
+  color: #18BC9C;
+  text-align: center;
+  margin-bottom: 25px;
+}
+.bg-index small {
+  color: #fff;
+}
+.index-profireader {
+  margin-top: 150px;
+}
+.index-about {
+  margin: 50px 0px 50px 0px;
+}
 .index-links {
-  margin-top: 100px;
   padding: 45px;
-  background-color: #FFF;
-  border-radius: 15px;
+  background-color: #F1F1F1;
+  border-radius: 10px;
+  margin-right: 15px;
+  margin-left: 15px;
+}
+.index-links a {
+  color: #FFFFFF;
+  background-color: #18BC9C;
+  padding: 5px 15px 5px 15px;
+  border-radius: 3px;
+  text-align: center;
+}
+.index-links span {
+  display: inherit;
+  text-align: center;
+}
+.index-links i {
+  border-radius: 50px;
+  background-color: #fff;
+  padding: 15px;
+  color: #18BC9C;
 }
 .border-radius {
   border-radius: 3px;
