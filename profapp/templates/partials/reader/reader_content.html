@@ -22,7 +22,6 @@
             <p>{{ article['short']|safe }}</p>
         </div>
         <div class="item-additional-info">
-
             <a href="//{{ article['portal']['host']|safe }}/_c/{{ article['company']['id']|safe }}/{{ article['company']['name']|safe }}" class="item-company">{{ article['company']['name']|safe }}</a>
             {{ article['division']['name'] }}
             <div class="item-read_count">Read: {{ article['read_count'] }}</div>
