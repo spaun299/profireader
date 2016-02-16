@@ -59,9 +59,7 @@
                 company_id: $scope.company_id,
                 portal_id: $scope.selectedPortal.id
             }, function (resp) {
-                $scope.data['portals_partners'] = resp['portals_partners'];
-              //  $scope.all_grid_data['paginationOptions']['page_for_id'] = $scope.selectedPortal.id;
-              //  $scope.grid_change_row($scope.data.portals, updated_row);
+                $scope.gridApi.grid.setGridData()
                 $scope.selectedPortal = null;
                 $scope.selectedPortal_name = null;
             }).finally(function () {
