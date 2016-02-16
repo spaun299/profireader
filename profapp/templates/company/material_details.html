@@ -33,6 +33,10 @@
                 return publication_id ? ('//' + host + $scope.url_front_publication_details({article_portal_division_id: publication_id})) : '';
             }
 
+            $scope.url_front_publication_index_host = function (host) {
+                return '//' + host + '/';
+            }
+
 
             $scope.loadMaterialDetails = function (data, callback) {
                 $ok('', data, function (resp) {
@@ -71,42 +75,49 @@
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                 loadGridData: $scope.loadMaterialDetails,
+                autoresizecolumns: True,
                 columnDefs: [
+                    /*                    {
+                     name: 'own_company.name', afilter: {type: 'input'},
+                     type: 'link',
+                     href: 'url_company({company_id:row.entity.own_company.id})',
+                     img: 'own_company.logo_file_id'
+                     }
+                     ,*/
                     {
-                        name: 'own_company.name', width: '13%', afilter: {type: 'input'}
+                        name: 'publication.status', afilter: {type: 'multi_select'}, width: '100'
                     }
                     , {
-                        name: 'publication.status', width: '10%', afilter: {type: 'multi_select'}
+                        name: 'publication.visibility', width: '100'
+                    }
+                    , {
+                        name: 'actions', type: 'actions', onclick: 'grid_action', width: '200'
 
                     }
                     , {
-                        name: 'publication.visibility', width: '10%'
+                        name: 'name',
+                        type: 'link',
+                        target: 'front',
+                        href: 'url_front_publication_index_host(row.entity.host)',
+                        img: 'logo_file_id'
                     }
                     , {
-                        name: 'actions', type: 'actions', onclick: 'grid_action', width: '50%'
-
-                    }
-                    , {
-                        name: 'name', width: '13%', type: 'link',
-                        href: 'url_company({company_id:row.entity.own_company.id})'
-                    }
-                    , {
-                        name: 'publication.division.name', width: '12%', type: 'link',
+                        name: 'publication.division.name', type: 'link', target: 'front',
                         href: 'url_front_publication_division_host(row.entity.publication.division.name, row.entity.host)'
                     }
 
                     , {
-                        name: 'publication.title', width: '12%', type: 'link',
+                        name: 'publication.title', type: 'link', target: 'front',
                         href: 'url_front_publication_details_host(row.entity.publication.id, row.entity.host)'
                     }
                     , {
-                        name: 'publication.position', width: '3%'
+                        name: 'publication.position', width: '30'
                     }
                     , {
-                        name: 'publication.counts', width: '7%'
+                        name: 'publication.counts', width: '70'
                     }
                     , {
-                        name: 'publication.publishing_tm', enableSorting: true, width: '10%'
+                        name: 'publication.publishing_tm', enableSorting: true
                     }
 
 

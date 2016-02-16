@@ -166,7 +166,7 @@ def material_details(material_id):
 
 def get_portal_dict_for_material(portal, company_id, material_id=None, publication_id=None):
     ret = portal.get_client_side_dict(
-            fields='id, name, host,divisions.id|name|portal_division_type_id, own_company.name, own_company.id')
+            fields='id, name, host, logo_file_id, divisions.id|name|portal_division_type_id, own_company.name|id|logo_file_id')
     ret['rights_company_at_portal'] = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id']).get_rights()
     ret['divisions'] = PRBase.get_ordered_dict([d for d in ret['divisions'] if (
         d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
@@ -183,12 +183,8 @@ def get_portal_dict_for_material(portal, company_id, material_id=None, publicati
         ret['publication']['division'] = ret['divisions'][ret['publication']['portal_division_id']]
         ret['publication']['counts'] = '0/0/0/0'
 
-        if ret['publication']['status'] == ArticlePortalDivision.STATUSES['SUBMITTED']:
-            ret['actions'] = ['edit', 'publish']
-        if ret['publication']['status'] == ArticlePortalDivision.STATUSES['UNPUBLISHED']:
-            ret['actions'] = ['edit', 'republish']
-        if ret['publication']['status'] == ArticlePortalDivision.STATUSES['PUBLISHED']:
-            ret['actions'] = ['edit', 'unpublish', 'republish']
+        ret['actions'] = publication_in_portal.get_actions_for_status()
+        ret['publication']['actions'] = ret['actions']
 
     else:
         ret['publication'] = None
@@ -276,10 +272,10 @@ def submit_publish(json, article_action):
                                                 publication_id=publication.id)
 
 
-@article_bp.route('/material_unpublish_from_portal/', methods=['POST'])
-@ok
-def publication_unpublish_from_portal(json):
-    return {}
+# @article_bp.route('/material_unpublish_from_portal/', methods=['POST'])
+# @ok
+# def publication_unpublish_from_portal(json):
+#     return {}
 
 
 # @article_bp.route('/material_details_publications/<string:material_id>/', methods=['POST'])
