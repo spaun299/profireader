@@ -17,10 +17,7 @@
 
     <link href="/static/css/font-awesome.min.css" rel="stylesheet">
     <link href="/static/css/bootstrap.css" rel="stylesheet">
-
     <link href="/static/css/_profreader.css" rel="stylesheet">
-    <link href="/static/css/_company.css" rel="stylesheet">
-    <link href="/static/css/_menu-company.css" rel="stylesheet">
     <link href="{{ url_for('static', filename = 'css/style.css') }}"  rel="stylesheet">
 
 
@@ -106,6 +103,7 @@
 
     <div class="container-fluid widewrapper">
         {% include 'flashed-messages.html' %}
+
         {% block portal_content %}
 
         {% endblock portal_content %}
