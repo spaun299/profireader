@@ -107,7 +107,7 @@
 
                 var params = {};
 
-                cloneIfExistsAttributes(params, {'af-url': window.location.href}, attrs);
+                cloneIfExistsAttributes(params, {'afUrl': window.location.href}, attrs);
                 var trans = '';
                 if (attrs['afLoadTranslate']) {
                     trans = '&__translate=' + attrs['afLoadTranslate'];
@@ -118,9 +118,9 @@
                     }
                 }
                 cloneIfExistsAttributes(params, {
-                    'afUrlLoad': AppendParameter(params['af-url'], 'action=load' + trans),
-                    'afUrlValidate': AppendParameter(params['af-url'], 'action=validate'),
-                    'afUrlSave': AppendParameter(params['af-url'], 'action=save')
+                    'afUrlLoad': AppendParameter(params['afUrl'], 'action=load' + trans),
+                    'afUrlValidate': AppendParameter(params['afUrl'], 'action=validate'),
+                    'afUrlSave': AppendParameter(params['afUrl'], 'action=save')
                 }, attrs);
 
 //TODO oz by OZ: allow model name dictionary

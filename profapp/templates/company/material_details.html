@@ -11,96 +11,10 @@
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
 
-    <script>
-
-        module.controller('submit_publish_dialog', function ($scope, $ok, $uibModalInstance,
-                                                             material_or_publication, company, action, portal, published_at_division, rights_user_in_company, rights_company_at_portal) {
-
-            $scope.$$translate = {{ translates('submit_publish_dialog')|safe }};
-            $scope.url_submit_to_portal = '{{ url_for('article.submit_publish')|safe }}';
-
-            $scope.selected_division = null;
-            $scope.portal = portal;
-            $scope.material_or_publication = material_or_publication;
-            $scope.action = action;
-            $scope.material_or_publication = material_or_publication;
-            $scope.company = company;
-            $scope.object_name = (action === 'republish') ? 'publication' : 'material';
-            $scope.rights_user_in_company = rights_user_in_company;
-            $scope.rights_company_at_portal = rights_company_at_portal;
-            $scope.published_at_division = published_at_division;
-
-            $scope.can_submit = $scope.object_name === 'publication' || $scope.rights_user_in_company['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'];
-            $scope.can_publish = $scope.rights_company_at_portal['PUBLICATION_PUBLISH'];
-
-            $scope.action_do = function () {
-                $ok($scope.url_submit_to_portal + '?action=' + action, {
-                    material_id: $scope.article.id,
-                    portal_division_id: $scope.selected_division.id,
-                    publication_data: {}
-                }, $uibModalInstance.close)
-            };
-
-            $scope.action_cancel = $uibModalInstance.dismiss;
-
-        });
-
-    </script>
-
-    {% raw %}
-    <script type="text/ng-template" id="submit_publish_dialog.html">
-        <div class="modal-header">
-            <h3 class="modal-title">{{ _(action + ' ' + object_name + ' at portal') }}</h3>
-        </div>
-        <div class="modal-body">
-            <div ng-if="!can_submit">
-                {{ _('sorry you have no permission to submit material in behalf of company `%(company.name)s`') }}
-            </div>
-            <div ng-if="can_submit">
-                {{ _('You are going to ' + action + ' ' + object_name + ' `%(material_or_publication.title)s` at portal
-                `%(portal.name)s`') }}<br/>
-                <br/>
-                <div ng-repeat="division in portal.divisions"><label><input
-                        ang-disabled="!division.can_be_published"
-                        name="material_details_publish_dialog_division"
-                        ng-value="division" ng-model="$parent.selected_division"
-                        type="radio"> {{ division.name }}</label></div>
-
-                {{ _('Select publication date and time') }}<br/>
-                <div pr-datepicker ng-model="material_or_publication.publishing_tm"></div>
-                <div ng-if="selected_division.portal_division_type_id === 'events'">
-                    {{ _('Select event date and time') }}<br/>
-                    <div pr-datepicker ng-model="material_or_publication.event_tm"></div>
-                </div>
-                <div ng-if="object_name === 'material'">
-                    <hr/>
-                    <label ng-class="{disabled: !can_publish}"><input ng-disabled="!can_publish" type="checkbox">&nbsp;{{
-                        _('also publish material') }}</label>
-                    <div ng-if="!can_publish">
-                        {{ _('Sorry, you company `%(company.name)s` have no permission to publish at portal
-                        %(portal.name)s') }}<br/>
-                        {{ _('You can send message to company') }}<br/>
-                        <textarea disabled="disabled" style="width: 100%" ng-model="message"></textarea>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button ng-if="action=='publish'" class="btn btn-primary" ng-disabled="!selected_division"
-                    type="button" ng-click="action_do('submit')">{{ _('Do submit') }}
-            </button>
-            <button class="btn btn-warning" type="button" ng-click="action_cancel()">{{ _('Cancel ' + action) }}
-            </button>
-        </div>
-    </script>
-    {% endraw %}
-
-
 
     <script>
 
-        module.controller('material_details_unpublish_dialog', function ($scope, $ok, $uibModalInstance, publication, company, portal, published_at_division, rights_user_in_company, rights_company_at_portal) {
+        module.controller('material_details_unpublish_dialog', function ($scope, $ok, $uibModalInstance, $publish, publication, company, portal, published_at_division, rights_user_in_company, rights_company_at_portal) {
 
             $scope.$$translate = {{ translates('material_details_unpublish_dialog')|safe }};
             $scope.url_unpublish_from_portal = '{{ url_for('article.publication_unpublish_from_portal')|safe }}';
@@ -249,7 +163,7 @@
     <script>
 
 
-        module.controller('material_details', function ($scope, $ok, $uibModal, $timeout) {
+        module.controller('material_details', function ($scope, $ok, $uibModal, $timeout, $publish) {
             $scope.$$translate = {{ translates('material_details')|safe }};
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
             $scope.url_search_for_user = {{ raw_url_for('company.search_for_user')|safe }};
@@ -288,33 +202,16 @@
                     return;
                 }
 
-                if (action === 'republish' || action === 'submit_and_publish') {
-                    var modalInstance = $uibModal.open({
-                        templateUrl: 'submit_publish_dialog.html',
-                        controller: 'submit_publish_dialog',
-                        resolve: {
-                            material_or_publication: function () {
-                                return action === 'republish' ? row['publication'] : $scope.data['material'];
-                            },
-                            action: function () {
-                                return action;
-                            },
-                            portal: function () {
-                                return row;
-                            },
-                            rights_company_at_portal: function () {
-                                return (action === 'republish') ? row['rights_company_at_portal'] : {};
-                            },
-                            published_at_division: function () {
-                                return (action === 'republish') ? row['publication']['division'] : null;
-                            },
-                            company: function () {
-                                return $scope.data.company;
-                            },
-                            rights_user_in_company: function () {
-                                return $scope.data.rights_user_in_company;
-                            }
-                        }
+                if (action === 'republish' || action === 'submit') {
+                    var modalInstance = $publish({
+                        material_or_publication_id: (action === 'submit') ? $scope.data['material']['id'] : row['publication']['id'],
+                        action: action,
+                        portal_id: row['id'],
+                        company_id: $scope.data.company['id']
+                    });
+
+                    modalInstance.result.then(function (updated_row) {
+                        $scope.grid_change_row($scope.data.portals, updated_row);
                     });
                 }
 
@@ -374,9 +271,7 @@
                 {#                    }#}
                 {#                });#}
                 {##}
-                modalInstance.result.then(function (updated_row) {
-                    $scope.grid_change_row($scope.data.portals, updated_row);
-                });
+
             };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {

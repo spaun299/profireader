@@ -67,7 +67,25 @@ function quoteattr(s, preserveCR) {
 }
 
 
+function resolveDictForAngularController(dict) {
+    return _.object(_.map(dict, function (val, key) {
+        return [key, function () {
+            return val
+        }]
+    }))
+}
+
 angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip'])
+    .factory('$publish', ['$http', '$uibModal', function ($http, $uibModal) {
+        return function (dict) {
+            var modalInstance = $uibModal.open({
+                templateUrl: 'submit_publish_dialog.html',
+                controller: 'submit_publish_dialog',
+                resolve: resolveDictForAngularController(dict)
+            });
+            return modalInstance;
+        }
+    }])
     .factory('$ok', ['$http', function ($http) {
         return function (url, data, ifok, iferror, translate, disableonsubmid) {
             //console.log($scope);
@@ -122,8 +140,8 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
         return {
             restrict: 'A',
             require: 'ngModel',
-            link: function (scope, element, attrs, model) {
 
+            link: function (scope, element, attrs, model) {
                 element.html($templateCache.get('cropper.html'));
 
                 $compile(element.contents())(scope);
@@ -194,6 +212,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 };
 
                 var restartCropper = function () {
+
                     $image.cropper('destroy');
                     if (model.$modelValue.uploaded) {
                         $image.attr('src', model.$modelValue.image_file_id);
@@ -288,10 +307,10 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             restrict: 'A',
             template: function (ele, attrs) {
 // TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line
-                return '<div><input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup\
+                return '<span><input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup\
                ng-model="' + attrs.ngModel + '" ng-required="true"\
                datepicker-options="dateOptions" close-text="Close"/><span class="input-group-btn"></span>\
-               </div>';
+               </span>';
             }
         }
     })
@@ -705,7 +724,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                 if (checkboxes) {
                     template += '<div class="checkbox"><label><input class="checkboxInput" type="checkbox" ng-click="checkboxClick($event, getPropertyForObject(option,settings.idProp))" ng-checked="isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp))" /> {{getPropertyForObject(option, settings.displayProp)}}</label></div></a>';
                 } else {
-                    template += '<span data-ng-class="{\'glyphicon glyphicon-ok\': isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp))}"></span> {{getPropertyForObject(option, settings.displayProp)}}</a>';
+                    template += '<span data-ng-class="{\'glyphicon glyphicon-check\': isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp)), \'glyphicon glyphicon-unchecked\': !isChecked(getPropertyForObject(option,settings.idProp), getPropertyForObject(option,settings.displayProp))}"></span> {{getPropertyForObject(option, settings.displayProp)}}</a>';
                 }
                 template += '</li>';
                 template += '<li role="presentation" ng-show="settings.selectionLimit > 1"><a role="menuitem">{{selectedModel.length}} {{texts.selectionOf}} {{settings.selectionLimit}} {{texts.selectionCount}}</a></li>';
@@ -1552,21 +1571,27 @@ None = null;
 False = false;
 True = true;
 
+$.fn.scrollTo = function () {
+  return this.each(function () {
+    $('html, body').animate({
+       scrollTop: $(this).offset().top
+    }, 1000);
+  });
+}
 
-//TODO: RP by OZ:   pls rewrite this two functions as jquery plugin
-
-function scrool($el, options) {
-    $.smoothScroll($.extend({
-        scrollElement: $el.parent(),
-        scrollTarget: $el
-    }, options ? options : {}));
+function scrool($el, message) {
+    $($el).scrollTo();
+    //$.smoothScroll($.extend({
+    //    scrollElement: $el.parent(),
+    //    scrollTarget: $el
+    //}, options ? options : {}));
 }
 
 function highlight($el) {
-    $el.addClass('highlight');
+    $($el).addClass('highlight');
     setTimeout(function () {
-        $el.removeClass('highlight');
-    }, 500);
+        $($el).removeClass('highlight');
+    }, 3500);
 }
 
 function angularControllerFunction(controller_attr, function_name) {

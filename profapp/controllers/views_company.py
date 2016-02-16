@@ -131,16 +131,18 @@ def update_material_status(json, company_id, article_id):
             'status': 'ok'}
 
 
-@company_bp.route('/profile/<string:company_id>/')
-@tos_required
-@login_required
-# @check_rights(simple_permissions(['manage_rights_company']))
-def profile(company_id):
-
-    return render_template('company/company_profile.html',
-                           company=db(Company, id=company_id).one(),
-                           rights_user_in_company=UserCompany.get(company_id=company_id).get_rights()
-                           )
+# @company_bp.route('/profile/<string:company_id>/')
+# @tos_required
+# @login_required
+# # @check_rights(simple_permissions(['manage_rights_company']))
+# def profile(company_id):
+#     user_companies = [user_comp for user_comp in current_user.employer_assoc]
+#     user_have_comp = True if len(user_companies) > 0 else False
+#     return render_template('company/company_profile.html',
+#                            company=db(Company, id=company_id).one(),
+#                            rights_user_in_company=UserCompany.get(company_id=company_id).get_rights(),
+#                            user_company = user_have_comp
+#                            )
 
 
 @company_bp.route('/<string:company_id>/employees/', methods=['GET'])
@@ -224,12 +226,13 @@ def employee_update_load(json, company_id, user_id):
                 'statuses_available': employment.get_statuses_avaible(),
                 'rights_available': employment.get_rights_avaible()}
     else:
-        employment.set_client_side_dict(json['employment'])
-        if action == 'validate':
-            employment.detach()
-            return employment.validate(False)
-        else:
-            employment.save()
+        print(employment)
+        # employment.set_client_side_dict(json['employment'])
+        # if action == 'validate':
+        #     employment.detach()
+        #     return employment.validate(False)
+        # else:
+        #     employment.save()
     return employment.get_client_side_dict()
 
 
@@ -251,7 +254,6 @@ def update_rights():
 
 
 @company_bp.route('/create/', methods=['GET'])
-@company_bp.route('/edit/<string:company_id>/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
@@ -263,12 +265,23 @@ def update(company_id=None):
                            company_name=company.name if company else '',
                            company=company if company else {})
 
+@company_bp.route('/profile/<string:company_id>/', methods=['GET'])
+@tos_required
+@login_required
+# @check_rights(simple_permissions([]))
+def profile(company_id=None):
+    return render_template('company/company_profile.html',
+                           rights_user_in_company=UserCompany.get(company_id=company_id).get_rights(),
+                           company=db(Company, id=company_id).first())
+
+
 
 @company_bp.route('/create/', methods=['POST'])
-@company_bp.route('/edit/<string:company_id>/', methods=['POST'])
+@company_bp.route('/profile/<string:company_id>/', methods=['POST'])
 @login_required
 @ok
 def load(json, company_id=None):
+    user_can_edit=UserCompany.get(company_id=company_id).get_rights()['EDIT_PORTAL_PROFILE'] if company_id else None
     action = g.req('action', allowed=['load', 'validate', 'save'])
     company = Company() if company_id is None else Company.get(company_id)
     if action == 'load':
@@ -292,31 +305,31 @@ def load(json, company_id=None):
         company.attr(g.filter_json(json, 'about', 'address', 'country', 'email', 'name', 'phone',
                                    'phone2', 'region', 'short_description', 'lon', 'lat'))
         if action == 'validate':
-            if company_id is not None:
+            if company_id is not None and user_can_edit:
                 company.detach()
-            return company.validate(company_id is None)
+            return company.validate(company_id is None and user_can_edit)
         else:
-            if json['image'].get('uploaded'):
-                if company_id is None:
-                    company.setup_new_company()
-                company.save().get_client_side_dict()
-                imgdataContent = json['image']['dataContent']
-                image_data = re.sub('^data:image/.+;base64,', '', imgdataContent)
-                bb = base64.b64decode(image_data)
-                new_comp = db(Company, id=company.id).first()
-                file_id = File.uploadForCompany(bb, json['image']['name'], json['image']['type'], new_comp)
-                logo_id = crop_image(file_id, json['image']['coordinates'])
-                new_comp.updates({'logo_file_id': logo_id})
-            else:
-                img = json['image']
-                img_id = img.get('image_file_id')
-                if img_id:
-                    company.logo_file_id = crop_image(img_id, img['coordinates'])
-                elif not img_id:
-                    company.logo_file_id = None
-                if company_id is None:
-                    company.setup_new_company()
-                return company.save().get_client_side_dict()
+                if json['image'].get('uploaded'):
+                    if company_id is None:
+                        company.setup_new_company()
+                    company.save().get_client_side_dict()
+                    imgdataContent = json['image']['dataContent']
+                    image_data = re.sub('^data:image/.+;base64,', '', imgdataContent)
+                    bb = base64.b64decode(image_data)
+                    new_comp = db(Company, id=company.id).first()
+                    file_id = File.uploadForCompany(bb, json['image']['name'], json['image']['type'], new_comp)
+                    logo_id = crop_image(file_id, json['image']['coordinates'])
+                    new_comp.updates({'logo_file_id': logo_id})
+                else:
+                    img = json['image']
+                    img_id = img.get('image_file_id')
+                    if img_id:
+                        company.logo_file_id = crop_image(img_id, img['coordinates'])
+                    elif not img_id:
+                        company.logo_file_id = None
+                    if company_id is None:
+                        company.setup_new_company()
+                    return company.save().get_client_side_dict()
 
 
 # @company_bp.route('/confirm_create/', methods=['POST'])
