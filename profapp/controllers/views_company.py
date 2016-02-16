@@ -226,13 +226,13 @@ def employee_update_load(json, company_id, user_id):
                 'statuses_available': employment.get_statuses_avaible(),
                 'rights_available': employment.get_rights_avaible()}
     else:
-        print(employment)
-        # employment.set_client_side_dict(json['employment'])
-        # if action == 'validate':
-        #     employment.detach()
-        #     return employment.validate(False)
-        # else:
-        #     employment.save()
+        # print(employment)
+        employment.set_client_side_dict(json['employment'])
+        if action == 'validate':
+            employment.detach()
+            return employment.validate(False)
+        else:
+            employment.save()
     return employment.get_client_side_dict()
 
 
