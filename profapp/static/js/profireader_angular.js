@@ -1128,6 +1128,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
         setGridExtarnals: function (gridApi) {
             var scope = this;
+            scope.gridApi = gridApi
             gridApi.grid['all_grid_data'] = {
                 paginationOptions: {pageNumber: 1, pageSize: 1},
                 filter: {},
@@ -1248,11 +1249,12 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             gridApi.grid['searchItemGrid'] = function (col) {
                 gridApi.grid.all_grid_data.paginationOptions.pageNumber = 1;
                 gridApi.grid.all_grid_data['filter'][col.field] = col.filter.text;
-                gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'searchItemGrid')
+                gridApi.grid.setGridData()
             };
 
-            gridApi.grid['setGridData'] = function (all_grid_data) {
-                //var all_grid_data = scope.all_grid_data;
+            gridApi.grid['setGridData'] = function (grid_data) {
+                var all_grid_data = grid_data ? grid_data: gridApi.grid.all_grid_data
+
                 gridApi.grid.options.loadGridData(all_grid_data, function (grid_data) {
                     //scope.initGridData = grid_data;
                     gridApi.grid.options.data = grid_data.grid_data;
@@ -1294,7 +1296,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
             if (!gridApi.grid.load_contr) {
                 gridApi.grid.load_contr = true;
-                gridApi.grid.setGridData(gridApi.grid.all_grid_data)
+                gridApi.grid.setGridData()
             }
 
 
@@ -1302,7 +1304,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 from = col.filters[0]['term'];
                 to = col.filters[1]['term'];
                 gridApi.grid.all_grid_data['filter'][col.field] = {'from': from, 'to': to};
-                gridApi.grid.setGridData(gridApi.grid.all_grid_dataa, 'filterForGridRange');
+                gridApi.grid.setGridData();
             };
 
             gridApi.grid['refreshGrid'] = function (col) {
@@ -1314,7 +1316,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                         col.filter.text = '';
                     }
                     delete gridApi.grid.all_grid_data['filter'][col.field];
-                    gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'refreshGrid')
+                    gridApi.grid.setGridData()
                 }
             };
 
@@ -1337,7 +1339,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 if (sortColumns.length !== 0) {
                     gridApi.grid.all_grid_data['sort'][sortColumns[0].field] = sortColumns[0].sort.direction;
                 }
-                gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'sortChanged')
+                gridApi.grid.setGridData()
             });
 
             if (gridApi.edit) gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
@@ -1349,7 +1351,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                         'col': colDef.name
                     };
                     gridApi.grid.all_grid_data.paginationOptions.pageNumber = 1;
-                    gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'afterCellEdit')
+                    gridApi.grid.setGridData()
                 }
             });
 
@@ -1358,7 +1360,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     gridApi.grid.all_grid_data.paginationOptions.pageNumber = newPage;
                     gridApi.grid.all_grid_data.paginationOptions.pageSize = pageSize;
                     $timeout(function () {
-                        gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'paginationTemplate')
+                        gridApi.grid.setGridData()
                     }, 500)
 
                 });
@@ -1393,7 +1395,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                 }
                 if (at_least_one_filter_changed) {
-                    error ? add_message('You push wrong date', 'danger', 3000) : gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'filterChanged')
+                    error ? add_message('You push wrong date', 'danger', 3000) : gridApi.grid.setGridData()
                 }
             });
 
