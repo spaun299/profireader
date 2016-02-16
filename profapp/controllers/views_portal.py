@@ -430,7 +430,7 @@ def portals_partners_load(json, company_id):
                            'portal_logo': File.get(partner.portal.logo_file_id).url() if partner.portal.logo_file_id
                            else '/static/images/company_no_logo.png',
                            'portal_id': partner.portal.id, 'link': partner.portal.host,
-                           'company_name': Company.get(partner.portal.company_owner_id).name}
+                           'company': Company.get(partner.portal.company_owner_id).get_client_side_dict(),'rights':partner.get_rights(),'status':partner.status, 'employeer_id':company_id }
                           for partner in partners_g],
             'total': count,
             'portal': db(Company, id=company_id).one().own_portal.get_client_side_dict(fields='name')
@@ -441,6 +441,49 @@ def portals_partners_load(json, company_id):
             'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()
             }
 
+@portal_bp.route('/<string:partner_id>/portal_partner_details/<string:employeer_id>/', methods=['GET'])
+@login_required
+def portal_partner_details(partner_id, employeer_id):
+    partner = Company.get(partner_id)
+    return render_template('company/portal_partner_details.html',
+                           company=partner.get_client_side_dict(),
+                           employeer=Company.get(employeer_id).get_client_side_dict(),
+                           rights = MemberCompanyPortal.get_rights(partner.portal_members),
+                           status = partner.portal_members.status)
+
+@portal_bp.route('/<string:employeer_id>/portal_partner_update/<string:partner_id>/', methods=['GET'])
+@login_required
+def portal_partner_update(employeer_id,partner_id ):
+    company = Company.get(partner_id)
+    partner = MemberCompanyPortal.get(company.own_portal.id, company_id=company.id)
+    print(partner.company.get_client_side_dict())
+    return render_template('company/portal_partner_update.html',
+                           partner=partner.company.get_client_side_dict())
+
+
+@portal_bp.route('/<string:employeer_id>/portal_partner_update/<string:partner_id>/', methods=['POST'])
+@tos_required
+@login_required
+@ok
+# @check_rights(simple_permissions([]))
+def partner_update_load(json, employeer_id, partner_id):
+    action = g.req('action', allowed=['load', 'validate', 'save'])
+    partner_company = Company.get(partner_id)
+    partner = MemberCompanyPortal.get(partner_company.own_portal.id, company_id=partner_company.id)
+    if action == 'load':
+        return {'status':partner.status,
+                'partner': partner_company.get_client_side_dict(),
+                'statuses_available': MemberCompanyPortal.STATUSES,
+                'employeer': Company.get(employeer_id).get_client_side_dict(),
+                'rights': partner.get_rights()}
+    else:
+        print(partner)
+        # if action == 'validate':
+        #     partner.detach()
+        #     return partner.validate(False)
+        # else:
+        #     partner.save()
+    return partner.get_client_side_dict()
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])
 @tos_required

@@ -305,10 +305,22 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             replace: false,
             require: 'ngModel',
             restrict: 'A',
+            scope: {
+                ngModel: '='
+            },
+            link: function (scope, element, attrs, model) {
+                scope.$watch('ngModel', function (nv, ov) {
+                    scope.setdate = scope['ngModel'];
+                });
+                scope.$watch('setdate', function (nv, ov) {
+                    if (nv && nv.setHours) nv.setHours(12);
+                    scope['ngModel'] = nv;
+                });
+            },
             template: function (ele, attrs) {
 // TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line
                 return '<span><input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup\
-               ng-model="' + attrs.ngModel + '" ng-required="true"\
+               ng-model="setdate" ng-required="true"\
                datepicker-options="dateOptions" close-text="Close"/><span class="input-group-btn"></span>\
                </span>';
             }
@@ -636,7 +648,21 @@ module.config(function ($provide) {
             return $delegate(constructor, locals, later, indent);
         };
     });
-});
+})
+
+Date.prototype.toISOString = function () {
+    //console.log('Tue, 26 Jan 2016 13:59:14 GMT', this.toUTCString());
+    return this.toUTCString();
+    //dateFormat(this, "dddd, mmmm dS, yyyy, h:MM:ss TT");
+    //  return 'here goes my awesome formatting of Date Objects '+ this;
+};
+//    .config(function($httpProvider) {
+//    $httpProvider.defaults.transformRequest.unshift(function (data) {
+//        console.log(data);
+//        return data;
+//    })
+//});
+
 
 module.controller('filemanagerCtrl', ['$scope', '$uibModalInstance', 'file_manager_called_for', 'file_manager_on_action',
     'file_manager_default_action', 'get_root',
@@ -1572,11 +1598,11 @@ False = false;
 True = true;
 
 $.fn.scrollTo = function () {
-  return this.each(function () {
-    $('html, body').animate({
-       scrollTop: $(this).offset().top
-    }, 1000);
-  });
+    return this.each(function () {
+        $('html, body').animate({
+            scrollTop: $(this).offset().top
+        }, 1000);
+    });
 }
 
 function scrool($el, message) {

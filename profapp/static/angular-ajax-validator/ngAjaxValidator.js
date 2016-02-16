@@ -213,7 +213,7 @@
                                     }, 0);
                                 }
                                 catch (e) {
-                                    console.error(e);
+                                    add_message(e, 'warning');
                                     if (stateonfail) setInParent('afState', stateonfail);
                                     notok(resp);
                                 }
@@ -230,7 +230,7 @@
                         return true;
                     }
                     catch (e) {
-                        console.error(e);
+                        add_message(e, 'warning');
                         if (stateonok) setInParent('afState', stateonfail);
                         notok(undefined);
                         validationdict['http'] = null;
