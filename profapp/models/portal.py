@@ -354,6 +354,10 @@ class MemberCompanyPortal(Base, PRBase):
     def get_rights(self):
         return PRBase.convert_rights_binary_to_dict(self.rights_company_at_portal, self.RIGHT_AT_PORTAL)
 
+    def set_client_side_dict(self, status, rights):
+        self.status = status
+        self.rights_company_at_portal = PRBase.convert_rights_dict_to_binary(rights, self.RIGHT_AT_PORTAL)
+
         # @staticmethod
         # def show_companies_on_my_portal(company_id):
         #     """Return all companies partners at portal"""
