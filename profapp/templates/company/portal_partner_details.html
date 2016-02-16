@@ -7,19 +7,17 @@
     <script>
         module.controller('portal_partner_details', function ($scope, $ok) {
 
-            $scope.portal_partner = {{ company|tojson|safe }};
+            $scope.portal_partner = {{ company_member|tojson|safe }};
             $scope.employeer  = {{ employeer|tojson|safe }};
             $scope.rights = {{ rights|tojson|safe }};
-            $scope.status = {{ status|tojson|safe }};
+            $scope.member = {{ member|tojson|safe }};
 
             $scope.url_portal_partner_update = {{ raw_url_for('portal.portal_partner_update')|safe }};
 
             $scope.update = function () {
                 window.location.href = $scope.url_portal_partner_update({
                     'employeer_id':$scope.employeer.id,
-                    'partner_id': $scope.portal_partner.id
-
-
+                    'partner_id': $scope.member.portal_id
                 });
             }
 
@@ -32,9 +30,8 @@
             <img class="person-small-cover" pr-image pr-no-image="{{portal_partner.logo_file_id }}"/>
             <img class="logo-small-cover" pr-image="employeer.logo_file_id"/>
             {{ _('Portal partner `%(portal_partner.name)s` at company `%(employeer.name)s`') }}</h2>
-
         <img pr-image="employer.logo_file_id"/>
-        {{ _('status') }} {{ status }}<br>
+        {{ _('status') }} {{ member.status }}<br>
         <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in rights">
             <img src="/static/images/0.gif"
                  class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ right_name }}"/>
