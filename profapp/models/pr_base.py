@@ -341,6 +341,14 @@ class PRBase:
     def __init__(self):
         self.query = g.db.query_property()
 
+    @staticmethod
+    def parseDate(str):
+        try:
+            return datetime.datetime.strptime(str, "%a, %d %b %Y %H:%M:%S %Z")
+        except:
+            return None
+
+
     def position_unique_filter(self):
         return self.__class__.position != None
 
