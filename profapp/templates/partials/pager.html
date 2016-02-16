@@ -5,8 +5,9 @@
                 <ul class="pager">
                     <li class="previous">
                         {% if current_page != 1 %}
-                            <a href="{{ url_page(page=current_page - 1, search_text=search_text, favorite=favorite) }}"><i class="fa fa-arrow-circle-left"></i>
-</a>
+                            <a href="{{ url_page(page=current_page - 1, search_text=search_text, favorite=favorite) }}"><i
+                                    class="fa fa-arrow-circle-left"></i>
+                            </a>
                         {% else %}
                         {% endif %}
                     </li>
@@ -41,7 +42,8 @@
                     <li class="next">
                         {% if current_page != pages %}
 
-                                <a href="{{ url_page(page=current_page + 1, search_text=search_text, favorite=favorite) }}"><i class="fa fa-arrow-circle-right"></i></a>
+                            <a href="{{ url_page(page=current_page + 1, search_text=search_text, favorite=favorite) }}"><i
+                                    class="fa fa-arrow-circle-right"></i></a>
 
                         {% else %}
                         {% endif %}
