@@ -47,10 +47,20 @@
                     search: val
                 }, function (resp) {
                     $scope.company_list = resp?resp:[];
-                    $('.col-xs-10 H3').html('dfsdfs')
+                //    $scope.highLight(val, 'h4');
                     return resp.length ? resp : [{id: false, name: 'No results'}];
                 });
             };
+
+            //$scope.highLight = function(substring, block) {
+          //      console.log(substring, block)
+           //    $(block).find("#com_n").each(function () {
+           //       $(this).outerHtml($(this).html());
+           //    });
+           //    // now the block is free from previous highlights
+//
+           //    $(block).html($(block).html().replace(/substring/g, '<span class="search-highlight">' + substring + '</span>'));
+           // }
 
             $scope.joinToCompany = function (company_id) {
                 $ok($scope.url_join({company_id: company_id}), {company_id: company_id},function (resp) {
@@ -109,7 +119,7 @@
                 </div>
 
                 <div class="col-lg-8 col-md-8 col-sm-10 col-xs-10">
-                    <h4>{{ company.name }}</h4>
+                    <h4 id="com_n">{{ company.name }}</h4>
                     <p ng-bind-html="company.short_description"></p>
                     <a ng-if="company.own_portal" href="http://{{ company.own_portal.host }}" title="http://{{ company.own_portal.host }}">PORTAL</a>
                 </div>
