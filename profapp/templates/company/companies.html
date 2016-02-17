@@ -47,20 +47,14 @@
                     search: val
                 }, function (resp) {
                     $scope.company_list = resp?resp:[];
-                //    $scope.highLight(val, 'h4');
+
+                    $timeout(function(){
+                        highLightSubstring(val, 'list_search_company', 'com_n');
+                    }, 0);
+
                     return resp.length ? resp : [{id: false, name: 'No results'}];
                 });
             };
-
-            //$scope.highLight = function(substring, block) {
-          //      console.log(substring, block)
-           //    $(block).find("#com_n").each(function () {
-           //       $(this).outerHtml($(this).html());
-           //    });
-           //    // now the block is free from previous highlights
-//
-           //    $(block).html($(block).html().replace(/substring/g, '<span class="search-highlight">' + substring + '</span>'));
-           // }
 
             $scope.joinToCompany = function (company_id) {
                 $ok($scope.url_join({company_id: company_id}), {company_id: company_id},function (resp) {

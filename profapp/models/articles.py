@@ -22,6 +22,7 @@ from sqlalchemy import event
 from ..controllers import errors
 from ..constants.SEARCH import RELEVANCE
 from datetime import datetime
+from flask import redirect, url_for
 
 
 class ArticlePortalDivision(Base, PRBase):
@@ -115,20 +116,22 @@ class ArticlePortalDivision(Base, PRBase):
             :return: dict with prepared filter parameters for search method """
         division = db(PortalDivision, id=division_id).one()
         division_type = division.portal_division_type.id
+        visibility = ArticlePortalDivision.visibility.in_(ArticlePortalDivision.articles_visibility_for_user(
+            portal_id=division.portal_id)[0])
         filter = None
         if division_type == 'index':
             filter = {'class': ArticlePortalDivision,
                       'filter': and_(ArticlePortalDivision.portal_division_id.in_(db(
-                              PortalDivision.id, portal_id=division.portal_id).filter(
-                              PortalDivision.portal_division_type_id != 'events'
-                      )), ArticlePortalDivision.status == ArticlePortalDivision.STATUSES['PUBLISHED']),
+                          PortalDivision.id, portal_id=division.portal_id).filter(
+                          PortalDivision.portal_division_type_id != 'events'
+                      )), ArticlePortalDivision.status == ArticlePortalDivision.STATUSES['PUBLISHED'], visibility),
                       'return_fields': 'default_dict', 'tags': True}
         elif division_type == 'news':
             if not company_id:
                 filter = {'class': ArticlePortalDivision,
                           'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
                                          ArticlePortalDivision.status ==
-                                         ArticlePortalDivision.STATUSES['PUBLISHED']),
+                                         ArticlePortalDivision.STATUSES['PUBLISHED'], visibility),
                           'return_fields': 'default_dict', 'tags': True}
             else:
                 filter = {'class': ArticlePortalDivision,
@@ -136,14 +139,14 @@ class ArticlePortalDivision(Base, PRBase):
                                          ArticlePortalDivision.status ==
                                          ArticlePortalDivision.STATUSES['PUBLISHED'],
                                          db(ArticleCompany, company_id=company_id,
-                                            id=ArticlePortalDivision.article_company_id).exists()),
+                                            id=ArticlePortalDivision.article_company_id).exists(), visibility),
                           'return_fields': 'default_dict', 'tags': True}
         elif division_type == 'events':
             if not company_id:
                 filter = {'class': ArticlePortalDivision,
                           'filter': and_(ArticlePortalDivision.portal_division_id == division_id,
                                          ArticlePortalDivision.status ==
-                                         ArticlePortalDivision.STATUSES['PUBLISHED']),
+                                         ArticlePortalDivision.STATUSES['PUBLISHED'], visibility),
                           'return_fields': 'default_dict', 'tags': True}
             else:
                 filter = {'class': ArticlePortalDivision,
@@ -151,7 +154,7 @@ class ArticlePortalDivision(Base, PRBase):
                                          ArticlePortalDivision.status ==
                                          ArticlePortalDivision.STATUSES['PUBLISHED'],
                                          db(ArticleCompany, company_id=company_id,
-                                            id=ArticlePortalDivision.article_company_id).exists()),
+                                            id=ArticlePortalDivision.article_company_id).exists(), visibility),
                           'return_fields': 'default_dict', 'tags': True}
         return filter
 
@@ -191,9 +194,35 @@ class ArticlePortalDivision(Base, PRBase):
         self.portal_division_id = portal_division_id
         # self.portal_id = portal_id
 
-    def get_client_side_dict(self, fields='id|image_file_id|read_count|title|subtitle|short|long_stripped|portal_division_id|'
-                                          'image_file_id|position|keywords|cr_tm|md_tm|status|visibility|publishing_tm|event_tm, '
-                                          'company.id|name, division.id|name, portal.id|name|host',
+    @staticmethod
+    def articles_visibility_for_user(portal_id):
+        # if ArticlePortalDivision.VISIBILITIES
+        employer = True
+        visibilities = ArticlePortalDivision.VISIBILITIES.copy()
+        if not db(UserCompany, user_id=getattr(g.user, 'id', None),
+                  status=UserCompany.STATUSES['ACTIVE']).filter(
+                    UserCompany.company_id == db(Portal.company_owner_id, id=portal_id)).count():
+            visibilities.pop(ArticlePortalDivision.VISIBILITIES['CONFIDENTIAL'])
+            employer = False
+        return visibilities.keys(), employer
+
+    def article_visibility_details(self):
+        actions = {ArticlePortalDivision.VISIBILITIES['OPEN']: lambda: True,
+                   ArticlePortalDivision.VISIBILITIES['REGISTERED']:
+                       lambda: True if getattr(g.user, 'is_authenticated()', False) else
+                       redirect('//profireader.com/auth/login_signup'),
+                   ArticlePortalDivision.VISIBILITIES['PAYED']: True,
+                   ArticlePortalDivision.VISIBILITIES['CONFIDENTIAL']:
+                       lambda portal_id=self.portal.id: True if
+                       ArticlePortalDivision.articles_visibility_for_user(portal_id)[1] else
+                       redirect('//profireader.com/reader/buy_subscription')
+                   }
+        return actions[self.visibility]()
+
+    def get_client_side_dict(self, fields='id|image_file_id|read_count|title|subtitle|short|long_stripped|'
+                                          'portal_division_id|image_file_id|position|keywords|cr_tm|md_tm|status|'
+                                          'visibility|publishing_tm|event_tm,company.id|name, division.id|'
+                                          'name, portal.id|name|host',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
@@ -237,7 +266,7 @@ class ArticlePortalDivision(Base, PRBase):
     @staticmethod
     def subquery_portal_articles(portal_id, filters, sorts):
         sub_query = db(ArticlePortalDivision)
-        list_filters = [];
+        list_filters = []
         list_sorts = []
         if 'publication_status' in filters:
             list_filters.append(
@@ -441,10 +470,10 @@ class ArticleCompany(Base, PRBase):
             list_filters.append({'type': 'date_range', 'value': filters['md_tm'], 'field': ArticleCompany.md_tm})
         if 'title' in filters:
             list_filters.append({'type': 'text', 'value': filters['title_author'], 'field': ArticleCompany.title})
-        if 'title_author' in filters:
+        if 'title&editor.profireader_name' in filters:
             sub_query = sub_query.join(User,
                                        User.id == ArticleCompany.editor_user_id)
-            list_filters.append({'type': 'text_multi', 'value': filters['title_author'],
+            list_filters.append({'type': 'text_multi', 'value': filters['title&editor.profireader_name'],
                                  'field': [ArticleCompany.title, User.profireader_name]})
         if 'editor.profireader_name' in filters:
             sub_query = sub_query.join(User,

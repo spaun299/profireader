@@ -6,6 +6,7 @@ from beaker.middleware import SessionMiddleware
 
 
 
+
 # if __name__ == '__main__':
 parser = argparse.ArgumentParser(description='profireader application type')
 parser.add_argument("apptype", default='profi')
@@ -14,14 +15,15 @@ app = create_app(apptype=args.apptype)
 if __name__ == '__main__':
 
     session_opts = {
-    'session.type': 'ext:memcached',
-    'session.url': 'memcached.profi:11211'
+        'session.type': 'ext:memcached',
+        'session.url': 'memcached.profi:11211'
     }
 
     class BeakerSessionInterface(SessionInterface):
         def open_session(self, app, request):
-            session = request.environ['beaker.session']
-            return session
+            _session = request.environ['beaker.session']
+            return _session
+
 
         def save_session(self, app, session, response):
             session.save()
