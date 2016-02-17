@@ -30,7 +30,7 @@
             <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 menu-company">
                 <a ng-class="{'selected': selected_company_menu == 'materials'}"
                    href="{{ url_company_materials({company_id: company.id}) }}">{{ _('Materials') }}</a>
-                <a ng-class="{'selected': selected_company_menu == 'companies_partners'}" id="companies_partners"
+                <a ng-class="{'selected': selected_company_menu == 'portals_partners'}" id="companies_partners"
                    href="{{ url_portal_companies_partners({company_id: company.id}) }}">{{ _('Membership') }}</a>
                 <a ng-class="{'selected': selected_company_menu == 'companies_employees'}"
                    href="{{ url_company_employees({company_id: company.id}) }}">{{ _('Employees') }}</a>
@@ -56,7 +56,7 @@
                    href="#">{{ _('Comments') }}</a>
                 <a ng-if="company.own_portal" ng-class="{'selected': selected_company_menu == 'companies_readers'}" id="companies_readers"
                    href="{{ url_company_readers({company_id: company.id}) }}">{{ _('Readers') }}</a>
-                <a ng-if="company.own_portal" ng-class="{'selected': selected_company_menu == 'portals_partners'}"
+                <a ng-if="company.own_portal" ng-class="{'selected': selected_company_menu == 'companies_partners'}"
                    href="{{ url_portal_portals_partners({company_id: company.id}) }}">{{ _('Members') }}</a>
                 <a ng-if="company.own_portal" ng-class="{'selected': selected_company_menu == 'statistics'}" id="statistics"
                    href="#">{{ _('Statistics') }}</a>
