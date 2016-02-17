@@ -1171,6 +1171,9 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 }, c);
             });
 
+            //TODO: SS by OZ: maybe we have access to this variable already?
+            scope.columns = col;
+
             gridApi.grid.options.headerTemplate = '<div class="ui-grid-header" ><div class="ui-grid-top-panel"><div class="ui-grid-header-viewport"><div class="ui-grid-header"></div><div class="ui-grid-header-canvas" >' +
                 '<div class="ui-grid-header-cell-wrapper" ng-style="colContainer.headerCellWrapperStyle()"><div role="row" class="ui-grid-header-cell-row">' +
                 '<div class="ui-grid-header-cell ui-grid-clearfix ui-grid-category" ng-repeat="cat in grid.options.category" ng-if="cat.visible && (colContainer.renderedColumns | filter:{ colDef:{category: cat.name} }).length > 0"> ' +
@@ -1214,8 +1217,11 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                 }
 
-                function generateCellTemplate(col) {
-                    var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + (col.type ? col.type : 'text') + ' pr-grid-cell-field-name-' + col.name.replace(/\./g, '-') + ' ' + (col.classes ? col.classes : '') + ' ';
+                function generateCellTemplate(col, columnindex) {
+                    var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + (col.type ? col.type : 'text') + ' pr-grid-cell-field-name-' + col.name.replace(/\./g, '-') + ' ' + (typeof col.classes === 'string' ? col.classes : '') + ' ';
+                    if (typeof  col.classes === 'function') {
+                        classes_for_row += ' {{ columns[' + columnindex + '].classes() }} ';
+                    }
                     var prefix_img = '';
                     if (col.img) {
                         //var imgwidth = col.imgwidth?col.imgwidth:'2em';
@@ -1230,7 +1236,11 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                         case 'show_modal':
                             return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">' + prefix_img + '<a ng-click="' + col.modal + '" ng-bind="COL_FIELD"></a></div>';
                         case 'actions':
-                            return '<div class="' + classes_for_row + '">' + prefix_img + '<button ' + 'class="btn pr-grid-cell-field-type-actions-action pr-grid-cell-field-type-actions-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.' + col['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col['name'] + '\')" title="{{ grid.appScope._(action_name + \' grid action\') }}">{{ grid.appScope._(action_name + \' grid action\') }}</button></div>';
+                            return '<div class="' + classes_for_row + '">' + prefix_img + '<button ' +
+                                ' class="btn pr-grid-cell-field-type-actions-action pr-grid-cell-field-type-actions-action-{{ action_name }}" ' +
+                                ' ng-repeat="(action_name, enabled) in COL_FIELD" ng-disabled="enabled !== true" ' +
+                                ' ng-click="grid.appScope.' + col['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col['name'] + '\')" ' +
+                                ' title="{{ grid.appScope._((enabled === true)?(action_name + \' grid action\'):(\'no permitions to \' + enabled)) }}">{{ grid.appScope._(action_name + \' grid action\') }}</button></div>';
                         case 'icons':
                             return '<div class="' + classes_for_row + '">' + prefix_img + '<i ng-class="{disabled: !icon_enabled}" ' +
                                 'class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ icon_name }}" ng-repeat="(icon_name, icon_enabled) in COL_FIELD" ng-click="grid.appScope.' + col['onclick'] + '(row.entity.id, \'{{ icon_name }}\', row.entity, \'' + col['name'] + '\')" title="{{ grid.appScope._(\'grid icon \' + icon_name) }}"></i></div>';
@@ -1266,7 +1276,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 }
 
 
-                gridApi.grid.options.columnDefs[i].cellTemplate = generateCellTemplate(col[i]);
+                gridApi.grid.options.columnDefs[i].cellTemplate = generateCellTemplate(col[i], i);
 
             }
 
@@ -1629,11 +1639,11 @@ function highlight($el) {
 function highLightSubstring(substring, block, element) {
     var elements = element.split('&');
     var re = new RegExp(substring, "gi");
-    $("."+block).find(".search-highlight").remove()
-    $.each(elements, function (index){
+    $("." + block).find(".search-highlight").remove()
+    $.each(elements, function (index) {
         var el = elements[index]
         console.log(el);
-        $("."+block).find("#"+el).each(function () {
+        $("." + block).find("#" + el).each(function () {
             var rex = $(this).html().match(re)
             $(this).html($(this).html().replace(re, '<span class="search-highlight">' + rex[0] + '</span>'));
         })

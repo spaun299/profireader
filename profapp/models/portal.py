@@ -296,7 +296,8 @@ class MemberCompanyPortal(Base, PRBase):
     RIGHT_AT_PORTAL = {
         'PUBLICATION_PUBLISH': 2 ** (1 - 1),
         'PUBLICATION_UNPUBLISH': 2 ** (2 - 1),
-        'PUBLICATION_EDIT': 2 ** (3 - 1)
+        'PUBLICATION_EDIT': 2 ** (3 - 1),
+        'PUBLICATION_DELETE_UNDELETE': 2 ** (4 - 1),
     }
 
     RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL['PUBLICATION_UNPUBLISH'] | RIGHT_AT_PORTAL['PUBLICATION_EDIT']
@@ -378,9 +379,14 @@ class MemberCompanyPortal(Base, PRBase):
         #             sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
         #     return sub_query
 
+
     def has_rights(self, binary_right):
         if self.portal.own_company.id == self.company_id:
             return True
+
+        if binary_right == -1:
+            return True if self.status == self.STATUSES['ACTIVE'] else False
+
         return True if self.status == self.STATUSES['ACTIVE'] and (
         binary_right & self.rights_company_at_portal) else False
         # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
