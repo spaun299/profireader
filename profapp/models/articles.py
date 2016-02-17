@@ -91,6 +91,7 @@ class ArticlePortalDivision(Base, PRBase):
         return db(ReaderArticlePortalDivision, user_id=user_id, article_portal_division_id=self.id,
                   favorite=True).count() > 0
 
+
     def search_filter_default(self, division_id, company_id=None):
         """ :param division_id: string with id from table portal_division,
                    optional company_id: string with id from table company. If provided

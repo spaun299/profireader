@@ -2,6 +2,9 @@
 body {
   padding-top: 100px;
 }
+.widewrapper {
+  min-height: 80vh;
+}
 .bg-index {
   background-image: url("../images/auth6.jpg");
   background-size: cover;
@@ -23,15 +26,14 @@ body {
   margin: 50px 0px 50px 0px;
 }
 .index-links {
-  padding: 45px;
-  background-color: #F1F1F1;
+  background-color: #424242;
+  padding: 0px 35px 35px 35px;
   border-radius: 10px;
   margin-right: 15px;
   margin-left: 15px;
+  min-height: 392px;
 }
 .index-links a {
-  color: #FFFFFF;
-  background-color: #18BC9C;
   padding: 5px 15px 5px 15px;
   border-radius: 3px;
   text-align: center;
@@ -42,9 +44,27 @@ body {
 }
 .index-links i {
   border-radius: 50px;
-  background-color: #fff;
+  background-color: #424242;
   padding: 15px;
-  color: #18BC9C;
+  color: #fff;
+  margin-top: -15px;
+}
+.index-links h3 {
+  text-align: center;
+  color: #18bc9c;
+  margin-bottom: 15px;
+  margin-top: 15px;
+}
+.index-links p {
+  margin-top: 15px;
+  color: #FFFFFF;
+  font-weight: 200;
+  font-size: 16px;
+}
+.index-links:hover {
+  box-shadow: 7px 7px 2px #18bc9c;
+  transition: all 0.2s ease-out;
+  margin-top: -5px;
 }
 .border-radius {
   border-radius: 3px;

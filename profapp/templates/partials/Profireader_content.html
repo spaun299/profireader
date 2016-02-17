@@ -32,8 +32,10 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-lg-5 index-links">
-                <h3>Profireader.com для видавців</h3>
+            <a href="{{ url_for('general.send_email_create_portal') }}">
+            <div class="col-lg-5 col-md-5 col-sm-5 col-xs-12 index-links">
+                <span><i class="fa fa-pencil fa-3x"></i></span>
+                <h3>Для видавців</h3>
                 <p>Миттєво створити портал (веб+мобайл) для свого медіа, без початкових інвестицій та технічних
                     знань.</p>
                 <p>Зконфігурувати свою унікальну модель поширення корисної читачам інформації як комбінацію відкритого
@@ -41,17 +43,25 @@
                     підписників.</p>
                 <p>Запропонувати рекламодавцям ефективні рекламні рішення побудовані на глибокому розумінні потреб
                     читачів і тісній комунікації з читачами.</p>
-                <a href="{{ url_for('general.send_email_create_portal') }}">{{ _('Index page. Block for company') }}</a>
             </div>
-            <div class="col-lg-5 pull-right index-links">
-                <h3>Profireader.com для читачів</h3>
-                <span><i class="fa fa-book"></i></span>
-                <p>Підписатись на улюблене медіа, портал якого створений на основі сервісу Profireader.com</p>
-                <p>Стати учасником спільноти читачіів підписаного порталу та обговорювати з ними вподобані статті та
-                    новини.</p>
-                <p>Впливати на формування новинної стрічки підписаного порталу.</p>
-                <a href="{{ url_for('general.portals_list') }}">{{ _('Index page. Block for reader') }}</a>
-            </div>
+            </a>
+
+            <a href="{{ url_for('general.portals_list') }}">
+                <div class="col-lg-5 col-md-5 col-sm-5 col-xs-12 pull-right index-links">
+                    <span><i class="fa fa-book fa-3x"></i></span>
+                    <h3>Для читачів</h3>
+                    <p>Підписатись на улюблене медіа, портал якого створений на основі сервісу Profireader.com</p>
+                    <p>Стати учасником спільноти читачіів підписаного порталу та обговорювати з ними вподобані статті та
+                        новини.</p>
+                    <p>Впливати на формування новинної стрічки підписаного порталу.</p>
+
+                </div>
+            </a>
         </div>
     </div>
 </div>
+
+<!--<a href="{{ url_for('general.send_email_create_portal') }}">{{ _('Index page. Block for company') }}</a>
+                    <a href="{{ url_for('general.portals_list') }}">{{ _('Index page. Block for reader') }}</a>
+
+-->
