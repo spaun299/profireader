@@ -79,14 +79,30 @@ class ArticlePortalDivision(Base, PRBase):
                                     )
 
     def get_actions_for_status(self):
+        action_rights_user = {
+            'edit': UserCompany.RIGHT_AT_COMPANY['MATERIALS_EDIT_OTHERS'],
+            'publish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'],
+            'republish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'],
+            'unpublish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']
+        }
+
+        action_rights_company = {
+            'edit': UserCompany.RIGHT_AT_COMPANY['MATERIALS_EDIT_OTHERS'],
+            'publish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'],
+            'republish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'],
+            'unpublish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']
+        }
+
         if self.status == ArticlePortalDivision.STATUSES['SUBMITTED']:
-            return ['edit', 'publish', 'delete']
+            ret = ['edit', 'publish', 'delete']
         elif self.status == ArticlePortalDivision.STATUSES['UNPUBLISHED']:
-            return ['edit', 'republish', 'delete']
+            ret = ['edit', 'republish', 'delete']
         elif self.status == ArticlePortalDivision.STATUSES['PUBLISHED']:
-            return ['edit', 'unpublish', 'republish']
+            ret = ['edit', 'unpublish', 'republish']
         elif self.status == ArticlePortalDivision.STATUSES['DELETED']:
-            return ['undelete']
+            ret = ['undelete']
+
+        return {r: canToAction(r) for r in ret}
 
     def check_favorite_status(self, user_id):
         return db(ReaderArticlePortalDivision, user_id=user_id, article_portal_division_id=self.id,
