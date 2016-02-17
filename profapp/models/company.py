@@ -268,7 +268,7 @@ class UserCompany(Base, PRBase):
         'FILES_UPLOAD': 2 ** (5 - 1),
         'FILES_DELETE_OTHERS': 2 ** (14 - 1),
 
-        'MATERIALS_SUBMIT_TO_ANOTHER_PORTAL': 2 ** (8 - 1),
+        'MATERIALS_SUBMIT_TO_PORTAL': 2 ** (8 - 1),
         'MATERIALS_EDIT_OTHERS': 2 ** (12 - 1),
 
         'PUBLICATION_PUBLISH_AT_OWN_PORTAL': 2 ** (2 - 1),
@@ -290,7 +290,7 @@ class UserCompany(Base, PRBase):
     }
 
     RIGHTS_AT_COMPANY_DEFAULT = RIGHT_AT_COMPANY['FILES_BROWSE'] | RIGHT_AT_COMPANY[
-        'MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']
+        'MATERIALS_SUBMIT_TO_PORTAL']
     RIGHTS_AT_COMPANY_FOR_OWNER = 0x7fffffffffffffff
 
     position = Column(TABLE_TYPES['short_name'], default='')
@@ -314,13 +314,12 @@ class UserCompany(Base, PRBase):
 
     # todo (AA to AA): check handling md_tm
 
-    def __init__(self, user_id=None, company_id=None, status=STATUSES['APPLICANT'], rights=0):
+    def __init__(self, user_id=None, company_id=None, status=STATUSES['APPLICANT']):
 
         super(UserCompany, self).__init__()
         self.user_id = user_id
         self.company_id = company_id
         self.status = status
-        self._rights = rights
 
     @staticmethod
     def get(user_id=None, company_id=None):

@@ -183,12 +183,13 @@ def get_portal_dict_for_material(portal, company_id, material_id=None, publicati
         ret['publication']['division'] = ret['divisions'][ret['publication']['portal_division_id']]
         ret['publication']['counts'] = '0/0/0/0'
 
-        ret['actions'] = publication_in_portal.get_actions_for_status()
+        ret['actions'] = publication_in_portal.get_actions_for_status(company_id)
         ret['publication']['actions'] = ret['actions']
 
     else:
         ret['publication'] = None
-        ret['actions'] = ['submit']
+        ret['actions'] = {'submit': UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL']) or
+                                                                                      'MATERIALS_SUBMIT_TO_PORTAL'}
     return ret
 
 

@@ -35,7 +35,9 @@
 
                     {name: 'position', width: '20%', afilter: {type: 'input'}},
                     {name: 'status', width: '10%', afilter: {type: 'input'}},
-                    {name: 'rights', width: '300', type: 'icons', afilter: {type: 'input'}}
+                    {name: 'rights', width: '*', type: 'icons', afilter: {type: 'input'}, classes: function (id, entity, field) {
+                        return 'lalala';
+                    }}
                 ]
             });
         });

@@ -4,7 +4,7 @@ from sqlalchemy.sql import expression
 from ..constants.TABLE_TYPES import TABLE_TYPES
 # from db_init import db_session
 from ..models.company import Company, UserCompany
-from ..models.portal import PortalDivision, Portal, PortalDivisionType
+from ..models.portal import PortalDivision, Portal, PortalDivisionType, MemberCompanyPortal
 from ..models.users import User
 from ..models.files import File, FileContent
 from ..models.tag import Tag, TagPortalDivision, TagPortalDivisionArticle
@@ -78,20 +78,42 @@ class ArticlePortalDivision(Base, PRBase):
                                     passive_deletes=True
                                     )
 
-    def get_actions_for_status(self):
-        action_rights_user = {
-            'edit': UserCompany.RIGHT_AT_COMPANY['MATERIALS_EDIT_OTHERS'],
-            'publish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'],
-            'republish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'],
-            'unpublish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']
-        }
+    def get_actions_for_status(self, company_id):
+        # action_rights_user = {
+        #     'edit': UserCompany.RIGHT_AT_COMPANY['MATERIALS_EDIT_OTHERS'],
+        #     'publish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL'],
+        #     'republish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL'],
+        #     'unpublish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL']
+        # }
+        #
+        # action_rights_company = {
+        #     'edit': MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_EDIT'],
+        #     'publish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL'],
+        #     'republish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL'],
+        #     'unpublish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL']
+        # }
 
-        action_rights_company = {
-            'edit': UserCompany.RIGHT_AT_COMPANY['MATERIALS_EDIT_OTHERS'],
-            'publish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'],
-            'republish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL'],
-            'unpublish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']
-        }
+        # ucr = UserCompany.get(company_id=self.division.portal.company_owner_id)
+        cpr = MemberCompanyPortal.get(portal_id=self.division.portal_id, company_id=company_id)
+
+        def action_is_allowed(action):
+            if action == 'edit':
+                return cpr.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_EDIT']) or 'PUBLICATION_EDIT'
+            if action == 'publish':
+                return cpr.has_rights(
+                        MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_PUBLISH']) or 'PUBLICATION_PUBLISH'
+            if action == 'republish':
+                return cpr.has_rights(
+                        MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_PUBLISH']) or 'PUBLICATION_PUBLISH'
+            if action == 'unpublish':
+                return cpr.has_rights(
+                        MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_UNPUBLISH']) or 'PUBLICATION_UNPUBLISH'
+            if action == 'delete':
+                return cpr.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL[
+                                          'PUBLICATION_DELETE_UNDELETE']) or 'PUBLICATION_DELETE_UNDELETE'
+            if action == 'undelete':
+                return cpr.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL[
+                                          'PUBLICATION_DELETE_UNDELETE']) or 'PUBLICATION_DELETE_UNDELETE'
 
         if self.status == ArticlePortalDivision.STATUSES['SUBMITTED']:
             ret = ['edit', 'publish', 'delete']
@@ -101,13 +123,14 @@ class ArticlePortalDivision(Base, PRBase):
             ret = ['edit', 'unpublish', 'republish']
         elif self.status == ArticlePortalDivision.STATUSES['DELETED']:
             ret = ['undelete']
+        else:
+            ret = []
 
-        return ret
+        return {r: action_is_allowed(r) for r in ret}
 
     def check_favorite_status(self, user_id):
         return db(ReaderArticlePortalDivision, user_id=user_id, article_portal_division_id=self.id,
                   favorite=True).count() > 0
-
 
     def search_filter_default(self, division_id, company_id=None):
         """ :param division_id: string with id from table portal_division,
@@ -117,13 +140,13 @@ class ArticlePortalDivision(Base, PRBase):
         division = db(PortalDivision, id=division_id).one()
         division_type = division.portal_division_type.id
         visibility = ArticlePortalDivision.visibility.in_(ArticlePortalDivision.articles_visibility_for_user(
-            portal_id=division.portal_id)[0])
+                portal_id=division.portal_id)[0])
         filter = None
         if division_type == 'index':
             filter = {'class': ArticlePortalDivision,
                       'filter': and_(ArticlePortalDivision.portal_division_id.in_(db(
-                          PortalDivision.id, portal_id=division.portal_id).filter(
-                          PortalDivision.portal_division_type_id != 'events'
+                              PortalDivision.id, portal_id=division.portal_id).filter(
+                              PortalDivision.portal_division_type_id != 'events'
                       )), ArticlePortalDivision.status == ArticlePortalDivision.STATUSES['PUBLISHED'], visibility),
                       'return_fields': 'default_dict', 'tags': True}
         elif division_type == 'news':
@@ -201,7 +224,7 @@ class ArticlePortalDivision(Base, PRBase):
         visibilities = ArticlePortalDivision.VISIBILITIES.copy()
         if not db(UserCompany, user_id=getattr(g.user, 'id', None),
                   status=UserCompany.STATUSES['ACTIVE']).filter(
-                    UserCompany.company_id == db(Portal.company_owner_id, id=portal_id)).count():
+                        UserCompany.company_id == db(Portal.company_owner_id, id=portal_id)).count():
             visibilities.pop(ArticlePortalDivision.VISIBILITIES['CONFIDENTIAL'])
             employer = False
         return visibilities.keys(), employer
