@@ -438,3 +438,8 @@
     color: white!important;
     background: red;
 }
+
+.search-highlight{
+    color: red;
+    text-decoration: underline;
+}

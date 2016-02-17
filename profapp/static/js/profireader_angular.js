@@ -1253,6 +1253,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             }
 
             gridApi.grid['searchItemGrid'] = function (col) {
+                //highLightSubstring(col.filter.text, 'ui-grid-canvas',col.field)
                 gridApi.grid.all_grid_data.paginationOptions.pageNumber = 1;
                 gridApi.grid.all_grid_data['filter'][col.field] = col.filter.text;
                 gridApi.grid.setGridData()
@@ -1595,12 +1596,8 @@ $.fn.scrollTo = function () {
     });
 }
 
-function scrool($el, message) {
+function scrool($el) {
     $($el).scrollTo();
-    //$.smoothScroll($.extend({
-    //    scrollElement: $el.parent(),
-    //    scrollTarget: $el
-    //}, options ? options : {}));
 }
 
 function highlight($el) {
@@ -1608,6 +1605,21 @@ function highlight($el) {
     setTimeout(function () {
         $($el).removeClass('highlight');
     }, 3500);
+}
+
+
+function highLightSubstring(substring, block, element) {
+    var elements = element.split('&');
+    var re = new RegExp(substring, "gi");
+    $("."+block).find(".search-highlight").remove()
+    $.each(elements, function (index){
+        var el = elements[index]
+        console.log(el);
+        $("."+block).find("#"+el).each(function () {
+            var rex = $(this).html().match(re)
+            $(this).html($(this).html().replace(re, '<span class="search-highlight">' + rex[0] + '</span>'));
+        })
+    })
 }
 
 function angularControllerFunction(controller_attr, function_name) {
