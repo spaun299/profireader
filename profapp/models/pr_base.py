@@ -131,7 +131,7 @@ class Search(Base):
         desc_asc = kwargs.get('desc_asc') or 'desc'
         pages = None
         search_text = kwargs.get('search_text') or ''
-        return_objects = True if [arg.get('return_fields') for arg in args][0] else False
+        return_objects = any(list(map(lambda arg: bool(arg.get('return_fields')), args)))
         try:
             assert (desc_asc == 'desc' or desc_asc == 'asc'), \
                 'Parameter desc_asc should be desc or asc but %s given' % desc_asc
@@ -197,12 +197,20 @@ class Search(Base):
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
-            search_params.append(and_(Search.index == db(cls['class'].id).filter(
-                    filter_params).subquery().c.id,
-                                      # Search.text.ilike(
-                    # "%" + search_text + "%"),
-                                      Search.table_name == cls['class'].__tablename__,
-                                      Search.kind.in_(fields)), )
+
+            if filter_params is not None:
+                filter_array = [Search.index == db(cls['class'].id).filter(filter_params).subquery().c.id]
+            else:
+                filter_array = [Search.index == db(cls['class'].id).subquery().c.id]
+
+            filter_array.append(Search.table_name == cls['class'].__tablename__)
+            filter_array.append(Search.kind.in_(fields))
+
+            if search_text is not None and search_text != '':
+                filter_array.append(Search.text.ilike("%" + search_text + "%"))
+
+            search_params.append(and_(*filter_array), )
+
         subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
                              func.min(Search.table_name).label('table_name'),

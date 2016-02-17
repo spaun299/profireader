@@ -17,7 +17,7 @@ from flask import send_from_directory, jsonify, json
 import collections
 from sqlalchemy import and_
 from .request_wrapers import ok
-from ..utils.email import send_email
+from ..utils.pr_email import send_email
 from flask.ext.login import current_user
 
 def get_division_for_subportal(portal_id, member_company_id):

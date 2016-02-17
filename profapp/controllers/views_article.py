@@ -277,6 +277,7 @@ def submit_publish(json, article_action):
 # def publication_unpublish_from_portal(json):
 #     return {}
 
+
 # @article_bp.route('/material_details_publications/<string:material_id>/', methods=['POST'])
 # @ok
 # def material_portals_load(json, material_id):

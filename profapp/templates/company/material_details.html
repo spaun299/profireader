@@ -85,16 +85,6 @@
                      }
                      ,*/
                     {
-                        name: 'publication.status', afilter: {type: 'multi_select'}, width: '100'
-                    }
-                    , {
-                        name: 'publication.visibility', width: '100'
-                    }
-                    , {
-                        name: 'actions', type: 'actions', onclick: 'grid_action', width: '200'
-
-                    }
-                    , {
                         name: 'name',
                         type: 'link',
                         target: 'front',
@@ -109,6 +99,12 @@
                     , {
                         name: 'publication.title', type: 'link', target: 'front',
                         href: 'url_front_publication_details_host(row.entity.publication.id, row.entity.host)'
+                    },
+                        {
+                        name: 'publication.status', afilter: {type: 'multi_select'}, width: '100'
+                    }
+                    , {
+                        name: 'publication.visibility', width: '100'
                     }
                     , {
                         name: 'publication.position', width: '30'
@@ -118,6 +114,9 @@
                     }
                     , {
                         name: 'publication.publishing_tm', enableSorting: true
+                    }, {
+                        name: 'actions', type: 'actions', onclick: 'grid_action', width: '200'
+
                     }
 
 

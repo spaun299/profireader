@@ -250,6 +250,10 @@
     background-color: #ff0000;
     color: #ff0000;
 }
+.pr-grid-cell-field-type-icons-icon-MATERIAL_SUBMIT {
+    background-color: #ff0000;
+    color: #ff0000;
+}
 
 
 .pr-grid-cell-field-type-icons-icon-PUBLICATION_EDIT {
@@ -302,8 +306,22 @@
     width: 16%;
 }
 
+.subscribe-portal-logo {
+    width: 200px;
+    height: 150px;
+}
+
 .pr-grid-cell-img-prefix {
     height: 100%;
     width: 50px;
     margin-right: 2px;
+}
+
+
+.p4px {
+    padding: 4px;
+}
+
+.highlightedText {
+    background: yellow;
 }
