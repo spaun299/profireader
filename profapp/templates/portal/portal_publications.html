@@ -67,25 +67,25 @@
                 loadGridData: $scope.loadPublications,
                 columnDefs: [
                     {
-                        name: 'status', afilter: {type: 'select'}, width: 100
-                    },
-                    {
-                        name: 'visibility', afilter: {type: 'select'}, width: 100
-                    }, {
-                        name: 'actions', type: 'actions', onclick: 'grid_action', width: 300,
-                    }
-
-                    , {
                         name: 'division.name', type: 'link', target: 'front',
                         href: 'url_front_publication_division_host(row.entity.division.name, row.entity.portal.host)'
                     }
-
-                    , {
+                    ,
+                    {
                         name: 'title', type: 'link', target: 'front',
                         href: 'url_front_publication_details_host(row.entity.id, row.entity.portal.host)'
                     },
                     {
+                        name: 'status', afilter: {type: 'select'}, width: 100
+                    },
+                    {
+                        name: 'visibility', afilter: {type: 'select'}, width: 100
+                    },
+                    {
                         name: 'publishing_tm', afilter: {type: 'date_range'}
+                    }
+                    , {
+                        name: 'actions', type: 'actions', onclick: 'grid_action', width: 300,
                     }
                 ]
             });

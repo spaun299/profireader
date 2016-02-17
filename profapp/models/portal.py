@@ -276,7 +276,7 @@ class Portal(Base, PRBase):
         return ret
 
     def get_client_side_dict(self,
-                             fields='id|name, divisions.*, layout.*, logo_file_id, favicon_file_id, company_owner_id, url_facebook',
+                             fields='id|name|host, divisions.*, layout.*, logo_file_id, favicon_file_id, company_owner_id, url_facebook',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
 
@@ -615,6 +615,10 @@ class UserPortalReader(Base, PRBase):
         portals = db(Portal).filter(~(Portal.id.in_(db(UserPortalReader.portal_id, user_id=g.user_dict['id'])))).all()
         for portal in portals:
             yield (portal.id, portal.name,)
+
+    @staticmethod
+    def get(user_id=None, portal_id = None):
+        return db(UserPortalReader).filter_by(user_id=user_id if user_id else g.user.id, portal_id=portal_id).first()
 
     @staticmethod
     def get_portals_and_plan_info_for_user(user_id, page, items_per_page, filter_params):
