@@ -1206,7 +1206,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                     switch (col.type) {
                         case 'link':
-                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">' + prefix_img + '<a ' + (col.target ? (' target="' + col.target + '" ') : '') + ' href="{{' + 'grid.appScope.' + col.href + '}}" ng-bind="COL_FIELD"></a></div>';
+                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">' + prefix_img + '<a ' + (col.target ? (' target="' + col.target + '" ') : '') + ' href="{{' + 'grid.appScope.' + col.href + '}}"><i ng-if="'+col.link+'" class="fa fa-external-link" style="font-size: 12px"></i> {{COL_FIELD}}</a></div>';
                         case 'img':
                             return '<div class="' + classes_for_row + '" style="text-align:center;">' + prefix_img + '<img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>';
                         case 'show_modal':

@@ -25,9 +25,7 @@
                 return ( '/portal/search_for_portal_to_join/' );
             };
         $scope.url_join = {{ raw_url_for('portal.apply_company')|safe }};
-        $scope.partners = {{ raw_url_for('portal.portals_partners')|safe }};
-        $scope.load_partners = {{ raw_url_for('portal.portals_partners_load')|safe }};
-        $scope.url_portal_partner_details = {{ raw_url_for('portal.portal_partner_details')| safe}};
+        $scope.url_company_profile = {{ raw_url_for('company.profile')|safe }};
         $scope.selectedPortal_name = '';
         $scope.selectedPortal = null;
         $scope.selectedPortal_sending = false;
@@ -59,7 +57,7 @@
                 company_id: $scope.company_id,
                 portal_id: $scope.selectedPortal.id
             }, function (resp) {
-                $scope.gridApi.grid.setGridData()
+                $scope.gridApi.grid.setGridData();
                 $scope.selectedPortal = null;
                 $scope.selectedPortal_name = null;
             }).finally(function () {
@@ -79,13 +77,11 @@
                         loadGridData: $scope.sendData,
                         columnDefs: [
                             {
-                                name: 'portal_logo', type: 'img'
-                            }, {
                                 name: 'portal_name', type: 'link',
-                                href: 'portal_link(row.entity.link)'
+                                href: 'portal_link(row.entity.link)', img:'portal_logo', link: true
                             }, {
                                 name: 'company.name', type: 'link',
-                                href: 'url_portal_partner_details({partner_id: row.entity.portal_id, employeer_id:row.entity.employeer_id})'
+                                href: 'url_company_profile({company_id: row.entity.company.id})',img:"company.logo_file_id"
                             }, {
                                 name: 'status', width: '10%', afilter: {type: 'input'}
                             }, {
