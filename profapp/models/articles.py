@@ -425,10 +425,10 @@ class ArticleCompany(Base, PRBase):
             list_filters.append({'type': 'date_range', 'value': filters['md_tm'], 'field': ArticleCompany.md_tm})
         if 'title' in filters:
             list_filters.append({'type': 'text', 'value': filters['title_author'], 'field': ArticleCompany.title})
-        if 'title_author' in filters:
+        if 'title&editor.profireader_name' in filters:
             sub_query = sub_query.join(User,
                                        User.id == ArticleCompany.editor_user_id)
-            list_filters.append({'type': 'text_multi', 'value': filters['title_author'],
+            list_filters.append({'type': 'text_multi', 'value': filters['title&editor.profireader_name'],
                                  'field': [ArticleCompany.title, User.profireader_name]})
         if 'editor.profireader_name' in filters:
             sub_query = sub_query.join(User,
