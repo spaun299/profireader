@@ -210,7 +210,7 @@ def load_user():
 
 
     # user_dict = {'id': id, 'name': name, 'logged_via': logged_via}
-
+    
     g.user_init = user_init
     g.user = user
     g.user_dict = user_dict
@@ -485,6 +485,10 @@ class AnonymousUser(AnonymousUserMixin):
 
     def __repr__(self):
         return "<User(id = %r)>" % self.id
+
+
+
+
 
 
 login_manager.anonymous_user = AnonymousUser
