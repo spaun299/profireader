@@ -14,16 +14,8 @@ from ..models.translate import TranslateTemplate
 #     return {'phrase': translation}
 
 
-from flask import make_response
 
-@tools_bp.route('/admin/ips', methods=['GET'])
-def index():
-    resp = make_response(render_template('/admin/ips'))
 
-    resp.set_cookie( request.cookies.get('beaker.session.id', '', max_age=60))
-    return resp
-
-print('ffff')
 @tools_bp.route('/save_translate/', methods=['POST'])
 @ok
 def save_translate(json):

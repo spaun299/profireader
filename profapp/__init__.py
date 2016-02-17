@@ -210,7 +210,7 @@ def load_user():
 
 
     # user_dict = {'id': id, 'name': name, 'logged_via': logged_via}
-
+    print(user_dict)
     g.user_init = user_init
     g.user = user
     g.user_dict = user_dict
@@ -490,22 +490,6 @@ class AnonymousUser(AnonymousUserMixin):
 
 
 
-# import http.cookies
-# import datetime
-# import random
-#
-# expiration = datetime.datetime.now() + datetime.timedelta(hours=3)
-# cookie = http.cookies.SimpleCookie()
-# cookie["session"] = random.randint(10000000,1000000000)
-# cookie["session"]["domain"] = "profireader.com"
-# cookie["session"]["path"] = "/"
-# cookie["session"]["expires"] = \
-#   expiration.strftime("%a, %d-%b-%Y %H:%M:%S PST")
-#
-# print ("Content-type: text/plain")
-# print (cookie.output())
-# print
-# print ("Cookie set with: " + cookie.output())
 
 login_manager.anonymous_user = AnonymousUser
 
