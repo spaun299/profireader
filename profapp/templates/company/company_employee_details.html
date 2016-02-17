@@ -36,13 +36,35 @@
         {{ _('position') }} {{ employment.position }}<br>
         {{ _('permissions') }}<br>
         <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in employment.rights">
-            <img src="/static/images/0.gif"
-                 class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ right_name }}"/>
+            <i class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ right_name }}">
             {{ right_name }}
+            </i>
         </div>
         <button class="btn fr" type="button" ng-click="update()">{{ _('Update employment') }}</button>
     </div>
-
+<!--
+ FILES_BROWSE <i class="fa fa-eye "></i>
+ FILES_UPLOAD <i class="fa fa-upload"></i>
+ DELETE_OTHERS <i class="fa fa-trash"></i>
+ SUBMIT_TO_ANOTHER_PORTAL <i class="fa fa-plus"></i>
+ MATERIALS_EDIT_OTHERS <i class="fa fa-pencil-square-o"></i>
+ PUBLISH_AT_OWN_PORTAL <i class="fa fa-check-square-o"></i>
+ UNPUBLISH_AT_OWN_PORTAL <i class="fa fa-ban"></i>
+ PUBLICATION_SET_PRIORITY <i class="fa fa-star"></i>
+ EMPLOYEE_CONFIRM_NEW <i class="fa fa-user-plus"></i>
+ EMPLOYEE_SUSPEND_UNSUSPEND <i class="fa fa-user-times"></i>
+ COMPANY_REQUIRE_MEMBEREE_AT_PORTALS <i class="fa fa-frown-o"></i>
+ COMPANY_MANAGE_USER_RIGHTS <i class="fa fa-bullhorn"></i>
+ COMPANY_EDIT_PROFILE <i class="fa fa-pencil"></i>
+ EDIT_PORTAL_PROFILE <i class="fa fa-user"></i>
+ PORTAL_MANAGE_READERS <i class="fa fa-book"></i>
+ PORTAL_MANAGE_COMMENTS <i class="fa fa-comments"></i>
+ PORTAL_MANAGE_MEMBERS_COMPANIES <i class="fa fa-male"></i>
+ MATERIAL_SUBMIT <i class="fa fa-check"></i>
+ PUBLICATION_EDIT
+ PUBLICATION_UNPUBLISH
+ PUBLICATION_PUBLISH
+ --->
     {% endraw %}
 
 {% endblock portal_content %}
