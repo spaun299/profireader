@@ -166,105 +166,110 @@
     margin: 0px 1px;
 }
 
-.pr-grid-cell-field-type-icons-icon-FILES_BROWSE {
+.pr-grid-cell-field-type-icons-icon::before {
+    width: 1em;
+    content: "!!!";
+}
+
+.apr-grid-cell-field-type-icons-icon-FILES_BROWSE {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-FILES_UPLOAD {
+.apr-grid-cell-field-type-icons-icon-FILES_UPLOAD {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-FILES_DELETE_OTHERS {
+.apr-grid-cell-field-type-icons-icon-FILES_DELETE_OTHERS {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-MATERIALS_SUBMIT_TO_ANOTHER_PORTAL {
+.apr-grid-cell-field-type-icons-icon-MATERIALS_SUBMIT_TO_ANOTHER_PORTAL {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-MATERIALS_EDIT_OTHERS {
+.apr-grid-cell-field-type-icons-icon-MATERIALS_EDIT_OTHERS {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_PUBLISH_AT_OWN_PORTAL {
+.apr-grid-cell-field-type-icons-icon-PUBLICATION_PUBLISH_AT_OWN_PORTAL {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_UNPUBLISH_AT_OWN_PORTAL {
+.apr-grid-cell-field-type-icons-icon-PUBLICATION_UNPUBLISH_AT_OWN_PORTAL {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_SET_PRIORITY {
+.apr-grid-cell-field-type-icons-icon-PUBLICATION_SET_PRIORITY {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-EMPLOYEE_CONFIRM_NEW {
+.apr-grid-cell-field-type-icons-icon-EMPLOYEE_CONFIRM_NEW {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-EMPLOYEE_SUSPEND_UNSUSPEND {
+.apr-grid-cell-field-type-icons-icon-EMPLOYEE_SUSPEND_UNSUSPEND {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-COMPANY_REQUIRE_MEMBEREE_AT_PORTALS {
+.apr-grid-cell-field-type-icons-icon-COMPANY_REQUIRE_MEMBEREE_AT_PORTALS {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-COMPANY_MANAGE_USER_RIGHTS {
+.apr-grid-cell-field-type-icons-icon-COMPANY_MANAGE_USER_RIGHTS {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-COMPANY_EDIT_PROFILE {
+.apr-grid-cell-field-type-icons-icon-COMPANY_EDIT_PROFILE {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-EDIT_PORTAL_PROFILE {
+.apr-grid-cell-field-type-icons-icon-EDIT_PORTAL_PROFILE {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_READERS {
+.apr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_READERS {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_COMMENTS {
+.apr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_COMMENTS {
     background-color: #ff0000;
     color: #ff0000;
 }
 
-.pr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_MEMBERS_COMPANIES {
+.apr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_MEMBERS_COMPANIES {
     background-color: #ff0000;
     color: #ff0000;
 }
-.pr-grid-cell-field-type-icons-icon-MATERIAL_SUBMIT {
+.apr-grid-cell-field-type-icons-icon-MATERIAL_SUBMIT {
     background-color: #ff0000;
     color: #ff0000;
 }
 
 
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_EDIT {
+.apr-grid-cell-field-type-icons-icon-PUBLICATION_EDIT {
     background-color: #ff0000;
     color: #ff0000;
 }
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_UNPUBLISH {
+.apr-grid-cell-field-type-icons-icon-PUBLICATION_UNPUBLISH {
     background-color: #ff0000;
     color: #ff0000;
 }
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_PUBLISH {
+.apr-grid-cell-field-type-icons-icon-PUBLICATION_PUBLISH {
     background-color: #ff0000;
     color: #ff0000;
 }
