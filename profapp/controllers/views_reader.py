@@ -51,26 +51,28 @@ def list_reader(page=1):
                                                               ArticlePortalDivision.status ==
                                                               ArticlePortalDivision.STATUSES['PUBLISHED']),
                                                'tags': True, 'return_fields': article_fields}, page=page)
-    else:
-        articles, pages, page = Search.search({'class': ArticlePortalDivision,
-                                               'filter': (ArticlePortalDivision.id == db(ReaderArticlePortalDivision,
-                                                                                         user_id=g.user.id,
-                                                                                         favorite=True).subquery().c.
-                                                          article_portal_division_id),
-                                               'tags': True, 'return_fields': article_fields}, page=page,
-                                              search_text=search_text)
-    portals = UserPortalReader.get_portals_for_user() if not articles else None
-    for article_id, article in articles.items():
-        articles[article_id]['company']['logo'] = File().get(articles[article_id]['company']['logo_file_id']).url()
-        articles[article_id]['portal']['logo'] = File().get(articles[article_id]['portal']['logo_file_id']).url()
-        del articles[article_id]['company']['logo_file_id'], articles[article_id]['portal']['logo_file_id']
+    # else:
+    #     articles, pages, page = Search.search({'class': ArticlePortalDivision,
+    #                                            'filter': (ArticlePortalDivision.id == db(ReaderArticlePortalDivision,
+    #                                                                                      user_id=g.user.id,
+    #                                                                                      favorite=True).subquery().c.
+    #                                                       article_portal_division_id),
+    #                                            'tags': True, 'return_fields': article_fields}, page=page,
+    #                                           search_text=search_text)
+    # portals = UserPortalReader.get_portals_for_user() if not articles else None
+    # for article_id, article in articles.items():
+    #     articles[article_id]['company']['logo'] = articles[article_id]['company']['logo_file_id']
+    #     articles[article_id]['portal']['logo'] = articles[article_id]['portal']['logo_file_id']
+        # articles[article_id]['company']['logo'] = File().get(articles[article_id]['company']['logo_file_id']).url()
+        # articles[article_id]['portal']['logo'] = File().get(articles[article_id]['portal']['logo_file_id']).url()
+        # del articles[article_id]['company']['logo_file_id'], articles[article_id]['portal']['logo_file_id']
 
     return render_template('partials/reader/reader_base.html',
-                           articles=articles,
-                           pages=pages,
+                           # articles=articles,
+                           # pages=pages,
                            current_page=page,
                            page_buttons=Config.PAGINATION_BUTTONS,
-                           portals=portals,
+                           # portals=portals,
                            favorite=favorite
                            )
 

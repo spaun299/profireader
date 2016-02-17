@@ -47,8 +47,8 @@
                     search: val
                 }, function (resp) {
                     $scope.company_list = resp?resp:[];
+                    $('.col-xs-10 H3').html('dfsdfs')
                     return resp.length ? resp : [{id: false, name: 'No results'}];
-
                 });
             };
 
@@ -60,7 +60,7 @@
                     $timeout(function () {
                         scrool('#joined_company_'+company_id);
                         highlight('#joined_company_56187294-164b-4001-a603-7614f897601e')
-                    }, 1500);
+                    }, 500);
                 }).finally(function () {
                     $scope.selectedCompany_sending = false;
                 });

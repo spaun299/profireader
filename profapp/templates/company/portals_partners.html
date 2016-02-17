@@ -20,7 +20,7 @@
     module.controller('portals_partners', function ($scope, $ok, $sce)  {
         angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('portals_partners');
         $scope.url_portals_partners = '{{ url_for('portal.portals_partners', company_id=company.id)}}';
-        $scope.company_id = '{{ company_id|safe }}';
+        $scope.company_id = '{{ company.id|safe }}';
         $scope.url_search_for_portal = function () {
                 return ( '/portal/search_for_portal_to_join/' );
             };
@@ -54,13 +54,12 @@
         };
 
         $scope.joinToPortal = function () {
+            $scope.data = {};
             $ok($scope.url_join(), {
-                company_id: $scope.data.company_id,
+                company_id: $scope.company_id,
                 portal_id: $scope.selectedPortal.id
             }, function (resp) {
-                $scope.data['portals_partners'] = resp['portals_partners'];
-                $scope.all_grid_data['paginationOptions']['page_for_id'] = $scope.selectedPortal.id;
-                $scope.sendData($scope.all_grid_data);
+                $scope.gridApi.grid.setGridData()
                 $scope.selectedPortal = null;
                 $scope.selectedPortal_name = null;
             }).finally(function () {
@@ -86,7 +85,7 @@
                                 href: 'portal_link(row.entity.link)'
                             }, {
                                 name: 'company.name', type: 'link',
-                                href: 'url_portal_partner_details({partner_id: row.entity.company.id, employeer_id:row.entity.employeer_id})'
+                                href: 'url_portal_partner_details({partner_id: row.entity.portal_id, employeer_id:row.entity.employeer_id})'
                             }, {
                                 name: 'status', width: '10%', afilter: {type: 'input'}
                             }, {
@@ -100,7 +99,7 @@
     {% raw %}
        <div ng-controller="portals_partners">
        <h3> {{ _('Join to portal') }} </h3>
-            <input uib-typeahead-on-select="onSelect($item, $model, $label)"
+            <input typeahead-on-select="onSelect($item, $model, $label)"
                    uib-typeahead-template-url="typeaheadTemplate.html"
                    uib-typeahead-loading="loadingPortals"
                    ng-model="selectedPortal_name"

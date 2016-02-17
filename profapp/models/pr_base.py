@@ -198,8 +198,10 @@ class Search(Base):
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
             search_params.append(and_(Search.index == db(cls['class'].id).filter(
-                    filter_params).subquery().c.id, Search.text.ilike(
-                    "%" + search_text + "%"), Search.table_name == cls['class'].__tablename__,
+                    filter_params).subquery().c.id,
+                                      # Search.text.ilike(
+                    # "%" + search_text + "%"),
+                                      Search.table_name == cls['class'].__tablename__,
                                       Search.kind.in_(fields)), )
         subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),

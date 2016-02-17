@@ -132,7 +132,7 @@
         <div class="modal-body">
             {{ _('You are going to ' + action + ' ' + object_name + ' `%(data.publication.title)s` at portal
             `%(data.portal.name)s`') }}<br/>
-            <div ng-if="action !== 'unpublish'">
+            <div ng-if="action !== 'unpublish' && action !== 'delete' && action !== 'undelete'">
                 <br/>
                 {{ _('Select portal division') }}<span
                     af-validation-answer="data_validation:portal_division_id"></span><br/>
