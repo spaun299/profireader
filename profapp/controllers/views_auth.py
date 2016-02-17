@@ -17,7 +17,7 @@ from flask.ext.login import login_user
 from ..constants.SOCIAL_NETWORKS import SOC_NET_NONE
 from ..constants.UNCATEGORIZED import AVATAR_SIZE, AVATAR_SMALL_SIZE
 from ..utils.redirect_url import redirect_url
-from utils.email import SendEmail
+from utils.pr_email import SendEmail
 # def _session_saver():
 #    session.modified = True
 

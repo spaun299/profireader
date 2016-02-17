@@ -5,6 +5,7 @@ from profapp.models.articles import Article, ArticleCompany, ArticleCompanyHisto
 from profapp.models.company import Company, UserCompany
 from profapp.models.files import File, FileContent
 from profapp.models.users import User
+from profapp.models.portal import Portal
 from profapp.models.pr_base import MLStripper
 from sqlalchemy import create_engine, event
 from profapp.models.pr_base import Search
@@ -14,7 +15,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from config import ProductionDevelopmentConfig
 import datetime
 classes = [ArticlePortalDivision, Article, ArticleCompany, ArticleCompanyHistory,
-           Company, UserCompany, FileContent, File, User]
+           Company, UserCompany, FileContent, File, User, Portal]
 engine = create_engine(ProductionDevelopmentConfig.SQLALCHEMY_DATABASE_URI)
 db_session = scoped_session(sessionmaker(autocommit=False,
                                          autoflush=False,
@@ -74,9 +75,10 @@ if __name__ == '__main__':
     quantity = 0
     percent_to_str = ''
     percents = []
-    prompt = True if input(
+    answer = input(
         "Are you sure? \n If you'l start this process, your database will be overwritten. "
-        "Yes|No") == ('yes' or 'Yes') else False
+        "Yes|No")
+    prompt = True if answer in ['yes', 'Yes', 'y', 'YES', 'tak'] else False
     if not prompt:
         exit('The script has been closed.')
     for cls in classes:
