@@ -617,6 +617,10 @@ class UserPortalReader(Base, PRBase):
             yield (portal.id, portal.name,)
 
     @staticmethod
+    def get(user_id=None, portal_id = None):
+        return db(UserPortalReader).filter_by(user_id=user_id if user_id else g.user.id, portal_id=portal_id).first()
+
+    @staticmethod
     def get_portals_and_plan_info_for_user(user_id, page, items_per_page, filter_params):
         from ..controllers.pagination import pagination
         query, pages, page, count = pagination(db(UserPortalReader, user_id=user_id).filter(filter_params),

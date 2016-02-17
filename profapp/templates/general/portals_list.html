@@ -1,6 +1,6 @@
 {% extends "index_lazy_layout.html" %}
 
-{% block title %}Profireader{% endblock title %}
+{% block title %}{{ _('Portal list') }}{% endblock title %}
 
 {% block head %}
     {{ super() }}
@@ -13,18 +13,46 @@
             $scope.$$translate = {{ translates('portals_list')|safe }};
             $scope.search_text = '';
             $scope.loading = false;
+            $scope.dirty = true;
             $scope.data = [];
+
+            $scope.subscribe = function (portal_id) {
+                {% if g.user_id %}
+                    $ok('{{ url_for('reader.reader_subscribe_registered')|safe }}', {portal_id: portal_id}, function (resp) {
+                        if (resp) {
+                            _.map($scope.data, function (portal) {
+                                if (portal['id'] === portal_id) {
+                                    portal['subscribed'] = true;
+                                }
+                            })
+                        }
+                    });
+                {% else %}
+                    window.location.href = {{ raw_url_for('reader.reader_subscribe')|safe }}({portal_id: portal_id});
+                {% endif %}
+            }
 
             $scope.search_for_portal = function () {
                 if ($scope.loading) {
+                    $scope.dirty = true;
                     return false;
                 }
                 $scope.loading = true;
                 $scope.data = [];
+                $scope.dirty = false;
                 $ok('', {text: $scope.search_text}, function (resp) {
-                    $scope.data = resp;
                     $scope.loading = false;
-                })
+                    if ($scope.dirty) {
+                        $scope.search_for_portal();
+                    }
+                    else {
+                        $scope.data = resp;
+
+                    }
+
+                }).finally(function () {
+                    $scope.loading = false;
+                });
             }
         });
 
@@ -41,11 +69,13 @@
                     <img class="subscribe-portal-logo" pr-image="portal.logo_file_id"/>
                 </td>
                 <td class="p4px">
-                    {{ portal.name }}<br/>
-                    {{ portal.host }}
+                    <span ng-bind-html="highlight(portal.name, search_text)"></span><br/>
+                    <span ng-bind-html="highlight(portal.host, search_text)"></span>
                 </td>
                 <td class="p4px">
-                    <button class="btn" ng-click="subscribe(portal.id)">{{ _('Subscribe') }}</button>
+                    <button ng-disabled="portal.subscribed" class="btn" ng-click="subscribe(portal.id)">{{
+                        _('Subscribe') }}
+                    </button>
                 </td>
 
             </tr>

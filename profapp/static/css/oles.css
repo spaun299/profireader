@@ -321,3 +321,7 @@
 .p4px {
     padding: 4px;
 }
+
+.highlightedText {
+    background: yellow;
+}
