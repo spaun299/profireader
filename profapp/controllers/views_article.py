@@ -17,6 +17,7 @@ from ..constants.FILES_FOLDERS import FOLDER_AND_FILE
 from sqlalchemy.sql import expression, and_
 from sqlalchemy import text
 import time
+import datetime
 
 
 # @article_bp.route('/list/', methods=['GET'])
@@ -163,15 +164,18 @@ def material_details(material_id):
 # def format_material_published(publication, portal):
 #
 
-def get_portal_dict_for_material(portal, material_id, company_id):
+def get_portal_dict_for_material(portal, company_id, material_id=None, publication_id=None):
     ret = portal.get_client_side_dict(
-            fields='id, name, host,divisions.id|name|portal_division_type_id, own_company.name, own_company.id')
+            fields='id, name, host, logo_file_id, divisions.id|name|portal_division_type_id, own_company.name|id|logo_file_id')
     ret['rights_company_at_portal'] = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id']).get_rights()
     ret['divisions'] = PRBase.get_ordered_dict([d for d in ret['divisions'] if (
         d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
-    publication_in_portal = db(ArticlePortalDivision).filter_by(article_company_id=material_id).filter(
-            ArticlePortalDivision.portal_division_id.in_(
-                    [div_id for div_id, div in ret['divisions'].items()])).first()
+    if material_id:
+        publication_in_portal = db(ArticlePortalDivision).filter_by(article_company_id=material_id).filter(
+                ArticlePortalDivision.portal_division_id.in_(
+                        [div_id for div_id, div in ret['divisions'].items()])).first()
+    else:
+        publication_in_portal = ArticlePortalDivision.get(publication_id)
 
     if publication_in_portal:
         ret['publication'] = publication_in_portal.get_client_side_dict(
@@ -179,12 +183,8 @@ def get_portal_dict_for_material(portal, material_id, company_id):
         ret['publication']['division'] = ret['divisions'][ret['publication']['portal_division_id']]
         ret['publication']['counts'] = '0/0/0/0'
 
-        if ret['publication']['status'] == ArticlePortalDivision.STATUSES['SUBMITTED']:
-            ret['actions'] = ['edit', 'publish']
-        if ret['publication']['status'] == ArticlePortalDivision.STATUSES['UNPUBLISHED']:
-            ret['actions'] = ['edit', 'republish']
-        if ret['publication']['status'] == ArticlePortalDivision.STATUSES['PUBLISHED']:
-            ret['actions'] = ['edit', 'unpublish', 'republish']
+        ret['actions'] = publication_in_portal.get_actions_for_status()
+        ret['publication']['actions'] = ret['actions']
 
     else:
         ret['publication'] = None
@@ -197,7 +197,7 @@ def get_portal_dict_for_material(portal, material_id, company_id):
 def material_details_load(json, material_id):
     material = ArticleCompany.get(material_id)
 
-    portals = [get_portal_dict_for_material(p, material_id, material.company_id) for p in
+    portals = [get_portal_dict_for_material(p, material.company_id, material_id=material.id) for p in
                Company.get(material.company_id).get_portals_where_company_is_member()]
 
     return {
@@ -214,59 +214,68 @@ def material_details_load(json, material_id):
     }
 
 
-@article_bp.route('/submit_publish/', methods=['POST'])
+@article_bp.route('/submit_publish/<string:article_action>/', methods=['POST'])
 # @check_rights(simple_permissions([]))
 @ok
-def submit_publish(json):
-    # action = g.req('action', allowed=['submit', 'publish', 'republish', 'submit_and_publish'])
-
+def submit_publish(json, article_action):
     action = g.req('action', allowed=['load', 'validate', 'save'])
-    article_action = json['action']
 
-    if (json['material_id']):
-        material = ArticleCompany.get(json['material_id'])
+    if article_action == 'submit':
+        material = ArticleCompany.get(json['material']['id'])
         publication = ArticlePortalDivision(title=material.title, subtitle=material.subtitle,
+                                            keywords=material.keywords,
                                             short=material.short, long=material.long, article_company_id=material.id)
-        publication.detach()
         more_data_to_ret = {
+            'material': {'id': material.id},
             'can_material_also_be_published':
-                MemberCompanyPortal.get(portal_id=json['portal_id'], company_id=json['company_id'])
+                MemberCompanyPortal.get(portal_id=json['portal']['id'], company_id=json['company']['id'])
                     .has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_PUBLISH'])
         }
     else:
-        publication = ArticlePortalDivision.get(json['division_id'])
-        more_data_to_ret = {
-        }
+        publication = ArticlePortalDivision.get(json['publication']['id'])
+        more_data_to_ret = {}
 
     if action == 'load':
-
-        # ret['rights_company_at_portal'] = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id']).get_rights(),
-        # ret['divisions'] = PRBase.get_ordered_dict([d for d in ret['divisions'] if (
-        # d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
-
-        # ,
-        #
-        #     'rights_user_in_company': UserCompany.get(company_id=json['company_id']).get_rights(),
-        #     'rights_company_at_portal': MemberCompanyPortal.get(company_id=json['company_id'],
-        #                                                         portal_id=json['portal_id']).get_rights()
-
         ret = {
             'publication': publication.get_client_side_dict(),
-            'company': Company.get(json['company_id']).get_client_side_dict(),
-            'portal': Portal.get(json['portal_id']).get_client_side_dict()
+            'company': Company.get(json['company']['id']).get_client_side_dict(),
+            'portal': Portal.get(json['portal']['id']).get_client_side_dict()
         }
         ret['portal']['divisions'] = PRBase.get_ordered_dict([d for d in ret['portal']['divisions']
                                                               if (d['portal_division_type_id'] in ['events', 'news'])])
 
         return PRBase.merge_dicts(ret, more_data_to_ret)
     else:
-        return publication.get_client_side_dict()
+
+        publication.attr(g.filter_json(json['publication'], 'portal_division_id'))
+        publication.publishing_tm = PRBase.parseDate(json['publication']['publishing_tm'])
+        publication.event_tm = PRBase.parseDate(json['publication']['event_tm'])
+        if 'also_publish' in json and json['also_publish']:
+            publication.status = ArticlePortalDivision.STATUSES['PUBLISHED']
+        else:
+            if article_action in ['publish', 'republish']:
+                publication.status = ArticlePortalDivision.STATUSES['PUBLISHED']
+            elif article_action in ['unpublish', 'undelete']:
+                publication.status = ArticlePortalDivision.STATUSES['UNPUBLISHED']
+            elif article_action in ['delete']:
+                publication.status = ArticlePortalDivision.STATUSES['DELETED']
+
+        if action == 'validate':
+            publication.detach()
+            return publication.validate(True if article_action == 'submit' else False)
+        else:
+            if article_action == 'submit':
+                publication.long = material.clone_for_portal_images_and_replace_urls(publication.portal_division_id,
+                                                                                     publication)
+            publication.save()
+            return get_portal_dict_for_material(publication.portal, json['company']['id'],
+                                                publication_id=publication.id)
 
 
-@article_bp.route('/material_unpublish_from_portal/', methods=['POST'])
-@ok
-def publication_unpublish_from_portal(json):
-    return {}
+# @article_bp.route('/material_unpublish_from_portal/', methods=['POST'])
+# @ok
+# def publication_unpublish_from_portal(json):
+#     return {}
 
 
 # @article_bp.route('/material_details_publications/<string:material_id>/', methods=['POST'])

@@ -1,12 +1,17 @@
 {#TODO AA by OZ: pls remove explicit url. use url_for#}
+<script>
+    var favorite = {{ favorite }}
+    $(document).ready(function(){
+        favorite?addToMenu_Selected('favorite'):addToMenu_Selected('list')
+    });
+</script>
 {% for article_id, article in articles.items() %}
-
     <div class="container">
-        <div class="row">
+        <div class="row reader-content">
 
             <div class="block-item list-elements">
                 <div class="item-type article">
-                    <a href="//{{ article['portal']['host']|safe }}/{{ article['division']['name'] }}/1/?search_text=">{{ article['division']['name']|safe }}</a>
+                    <span class="label label-success"><a href="//{{ article['portal']['host']|safe }}/{{ article['division']['name'] }}/1/?search_text=">{{ article['division']['name']|safe }}</a></span>
                 </div>
                 <h2 class="item-title">
                     <a href="{{ url_for('article.details_reader', article_portal_division_id=article_id) }}">{{ article['title']|safe }}</a>
@@ -22,12 +27,14 @@
                     <p>{{ article['short']|safe }}</p>
                 </div>
                 <div class="item-additional-info">
-                    <a href="//{{ article['portal']['host']|safe }}/_c/{{ article['company']['id']|safe }}/{{ article['company']['name']|safe }}" class="item-company">{{ article['company']['name']|safe }}</a>
+                    <a href="//{{ article['portal']['host']|safe }}/_c/{{ article['company']['id']|safe }}/{{ article['company']['name']|safe }}"
+                       class="item-company">{{ article['company']['name']|safe }}</a>
                     <div class="item-read_count">Read: {{ article['read_count'] }}</div>
                     <div class="item-publication-date">{{ article['publishing_tm']|safe }}</div>
                 </div>
                 <div class="bottom-hide"></div>
-                <img src="/static/images/0.gif" class="block-item-img" style="background-image: url({{ fileUrl(article['image_file_id']) }})"/>
+                <img src="/static/images/0.gif" class="block-item-img"
+                     style="background-image: url({{ fileUrl(article['image_file_id']) }})"/>
             </div>
         </div>
     </div>

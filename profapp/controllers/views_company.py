@@ -280,7 +280,7 @@ def profile(company_id=None):
 @login_required
 @ok
 def load(json, company_id=None):
-    rights_user_in_company=UserCompany.get(company_id=company_id).get_rights()
+    user_can_edit=UserCompany.get(company_id=company_id).get_rights()['EDIT_PORTAL_PROFILE'] if company_id else None
     action = g.req('action', allowed=['load', 'validate', 'save'])
     company = Company() if company_id is None else Company.get(company_id)
     if action == 'load':
@@ -301,15 +301,13 @@ def load(json, company_id=None):
         company_dict.update(image)
         return company_dict
     else:
-        print(rights_user_in_company['EDIT_PORTAL_PROFILE'])
         company.attr(g.filter_json(json, 'about', 'address', 'country', 'email', 'name', 'phone',
                                    'phone2', 'region', 'short_description', 'lon', 'lat'))
-        if rights_user_in_company['EDIT_PORTAL_PROFILE']:
-            if action == 'validate':
-                if company_id is not None:
-                    company.detach()
-                return company.validate(company_id is None)
-            else:
+        if action == 'validate':
+            if company_id is not None and user_can_edit:
+                company.detach()
+            return company.validate(company_id is None and user_can_edit)
+        else:
                 if json['image'].get('uploaded'):
                     if company_id is None:
                         company.setup_new_company()

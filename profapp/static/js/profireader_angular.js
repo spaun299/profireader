@@ -305,10 +305,22 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             replace: false,
             require: 'ngModel',
             restrict: 'A',
+            scope: {
+                ngModel: '='
+            },
+            link: function (scope, element, attrs, model) {
+                scope.$watch('ngModel', function (nv, ov) {
+                    scope.setdate = scope['ngModel'];
+                });
+                scope.$watch('setdate', function (nv, ov) {
+                    if (nv && nv.setHours) nv.setHours(12);
+                    scope['ngModel'] = nv;
+                });
+            },
             template: function (ele, attrs) {
 // TODO: MY BY OZ: please uncoment time (comented by ng-if=0 now), move date and time to one line
                 return '<span><input style="width: 15em; display: inline" type="date" class="form-control" uib-datepicker-popup\
-               ng-model="' + attrs.ngModel + '" ng-required="true"\
+               ng-model="setdate" ng-required="true"\
                datepicker-options="dateOptions" close-text="Close"/><span class="input-group-btn"></span>\
                </span>';
             }
@@ -636,7 +648,21 @@ module.config(function ($provide) {
             return $delegate(constructor, locals, later, indent);
         };
     });
-});
+})
+
+Date.prototype.toISOString = function () {
+    //console.log('Tue, 26 Jan 2016 13:59:14 GMT', this.toUTCString());
+    return this.toUTCString();
+    //dateFormat(this, "dddd, mmmm dS, yyyy, h:MM:ss TT");
+    //  return 'here goes my awesome formatting of Date Objects '+ this;
+};
+//    .config(function($httpProvider) {
+//    $httpProvider.defaults.transformRequest.unshift(function (data) {
+//        console.log(data);
+//        return data;
+//    })
+//});
+
 
 module.controller('filemanagerCtrl', ['$scope', '$uibModalInstance', 'file_manager_called_for', 'file_manager_on_action',
     'file_manager_default_action', 'get_root',
@@ -1102,6 +1128,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
         setGridExtarnals: function (gridApi) {
             var scope = this;
+            scope.gridApi = gridApi
             gridApi.grid['all_grid_data'] = {
                 paginationOptions: {pageNumber: 1, pageSize: 1},
                 filter: {},
@@ -1164,29 +1191,35 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 }
 
                 function generateCellTemplate(col) {
-                    var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + col.type + ' pr-grid-cell-field-name-' + col.name.replace(/\./g, '-') + ' ' + (col.classes ? col.classes : '') + ' ';
+                    var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + (col.type?col.type:'text') + ' pr-grid-cell-field-name-' + col.name.replace(/\./g, '-') + ' ' + (col.classes ? col.classes : '') + ' ';
+                    var prefix_img = '';
+                    if (col.img) {
+                        //var imgwidth = col.imgwidth?col.imgwidth:'2em';
+                        var prefix_img = '<img class="pr-grid-cell-img-prefix" pr-image="row.entity.'+col.img+'"/>';
+                        //classes_for_row += ' pr-grid-cell-with-img '
+                    }
                     switch (col.type) {
                         case 'link':
-                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}"><a href="{{' + 'grid.appScope.' + col.href + '}}" ng-bind="COL_FIELD"></a></div>';
+                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">'+prefix_img+'<a '+(col.target?(' target="'+col.target+'" '):'')+' href="{{' + 'grid.appScope.' + col.href + '}}" ng-bind="COL_FIELD"></a></div>';
                         case 'img':
-                            return '<div class="' + classes_for_row + '" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>';
+                            return '<div class="' + classes_for_row + '" style="text-align:center;">'+prefix_img+'<img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>';
                         case 'show_modal':
-                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}"><a ng-click="' + col.modal + '" ng-bind="COL_FIELD"></a></div>';
+                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">'+prefix_img+'<a ng-click="' + col.modal + '" ng-bind="COL_FIELD"></a></div>';
                         case 'actions':
-                            return '<div class="' + classes_for_row + '"><button ' + 'class="btn pr-grid-cell-field-type-actions-action pr-grid-cell-field-type-actions-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.' + col['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col['name'] + '\')" title="{{ grid.appScope._(\'grid action \' + action_name) }}">{{ grid.appScope._(\'grid action \' + action_name) }}</button></div>';
+                            return '<div class="' + classes_for_row + '">'+prefix_img+'<button ' + 'class="btn pr-grid-cell-field-type-actions-action pr-grid-cell-field-type-actions-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.' + col['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col['name'] + '\')" title="{{ grid.appScope._(action_name + \' grid action\') }}">{{ grid.appScope._(action_name + \' grid action\') }}</button></div>';
                         case 'icons':
-                            return '<div class="' + classes_for_row + '"><img ng-class="{disabled: !icon_enabled}" src="/static/images/0.gif" ' +
+                            return '<div class="' + classes_for_row + '">'+prefix_img+'<img ng-class="{disabled: !icon_enabled}" src="/static/images/0.gif" ' +
                                 'class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ icon_name }}" ng-repeat="(icon_name, icon_enabled) in COL_FIELD" ng-click="grid.appScope.' + col['onclick'] + '(row.entity.id, \'{{ icon_name }}\', row.entity, \'' + col['name'] + '\')" title="{{ grid.appScope._(\'grid icon \' + icon_name) }}"/></div>';
                         case 'editable':
                             if (col.multiple === true && col.rule) {
-                                return '<div class="' + classes_for_row + '" ng-if="grid.appScope.' + col.rule + '=== false" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div><div ng-if="grid.appScope.' + col.rule + '"><div ng-click="' + col.modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>';
+                                return '<div class="' + classes_for_row + '" ng-if="grid.appScope.' + col.rule + '=== false" title="{{ COL_FIELD }}">'+prefix_img+'{{ COL_FIELD }}</div><div ng-if="grid.appScope.' + col.rule + '"><div ng-click="' + col.modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>';
                             }
                             if (col.subtype && col.subtype === 'tinymce') {
-                                return '<div class="' + classes_for_row + '" ng-click="' + col.modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div>';
+                                return '<div class="' + classes_for_row + '" ng-click="' + col.modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>'+prefix_img+'{{ COL_FIELD }}</div>';
                             }
                         //TODO: SS by OZ: what is returned when neither of two above contitions is true?
                         default:
-                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div>';
+                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">'+prefix_img+'{{ COL_FIELD }}</div>';
 
                     }
                 }
@@ -1211,40 +1244,17 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
                 gridApi.grid.options.columnDefs[i].cellTemplate = generateCellTemplate(col[i]);
 
-
-                //if (col[i].type === 'link') {
-                //
-                //
-                //} else if (col[i].type === 'img') {
-                //    //gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" style="text-align:center;"><img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>'
-                //} else if (col[i].type === 'show_modal') {
-                //    scope.gridOptions1.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}"><a ng-click="' + col[i].modal + '" ng-bind="COL_FIELD"></a></div>'
-                //} else if (col[i].type === 'actions') {
-                //    //gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><button ' +
-                //    //    'class="btn pr-grid-cell-field-type-actions-action pr-grid-cell-field-type-actions-action-{{ action_name }}" ng-repeat="action_name in COL_FIELD" ng-click="grid.appScope.' + col[i]['onclick'] + '(row.entity.id, \'{{ action_name }}\', row.entity, \'' + col[i]['name'] + '\')" title="{{ grid.appScope._(\'grid action \' + action_name) }}">{{ grid.appScope._(\'grid action \' + action_name) }}</button></div>'
-                //} else if (col[i].type === 'icons') {
-                //    gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '"><img ng-class="{disabled: !icon_enabled}" src="/static/images/0.gif" ' +
-                //        'class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ icon_name }}" ng-repeat="(icon_name, icon_enabled) in COL_FIELD" ng-click="grid.appScope.' + col[i]['onclick'] + '(row.entity.id, \'{{ icon_name }}\', row.entity, \'' + col[i]['name'] + '\')" title="{{ grid.appScope._(\'grid icon \' + icon_name) }}"/></div>'
-                //} else if (col[i].type === 'editable') {
-                //    if (col[i].multiple === true && col[i].rule) {
-                //        gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" ng-if="grid.appScope.' + col[i].rule + '=== false" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div><div ng-if="grid.appScope.' + col[i].rule + '"><div ng-click="' + col[i].modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div></div>'
-                //    }
-                //    if (col[i].subtype && col[i].subtype === 'tinymce') {
-                //        gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" ng-click="' + col[i].modal + '" title="{{ COL_FIELD }}" id=\'grid_{{row.entity.id}}\'>{{ COL_FIELD }}</div>'
-                //    }
-                //} else {
-                //    gridApi.grid.options.columnDefs[i].cellTemplate = '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">{{ COL_FIELD }}</div>'
-                //}
             }
 
             gridApi.grid['searchItemGrid'] = function (col) {
                 gridApi.grid.all_grid_data.paginationOptions.pageNumber = 1;
                 gridApi.grid.all_grid_data['filter'][col.field] = col.filter.text;
-                gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'searchItemGrid')
+                gridApi.grid.setGridData()
             };
 
-            gridApi.grid['setGridData'] = function (all_grid_data) {
-                //var all_grid_data = scope.all_grid_data;
+            gridApi.grid['setGridData'] = function (grid_data) {
+                var all_grid_data = grid_data ? grid_data: gridApi.grid.all_grid_data
+
                 gridApi.grid.options.loadGridData(all_grid_data, function (grid_data) {
                     //scope.initGridData = grid_data;
                     gridApi.grid.options.data = grid_data.grid_data;
@@ -1286,7 +1296,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
             if (!gridApi.grid.load_contr) {
                 gridApi.grid.load_contr = true;
-                gridApi.grid.setGridData(gridApi.grid.all_grid_data)
+                gridApi.grid.setGridData()
             }
 
 
@@ -1294,7 +1304,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 from = col.filters[0]['term'];
                 to = col.filters[1]['term'];
                 gridApi.grid.all_grid_data['filter'][col.field] = {'from': from, 'to': to};
-                gridApi.grid.setGridData(gridApi.grid.all_grid_dataa, 'filterForGridRange');
+                gridApi.grid.setGridData();
             };
 
             gridApi.grid['refreshGrid'] = function (col) {
@@ -1306,7 +1316,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                         col.filter.text = '';
                     }
                     delete gridApi.grid.all_grid_data['filter'][col.field];
-                    gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'refreshGrid')
+                    gridApi.grid.setGridData()
                 }
             };
 
@@ -1329,7 +1339,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 if (sortColumns.length !== 0) {
                     gridApi.grid.all_grid_data['sort'][sortColumns[0].field] = sortColumns[0].sort.direction;
                 }
-                gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'sortChanged')
+                gridApi.grid.setGridData()
             });
 
             if (gridApi.edit) gridApi.edit.on.afterCellEdit(scope, function (rowEntity, colDef, newValue, oldValue) {
@@ -1341,7 +1351,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                         'col': colDef.name
                     };
                     gridApi.grid.all_grid_data.paginationOptions.pageNumber = 1;
-                    gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'afterCellEdit')
+                    gridApi.grid.setGridData()
                 }
             });
 
@@ -1350,7 +1360,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     gridApi.grid.all_grid_data.paginationOptions.pageNumber = newPage;
                     gridApi.grid.all_grid_data.paginationOptions.pageSize = pageSize;
                     $timeout(function () {
-                        gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'paginationTemplate')
+                        gridApi.grid.setGridData()
                     }, 500)
 
                 });
@@ -1385,7 +1395,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                 }
                 if (at_least_one_filter_changed) {
-                    error ? add_message('You push wrong date', 'danger', 3000) : gridApi.grid.setGridData(gridApi.grid.all_grid_data, 'filterChanged')
+                    error ? add_message('You push wrong date', 'danger', 3000) : gridApi.grid.setGridData()
                 }
             });
 
@@ -1572,11 +1582,11 @@ False = false;
 True = true;
 
 $.fn.scrollTo = function () {
-  return this.each(function () {
-    $('html, body').animate({
-       scrollTop: $(this).offset().top
-    }, 1000);
-  });
+    return this.each(function () {
+        $('html, body').animate({
+            scrollTop: $(this).offset().top
+        }, 1000);
+    });
 }
 
 function scrool($el, message) {

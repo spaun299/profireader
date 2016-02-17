@@ -1,10 +1,57 @@
-{{ __('Index page text top') }}
-
-
-</br>
-<a href="{{ url_for('general.portals_list') }}">{{ _('Index page. Block for reader') }}</a></br>
-
-<a href="{{ url_for('general.send_email_create_portal') }}">{{ _('Index page. Block for company') }}</a></br>
-
-
-{{ __('Index page tos text') }}
+<div class="row bg-index">
+    <div class="container index-profireader">
+        <div class="row ">
+            <div class="col-lg-12">
+                <h2>Profireader.com
+                    <small>- місце де новини зустрічаються з читачами, читачі з редактором, а редактори з
+                        новинами.
+                    </small>
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="container">
+        <div class="row index-about">
+            <div class="col-lg-offset-1 col-lg-10">
+                <p>Profireader.com - сервіс для видавців нішевих онлайн медіа, який виконує для видавців усю технічну
+                    роботу, дозволяючи сконцентруватись на основному - підготовці якісної інформаціїї та модерації
+                    спільноти своїх читачів. Profireader.com ідеально підходить для створення та підтримки:</p>
+                <ul>
+                    <li>
+                        локальних та регіональних новинних порталів,
+                    </li>
+                    <li>
+                        професіональних та спеціалізованих b2b та b2c порталів,
+                    </li>
+                    <li>
+                        корпоративних порталів університетів, торгівельних центрів, великих компаній, тощо.
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-5 index-links">
+                <h3>Profireader.com для видавців</h3>
+                <p>Миттєво створити портал (веб+мобайл) для свого медіа, без початкових інвестицій та технічних
+                    знань.</p>
+                <p>Зконфігурувати свою унікальну модель поширення корисної читачам інформації як комбінацію відкритого
+                    змісту, безкоштовного змісту для зареєстрованих читачів, преміального змісту для платних
+                    підписників.</p>
+                <p>Запропонувати рекламодавцям ефективні рекламні рішення побудовані на глибокому розумінні потреб
+                    читачів і тісній комунікації з читачами.</p>
+                <a href="{{ url_for('general.send_email_create_portal') }}">{{ _('Index page. Block for company') }}</a>
+            </div>
+            <div class="col-lg-5 pull-right index-links">
+                <h3>Profireader.com для читачів</h3>
+                <span><i class="fa fa-book"></i></span>
+                <p>Підписатись на улюблене медіа, портал якого створений на основі сервісу Profireader.com</p>
+                <p>Стати учасником спільноти читачіів підписаного порталу та обговорювати з ними вподобані статті та
+                    новини.</p>
+                <p>Впливати на формування новинної стрічки підписаного порталу.</p>
+                <a href="{{ url_for('general.portals_list') }}">{{ _('Index page. Block for reader') }}</a>
+            </div>
+        </div>
+    </div>
+</div>

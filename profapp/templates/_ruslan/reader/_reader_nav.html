@@ -1,11 +1,17 @@
-    <div class="container">
-      <div class="col-md-12">
-        <div class="row">
-          <ul class="nav nav-tabs">
-            <li><a class="reader_button" href="{{ url_for('reader.list_reader') }}">News</a></li>
-            <li><a class="reader_button" href="{{ url_for('reader.list_reader', favorite=True) }}">Favorite</a></li>
-            <li><a class="reader_button" href="{{ url_for('reader.profile') }}">Subscriptions</a></li>
-          </ul>
+<script>
+    addToMenu_Selected = function(action){
+        $('.reader_button_'+action).addClass('selected')
+    }
+</script>
+
+<div class="container">
+    <div class="row reader-list-nav menu-company ">
+        <div class="col-lg-12">
+            <ul>
+                <li><a class="reader_button_list" href="{{ url_for('reader.list_reader') }}">News</a></li>
+                <li><a class="reader_button_favorite" href="{{ url_for('reader.list_reader', favorite=True) }}">Favorite</a></li>
+                <li><a class="reader_button_profile" href="{{ url_for('reader.profile') }}" >Subscriptions</a></li>
+            </ul>
         </div>
-      </div>
     </div>
+</div>
