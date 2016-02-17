@@ -219,7 +219,6 @@ class ArticlePortalDivision(Base, PRBase):
 
     @staticmethod
     def articles_visibility_for_user(portal_id):
-        # if ArticlePortalDivision.VISIBILITIES
         employer = True
         visibilities = ArticlePortalDivision.VISIBILITIES.copy()
         if not db(UserCompany, user_id=getattr(g.user, 'id', None),
@@ -232,7 +231,7 @@ class ArticlePortalDivision(Base, PRBase):
     def article_visibility_details(self):
         actions = {ArticlePortalDivision.VISIBILITIES['OPEN']: lambda: True,
                    ArticlePortalDivision.VISIBILITIES['REGISTERED']:
-                       lambda: True if getattr(g.user, 'is_authenticated()', False) else
+                       lambda: True if getattr(g.user, 'id', False) else
                        redirect('//profireader.com/auth/login_signup'),
                    ArticlePortalDivision.VISIBILITIES['PAYED']: True,
                    ArticlePortalDivision.VISIBILITIES['CONFIDENTIAL']:
