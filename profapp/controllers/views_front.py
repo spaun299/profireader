@@ -152,7 +152,10 @@ def details(article_portal_division_id):
     if search_text:
         return redirect(url_for('front.index', search_text=search_text))
     article = ArticlePortalDivision.get(article_portal_division_id)
-    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+    article_visibility = article.article_visibility_details()
+    if article_visibility is not True:
+        return article_visibility
+    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, visibility,'
                                                        'publishing_tm, keywords, status, long, image_file_id,'
                                                        'division.name, division.portal.id,'
                                                        'company.name|id')
