@@ -102,7 +102,7 @@ class ArticlePortalDivision(Base, PRBase):
         elif self.status == ArticlePortalDivision.STATUSES['DELETED']:
             ret = ['undelete']
 
-        return {r: canToAction(r) for r in ret}
+        return ret
 
     def check_favorite_status(self, user_id):
         return db(ReaderArticlePortalDivision, user_id=user_id, article_portal_division_id=self.id,
