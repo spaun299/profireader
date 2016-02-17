@@ -281,7 +281,7 @@ class UserCompany(Base, PRBase):
         'COMPANY_MANAGE_USER_RIGHTS': 2 ** (9 - 1),
         'COMPANY_EDIT_PROFILE': 2 ** (1 - 1),
 
-        'EDIT_PORTAL_PROFILE': 2 ** (10 - 1),
+        'PORTAL_EDIT_PROFILE': 2 ** (10 - 1),
 
         'PORTAL_MANAGE_READERS': 2 ** (16 - 1),
         'PORTAL_MANAGE_COMMENTS': 2 ** (18 - 1),
