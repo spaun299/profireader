@@ -278,6 +278,11 @@
     color: dodgerblue;
 }
 
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_DELETE_UNDELETE:before {
+    content: "\f0a2";
+    color: dodgerblue;
+}
+
 
 .pr-grid-cell-field-type-actions {
     padding: 2px;

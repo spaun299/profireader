@@ -383,6 +383,10 @@ class MemberCompanyPortal(Base, PRBase):
     def has_rights(self, binary_right):
         if self.portal.own_company.id == self.company_id:
             return True
+
+        if binary_right == -1:
+            return True if self.status == self.STATUSES['ACTIVE'] else False
+
         return True if self.status == self.STATUSES['ACTIVE'] and (
         binary_right & self.rights_company_at_portal) else False
         # user_company = self.employer_assoc.filter_by(company_id=company_id).first()

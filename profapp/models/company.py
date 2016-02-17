@@ -401,6 +401,10 @@ class UserCompany(Base, PRBase):
            status=UserCompany.STATUSES['APPLICANT']).update({'status': stat})
 
     def has_rights(self, binary_right):
+
+        if binary_right == -1:
+            return True if self.status == self.STATUSES['ACTIVE'] else False
+
         return True if self.status == self.STATUSES['ACTIVE'] and (binary_right & self._rights) else False
         # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
         # return user_company.rights_set if user_company and user_company.status == STATUS.ACTIVE() and user_company.employer.status == STATUS.ACTIVE() else []

@@ -167,7 +167,8 @@ def material_details(material_id):
 def get_portal_dict_for_material(portal, company_id, material_id=None, publication_id=None):
     ret = portal.get_client_side_dict(
             fields='id, name, host, logo_file_id, divisions.id|name|portal_division_type_id, own_company.name|id|logo_file_id')
-    ret['rights_company_at_portal'] = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id']).get_rights()
+    mcp = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id'])
+    # ret['rights_company_at_portal'] = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id']).get_rights()
     ret['divisions'] = PRBase.get_ordered_dict([d for d in ret['divisions'] if (
         d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
     if material_id:
@@ -188,8 +189,11 @@ def get_portal_dict_for_material(portal, company_id, material_id=None, publicati
 
     else:
         ret['publication'] = None
-        ret['actions'] = {'submit': UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL']) or
-                                                                                      'MATERIALS_SUBMIT_TO_PORTAL'}
+        ret['actions'] = {'submit':
+                              (UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL'])
+                              and mcp.has_rights(-1))
+                               or 'MATERIALS_SUBMIT_TO_PORTAL'}
+
     return ret
 
 
@@ -249,8 +253,8 @@ def submit_publish(json, article_action):
     else:
 
         publication.attr(g.filter_json(json['publication'], 'portal_division_id'))
-        publication.publishing_tm = PRBase.parseDate(json['publication']['publishing_tm'])
-        publication.event_tm = PRBase.parseDate(json['publication']['event_tm'])
+        publication.publishing_tm = PRBase.parseDate(json['publication'].get('publishing_tm'))
+        publication.event_tm = PRBase.parseDate(json['publication'].get('event_tm'))
         if 'also_publish' in json and json['also_publish']:
             publication.status = ArticlePortalDivision.STATUSES['PUBLISHED']
         else:
