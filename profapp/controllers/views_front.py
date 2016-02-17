@@ -113,7 +113,7 @@ def division(division_name, page=1):
 
         current_division = division.get_client_side_dict()
 
-        def url_page_division(page=1, search_text=''):
+        def url_page_division(page=1, search_text='', **kwargs):
             return url_for('front.division', division_name=current_division['name'], page=page,
                            search_text=search_text)
 
@@ -152,7 +152,10 @@ def details(article_portal_division_id):
     if search_text:
         return redirect(url_for('front.index', search_text=search_text))
     article = ArticlePortalDivision.get(article_portal_division_id)
-    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+    article_visibility = article.article_visibility_details()
+    if article_visibility is not True:
+        return article_visibility
+    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, visibility,'
                                                        'publishing_tm, keywords, status, long, image_file_id,'
                                                        'division.name, division.portal.id,'
                                                        'company.name|id')

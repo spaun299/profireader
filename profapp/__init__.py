@@ -174,7 +174,7 @@ def setup_authomatic(app):
     return func
 
 
-def load_user():
+def load_user(apptype):
     user_init = current_user
     user = None
 
@@ -210,7 +210,7 @@ def load_user():
 
 
     # user_dict = {'id': id, 'name': name, 'logged_via': logged_via}
-
+    
     g.user_init = user_init
     g.user = user
     g.user_dict = user_dict
@@ -487,6 +487,10 @@ class AnonymousUser(AnonymousUserMixin):
         return "<User(id = %r)>" % self.id
 
 
+
+
+
+
 login_manager.anonymous_user = AnonymousUser
 
 
@@ -502,7 +506,7 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     app.before_request(load_database(app.config['SQLALCHEMY_DATABASE_URI']))
     app.config['DEBUG'] = True
 
-    app.before_request(load_user)
+    app.before_request(lambda: load_user(apptype))
     app.before_request(setup_authomatic(app))
     app.before_request(load_portal_id(app))
 

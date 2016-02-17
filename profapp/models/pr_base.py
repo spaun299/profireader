@@ -131,7 +131,7 @@ class Search(Base):
         desc_asc = kwargs.get('desc_asc') or 'desc'
         pages = None
         search_text = kwargs.get('search_text') or ''
-        return_objects = True if [arg.get('return_fields') for arg in args][0] else False
+        return_objects = any(list(map(lambda arg: bool(arg.get('return_fields')), args)))
         try:
             assert (desc_asc == 'desc' or desc_asc == 'asc'), \
                 'Parameter desc_asc should be desc or asc but %s given' % desc_asc
@@ -357,6 +357,7 @@ class PRBase:
             return datetime.datetime.strptime(str, "%a, %d %b %Y %H:%M:%S %Z")
         except:
             return None
+
 
     def position_unique_filter(self):
         return self.__class__.position != None

@@ -1,0 +1,5 @@
+{% if profi_cookie != local_cookie %}
+<script>
+    window.parent.postMessage('{{ profi_cookie }}','*')
+</script>
+{% endif %}

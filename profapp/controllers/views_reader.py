@@ -64,7 +64,6 @@ def list_reader(page=1):
         articles[article_id]['company']['logo'] = File().get(articles[article_id]['company']['logo_file_id']).url()
         articles[article_id]['portal']['logo'] = File().get(articles[article_id]['portal']['logo_file_id']).url()
         del articles[article_id]['company']['logo_file_id'], articles[article_id]['portal']['logo_file_id']
-    print(favorite)
     return render_template('partials/reader/reader_base.html',
                            articles=articles,
                            pages=pages,
@@ -201,3 +200,8 @@ def edit_profile_submit(json, reader_portal_id):
             if item['division_id'] == show_division_and_comments.division_id:
                 show_division_and_comments.show_divisions_and_comments = item['show_divisions_and_comments']
     return json
+
+
+@reader_bp.route('/buy_subscription')
+def buy_subscription():
+    return render_template('partials/reader/buy_subscription.html')
