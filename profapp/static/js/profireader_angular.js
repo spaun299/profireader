@@ -368,6 +368,24 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             }
         };
     }])
+    .directive('prUserRights', ['$timeout', function ($timeout) {
+        return {
+            restrict: 'AE',
+            link: function (scope, element, attrs) {
+                scope.$watch(attrs['prRights'], function () {
+                    console.log(attrs['prRights'],attrs['prAllow'])
+                    disable(attrs['prRights'], attrs['prAllow'])
+                });
+
+                var disable = function(rights, allow){
+                    console.log(rights[allow])
+                    if(rights[allow] === false){
+                        console.log('s')
+                    }
+                }
+            }
+        };
+    }])
     .service('objectTransformation', function () {
         var objectTransformation = {};
 

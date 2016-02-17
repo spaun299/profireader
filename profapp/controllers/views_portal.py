@@ -412,7 +412,7 @@ def profile_edit_load(json, portal_id):
 # @check_rights(simple_permissions([]))
 def companies_partners(company_id):
     return render_template('company/portals_partners.html',
-                           company=Company.get(company_id))
+                           company=Company.get(company_id), rights_user_in_company=UserCompany.get(company_id=company_id).get_rights())
 
 
 @portal_bp.route('/portals_partners/<string:company_id>/', methods=['POST'])
@@ -486,7 +486,7 @@ def partner_update_load(json, employeer_id, partner_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def portals_partners(company_id):
-    return render_template('company/companies_partners.html', company=Company.get(company_id))
+    return render_template('company/companies_partners.html', company=Company.get(company_id),rights_user_in_company=UserCompany.get(company_id=company_id).get_rights())
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['POST'])
@@ -509,8 +509,7 @@ def companies_partners_load(json, company_id):
             'grid_data': grid_data,
             'total': count,
             'page': current_page,
-            'company_id': company_id,
-            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()}
+            'company_id': company_id}
 
 
 @portal_bp.route('/search_for_portal_to_join/', methods=['POST'])
