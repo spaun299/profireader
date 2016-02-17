@@ -176,6 +176,9 @@ body {
   margin-right: -15px;
 }
 /* ---AUTH User---*/
+.auth-input input {
+  width: 100%;
+}
 .auth-window {
   background-image: url("../images/auth.jpg");
   background-size: cover;
