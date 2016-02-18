@@ -23,7 +23,7 @@
             $scope.company = {{ company.get_client_side_dict()|tojson|safe }};
             $scope.url_back = {{ raw_url_for('company.show')|safe }};
             $scope.data = {};
-            $scope.rights_user_in = {{ rights_user_in|tojson|safe }};
+            $scope.rights_user_in_company = {{ rights_user_in_company|tojson|safe }};
             $scope.edit = false;
 
             $scope.go_to_portal = function (host) {
