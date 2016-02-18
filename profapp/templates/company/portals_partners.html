@@ -25,8 +25,7 @@
         $scope.selectedPortal_name = '';
         $scope.selectedPortal = null;
         $scope.selectedPortal_sending = false;
-        $scope.user_rights = {{ rights_user_in_company|safe }}
-        $scope.right_for = 'COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'
+        $scope.user_right = {{ rights_user_in|safe }}
 
 
         {% raw %}
@@ -52,7 +51,7 @@
 
         $scope.joinToPortal = function () {
             $scope.data = {};
-            $ok($scope.url_join(), {
+            $scope.user_right ? $ok($scope.url_join(), {
                 company_id: $scope.company_id,
                 portal_id: $scope.selectedPortal.id
             }, function (resp) {
@@ -62,7 +61,7 @@
             }).finally(function () {
                 delete $scope.all_grid_data['paginationOptions']['page_for_id'];
                 $scope.selectedPortal_sending = false;
-            });
+            }) : add_message('Sorry!!!You haven\'t got  appropriate rights!', 'danger', 8000)
         };
         $scope.sendData = function (grid_data, callback) {
             return $ok($scope.url_portals_partners, grid_data, callback);
@@ -76,13 +75,13 @@
                         loadGridData: $scope.sendData,
                         columnDefs: [
                             {
-                                name: 'portal_name', type: 'link',
-                                href: 'portal_link(row.entity.link)', img:'portal_logo', link: true
+                                name: 'portal.name', type: 'link',
+                                href: 'portal_link(row.entity.portal.host)', img:'portal.logo_file_id', link: true
                             }, {
                                 name: 'company.name', type: 'link',
                                 href: 'url_company_profile({company_id: row.entity.company.id})',img:"company.logo_file_id"
                             }, {
-                                name: 'status', width: '10%', afilter: {type: 'input'}
+                                name: 'partner.status', width: '10%', afilter: {type: 'input'}
                             }, {
                                 name: 'rights', width: '300', type: 'icons', afilter: {type: 'input'}}
                         ]
@@ -94,13 +93,13 @@
     {% raw %}
        <div ng-controller="portals_partners">
        <h3> {{ _('Join to portal') }} </h3>
-            <input typeahead-on-select="onSelect($item, $model, $label)"
+            <input pr-user-rights="user_right" typeahead-on-select="onSelect($item, $model, $label)"
                    uib-typeahead-template-url="typeaheadTemplate.html"
                    uib-typeahead-loading="loadingPortals"
                    ng-model="selectedPortal_name"
                    uib-typeahead="portal as portal.name for portal in searchForPortalToJoin($viewValue)"
                    name="portal_id"/>&nbsp;
-            <button pr-user-rights="" pr-rights="{{user_rights}}" pr-allow="{{ right_for }}"  class="btn" ng-click="joinToPortal()"
+            <button pr-user-rights="user_right"  class="btn" ng-click="joinToPortal()"
                     ng-class="{'disabled': !selectedPortal || selectedPortal_sending}"
                     ng-disabled="!selectedPortal || selectedPortal_sending">{{ _('join to this portal') }}
             </button>

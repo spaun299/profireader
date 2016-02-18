@@ -32,6 +32,9 @@ from .models.tools import HtmlHelper
 from .models.pr_base import MLStripper
 import os.path
 
+from flask.sessions import SessionInterface
+from beaker.middleware import SessionMiddleware
+
 
 def req(name, allowed=None, default=None, exception=True):
     ret = request.args.get(name)
@@ -210,7 +213,7 @@ def load_user(apptype):
 
 
     # user_dict = {'id': id, 'name': name, 'logged_via': logged_via}
-    
+
     g.user_init = user_init
     g.user = user
     g.user_dict = user_dict
@@ -586,5 +589,22 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     #     finally:
     #         session.close()  # optional, depends on use case
     #     # db_session.remove()
+
+    session_opts = {
+        'session.type': 'ext:memcached',
+        'session.url': 'memcached.profi:11211'
+    }
+
+    class BeakerSessionInterface(SessionInterface):
+        def open_session(self, app, request):
+            _session = request.environ['beaker.session']
+            return _session
+
+
+        def save_session(self, app, session, response):
+            session.save()
+
+    app.wsgi_app = SessionMiddleware(app.wsgi_app, session_opts)
+    app.session_interface = BeakerSessionInterface()
 
     return app

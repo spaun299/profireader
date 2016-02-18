@@ -160,7 +160,6 @@ def employees_load(json, company_id):
     employees_list = [
         PRBase.merge_dicts(employment.employee.get_client_side_dict(), employment.get_client_side_dict())
         for employment in company.employee_assoc]
-    print(employees_list)
 
     return {
         'company': company.get_client_side_dict(fields='id,name'),
@@ -193,12 +192,15 @@ def employees_load(json, company_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def employee_details(company_id, user_id):
+
     employment = UserCompany.get(user_id=user_id, company_id=company_id)
     return render_template('company/company_employee_details.html',
                            company = Company.get(company_id),
                            employer=employment.employer.get_client_side_dict(),
                            employee=employment.employee.get_client_side_dict(),
-                           employment=employment.get_client_side_dict())
+                           employment=employment.get_client_side_dict(),
+                           user_right_in = UserCompany.get(company_id=company_id).get_rights()['COMPANY_MANAGE_USER_RIGHTS']
+                           )
 
 
 @company_bp.route('/<string:company_id>/employee_update/<string:user_id>/', methods=['GET'])
