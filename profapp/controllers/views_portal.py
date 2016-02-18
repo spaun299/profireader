@@ -437,7 +437,6 @@ def portals_partners_load(json, company_id):
 @portal_bp.route('/<string:company_id>/portal_partner_details/<string:partner_id>/', methods=['GET'])
 @login_required
 def portal_partner_details(partner_id, company_id):
-# TODO: SS by OZ: fucking kwargs. blya!
     partner = MemberCompanyPortal.get(Company.get(company_id).own_portal.id, partner_id)
     return render_template('company/portal_partner_details.html',
                            company=Company.get(company_id),
