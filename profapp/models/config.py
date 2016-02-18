@@ -4,7 +4,7 @@ from .pr_base import PRBase, Base
 from utils.db_utils import db
 
 class Config(Base, PRBase):
-    __tablename__ = 'config2'
+    __tablename__ = 'config'
     id = Column(TABLE_TYPES['name'], primary_key=True, nullable=False)
     value = Column(TABLE_TYPES['text'])
     type = Column(TABLE_TYPES['name'])
