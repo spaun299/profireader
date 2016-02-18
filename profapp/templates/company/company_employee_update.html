@@ -13,20 +13,22 @@
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_employees');
 
             $scope.url_company_employee_details = {{ raw_url_for('company.employee_details')|safe }};
-
+            $scope.user_right = {{ user_right_in|safe }};
             $scope.after_save = function () {
                 window.location.href = $scope.url_company_employee_details({
                     'company_id': $scope.data.employer.id,
                     'user_id': $scope.data.employee.id
                 });
-            }
+            };
+
 
         });
     </script>
     {% raw %}
 
     <div ng-controller="company_employee_update">
-        <div af af-after-save="after_save" af-watch="data.employment" ng-model="data">
+        <div style="text-align: center" ng-if="!user_right"><h2>Sorry!!!You haven't got  appropriate rights!</h2></div>
+        <div af af-after-save="after_save" af-watch="data.employment" ng-model="data" pr-user-rights="user_right">
             <h2>
                 <img class="person-small-cover" pr-image
                      pr-no-image="{{ data.employee.profireader_small_avatar_url }}"/>
@@ -34,7 +36,7 @@
                 {{ _('Employee `%(data.employee.profireader_name)s` at company `%(data.employer.name)s`') }}</h2>
 
             <img pr-image="employer.logo_file_id"/>
-            {{ _('status') }} <select ng-model="data.employment.status"
+            {{ _('status') }} <select id="select-status" ng-model="data.employment.status"
                                       ng-options="status as status disable when !available for (status, available) in data.statuses_available"></select><br>
             {{ _('position') }} <input ng-model="data.employment.position"/><br>
             {{ _('permissions') }}<br>

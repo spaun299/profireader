@@ -368,18 +368,26 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             }
         };
     }])
-    .directive('prUserRights', function () {
+    .directive('prUserRights', function ($timeout) {
         return {
             restrict: 'AE',
             link: function (scope, element, attrs) {
                 var elementType = element.prop('nodeName');
                 scope.$watch(attrs['prUserRights'], function (val) {
                     disable(val)
-                });
+                })
 
                 var disable = function(allow){
+                    console.log(allow)
                     if(allow === false){
-                        element.prop('disabled', true)
+                        if(elementType === 'BUTTON' || elementType === 'INPUT'){
+                            element.prop('disabled', true)
+                        }else if(elementType === 'A'){
+                             element.hide()
+                        }else{
+
+                            element.hide()
+                        }
                     }
                 }
             }
