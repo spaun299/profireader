@@ -29,8 +29,7 @@
         $scope.selectedPortal_name = '';
         $scope.selectedPortal = null;
         $scope.selectedPortal_sending = false;
-        $scope.user_rights = {{ rights_user_in_company|safe }}
-        $scope.right_for = 'COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'
+        $scope.user_right = {{ rights_user_in_company|safe }}['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS']
 
 
         {% raw %}
@@ -104,7 +103,7 @@
                    ng-model="selectedPortal_name"
                    uib-typeahead="portal as portal.name for portal in searchForPortalToJoin($viewValue)"
                    name="portal_id"/>&nbsp;
-            <button pr-user-rights="" pr-rights="{{user_rights}}" pr-allow="{{ right_for }}"  class="btn" ng-click="joinToPortal()"
+            <button pr-user-rights pr-allow="{{user_right}}"  class="btn" ng-click="joinToPortal()"
                     ng-class="{'disabled': !selectedPortal || selectedPortal_sending}"
                     ng-disabled="!selectedPortal || selectedPortal_sending">{{ _('join to this portal') }}
             </button>
