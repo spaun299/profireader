@@ -300,7 +300,7 @@ class MemberCompanyPortal(Base, PRBase):
         'PUBLICATION_DELETE_UNDELETE': 2 ** (4 - 1),
     }
 
-    RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL['PUBLICATION_UNPUBLISH'] | RIGHT_AT_PORTAL['PUBLICATION_EDIT']
+    RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL['PUBLICATION_PUBLISH']
 
     RIGHT_AT_PORTAL_FOR_OWN_PORTAL = 0x7fffffffffffffff
 
@@ -590,6 +590,7 @@ class UserPortalReader(Base, PRBase):
     id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
     user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'))
     portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
+# TODO: VK by OZ: status should be of enum type
     status = Column(TABLE_TYPES['id_profireader'], default='active', nullable=False)
     portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('reader_user_portal_plan.id'))
     start_tm = Column(TABLE_TYPES['timestamp'])
