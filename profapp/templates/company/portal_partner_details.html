@@ -10,20 +10,21 @@
 
     <script>
         module.controller('portal_partner_details', function ($scope, $ok) {
-            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('portals_partners');
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_partners');
 
             $scope.portal_partner = {{ company_member|tojson|safe }};
             $scope.employeer  = {{ employeer|tojson|safe }};
             $scope.rights = {{ rights|tojson|safe }};
             $scope.member = {{ member|tojson|safe }};
+            $scope.user_right = {{ user_right_in|tojson|safe }};
 
             $scope.url_portal_partner_update = {{ raw_url_for('portal.portal_partner_update')|safe }};
 
             $scope.update = function () {
-                window.location.href = $scope.url_portal_partner_update({
-                    'employeer_id':$scope.employeer.id,
-                    'partner_id': $scope.member.portal_id
-                });
+                $scope.user_right ? window.location.href = $scope.url_portal_partner_update({
+                    'company_id':$scope.employeer.id,
+                    'partner_id': $scope.portal_partner.id
+                }) : add_message('Sorry!You haven\'t got  appropriate rights!', 'danger', 8000)
             }
 
         });
@@ -42,7 +43,7 @@
                  class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ right_name }}"/>
             {{ right_name }}
         </div>
-        <button class="btn fr" type="button" ng-click="update()">{{ _('Update partners') }}</button>
+        <button pr-user-rights="user_right" class="btn fr" type="button" ng-click="update()">{{ _('Update partners') }}</button>
     </div>
 
     {% endraw %}

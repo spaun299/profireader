@@ -36,8 +36,8 @@
                         loadGridData: $scope.sendData,
                         columnDefs: [
                              {
-                                name: 'company_name', type: 'link',img:'logo',
-                                href: 'url_portal_partner_details({partner_id: row.entity.portal_employeer_id, employeer_id:row.entity.id})'
+                                name: 'member_name', type: 'link',img:'logo',
+                                href: 'url_portal_partner_details({company_id: row.entity.company_id,partner_id:row.entity.member_id})'
                             },
                                 {
                                 name: 'status'},

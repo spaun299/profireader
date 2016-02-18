@@ -10,14 +10,14 @@
 
     <script>
         module.controller('portal_partner_update', function ($scope, $ok) {
-            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('portals_partners');
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_partners');
 
             $scope.url_portal_partner_details = {{ raw_url_for('portal.portal_partner_details')|safe }};
 
             $scope.after_save = function () {
                 window.location.href = $scope.url_portal_partner_details({
-                    'partner_id': $scope.data.partner.own_portal.id,
-                    'employeer_id': $scope.data.employeer.id
+                    'company_id': $scope.data.employeer.id,
+                    'partner_id': $scope.data.partner.id
                 });
             }
 
@@ -28,7 +28,7 @@
     <div ng-controller="portal_partner_update">
         <div af af-after-save="after_save" af-watch="data.partner" ng-model="data">
             <h2>
-                <img class="person-small-cover" pr-image="data.partner.logo_file_id"/><img class="person-small-cover" pr-image="data.employeer.logo_file_id"/>
+                <img class="person-small-cover" pr-image="data.partner.logo_file_id"/><img class="person-small-cover" pr-image="data.company.logo_file_id"/>
                 {{ _('Portal partner `%(data.partner.name)s` at company `%(data.employeer.name)s`') }}</h2>
             {{ _('status') }} <select ng-model="data.status"
                                       ng-options="status as status disable when !available for (status, available) in data.statuses_available"></select><br>

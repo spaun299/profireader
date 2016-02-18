@@ -368,24 +368,23 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             }
         };
     }])
-    .directive('prUserRights', ['$timeout', function ($timeout) {
+    .directive('prUserRights', function () {
         return {
             restrict: 'AE',
             link: function (scope, element, attrs) {
-                scope.$watch(attrs['prRights'], function () {
-                    console.log(attrs['prRights'],attrs['prAllow'])
-                    disable(attrs['prRights'], attrs['prAllow'])
+                var elementType = element.prop('nodeName');
+                scope.$watch(attrs['prUserRights'], function (val) {
+                    disable(val)
                 });
 
-                var disable = function(rights, allow){
-                    console.log(rights[allow])
-                    if(rights[allow] === false){
-                        console.log('s')
+                var disable = function(allow){
+                    if(allow === false){
+                        element.prop('disabled', true)
                     }
                 }
             }
         };
-    }])
+    })
     .service('objectTransformation', function () {
         var objectTransformation = {};
 
@@ -1152,7 +1151,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
         setGridExtarnals: function (gridApi) {
             var scope = this;
-            scope.gridApi = gridApi
+            scope.gridApi = gridApi;
             gridApi.grid['all_grid_data'] = {
                 paginationOptions: {pageNumber: 1, pageSize: 1},
                 filter: {},
