@@ -195,6 +195,7 @@ def employees_load(json, company_id):
 def employee_details(company_id, user_id):
     employment = UserCompany.get(user_id=user_id, company_id=company_id)
     return render_template('company/company_employee_details.html',
+                           company = Company.get(company_id),
                            employer=employment.employer.get_client_side_dict(),
                            employee=employment.employee.get_client_side_dict(),
                            employment=employment.get_client_side_dict())
@@ -206,6 +207,7 @@ def employee_details(company_id, user_id):
 # @check_rights(simple_permissions([]))
 def employee_update(company_id, user_id):
     return render_template('company/company_employee_update.html',
+                           company = Company.get(company_id),
                            employment=UserCompany.get(user_id=user_id, company_id=company_id))
     # employer=employment.employer.get_client_side_dict(),
     # employee=employment.employee.get_client_side_dict())

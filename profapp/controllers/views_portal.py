@@ -418,6 +418,7 @@ def companies_partners(company_id):
 @portal_bp.route('/portals_partners/<string:company_id>/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([]))
+# TODO: SS by OZ: perepysaty 10 raziv
 @ok
 def portals_partners_load(json, company_id):
     subquery_member_portal = db(MemberCompanyPortal, portal_id=json.get('getPageOfId'),
@@ -444,8 +445,10 @@ def portals_partners_load(json, company_id):
 @portal_bp.route('/<string:partner_id>/portal_partner_details/<string:employeer_id>/', methods=['GET'])
 @login_required
 def portal_partner_details(partner_id, employeer_id):
+# TODO: SS by OZ: fucking kwargs. blya!
     partner = MemberCompanyPortal.get(partner_id, employeer_id)
     return render_template('company/portal_partner_details.html',
+                           company=Company.get(employeer_id),
                            company_member=Portal.get(partner_id).own_company.get_client_side_dict(fields='name, id, own_portal.id'),
                            employeer=Company.get(employeer_id).get_client_side_dict(),
                            rights = MemberCompanyPortal.get_rights(partner),
@@ -455,6 +458,7 @@ def portal_partner_details(partner_id, employeer_id):
 @login_required
 def portal_partner_update(employeer_id,partner_id ):
     return render_template('company/portal_partner_update.html',
+                           company = Company.get(employeer_id),
                            partner=MemberCompanyPortal.get(partner_id, company_id=employeer_id).company.get_client_side_dict())
 
 
@@ -501,7 +505,8 @@ def companies_partners_load(json, company_id):
     portal = partners[0].portal if partners else db(Company, id=company_id).one().own_portal
     grid_data = [{'id': partner.company.id, 'company_name': partner.company.name,
                   'portal_employeer_id': company_employeer_portal.id,
-                 'rights': partner.get_rights(),
+                  'rights': partner.get_rights(),
+                  'status': partner.status,
                   'logo': partner.company.logo_file_id if partner.company.logo_file_id
                   else None}
                  for partner in partners] if portal else []

@@ -161,13 +161,16 @@
 
 /*TODO: RI by OZ: this class for grid icons (see employees icons) */
 .pr-grid-cell-field-type-icons-icon {
-    display: inline-block;
+  display: inline-block;
   font: normal normal normal 14px/1 FontAwesome;
   font-size: inherit;
   text-rendering: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  width: 1.4em;
+
 }
+
 
 .pr-grid-cell-field-type-icons-icon-FILES_BROWSE:before {
     content: "\f06e";
@@ -183,7 +186,7 @@
     color: dodgerblue;
 }
 
-.pr-grid-cell-field-type-icons-icon-MATERIALS_SUBMIT_TO_ANOTHER_PORTAL:before {
+.pr-grid-cell-field-type-icons-icon-MATERIALS_SUBMIT_TO_PORTAL:before {
     content: "\f055";
     color: dodgerblue;
 }
@@ -204,7 +207,7 @@
 }
 
 .pr-grid-cell-field-type-icons-icon-PUBLICATION_SET_PRIORITY:before {
-    content: "\f089";
+    content: "\f091";
     color: green;
 }
 
@@ -248,6 +251,11 @@
     color: #FF4103;
 }
 
+.pr-grid-cell-field-type-icons-icon-PORTAL_EDIT_PROFILE:before {
+    content: "\f087";
+    color: #FF4103;
+}
+
 .pr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_MEMBERS_COMPANIES:before {
     content: "\f183";
     color: #FF4103;
@@ -256,7 +264,6 @@
     content: "\f00c";
     color: dodgerblue;
 }
-
 
 .pr-grid-cell-field-type-icons-icon-PUBLICATION_EDIT:before {
     content: "\f044";
@@ -268,6 +275,11 @@
 }
 .pr-grid-cell-field-type-icons-icon-PUBLICATION_PUBLISH:before {
     content: "\f0a1";
+    color: dodgerblue;
+}
+
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_DELETE_UNDELETE:before {
+    content: "\f0a2";
     color: dodgerblue;
 }
 
