@@ -17,7 +17,6 @@
             $scope.employment = {{ employment|tojson|safe }};
             $scope.user_right = {{ user_right_in|safe }}
             $scope.url_company_employee_update = {{ raw_url_for('company.employee_update')|safe }};
-            $scope.user_right = true
             $scope.update = function () {
                 if($scope.user_right){
                     window.location.href = $scope.url_company_employee_update({
@@ -25,7 +24,7 @@
                         'user_id': $scope.employee.id
                     });
                 }else{
-                    add_message('You haven\'t got  appropriate rights', 'danger', 8000)
+                    add_message('Sorry!!!You haven\'t got  appropriate rights!', 'danger', 8000)
                 }
             }
 
