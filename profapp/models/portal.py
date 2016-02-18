@@ -296,10 +296,11 @@ class MemberCompanyPortal(Base, PRBase):
     RIGHT_AT_PORTAL = {
         'PUBLICATION_PUBLISH': 2 ** (1 - 1),
         'PUBLICATION_UNPUBLISH': 2 ** (2 - 1),
-        'PUBLICATION_EDIT': 2 ** (3 - 1)
+        'PUBLICATION_EDIT': 2 ** (3 - 1),
+        'PUBLICATION_DELETE_UNDELETE': 2 ** (4 - 1),
     }
 
-    RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL['PUBLICATION_UNPUBLISH'] | RIGHT_AT_PORTAL['PUBLICATION_EDIT']
+    RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL['PUBLICATION_PUBLISH']
 
     RIGHT_AT_PORTAL_FOR_OWN_PORTAL = 0x7fffffffffffffff
 
@@ -378,9 +379,14 @@ class MemberCompanyPortal(Base, PRBase):
         #             sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
         #     return sub_query
 
+
     def has_rights(self, binary_right):
         if self.portal.own_company.id == self.company_id:
             return True
+
+        if binary_right == -1:
+            return True if self.status == self.STATUSES['ACTIVE'] else False
+
         return True if self.status == self.STATUSES['ACTIVE'] and (
         binary_right & self.rights_company_at_portal) else False
         # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
@@ -584,6 +590,7 @@ class UserPortalReader(Base, PRBase):
     id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
     user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'))
     portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
+# TODO: VK by OZ: status should be of enum type
     status = Column(TABLE_TYPES['id_profireader'], default='active', nullable=False)
     portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('reader_user_portal_plan.id'))
     start_tm = Column(TABLE_TYPES['timestamp'])

@@ -161,112 +161,126 @@
 
 /*TODO: RI by OZ: this class for grid icons (see employees icons) */
 .pr-grid-cell-field-type-icons-icon {
-    width: 1em;
-    height: 1em;
-    margin: 0px 1px;
-}
+  display: inline-block;
+  font: normal normal normal 14px/1 FontAwesome;
+  font-size: inherit;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  width: 1.4em;
 
-.pr-grid-cell-field-type-icons-icon-FILES_BROWSE {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-FILES_UPLOAD {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-FILES_DELETE_OTHERS {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-MATERIALS_SUBMIT_TO_ANOTHER_PORTAL {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-MATERIALS_EDIT_OTHERS {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_PUBLISH_AT_OWN_PORTAL {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_UNPUBLISH_AT_OWN_PORTAL {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_SET_PRIORITY {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-EMPLOYEE_CONFIRM_NEW {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-EMPLOYEE_SUSPEND_UNSUSPEND {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-COMPANY_REQUIRE_MEMBEREE_AT_PORTALS {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-COMPANY_MANAGE_USER_RIGHTS {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-COMPANY_EDIT_PROFILE {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-PORTAL_EDIT_PROFILE {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_READERS {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_COMMENTS {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-
-.pr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_MEMBERS_COMPANIES {
-    background-color: #ff0000;
-    color: #ff0000;
-}
-.pr-grid-cell-field-type-icons-icon-MATERIAL_SUBMIT {
-    background-color: #ff0000;
-    color: #ff0000;
 }
 
 
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_EDIT {
-    background-color: #ff0000;
-    color: #ff0000;
+.pr-grid-cell-field-type-icons-icon-FILES_BROWSE:before {
+    content: "\f06e";
+    color: dodgerblue;
 }
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_UNPUBLISH {
-    background-color: #ff0000;
-    color: #ff0000;
+.pr-grid-cell-field-type-icons-icon-FILES_UPLOAD:before {
+    content: "\f093";
+    color: dodgerblue;
 }
-.pr-grid-cell-field-type-icons-icon-PUBLICATION_PUBLISH {
-    background-color: #ff0000;
-    color: #ff0000;
+
+.pr-grid-cell-field-type-icons-icon-FILES_DELETE_OTHERS:before {
+    content: "\f1f8";
+    color: dodgerblue;
+}
+
+.pr-grid-cell-field-type-icons-icon-MATERIALS_SUBMIT_TO_PORTAL:before {
+    content: "\f055";
+    color: dodgerblue;
+}
+
+.pr-grid-cell-field-type-icons-icon-MATERIALS_EDIT_OTHERS:before {
+    content: "\f044";
+    color: dodgerblue;
+}
+
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_PUBLISH_AT_OWN_PORTAL:before {
+    content: "\f046";
+    color: green;
+}
+
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_UNPUBLISH_AT_OWN_PORTAL:before {
+    content: "\f05e";
+    color: green;
+}
+
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_SET_PRIORITY:before {
+    content: "\f091";
+    color: green;
+}
+
+.pr-grid-cell-field-type-icons-icon-EMPLOYEE_CONFIRM_NEW:before {
+    content: "\f234";
+    color: dodgerblue;
+}
+
+.pr-grid-cell-field-type-icons-icon-EMPLOYEE_SUSPEND_UNSUSPEND:before {
+    content: "\f235";
+    color: dodgerblue;
+}
+
+.pr-grid-cell-field-type-icons-icon-COMPANY_REQUIRE_MEMBEREE_AT_PORTALS:before {
+    content: "\f196";
+    color: #790B79;
+}
+
+.pr-grid-cell-field-type-icons-icon-COMPANY_MANAGE_USER_RIGHTS:before {
+    content: "\f0a1";
+    color: #790B79;
+}
+
+.pr-grid-cell-field-type-icons-icon-COMPANY_EDIT_PROFILE:before {
+    content: "\f14b";
+    color: #790B79;
+}
+
+.pr-grid-cell-field-type-icons-icon-EDIT_PORTAL_PROFILE:before {
+    content: "\f21b";
+    color: green;
+}
+
+.pr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_READERS:before {
+    content: "\f02d";
+    color: #FF4103;
+}
+
+.pr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_COMMENTS:before {
+    content: "\f086";
+    color: #FF4103;
+}
+
+.pr-grid-cell-field-type-icons-icon-PORTAL_EDIT_PROFILE:before {
+    content: "\f087";
+    color: #FF4103;
+}
+
+.pr-grid-cell-field-type-icons-icon-PORTAL_MANAGE_MEMBERS_COMPANIES:before {
+    content: "\f183";
+    color: #FF4103;
+}
+.pr-grid-cell-field-type-icons-icon-MATERIAL_SUBMIT:before {
+    content: "\f00c";
+    color: dodgerblue;
+}
+
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_EDIT:before {
+    content: "\f044";
+    color: dodgerblue;
+}
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_UNPUBLISH:before {
+    content: "\f05e";
+    color: dodgerblue;
+}
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_PUBLISH:before {
+    content: "\f0a1";
+    color: dodgerblue;
+}
+
+.pr-grid-cell-field-type-icons-icon-PUBLICATION_DELETE_UNDELETE:before {
+    content: "\f0a2";
+    color: dodgerblue;
 }
 
 

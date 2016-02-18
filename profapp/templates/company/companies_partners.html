@@ -21,7 +21,7 @@
         angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_partners')
         $scope.url_companies_partners = '{{ url_for('portal.companies_partners_load', company_id=company.id)
          }}';
-        $scope.url_company_profile = {{ raw_url_for('company.profile')|safe }};
+        $scope.url_portal_partner_details = {{ raw_url_for('portal.portal_partner_details')| safe}};
 
         {% raw %}
         $scope.sendData = function (grid_data, callback) {
@@ -35,13 +35,13 @@
         $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                         loadGridData: $scope.sendData,
                         columnDefs: [
-                            {
-                                name: 'logo', type: 'img'
-                            }, {
-                                name: 'company_name', type: 'link',
-                                href: 'url_company_profile({company_id: row.entity.id})'
+                             {
+                                name: 'company_name', type: 'link',img:'logo',
+                                href: 'url_portal_partner_details({partner_id: row.entity.portal_employeer_id, employeer_id:row.entity.id})'
                             },
-                            {name: 'rights', width: '300', type: 'icons', afilter: {type: 'input'}}
+                                {
+                                name: 'status'},
+                            {name: 'rights', width: '500', type: 'icons', afilter: {type: 'input'}}
                         ]
                     });
         {% endraw %}

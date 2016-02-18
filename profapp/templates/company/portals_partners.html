@@ -7,10 +7,6 @@
     {% include '_ruslan/partials/_header_files_grid.html' %}
 {% endblock head %}
 
-{% block portal_base %}
-    {% include 'partials/portal_base_Profireader_auth_user.html' %}
-{% endblock portal_base %}
-
 {% block portal_content %}
     {% block company_base %}
         {% include 'company/company_base_angular.html' %}
@@ -25,12 +21,13 @@
                 return ( '/portal/search_for_portal_to_join/' );
             };
         $scope.url_join = {{ raw_url_for('portal.apply_company')|safe }};
-        $scope.partners = {{ raw_url_for('portal.portals_partners')|safe }};
-        $scope.load_partners = {{ raw_url_for('portal.portals_partners_load')|safe }};
-        $scope.url_portal_partner_details = {{ raw_url_for('portal.portal_partner_details')| safe}};
+        $scope.url_company_profile = {{ raw_url_for('company.profile')|safe }};
         $scope.selectedPortal_name = '';
         $scope.selectedPortal = null;
         $scope.selectedPortal_sending = false;
+        $scope.user_rights = {{ rights_user_in_company|safe }}
+        $scope.right_for = 'COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'
+
 
         {% raw %}
 
@@ -59,7 +56,7 @@
                 company_id: $scope.company_id,
                 portal_id: $scope.selectedPortal.id
             }, function (resp) {
-                $scope.gridApi.grid.setGridData()
+                $scope.gridApi.grid.setGridData();
                 $scope.selectedPortal = null;
                 $scope.selectedPortal_name = null;
             }).finally(function () {
@@ -79,13 +76,11 @@
                         loadGridData: $scope.sendData,
                         columnDefs: [
                             {
-                                name: 'portal_logo', type: 'img'
-                            }, {
                                 name: 'portal_name', type: 'link',
-                                href: 'portal_link(row.entity.link)'
+                                href: 'portal_link(row.entity.link)', img:'portal_logo', link: true
                             }, {
                                 name: 'company.name', type: 'link',
-                                href: 'url_portal_partner_details({partner_id: row.entity.portal_id, employeer_id:row.entity.employeer_id})'
+                                href: 'url_company_profile({company_id: row.entity.company.id})',img:"company.logo_file_id"
                             }, {
                                 name: 'status', width: '10%', afilter: {type: 'input'}
                             }, {
@@ -105,7 +100,7 @@
                    ng-model="selectedPortal_name"
                    uib-typeahead="portal as portal.name for portal in searchForPortalToJoin($viewValue)"
                    name="portal_id"/>&nbsp;
-            <button class="btn" ng-click="joinToPortal()"
+            <button pr-user-rights="" pr-rights="{{user_rights}}" pr-allow="{{ right_for }}"  class="btn" ng-click="joinToPortal()"
                     ng-class="{'disabled': !selectedPortal || selectedPortal_sending}"
                     ng-disabled="!selectedPortal || selectedPortal_sending">{{ _('join to this portal') }}
             </button>

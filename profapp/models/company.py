@@ -260,14 +260,15 @@ class UserCompany(Base, PRBase):
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'), nullable=False)
 
     status = Column(TABLE_TYPES['status'], default='APPLICANT')
-    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED', 'FIRED': 'FIRED'}
+    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED',
+                'FIRED': 'FIRED'}
 
     RIGHT_AT_COMPANY = {
         'FILES_BROWSE': 2 ** (4 - 1),
         'FILES_UPLOAD': 2 ** (5 - 1),
         'FILES_DELETE_OTHERS': 2 ** (14 - 1),
 
-        'MATERIALS_SUBMIT_TO_ANOTHER_PORTAL': 2 ** (8 - 1),
+        'MATERIALS_SUBMIT_TO_PORTAL': 2 ** (8 - 1),
         'MATERIALS_EDIT_OTHERS': 2 ** (12 - 1),
 
         'PUBLICATION_PUBLISH_AT_OWN_PORTAL': 2 ** (2 - 1),
@@ -288,8 +289,8 @@ class UserCompany(Base, PRBase):
         'PORTAL_MANAGE_MEMBERS_COMPANIES': 2 ** (13 - 1)
     }
 
-    RIGHTS_AT_COMPANY_DEFAULT = RIGHT_AT_COMPANY['FILES_BROWSE'] | RIGHT_AT_COMPANY[
-        'MATERIALS_SUBMIT_TO_ANOTHER_PORTAL']
+    RIGHTS_AT_COMPANY_DEFAULT = RIGHT_AT_COMPANY['FILES_BROWSE'] | RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL'] | RIGHT_AT_COMPANY['PUBLICATION_PUBLISH_AT_OWN_PORTAL']
+
     RIGHTS_AT_COMPANY_FOR_OWNER = 0x7fffffffffffffff
 
     position = Column(TABLE_TYPES['short_name'], default='')
@@ -313,13 +314,12 @@ class UserCompany(Base, PRBase):
 
     # todo (AA to AA): check handling md_tm
 
-    def __init__(self, user_id=None, company_id=None, status=STATUSES['APPLICANT'], rights=0):
+    def __init__(self, user_id=None, company_id=None, status=STATUSES['APPLICANT']):
 
         super(UserCompany, self).__init__()
         self.user_id = user_id
         self.company_id = company_id
         self.status = status
-        self._rights = rights
 
     @staticmethod
     def get(user_id=None, company_id=None):
@@ -401,6 +401,10 @@ class UserCompany(Base, PRBase):
            status=UserCompany.STATUSES['APPLICANT']).update({'status': stat})
 
     def has_rights(self, binary_right):
+
+        if binary_right == -1:
+            return True if self.status == self.STATUSES['ACTIVE'] else False
+
         return True if self.status == self.STATUSES['ACTIVE'] and (binary_right & self._rights) else False
         # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
         # return user_company.rights_set if user_company and user_company.status == STATUS.ACTIVE() and user_company.employer.status == STATUS.ACTIVE() else []

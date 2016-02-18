@@ -59,6 +59,3 @@ def url_page(endpoint=None, **kwargs):
         kwargs_new.pop('favorite', None)
 
     return url_for(ep, **kwargs_new)
-
-
-

@@ -443,3 +443,6 @@
     color: red;
     text-decoration: underline;
 }
+.pr-grid-cell-field-type-link{
+    padding-right: 20px!important;
+}

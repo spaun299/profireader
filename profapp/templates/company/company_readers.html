@@ -1,6 +1,8 @@
-{% extends "index_layout.html" %}
-{% block title %}Profireader Portal - Readers{% endblock title %}
-
+{% extends "index_lazy_layout.html" %}
+{% block head %}
+    {{ super() }}
+    {% include '_ruslan/partials/_header_files_grid.html' %}
+{% endblock head %}
 {% block styles %}
     {{ super() }}
     <style>

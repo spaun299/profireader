@@ -406,18 +406,19 @@ def profile_edit_load(json, portal_id):
             'tag': tags_dict}
 
 
-@portal_bp.route('/portals_partners/<string:company_id>/', methods=['GET'])
+@portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
-def portals_partners(company_id):
+def companies_partners(company_id):
     return render_template('company/portals_partners.html',
-                           company=Company.get(company_id))
+                           company=Company.get(company_id), rights_user_in_company=UserCompany.get(company_id=company_id).get_rights())
 
 
 @portal_bp.route('/portals_partners/<string:company_id>/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([]))
+# TODO: SS by OZ: perepysaty 10 raziv
 @ok
 def portals_partners_load(json, company_id):
     subquery_member_portal = db(MemberCompanyPortal, portal_id=json.get('getPageOfId'),
@@ -427,8 +428,8 @@ def portals_partners_load(json, company_id):
                                                         **Grid.page_options(json.get('paginationOptions')))
     return {'page': current_page,
             'grid_data': [{'portal_name': partner.portal.name,
-                           'portal_logo': File.get(partner.portal.logo_file_id).url() if partner.portal.logo_file_id
-                           else '/static/images/company_no_logo.png',
+                           'portal_logo': partner.portal.logo_file_id if partner.portal.logo_file_id
+                           else None,
                            'portal_id': partner.portal.id, 'link': partner.portal.host,
                            'company': Company.get(partner.portal.company_owner_id).get_client_side_dict(),'rights':partner.get_rights(),'status':partner.status, 'employeer_id':company_id , 'pa':partner.company.get_client_side_dict()}
                           for partner in partners_g],
@@ -444,8 +445,10 @@ def portals_partners_load(json, company_id):
 @portal_bp.route('/<string:partner_id>/portal_partner_details/<string:employeer_id>/', methods=['GET'])
 @login_required
 def portal_partner_details(partner_id, employeer_id):
+# TODO: SS by OZ: fucking kwargs. blya!
     partner = MemberCompanyPortal.get(partner_id, employeer_id)
     return render_template('company/portal_partner_details.html',
+                           company=Company.get(employeer_id),
                            company_member=Portal.get(partner_id).own_company.get_client_side_dict(fields='name, id, own_portal.id'),
                            employeer=Company.get(employeer_id).get_client_side_dict(),
                            rights = MemberCompanyPortal.get_rights(partner),
@@ -455,6 +458,7 @@ def portal_partner_details(partner_id, employeer_id):
 @login_required
 def portal_partner_update(employeer_id,partner_id ):
     return render_template('company/portal_partner_update.html',
+                           company = Company.get(employeer_id),
                            partner=MemberCompanyPortal.get(partner_id, company_id=employeer_id).company.get_client_side_dict())
 
 
@@ -481,12 +485,12 @@ def partner_update_load(json, employeer_id, partner_id):
             partner.save()
     return partner.get_client_side_dict(fields='id, status, rights_company_at_portal')
 
-@portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])
+@portal_bp.route('/portals_partners/<string:company_id>/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
-def companies_partners(company_id):
-    return render_template('company/companies_partners.html', company=Company.get(company_id))
+def portals_partners(company_id):
+    return render_template('company/companies_partners.html', company=Company.get(company_id),rights_user_in_company=UserCompany.get(company_id=company_id).get_rights())
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['POST'])
@@ -494,22 +498,23 @@ def companies_partners(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def companies_partners_load(json, company_id):
-    """ RIGHT_AT_PORTAL HARDCODED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! """
+    company_employeer_portal = Company.get(company_id).own_portal
     subquery = db(MemberCompanyPortal).filter(
         MemberCompanyPortal.portal_id == db(Portal, company_owner_id=company_id).subquery().c.id)
     partners, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
     portal = partners[0].portal if partners else db(Company, id=company_id).one().own_portal
-    grid_data = [{'id': comp.company.id, 'company_name': comp.company.name,
-                 'rights': {'MATERIAL_SUBMIT': True,  'PUBLICATION_PUBLISH': True},
-                  'logo': File.get(comp.company.logo_file_id).url() if comp.company.logo_file_id
-                  else '/static/images/company_no_logo.png'}
-                 for comp in partners] if portal else []
+    grid_data = [{'id': partner.company.id, 'company_name': partner.company.name,
+                  'portal_employeer_id': company_employeer_portal.id,
+                  'rights': partner.get_rights(),
+                  'status': partner.status,
+                  'logo': partner.company.logo_file_id if partner.company.logo_file_id
+                  else None}
+                 for partner in partners] if portal else []
     return {'portal': portal.get_client_side_dict(fields='name') if portal else [],
             'grid_data': grid_data,
             'total': count,
             'page': current_page,
-            'company_id': company_id,
-            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()}
+            'company_id': company_id}
 
 
 @portal_bp.route('/search_for_portal_to_join/', methods=['POST'])
