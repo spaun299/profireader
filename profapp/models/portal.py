@@ -5,7 +5,7 @@ from ..controllers import errors
 from flask import g, jsonify
 from utils.db_utils import db
 # from .company import Company
-from .pr_base import PRBase, Base
+from .pr_base import PRBase, Base, BinaryRights
 import re
 from .tag import TagPortalDivision, Tag
 from sqlalchemy import event
@@ -293,21 +293,11 @@ class Portal(Base, PRBase):
 class MemberCompanyPortal(Base, PRBase):
     __tablename__ = 'member_company_portal'
 
-    class _RIGHT_AT_PORTAL():
-        PUBLICATION_PUBLISH = 2 ** (1 - 1)
-        PUBLICATION_UNPUBLISH = 2 ** (2 - 1),
-        PUBLICATION_EDIT = 2 ** (3 - 1),
+
+        # field = MemberCompanyPortal.rights_company_at_portal
         # PUBLICATION_DELETE_UNDELETE = 2 ** (4 - 1)
 
 
-        def bin(self, key):
-            return object.__getattribute__(self, key)
-
-        def __getattribute__(self, key):
-            if key == 'bin':
-                return object.__getattribute__(self, key)
-            else:
-                return key
 
     RIGHT_AT_PORTAL = {
         'PUBLICATION_PUBLISH': 2 ** (1 - 1),
@@ -316,7 +306,7 @@ class MemberCompanyPortal(Base, PRBase):
         # 'PUBLICATION_DELETE_UNDELETE': 2 ** (4 - 1),
     }
 
-    _RIGHT_AT_PORTAL = _RIGHT_AT_PORTAL()
+    # _RIGHT_AT_PORTAL = _RIGHT_AT_PORTAL()
 
     RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL['PUBLICATION_PUBLISH']
 
@@ -326,6 +316,12 @@ class MemberCompanyPortal(Base, PRBase):
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'))
     portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
     rights_company_at_portal = Column(TABLE_TYPES['bigint'], default=RIGHT_AT_PORTAL_DEFAULT, nullable=False)
+
+    class _RIGHT_AT_PORTAL(BinaryRights):
+        PUBLICATION_PUBLISH     = 2 ** (1 - 1)
+        PUBLICATION_UNPUBLISH   = 2 ** (2 - 1)
+        PUBLICATION_EDIT        = 2 ** (3 - 1)
+
 
     member_company_portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))
 
@@ -376,7 +372,8 @@ class MemberCompanyPortal(Base, PRBase):
         return db(MemberCompanyPortal).filter_by(portal_id=portal_id, company_id=company_id).one()
 
     def get_rights(self):
-        return PRBase.convert_rights_binary_to_dict(self.rights_company_at_portal, self.RIGHT_AT_PORTAL)
+        # return self._RIGHT_AT_PORTAL.dict()
+        PRBase.convert_rights_binary_to_dict(self.rights_company_at_portal, self.RIGHT_AT_PORTAL)
 
     def set_client_side_dict(self, status, rights):
         self.status = status
@@ -505,13 +502,14 @@ class PortalDivision(Base, PRBase):
     #         # target.settings = db(PortalDivisionSettingsCompanySubportal).filter_by(
     #         #     portal_division_id=self.id).one()
 
-    def search_filter(self):
-        from .articles import ArticlePortalDivision
-
-        return and_(ArticlePortalDivision.portal_division_id.in_(
-                db(PortalDivision.id, portal_id=portal.id)),
-                ArticlePortalDivision.status ==
-                ArticlePortalDivision.STATUSES['PUBLISHED'])
+# TODO: VK by OZ: do we need this func? i have cemented it becouse IDE shows error here
+    # def search_filter(self):
+    #     from .articles import ArticlePortalDivision
+    #
+    #     return and_(ArticlePortalDivision.portal_division_id.in_(
+    #             db(PortalDivision.id, portal_id=portal.id)),
+    #             ArticlePortalDivision.status ==
+    #             ArticlePortalDivision.STATUSES['PUBLISHED'])
 
     @orm.reconstructor
     def init_on_load(self):

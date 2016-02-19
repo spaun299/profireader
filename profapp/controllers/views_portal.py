@@ -487,6 +487,10 @@ def companies_partners_load(json, company_id):
         MemberCompanyPortal.portal_id == db(Portal, company_owner_id=company_id).subquery().c.id)
     partners, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
     portal = partners[0].portal if partners else db(Company, id=company_id).one().own_portal
+    print(MemberCompanyPortal._RIGHT_AT_PORTAL.__dict__)
+    print(MemberCompanyPortal._RIGHT_AT_PORTAL.all())
+    print(MemberCompanyPortal._RIGHT_AT_PORTAL.PUBLICATION_EDIT)
+
     grid_data = [{'member_id': partner.company.id, 'member_name': partner.company.name,
                   'rights': partner.get_rights(),
                   'status': partner.status,

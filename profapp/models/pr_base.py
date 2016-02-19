@@ -313,7 +313,8 @@ class Grid:
 
     @staticmethod
     def page_options(client_json):
-        return {'page': client_json['pageNumber'], 'getPageOfId': client_json.get('pageNumber'), 'items_per_page': client_json['pageSize']} if client_json else {}
+        return {'page': client_json['pageNumber'], 'getPageOfId': client_json.get('pageNumber'),
+                'items_per_page': client_json['pageSize']} if client_json else {}
 
     @staticmethod
     def subquery_grid(query, filters=None, sorts=None):
@@ -666,6 +667,7 @@ class PRBase:
         event.listen(cls, 'after_update', cls.update_search_table)
         event.listen(cls, 'after_delete', cls.delete_from_search)
 
+
 #
 #
 #
@@ -691,3 +693,22 @@ class PRBase:
 # event.listen(ArticlePortal, 'before_insert', set_long_striped)
 # event.listen(ArticleCompany, 'before_update', set_long_striped)
 # event.listen(ArticleCompany, 'before_insert', set_long_striped)
+
+class BinaryRights(object):
+
+
+    @classmethod
+    def bin(cls):
+        return [name for (name, val) in cls.__dict__.items() if name not in ['__doc__', '__module__'] and val > 0]
+
+    @classmethod
+    def all(cls):
+        return [name for (name, val) in cls.__dict__.items() if name not in ['__doc__', '__module__'] and val > 0]
+
+    @classmethod
+    def dict(cls):
+        return {name: True for (name, val) in cls.__dict__.items() if name not in ['__doc__', '__module__'] and val > 0}
+
+    def __getattribute__(self, key):
+        return object.__getattribute__(self, key) if key in ['bin', 'all', 'dict'] else key
+

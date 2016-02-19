@@ -341,8 +341,7 @@ class UserCompany(Base, PRBase):
     def get_rights(self):
         return PRBase.convert_rights_binary_to_dict(self._rights, self.RIGHT_AT_COMPANY)
 
-    def get_client_side_dict(self, fields='id,user_id,company_id,position,status',
-                             more_fields=None):
+    def get_client_side_dict(self, fields='id,user_id,company_id,position,status', more_fields=None):
         ret = self.to_dict(fields, more_fields)
         ret['rights'] = self.get_rights()
         return ret
