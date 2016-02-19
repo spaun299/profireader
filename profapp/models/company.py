@@ -326,7 +326,14 @@ class UserCompany(Base, PRBase):
         return db(UserCompany).filter_by(user_id=user_id if user_id else g.user.id, company_id=company_id).one()
 
     def get_statuses_avaible(self):
-        return {s: True for s in self.STATUSES}
+        available_statuses = {s: True for s in self.STATUSES}
+        user_rights = self.get_rights()
+        if user_rights['EMPLOYEE_CONFIRM_NEW'] == False:
+            available_statuses['ACTIVE']= False
+        if user_rights['EMPLOYEE_SUSPEND_UNSUSPEND'] == False:
+            available_statuses['SUSPENDED'] = False
+            available_statuses['UNSUSPEND'] = False
+        return available_statuses
 
     def get_rights_avaible(self):
         return {s: True for s in self.RIGHT_AT_COMPANY}

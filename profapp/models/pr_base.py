@@ -310,8 +310,9 @@ class Grid:
     def filter_for_status(statuses):
         return [{'value': status, 'label': status} for status in statuses.keys()]
 
+    @staticmethod
     def page_options(client_json):
-        return {'page': client_json['pageNumber'], 'items_per_page': client_json['pageSize']} if client_json else {}
+        return {'page': client_json['pageNumber'], 'getPageOfId': client_json.get('pageNumber'), 'items_per_page': client_json['pageSize']} if client_json else {}
 
     @staticmethod
     def subquery_grid(query, filters=None, sorts=None):
@@ -356,7 +357,6 @@ class PRBase:
             return datetime.datetime.strptime(str, "%a, %d %b %Y %H:%M:%S %Z")
         except:
             return None
-
 
     def position_unique_filter(self):
         return self.__class__.position != None

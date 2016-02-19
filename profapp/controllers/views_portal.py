@@ -412,69 +412,54 @@ def profile_edit_load(json, portal_id):
 # @check_rights(simple_permissions([]))
 def companies_partners(company_id):
     return render_template('company/portals_partners.html',
-                           company=Company.get(company_id), rights_user_in_company=UserCompany.get(company_id=company_id).get_rights())
+                           company=Company.get(company_id), rights_user_in=UserCompany.get(company_id=company_id).get_rights()['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'])
 
 
 @portal_bp.route('/portals_partners/<string:company_id>/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([]))
-# TODO: SS by OZ: perepysaty 10 raziv
 @ok
 def portals_partners_load(json, company_id):
-    subquery_member_portal = db(MemberCompanyPortal, portal_id=json.get('getPageOfId'),
-                                company_id=company_id).one().id if json.get('getPageOfId') else None
     subquery = Company.subquery_company_partners(company_id, json.get('filter'))
-    partners_g, pages, current_page, count = pagination(subquery, subquery_member_portal,
-                                                        **Grid.page_options(json.get('paginationOptions')))
+    partners_g, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
     return {'page': current_page,
-            'grid_data': [{'portal_name': partner.portal.name,
-                           'portal_logo': partner.portal.logo_file_id if partner.portal.logo_file_id
-                           else None,
-                           'portal_id': partner.portal.id, 'link': partner.portal.host,
-                           'company': Company.get(partner.portal.company_owner_id).get_client_side_dict(),'rights':partner.get_rights(),'status':partner.status, 'employeer_id':company_id , 'pa':partner.company.get_client_side_dict()}
-                          for partner in partners_g],
-            'total': count,
-            'portal': db(Company, id=company_id).one().own_portal.get_client_side_dict(fields='name')
-            if db(Company, id=company_id).one().own_portal else [],
-            'portals_partners': [port.get_client_side_dict(fields='name, company_owner_id,id')
-                                 for port in Company.get(company_id).get_portals_where_company_is_member()],
-            'company_id': company_id,
-            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights()
-            }
+            'grid_data': [partner.get_client_side_dict(fields='id,status,company,portal') for partner in partners_g],
+            'total': count}
 
-@portal_bp.route('/<string:partner_id>/portal_partner_details/<string:employeer_id>/', methods=['GET'])
+@portal_bp.route('/<string:company_id>/portal_partner_details/<string:partner_id>/', methods=['GET'])
 @login_required
-def portal_partner_details(partner_id, employeer_id):
-# TODO: SS by OZ: fucking kwargs. blya!
-    partner = MemberCompanyPortal.get(partner_id, employeer_id)
+def portal_partner_details(partner_id, company_id):
+    partner = MemberCompanyPortal.get(Company.get(company_id).own_portal.id, partner_id)
     return render_template('company/portal_partner_details.html',
-                           company=Company.get(employeer_id),
-                           company_member=Portal.get(partner_id).own_company.get_client_side_dict(fields='name, id, own_portal.id'),
-                           employeer=Company.get(employeer_id).get_client_side_dict(),
-                           rights = MemberCompanyPortal.get_rights(partner),
-                           member = partner.get_client_side_dict(fields='portal_id, status'))
+                           company=Company.get(company_id),
+                           company_member=Company.get(partner_id).get_client_side_dict(fields='name, id, own_portal.id'),
+                           employeer=Company.get(company_id).get_client_side_dict(),
+                           rights = partner.get_rights(),
+                           member = partner.get_client_side_dict(fields='portal_id, status'),
+                           user_right_in=UserCompany.get(company_id=company_id).get_rights()['PORTAL_MANAGE_MEMBERS_COMPANIES']
+                           )
 
-@portal_bp.route('/<string:employeer_id>/portal_partner_update/<string:partner_id>/', methods=['GET'])
+@portal_bp.route('/<string:company_id>/portal_partner_update/<string:partner_id>/', methods=['GET'])
 @login_required
-def portal_partner_update(employeer_id,partner_id ):
+def portal_partner_update(company_id,partner_id):
     return render_template('company/portal_partner_update.html',
-                           company = Company.get(employeer_id),
-                           partner=MemberCompanyPortal.get(partner_id, company_id=employeer_id).company.get_client_side_dict())
+                           company = Company.get(company_id),
+                           partner=MemberCompanyPortal.get(Company.get(company_id).own_portal.id, company_id=partner_id).company.get_client_side_dict('id, status'))
 
 
-@portal_bp.route('/<string:employeer_id>/portal_partner_update/<string:partner_id>/', methods=['POST'])
+@portal_bp.route('/<string:company_id>/portal_partner_update/<string:partner_id>/', methods=['POST'])
 @tos_required
 @login_required
 @ok
 # @check_rights(simple_permissions([]))
-def partner_update_load(json, employeer_id, partner_id):
+def partner_update_load(json, company_id, partner_id):
     action = g.req('action', allowed=['load', 'validate', 'save'])
-    partner = MemberCompanyPortal.get(partner_id, employeer_id)
+    partner = MemberCompanyPortal.get(Company.get(company_id).own_portal.id, partner_id)
     if action == 'load':
         return {'status':partner.status,
-                'partner': Portal.get(partner_id).own_company.get_client_side_dict(fields='id,name,own_portal'),
+                'partner': Company.get(partner_id).get_client_side_dict(fields='id,name,own_portal'),
                 'statuses_available': MemberCompanyPortal.STATUSES,
-                'employeer': Company.get(employeer_id).get_client_side_dict(),
+                'employeer': Company.get(company_id).get_client_side_dict(),
                 'rights': partner.get_rights()}
     else:
         partner.set_client_side_dict(json['status'],json['rights'])
@@ -490,7 +475,7 @@ def partner_update_load(json, employeer_id, partner_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def portals_partners(company_id):
-    return render_template('company/companies_partners.html', company=Company.get(company_id),rights_user_in_company=UserCompany.get(company_id=company_id).get_rights())
+    return render_template('company/companies_partners.html', company=Company.get(company_id),rights_user_in=UserCompany.get(company_id=company_id).get_rights()['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'])
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['POST'])
@@ -498,15 +483,14 @@ def portals_partners(company_id):
 # @check_rights(simple_permissions([]))
 @ok
 def companies_partners_load(json, company_id):
-    company_employeer_portal = Company.get(company_id).own_portal
     subquery = db(MemberCompanyPortal).filter(
         MemberCompanyPortal.portal_id == db(Portal, company_owner_id=company_id).subquery().c.id)
     partners, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
     portal = partners[0].portal if partners else db(Company, id=company_id).one().own_portal
-    grid_data = [{'id': partner.company.id, 'company_name': partner.company.name,
-                  'portal_employeer_id': company_employeer_portal.id,
+    grid_data = [{'member_id': partner.company.id, 'member_name': partner.company.name,
                   'rights': partner.get_rights(),
                   'status': partner.status,
+                  'company_id':company_id,
                   'logo': partner.company.logo_file_id if partner.company.logo_file_id
                   else None}
                  for partner in partners] if portal else []
@@ -536,17 +520,12 @@ def publications(company_id):
 
 
 def get_publication_dict(publication):
-    actions_for_statuses = {
-        ArticlePortalDivision.STATUSES['SUBMITTED']: ['publish', 'delete'],
-        ArticlePortalDivision.STATUSES['PUBLISHED']: ['unpublish', 'republish', 'delete'],
-        ArticlePortalDivision.STATUSES['UNPUBLISHED']: ['republish', 'delete'],
-        ArticlePortalDivision.STATUSES['DELETED']: ['undelete']
-    }
+
     ret = publication.get_client_side_dict()
     if ret.get('long'):
             del ret['long']
 
-    ret['actions'] = publication.get_actions_for_status()
+    ret['actions'] = publication.get_actions_for_status(publication.division.portal.company_owner_id)
 
     return ret
 

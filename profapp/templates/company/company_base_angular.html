@@ -1,4 +1,3 @@
-{#TODO: SS by OZ: add {% raw and remove this all stupid {{ '{{' }} %}#}
 <script>
     module.controller('CompanyMenuController', ['$scope', '$timeout', function ($scope, $timeout) {
         $scope.user = {{ g.user_dict|tojson|safe }};
@@ -60,8 +59,8 @@
                    href="{{ url_portal_portals_partners({company_id: company.id}) }}">{{ _('Members') }}</a>
                 <a ng-if="company.own_portal" ng-class="{'selected': selected_company_menu == 'statistics'}" id="statistics"
                    href="#">{{ _('Statistics') }}</a>
-                <a ng-if="company.own_portal" ng-class="{'selected': selected_company_menu == 'portal_profile'}" id="portal_profile"
-                   href="#">{{ _('Portal profile') }}</a>
+                <a ng-if="company.own_portal" ng-class="{'selected': selected_company_menu == 'home'}" id="portal_profile"
+                   href="{{ url_company_profile({company_id: company.id}) }}">{{ _('Portal profile') }}</a>
             </div>
         </div>
 
