@@ -68,7 +68,7 @@ class Search(Base):
     ORDER_MD_TM = 3
 
     @staticmethod
-    def search(*args, **kwargs):
+    def search(*args: dict, **kwargs):
         """ *args: dictionary with following values -
                              -class = sqlalchemy table class object,
                 optional:    -filter: sqlalchemy filter with your own parameters,
@@ -159,7 +159,6 @@ class Search(Base):
             filename_, line_, func_, text_ = tb_info[-1]
             message = 'An error occurred on File "{file}" line {line}\n {assert_message}'.format(
                     line=line_, assert_message=e.args, file=filename_)
-            print(message)
             raise errors.BadDataProvided({'message': message})
 
         def get_order(order_name, desc_asc, field):
