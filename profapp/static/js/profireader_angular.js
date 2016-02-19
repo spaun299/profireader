@@ -359,7 +359,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                         backgroundImage: "url('" + fileUrl(newval, false, no_image) + "')"
                     });
                 });
-                element.attr('src', '/static/images/0.gif');
+                element.attr('src', '//static.profireader.com/static/images/0.gif');
                 element.css({
                     backgroundPosition: 'center',
                     backgroundSize: 'contain',
@@ -659,7 +659,7 @@ function file_choose(selectedfile) {
     top.tinymce.activeEditor.windowManager.close();
 }
 
-// 'ui.select' uses "/static/js/select.js" included in _index_layout.html
+// 'ui.select' uses "//static.profireader.com/static/js/select.js" included in _index_layout.html
 //module = angular.module('Profireader', ['ui.bootstrap', 'profireaderdirectives', 'ui.tinymce', 'ngSanitize', 'ui.select']);
 
 module = angular.module('Profireader', pr_angular_modules);
@@ -1548,7 +1548,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             },
             //valid_elements: Config['article_html_valid_elements'],
             //valid_elements: 'a[class],img[class|width|height],p[class],table[class|width|height],th[class|width|height],tr[class],td[class|width|height],span[class],div[class],ul[class],ol[class],li[class]',
-            content_css: ["/static/front/css/bootstrap.css", "/static/css/article.css", "/static/front/bird/css/article.css"],
+            content_css: ["//static.profireader.com/static/front/css/bootstrap.css", "//static.profireader.com/static/css/article.css", "//static.profireader.com/static/front/bird/css/article.css"],
 
 
             //paste_auto_cleanup_on_paste : true,
@@ -1947,10 +1947,10 @@ var convert_python_format_to_tinymce_format = function (python_format) {
 
 var noImageForImageName = function (image_name) {
     if (image_name === 'logo_file_id') {
-        return '/static/images/company_no_logo.png';
+        return '//static.profireader.com/static/images/company_no_logo.png';
     }
     else {
-        return '/static/images/no_image.png';
+        return '//static.profireader.com/static/images/no_image.png';
     }
 }
 

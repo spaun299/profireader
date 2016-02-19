@@ -18,9 +18,10 @@ from flask.ext.babel import Babel
 import jinja2
 from jinja2 import Markup, escape
 
-from profapp.controllers.blueprints_register import register as register_blueprints
+from profapp.controllers.blueprints_register import register_profi as register_blueprints_profi
 from profapp.controllers.blueprints_register import register_front as register_blueprints_front
 from profapp.controllers.blueprints_register import register_file as register_blueprints_file
+from profapp.controllers.blueprints_register import register_static as register_blueprints_static
 from profapp.controllers.errors import csrf
 from .constants.SOCIAL_NETWORKS import INFO_ITEMS_NONE, SOC_NET_FIELDS
 from .constants.USER_REGISTERED import REGISTERED_WITH
@@ -279,9 +280,9 @@ def fileUrl(id, down=False, if_no_file=None):
 
 
 def prImage(id, if_no_image=None):
-    file = fileUrl(id, False, if_no_image if if_no_image else "/static/images/no_image.png")
+    file = fileUrl(id, False, if_no_image if if_no_image else "//static.profireader.com/static/images/no_image.png")
     return Markup(
-        ' src="/static/images/0.gif" style="background-position: center; background-size: contain; background-repeat: no-repeat; background-image: url(\'%s\')" ' % (
+        ' src="//static.profireader.com/static/images/0.gif" style="background-position: center; background-size: contain; background-repeat: no-repeat; background-image: url(\'%s\')" ' % (
             file,))
 
 
@@ -443,7 +444,7 @@ class AnonymousUser(AnonymousUserMixin):
     #    'guest@profireader.com'.encode('utf-8')).hexdigest()
     # return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
     #    url=url, hash=hash, size=size, default=default, rating=rating)
-    # return '/static/no_avatar.png'
+    # return '//static.profireader.com/static/no_avatar.png'
 
     @staticmethod
     def check_rights(permissions):
@@ -498,7 +499,7 @@ login_manager.anonymous_user = AnonymousUser
 
 
 def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder = './static')
 
     app.config.from_object(config)
     # app.config['SERVER_NAME'] = host
@@ -537,10 +538,12 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
             jinja2.FileSystemLoader('templates_front'),
         ])
         app.jinja_loader = my_loader
+    elif apptype == 'static':
+        register_blueprints_static(app)
     elif apptype == 'file':
         register_blueprints_file(app)
     else:
-        register_blueprints(app)
+        register_blueprints_profi(app)
 
     bootstrap.init_app(app)
     mail.init_app(app)

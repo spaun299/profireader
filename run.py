@@ -17,6 +17,8 @@ if __name__ == '__main__':
         port = 8888
     elif args.apptype == 'file':
         port = 9001
+    elif args.apptype == 'static':
+        port = 9000
     else:
         port = 8080
 

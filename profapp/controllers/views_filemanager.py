@@ -29,6 +29,7 @@ def parent_folder(func):
     return function_parent_folder
 
 
+# TODO: VK by OZ: what is that (root)?
 root = os.getcwd() + '/profapp/static/filemanager/tmp'
 json_result = {"result": {"success": True, "error": None}}
 
