@@ -418,20 +418,12 @@ def companies_partners(company_id):
 @portal_bp.route('/portals_partners/<string:company_id>/', methods=['POST'])
 @login_required
 # @check_rights(simple_permissions([]))
-# TODO: SS by OZ: perepysaty 10 raziv
 @ok
 def portals_partners_load(json, company_id):
-    subquery_member_portal = db(MemberCompanyPortal, portal_id=json.get('getPageOfId'),
-                                company_id=company_id).one().id if json.get('getPageOfId') else None
     subquery = Company.subquery_company_partners(company_id, json.get('filter'))
-    partners_g, pages, current_page, count = pagination(subquery, subquery_member_portal,
-                                                        **Grid.page_options(json.get('paginationOptions')))
+    partners_g, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
     return {'page': current_page,
-            'grid_data': [{'portal':partner.portal.get_client_side_dict(),
-                           'company': Company.get(partner.portal.company_owner_id).get_client_side_dict(),
-                           'rights':partner.get_rights(),
-                           'partner':partner.company.get_client_side_dict('id,status')}
-                          for partner in partners_g],
+            'grid_data': [partner.get_client_side_dict(fields='id,status,company,portal') for partner in partners_g],
             'total': count}
 
 @portal_bp.route('/<string:company_id>/portal_partner_details/<string:partner_id>/', methods=['GET'])
@@ -528,17 +520,12 @@ def publications(company_id):
 
 
 def get_publication_dict(publication):
-    actions_for_statuses = {
-        ArticlePortalDivision.STATUSES['SUBMITTED']: ['publish', 'delete'],
-        ArticlePortalDivision.STATUSES['PUBLISHED']: ['unpublish', 'republish', 'delete'],
-        ArticlePortalDivision.STATUSES['UNPUBLISHED']: ['republish', 'delete'],
-        ArticlePortalDivision.STATUSES['DELETED']: ['undelete']
-    }
+
     ret = publication.get_client_side_dict()
     if ret.get('long'):
             del ret['long']
 
-    ret['actions'] = publication.get_actions_for_status()
+    ret['actions'] = publication.get_actions_for_status(publication.division.portal.company_owner_id)
 
     return ret
 
