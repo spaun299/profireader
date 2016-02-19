@@ -93,15 +93,27 @@ class ArticlePortalDivision(Base, PRBase):
         #     'unpublish': UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL']
         # }
 
-        # ucr = UserCompany.get(company_id=self.division.portal.company_owner_id)
+        ucr = UserCompany.get(company_id=company_id)
         cpr = MemberCompanyPortal.get(portal_id=self.division.portal_id, company_id=company_id)
+        print(MemberCompanyPortal._RIGHT_AT_PORTAL.PUBLICATION_DELETE_UNDELETE)
+        print(MemberCompanyPortal._RIGHT_AT_PORTAL.bin(MemberCompanyPortal._RIGHT_AT_PORTAL.PUBLICATION_DELETE_UNDELETE))
+
+        MemberCompanyPortal._RIGHT_AT_PORTAL.PUBLICATION_EDIT
+
+        def cr(o):
+            print(o)
+            return True
+
 
         def action_is_allowed(action):
             if action == 'edit':
                 return cpr.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_EDIT']) or 'PUBLICATION_EDIT'
             if action == 'publish':
-                return cpr.has_rights(
-                        MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_PUBLISH']) or 'PUBLICATION_PUBLISH'
+                return cr(MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_PUBLISH'])
+                # return (cpr.has_rights(
+                #         MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_PUBLISH']) or 'PUBLICATION_PUBLISH') or \
+                #        ucr.has_rights(UserCompany.RIGHT_AT_COMPANY['PUBLICATION_PUBLISH_AT_OWN_PORTAL'])
+
             if action == 'republish':
                 return cpr.has_rights(
                         MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_PUBLISH']) or 'PUBLICATION_PUBLISH'
