@@ -604,7 +604,7 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
         def save_session(self, app, session, response):
             session.save()
 
-    app.wsgi_app = SessionMiddleware(app.wsgi_app, session_opts)
-    app.session_interface = BeakerSessionInterface()
+#    app.wsgi_app = SessionMiddleware(app.wsgi_app, session_opts)
+#    app.session_interface = BeakerSessionInterface()
 
     return app
