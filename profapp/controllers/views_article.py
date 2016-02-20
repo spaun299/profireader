@@ -156,9 +156,10 @@ def load_form_create(json, company_id=None, material_id=None, publication_id=Non
 @tos_required
 # @check_rights(simple_permissions([]))
 def material_details(material_id):
+    company=Company.get(ArticleCompany.get(material_id).company.id)
     return render_template('company/material_details.html',
                            article=ArticleCompany.get(material_id).get_client_side_dict(more_fields='company|long'),
-                           company=Company.get(ArticleCompany.get(material_id).company.id))
+                           company=company, user_rights_in_company = UserCompany.get(company_id=company.id).get_rights())
 
 
 # def format_material_published(publication, portal):
