@@ -228,7 +228,8 @@ def employee_update_load(json, company_id, user_id):
                 'employee': employment.employee.get_client_side_dict(),
                 'employer': employment.employer.get_client_side_dict(fields='id|logo_file_id|name'),
                 'statuses_available': employment.get_statuses_avaible(),
-                'rights_available': employment.get_rights_avaible()}
+                # 'rights_available': employment.get_rights_avaible()
+                 }
     else:
         employment.set_client_side_dict(json['employment'])
         if action == 'validate':

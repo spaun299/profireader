@@ -30,7 +30,7 @@
                 {% else %}
                     window.location.href = {{ raw_url_for('reader.reader_subscribe')|safe }}({portal_id: portal_id});
                 {% endif %}
-            }
+            };
 
             $scope.search_for_portal = function () {
                 if ($scope.loading) {
@@ -63,8 +63,9 @@
         <h2>{{ _('Please, subscribe to any portal') }}</h2>
         </br>
         {{ _('Search') }} <input ng-model="search_text" ng-change="search_for_portal()" id="portal_search" type="text">
-        <table>
+        <table>{{ data }}
             <tr ng-repeat="portal in data">
+
                 <td class="p4px">
                     <img class="subscribe-portal-logo" pr-image="portal.logo_file_id"/>
                 </td>

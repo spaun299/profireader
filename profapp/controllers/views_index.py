@@ -31,9 +31,10 @@ def portals_list():
 @ok
 def portals_list_load(json):
     ret, page, page2 = Search.search(
-        {'class': Portal, 'filter': Portal.id == Portal.id, 'return_fields': 'default_dict'}, page=1,
-        search_text=json['text'])
-    return [PRBase.merge_dicts(p, {'subscribed': True if UserPortalReader.get(portal_id=p_id) else False}) for p_id, p in ret.items()]
+        {'class': Portal, 'return_fields': 'default_dict'},
+        page=json.get('page'), search_text=json.get('text'), pagination=True)
+    return [PRBase.merge_dicts(p, {'subscribed': True if UserPortalReader.get(portal_id=p_id) else False})
+            for p_id, p in ret.items()]
 
 
 @general_bp.route('subscribe/')
