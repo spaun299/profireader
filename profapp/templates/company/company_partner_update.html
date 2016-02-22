@@ -17,7 +17,7 @@
             $scope.after_save = function () {
                 window.location.href = $scope.url_company_partner_details({
                     'employeer_id': $scope.data.employeer.id,
-                    'member_id': $scope.data.member.id
+                    'member_id': $scope.data.member.company.id
                 });
             }
 
@@ -28,14 +28,14 @@
     <div ng-controller="company_partner_update">
         <div af af-after-save="after_save" af-watch="data.member" ng-model="data">
             <h2>
-                <img class="person-small-cover" pr-image="data.member.logo_file_id"/><img class="person-small-cover" pr-image="data.employeer.logo_file_id"/>
-                {{ _('Portal partner `%(data.member.name)s` at company `%(data.employeer.name)s`') }}</h2>
-            {{ _('status') }} <select ng-model="data.status"
+                <img class="person-small-cover" pr-image="data.member.company.logo_file_id"/><img class="person-small-cover" pr-image="data.employeer.logo_file_id"/>
+                {{ _('Portal partner `%(data.member.company.name)s` at company `%(data.employeer.name)s`') }}</h2>
+            {{ _('status') }} <select ng-model="data.member.status"
                                       ng-options="status as status disable when !available for (status, available) in data.statuses_available"></select><br>
-            <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in data.rights">
+            <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in data.member.rights">
                 <img src="/static/images/0.gif"
                      class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ right_name }}"/>
-                <label><input ng-model="data.rights[right_name]" type="checkbox"/> {{ right_name }}</label>
+                <label><input ng-model="data.member.rights[right_name]" type="checkbox"/> {{ right_name }}</label>
             </div>
             <button class="btn fr" type="button" ng-disabled="!$af.isActionAllowed(data, 'save')"
                     ng-click="$af.save(data)">{{ _('Save') }}

@@ -412,7 +412,7 @@ def profile_edit_load(json, portal_id):
 # @check_rights(simple_permissions([]))
 def portals_partners(company_id):
     return render_template('company/portals_partners.html',
-                           company=Company.get(company_id), rights_user_in=UserCompany.get(company_id=company_id).get_rights()['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'])
+                           company=Company.get(company_id), rights_user_in=UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS']))
 
 
 @portal_bp.route('/portals_partners/<string:company_id>/', methods=['POST'])
@@ -432,11 +432,9 @@ def company_partner_details(member_id, employeer_id):
     member = MemberCompanyPortal.get(Company.get(employeer_id).own_portal.id, member_id)
     return render_template('company/company_partner_details.html',
                            company=Company.get(employeer_id),
-                           company_member=Company.get(member_id).get_client_side_dict(fields='name, id, own_portal.id'),
                            employeer=Company.get(employeer_id).get_client_side_dict(),
-                           rights = member.get_rights(),
-                           member = member.get_client_side_dict(fields='portal_id, status'),
-                           user_right_in=UserCompany.get(company_id=employeer_id).get_rights()['PORTAL_MANAGE_MEMBERS_COMPANIES']
+                           member = member.get_client_side_dict(fields='portal_id, status, company'),
+                           user_right_in=UserCompany.get(company_id=employeer_id).has_rights(UserCompany.RIGHT_AT_COMPANY['PORTAL_MANAGE_MEMBERS_COMPANIES'])
                            )
 
 @portal_bp.route('/<string:employeer_id>/company_partner_update/<string:member_id>/', methods=['GET'])
@@ -456,13 +454,11 @@ def company_update_load(json, employeer_id, member_id):
     action = g.req('action', allowed=['load', 'validate', 'save'])
     member = MemberCompanyPortal.get(Company.get(employeer_id).own_portal.id, member_id)
     if action == 'load':
-        return {'status':member.status,
-                'member': Company.get(member_id).get_client_side_dict(fields='id,name,own_portal'),
+        return {'member': member.get_client_side_dict(fields='id,status,company'),
                 'statuses_available': MemberCompanyPortal.STATUSES,
-                'employeer': Company.get(employeer_id).get_client_side_dict(),
-                'rights': member.get_rights()}
+                'employeer': Company.get(employeer_id).get_client_side_dict()}
     else:
-        member.set_client_side_dict(json['status'],json['rights'])
+        member.set_client_side_dict(json['member']['status'],json['member']['rights'])
         if action == 'validate':
             member.detach()
             return member.validate(False)
@@ -475,7 +471,7 @@ def company_update_load(json, employeer_id, member_id):
 @login_required
 # @check_rights(simple_permissions([]))
 def companies_partners(company_id):
-    return render_template('company/companies_partners.html', company=Company.get(company_id),rights_user_in=UserCompany.get(company_id=company_id).get_rights()['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'])
+    return render_template('company/companies_partners.html', company=Company.get(company_id),rights_user_in=UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS']))
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['POST'])
@@ -485,20 +481,12 @@ def companies_partners(company_id):
 def companies_partners_load(json, company_id):
     subquery = db(MemberCompanyPortal).filter(
         MemberCompanyPortal.portal_id == db(Portal, company_owner_id=company_id).subquery().c.id)
-    partners, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
-    portal = partners[0].portal if partners else db(Company, id=company_id).one().own_portal
-    grid_data = [{'member_id': partner.company.id, 'member_name': partner.company.name,
-                  'rights': partner.get_rights(),
-                  'status': partner.status,
-                  'company_id':company_id,
-                  'logo': partner.company.logo_file_id if partner.company.logo_file_id
-                  else None}
-                 for partner in partners] if portal else []
-    return {'portal': portal.get_client_side_dict(fields='name') if portal else [],
-            'grid_data': grid_data,
+    members, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
+    return {'grid_data': [{'member': member.get_client_side_dict(fields='id,status, company'),
+                  'company_id':company_id}
+                 for member in members],
             'total': count,
-            'page': current_page,
-            'company_id': company_id}
+            'page': current_page}
 
 
 @portal_bp.route('/search_for_portal_to_join/', methods=['POST'])

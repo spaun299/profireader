@@ -9,12 +9,10 @@
     {% endblock company_base %}
 
     <script>
-        module.controller('portal_partner_details', function ($scope, $ok) {
+        module.controller('company_partner_details', function ($scope, $ok) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_partners');
 
-            $scope.portal_partner = {{ company_member|tojson|safe }};
             $scope.employeer  = {{ employeer|tojson|safe }};
-            $scope.rights = {{ rights|tojson|safe }};
             $scope.member = {{ member|tojson|safe }};
             $scope.user_right = {{ user_right_in|tojson|safe }};
 
@@ -23,7 +21,7 @@
             $scope.update = function () {
                 $scope.user_right ? window.location.href = $scope.url_company_partner_update({
                     'employeer_id':$scope.employeer.id,
-                    'member_id': $scope.portal_partner.id
+                    'member_id': $scope.member.company.id
                 }) : add_message('Sorry!You haven\'t got  appropriate rights!', 'danger', 8000)
             }
 
@@ -31,14 +29,14 @@
     </script>
     {% raw %}
 
-    <div  ng-controller="portal_partner_details">
+    <div  ng-controller="company_partner_details">
         <h2>
-            <img class="person-small-cover" pr-image pr-no-image="{{portal_partner.logo_file_id }}"/>
+            <img class="person-small-cover" pr-image ="member.company.logo_file_id"/>
             <img class="logo-small-cover" pr-image="employeer.logo_file_id"/>
-            {{ _('Portal partner `%(portal_partner.name)s` at company `%(employeer.name)s`') }}</h2>
+            {{ _('Portal partner `%(member.company.name)s` at company `%(employeer.name)s`') }}</h2>
         <img pr-image="employer.logo_file_id"/>
         {{ _('status') }} {{ member.status }}<br>
-        <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in rights">
+        <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in member.rights">
             <img src="/static/images/0.gif"
                  class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ right_name }}"/>
             {{ right_name }}

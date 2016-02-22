@@ -35,9 +35,9 @@
         $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                         loadGridData: $scope.sendData,
                         columnDefs: [
-                             {name: 'member_name', type: 'link',img:'logo', href: 'url_company_partner_details({employeer_id: row.entity.company_id,member_id:row.entity.member_id})'},
-                             {name: 'status'},
-                             {name: 'rights', width: '500', type: 'icons', afilter: {type: 'input'}}
+                             {name: 'member.company.name', type: 'link',img:'member.company.logo_file_id', href: 'url_company_partner_details({employeer_id: row.entity.company_id,member_id:row.entity.member.company.id})'},
+                             {name: 'member.status'},
+                             {name: 'member.rights', width: '500', type: 'icons', afilter: {type: 'input'}}
                         ]
                     });
         {% endraw %}
