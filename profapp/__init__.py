@@ -514,6 +514,7 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     def add_map_headers_to_less_files(response):
 
         response.headers.add('Access-Control-Allow-Origin', '*')
+
         if (request.path and re.search(r'\.css$', request.path)):
             mapfile = re.sub(r'\.css$', r'.css.map', request.path)
             if os.path.isfile(os.path.realpath(os.path.dirname(__file__)) + mapfile):
