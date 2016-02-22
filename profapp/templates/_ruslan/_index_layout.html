@@ -15,14 +15,14 @@
 {% block styles %}
 
 
-    <link href="/static/css/font-awesome.min.css" rel="stylesheet">
-    <link href="/static/css/bootstrap.css" rel="stylesheet">
-    <link href="/static/css/_profreader.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename = 'css/style.css') }}"  rel="stylesheet">
+    <link href="//static.profireader.com/static/css/font-awesome.min.css" rel="stylesheet">
+    <link href="//static.profireader.com/static/css/bootstrap.css" rel="stylesheet">
+    <link href="//static.profireader.com/static/css/_profreader.css" rel="stylesheet">
+    <link href="//static.profireader.com/static/css/style.css"  rel="stylesheet">
 
 
     {#    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">#}
-    <link rel="stylesheet" href="/static/css/icons.css">
+    <link rel="stylesheet" href="//static.profireader.com/static/css/icons.css">
 
 {%- endblock styles %}
 
@@ -33,19 +33,19 @@
     </script>
 
 
-    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon"/>
-    <link rel="icon" href="/static/favicon.ico" type="image/gif"/>
+    <link rel="shortcut icon" href="//static.profireader.com/static/favicon.ico" type="image/x-icon"/>
+    <link rel="icon" href="//static.profireader.com/static/favicon.ico" type="image/gif"/>
 
     {{ config_variables()|safe }}
 
-    <script src="{{ url_for('static', filename = 'new/jquery/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'new/jquery/jquery-ui.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'new/bootstrap/js/bootstrap.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'new/angular/angular.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'new/angular-bootstrap/ui-bootstrap.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'new/angular-bootstrap/ui-bootstrap-tpls.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'angular-ajax-validator/ngAjaxValidator.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'angular-ui-slider/slider.js') }}"></script>
+    <script src="//static.profireader.com/static/new/jquery/jquery.min.js"></script>
+    <script src="//static.profireader.com/static/new/jquery/jquery-ui.js"></script>
+    <script src="//static.profireader.com/static/new/bootstrap/js/bootstrap.js"></script>
+    <script src="//static.profireader.com/static/new/angular/angular.min.js"></script>
+    <script src="//static.profireader.com/static/new/angular-bootstrap/ui-bootstrap.min.js"></script>
+    <script src="//static.profireader.com/static/new/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+    <script src="//static.profireader.com/static/angular-ajax-validator/ngAjaxValidator.js"></script>
+    <script src="//static.profireader.com/static/angular-ui-slider/slider.js"></script>
 
     {#    {% include '_ruslan/partials/_header_files_grid.html' %}#}
 
@@ -62,20 +62,20 @@
     {#    {% if angular_ui_bootstrap_version %}#}
     {#        <script src="{{ angular_ui_bootstrap_version }}"></script>#}
     {#    {% endif %}#}
-    {#<script src="{{ url_for('static', filename = 'image_editor/demo/js/main.js') }}"></script>#}
-    {#    <script src="/static/filemanager/angular-filemanager.min.js"></script><!-- Comment if you need to use raw source code -->#}
+    {#<script src="//static.profireader.com/static/image_editor/demo/js/main.js"></script>#}
+    {#    <script src="//static.profireader.com/static/filemanager/angular-filemanager.min.js"></script><!-- Comment if you need to use raw source code -->#}
 
-    {#    <script src="/static/filemanager/cached-templates.js"></script><!-- Comment if you need to use raw source code -->#}
+    {#    <script src="//static.profireader.com/static/filemanager/cached-templates.js"></script><!-- Comment if you need to use raw source code -->#}
     {#    <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>#}
 
-    <script src="/static/js/underscore-min.js"></script>
+    <script src="//static.profireader.com/static/js/underscore-min.js"></script>
 
     <!-- ui-select files -->
-    {#    <script src="/static/js/select.js"></script>#}
-    <!-- profireader_angular.js uses /static/js/select.js -->
-    <script src="/static/js/profireader_angular.js"></script>
+    {#    <script src="//static.profireader.com/static/js/select.js"></script>#}
+    <!-- profireader_angular.js uses //static.profireader.com/static/js/select.js -->
+    <script src="//static.profireader.com/static/js/profireader_angular.js"></script>
 
-    {#    <script src="/static/js/jquery.smooth-scroll.js"></script>#}
+    {#    <script src="//static.profireader.com/static/js/jquery.smooth-scroll.js"></script>#}
     {#    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>#}
 
 
@@ -114,6 +114,6 @@
 
 {% block scripts %}
     {% include 'partials/portal_footer_Profireader.html' %}
-    <link href="/static/css/oles.css" rel="stylesheet">
+    <link href="//static.profireader.com/static/css/oles.css" rel="stylesheet">
 {% endblock scripts %}
 

@@ -33,7 +33,7 @@
             {{ _('status') }} <select ng-model="data.status"
                                       ng-options="status as status disable when !available for (status, available) in data.statuses_available"></select><br>
             <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in data.rights">
-                <img src="/static/images/0.gif"
+                <img src="//static.profireader.com/static/images/0.gif"
                      class="pr-grid-cell-field-type-icons-icon pr-grid-cell-field-type-icons-icon-{{ right_name }}"/>
                 <label><input ng-model="data.rights[right_name]" type="checkbox"/> {{ right_name }}</label>
             </div>
