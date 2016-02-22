@@ -9,8 +9,8 @@ class BinaryRightsMetaClass1(type):
         return [name for (name, val) in self.__dict__.items() if name not in ['__doc__', '__module__']]
 
     def todict(self, bin):
-        return {name: (True if (type.__getattribute__(self, name) & bin) else False) for (name, val) in
-                self.__dict__.items() if name not in ['__doc__', '__module__']}
+        return {name: (True if (2 ** (type.__getattribute__(self, name) - 1) & bin) else False) for (name, val) in
+               self.__dict__.items() if name not in ['__doc__', '__module__']}
 
     def tobin(self, dict):
         ret = {'name': type.__getattribute__(self, name) for (name, val) in
@@ -18,7 +18,7 @@ class BinaryRightsMetaClass1(type):
         for (rightname, bitposition) in ret.items():
             if bitposition == True:
                 bin = 0x7fffffffffffffff
-            bin = bin | (2 ** (1 - bitposition) if dict.get(rightname) else 0)
+            bin = bin | (2 ** (bitposition - 1) if dict.get(rightname) else 0)
         return bin
 
     def __getattribute__(self, key):
