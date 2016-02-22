@@ -18,7 +18,7 @@
 
             $scope.$$translate = {{ translates('company_employees_controller')|safe }};
             $scope.company = {{ company.get_client_side_dict(fields = 'id,name')|tojson|safe }};
-            $scope.url_employee_details = {{ raw_url_for('company.employee_details')|safe }};
+            $scope.url_employee_update = {{ raw_url_for('company.employee_update')|safe }};
 
             $scope.loadData = function (data, callbackfunc) {
                 $ok('', data, callbackfunc);
@@ -29,7 +29,7 @@
                 columnDefs: [
                     {
                         name: 'profireader_name', width: '20%', type: 'link',
-                        href: 'url_employee_details({company_id:grid.appScope.company.id, user_id: row.entity.user_id})',
+                        href: 'url_employee_update({company_id:grid.appScope.company.id, user_id: row.entity.user_id})',
                         afilter: {type: 'input'}
                     },
 

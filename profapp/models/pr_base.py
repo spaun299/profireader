@@ -69,7 +69,7 @@ class Search(Base):
     ORDER_MD_TM = 3
 
     @staticmethod
-    def search(*args, **kwargs):
+    def search(*args: dict, **kwargs):
         """ *args: dictionary with following values -
                              -class = sqlalchemy table class object,
                 optional:    -filter: sqlalchemy filter with your own parameters,
@@ -125,7 +125,6 @@ class Search(Base):
                        and current page """
         page = kwargs.get('page') or 1
         items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
-        page -= 1
         search_params = []
         order_by_to_str = {1: 'relevance', 2: 'position', 3: 'md_tm'}
         pagination = kwargs.get('pagination') or True
@@ -159,28 +158,26 @@ class Search(Base):
             tb_info = traceback.extract_tb(tb)
             filename_, line_, func_, text_ = tb_info[-1]
             message = 'An error occurred on File "{file}" line {line}\n {assert_message}'.format(
-                    line=line_, assert_message=e.args, file=filename_)
-            print(message)
+                line=line_, assert_message=e.args, file=filename_)
             raise errors.BadDataProvided({'message': message})
 
         def get_order(order_name, desc_asc, field):
             order_name += '+' if desc_asc == 'desc' else '-'
-            result = {'text+': lambda field_name: desc(
-                    func.max(getattr(Search, field_name, Search.text))),
+            result = {'text+': lambda field_name: desc(func.max(getattr(Search, field_name, Search.text))),
                       'text-': lambda field_name: asc(func.max(
-                              getattr(Search, field_name, Search.text))),
+                          getattr(Search, field_name, Search.text))),
                       'md_tm+': lambda field_name: desc(func.min(
-                              getattr(Search, field_name, Search.md_tm))),
+                          getattr(Search, field_name, Search.md_tm))),
                       'md_tm-': lambda field_name: asc(func.min(
-                              getattr(Search, field_name, Search.md_tm))),
+                          getattr(Search, field_name, Search.md_tm))),
                       'relevance+': lambda field_name: desc(func.sum(
-                              getattr(Search, field_name, Search.relevance))),
+                          getattr(Search, field_name, Search.relevance))),
                       'relevance-': lambda field_name: asc(func.sum(
-                              getattr(Search, field_name, Search.relevance))),
+                          getattr(Search, field_name, Search.relevance))),
                       'position+': lambda field_name: desc(func.max(
-                              getattr(Search, field_name, Search.position))),
+                          getattr(Search, field_name, Search.position))),
                       'position-': lambda field_name: asc(func.max(
-                              getattr(Search, field_name, Search.position)))
+                          getattr(Search, field_name, Search.position)))
                       }[order_name](field)
             return result
 
@@ -188,13 +185,12 @@ class Search(Base):
             joined = db(Search.index, func.min(Search.text).label('text'),
                         func.min(Search.table_name).label('table_name'),
                         index=subquery_search.subquery().c.index).filter(
-                    Search.kind.in_(tuple(field_name))).group_by(Search.index)
+                Search.kind.in_(tuple(field_name))).group_by(Search.index)
             return joined
 
         for cls in args:
             filter_params = cls.get('filter')
-            fields = cls.get('fields') or \
-                     [key for key in vars(cls['class']).keys() if key[0] != '_']
+            fields = cls.get('fields') or [key for key in vars(cls['class']).keys() if key[0] != '_']
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
@@ -218,7 +214,7 @@ class Search(Base):
                              func.min(Search.md_tm).label('md_tm'),
                              func.max(Search.position).label('position'),
                              func.max(Search.text).label('text')).filter(
-                or_(*search_params)).group_by(Search.index)
+            or_(*search_params)).group_by(Search.index)
         if type(kwargs.get('order_by')) in (str, list, tuple):
             order = get_order('text', desc_asc, 'text')
             subquery_search = add_joined_search(kwargs['order_by'])
@@ -231,15 +227,10 @@ class Search(Base):
             subquery_search = subquery_search.order_by(order)
         else:
             subquery_search = subquery_search.order_by(order).order_by(
-                    get_order('md_tm', desc_asc, 'md_tm'))
+                get_order('md_tm', desc_asc, 'md_tm'))
         if pagination:
-            pages = math.ceil(subquery_search.count() / items_per_page)
-            if items_per_page:
-                subquery_search = subquery_search.limit(items_per_page)
-            if page:
-                subquery_search = subquery_search.offset(page * items_per_page) \
-                    if int(page) in range(
-                        0, int(pages)) else subquery_search.offset(pages * items_per_page)
+            from ..controllers.pagination import pagination as pagination_func
+            subquery_search, pages, page, _ = pagination_func(subquery_search, page=page, items_per_page=items_per_page)
         subquery_search = subquery_search.subquery()
         join_search = []
         for arg in args:

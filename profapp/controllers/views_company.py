@@ -198,7 +198,7 @@ def employee_details(company_id, user_id):
                            employer=employment.employer.get_client_side_dict(),
                            employee=employment.employee.get_client_side_dict(),
                            employment=employment.get_client_side_dict(),
-                           user_right_in = UserCompany.get(company_id=company_id).rights['COMPANY_MANAGE_USER_RIGHTS']
+                           user_right_in = UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY.COMPANY_MANAGE_USER_RIGHTS)
                            )
 
 
@@ -210,7 +210,7 @@ def employee_update(company_id, user_id):
     return render_template('company/company_employee_update.html',
                            company = Company.get(company_id),
                            employment=UserCompany.get(user_id=user_id, company_id=company_id),
-                           user_right_in=UserCompany.get(company_id=company_id).rights['COMPANY_MANAGE_USER_RIGHTS'])
+                           user_right_in=UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY.COMPANY_MANAGE_USER_RIGHTS))
     # employer=employment.employer.get_client_side_dict(),
     # employee=employment.employee.get_client_side_dict())
 
@@ -228,7 +228,8 @@ def employee_update_load(json, company_id, user_id):
                 'employee': employment.employee.get_client_side_dict(),
                 'employer': employment.employer.get_client_side_dict(fields='id|logo_file_id|name'),
                 'statuses_available': employment.get_statuses_avaible(),
-                'rights_available': employment.get_rights_avaible()}
+                # 'rights_available': employment.get_rights_avaible()
+                 }
     else:
         employment.set_client_side_dict(json['employment'])
         if action == 'validate':

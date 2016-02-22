@@ -357,8 +357,8 @@ class UserCompany(Base, PRBase):
             available_statuses['UNSUSPEND'] = False
         return available_statuses
 
-    def get_rights_avaible(self):
-        return {s: True for s in self.RIGHT_AT_COMPANY}
+    # def get_rights_avaible(self):
+    #     return {s: True for s in self.RIGHT_AT_COMPANY}
 
     def get_client_side_dict(self, fields='id,user_id,company_id,position,status,rights', more_fields=None):
         return self.to_dict(fields, more_fields)
