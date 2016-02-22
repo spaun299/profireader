@@ -131,20 +131,6 @@ def update_material_status(json, company_id, article_id):
             'status': 'ok'}
 
 
-# @company_bp.route('/profile/<string:company_id>/')
-# @tos_required
-# @login_required
-# # @check_rights(simple_permissions(['manage_rights_company']))
-# def profile(company_id):
-#     user_companies = [user_comp for user_comp in current_user.employer_assoc]
-#     user_have_comp = True if len(user_companies) > 0 else False
-#     return render_template('company/company_profile.html',
-#                            company=db(Company, id=company_id).one(),
-#                            rights_user_in_company=UserCompany.get(company_id=company_id).rights,
-#                            user_company = user_have_comp
-#                            )
-
-
 @company_bp.route('/<string:company_id>/employees/', methods=['GET'])
 @tos_required
 @login_required
@@ -165,26 +151,6 @@ def employees_load(json, company_id):
         'company': company.get_client_side_dict(fields='id,name'),
         'grid_data': employees_list
     }
-    # company_user_rights = UserCompany.show_rights(company_id)
-    # ordered_rights = sorted(Right.keys(), key=lambda t: Right.RIGHT_POSITION()[t.lower()])
-    # ordered_rights = list(map((lambda x: getattr(x, 'lower')()), ordered_rights))
-
-    # for user_id in company_user_rights.keys():
-    #     rights = company_user_rights[user_id]['rights']
-    #     rez = OrderedDict()
-    #     for elem in ordered_rights:
-    #         rez[elem] = True if elem in rights else False
-    #     company_user_rights[user_id]['rights'] = rez
-
-    # user_id = current_user.get_id()
-    # curr_user = {user_id: company_user_rights[user_id]}
-    # curr_user = {user_id: []}
-
-    # return render_template('company/company_employees.html',
-    #                        company=db(Company, id=company_id).one(),
-    #                        company_user_rights=[],
-    #                        curr_user=curr_user,
-    #                        rights={})
 
 
 @company_bp.route('/<string:company_id>/employee_details/<string:user_id>/', methods=['GET'])
