@@ -168,7 +168,7 @@ def material_details(material_id):
 def get_portal_dict_for_material(portal, company_id, material_id=None, publication_id=None):
     ret = portal.get_client_side_dict(
             fields='id, name, host, logo_file_id, divisions.id|name|portal_division_type_id, own_company.name|id|logo_file_id')
-    mcp = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id'])
+
     # ret['rights'] = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id']).rights
     ret['divisions'] = PRBase.get_ordered_dict([d for d in ret['divisions'] if (
         d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
@@ -192,7 +192,7 @@ def get_portal_dict_for_material(portal, company_id, material_id=None, publicati
         ret['publication'] = None
         ret['actions'] = {'submit':
                               (UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_TO_PORTAL)
-                              and mcp.has_rights(-1))
+                              and MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id']).has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL._ANY))
                                or 'MATERIALS_SUBMIT_TO_PORTAL'}
 
     return ret

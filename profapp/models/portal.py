@@ -394,15 +394,13 @@ class MemberCompanyPortal(Base, PRBase):
         #     return sub_query
 
     def has_rights(self, rightname):
+        if rightname == '_ANY':
+            return True if self.status == self.STATUSES['ACTIVE'] else False
+
         if self.portal.own_company.id == self.company_id:
             return True
 
-        if rightname == 'RIGHT_ANY':
-            return True if self.status == self.STATUSES['ACTIVE'] else False
-
         return True if (self.status == self.STATUSES['ACTIVE'] and self.rights[rightname]) else False
-        # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
-        # return user_company.rights_set if user_company and user_company.status == STATUS.ACTIVE() and user_company.employer.status == STATUS.ACTIVE() else []
 
 
 class ReaderUserPortalPlan(Base, PRBase):
