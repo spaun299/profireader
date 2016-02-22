@@ -343,7 +343,7 @@ class MemberCompanyPortal(Base, PRBase):
                         # , backref='partner_portals'
                         )
 
-    def get_client_side_dict(self, fields='id,rights', more_fields=None):
+    def get_client_side_dict(self, fields='id,status,rights', more_fields=None):
         return self.to_dict(fields, more_fields)
 
     def __init__(self, company_id=None, portal=None, company=None, plan=None):
