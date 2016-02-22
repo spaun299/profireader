@@ -378,14 +378,12 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 })
 
                 var disable = function(allow){
-                    console.log(allow)
                     if(allow === false){
                         if(elementType === 'BUTTON' || elementType === 'INPUT'){
                             element.prop('disabled', true)
                         }else if(elementType === 'A'){
-                             element.hide()
+                             element.css({'pointer-events': 'none', 'cursor': 'default'})
                         }else{
-
                             element.hide()
                         }
                     }
