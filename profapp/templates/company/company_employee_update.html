@@ -12,12 +12,12 @@
         module.controller('company_employee_update', function ($scope, $ok) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_employees');
 
-            $scope.url_company_employee_details = {{ raw_url_for('company.employee_details')|safe }};
+            $scope.url_company_employee_list = {{ raw_url_for('company.employees')|safe }};
             $scope.user_right = {{ user_right_in|safe }};
             $scope.after_save = function () {
-                window.location.href = $scope.url_company_employee_details({
-                    'company_id': $scope.data.employer.id,
-                    'user_id': $scope.data.employee.id
+                window.location.href = $scope.url_company_employee_list({
+                    'company_id': $scope.data.employer.id
+{#                    'user_id': $scope.data.employee.id#}
                 });
             };
 

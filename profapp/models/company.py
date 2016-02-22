@@ -364,8 +364,7 @@ class UserCompany(Base, PRBase):
         return self.to_dict(fields, more_fields)
 
     def set_client_side_dict(self, json):
-        self.attr(g.filter_json(json, 'status|position'))
-        self._rights = PRBase.convert_rights_dict_to_binary(json['rights'], self.RIGHT_AT_COMPANY)
+        self.attr(g.filter_json(json, 'status|position|rights'))
 
     @property
     def rights_set(self):
