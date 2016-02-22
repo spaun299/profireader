@@ -293,12 +293,30 @@ class Portal(Base, PRBase):
 class MemberCompanyPortal(Base, PRBase):
     __tablename__ = 'member_company_portal'
 
+    class _RIGHT_AT_PORTAL():
+        PUBLICATION_PUBLISH = 2 ** (1 - 1)
+        PUBLICATION_UNPUBLISH = 2 ** (2 - 1),
+        PUBLICATION_EDIT = 2 ** (3 - 1),
+        # PUBLICATION_DELETE_UNDELETE = 2 ** (4 - 1)
+
+
+        def bin(self, key):
+            return object.__getattribute__(self, key)
+
+        def __getattribute__(self, key):
+            if key == 'bin':
+                return object.__getattribute__(self, key)
+            else:
+                return key
+
     RIGHT_AT_PORTAL = {
         'PUBLICATION_PUBLISH': 2 ** (1 - 1),
         'PUBLICATION_UNPUBLISH': 2 ** (2 - 1),
         'PUBLICATION_EDIT': 2 ** (3 - 1),
-        'PUBLICATION_DELETE_UNDELETE': 2 ** (4 - 1),
+        # 'PUBLICATION_DELETE_UNDELETE': 2 ** (4 - 1),
     }
+
+    _RIGHT_AT_PORTAL = _RIGHT_AT_PORTAL()
 
     RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL['PUBLICATION_PUBLISH']
 
@@ -329,6 +347,11 @@ class MemberCompanyPortal(Base, PRBase):
     plan = relationship('MemberCompanyPortalPlan'
                         # , backref='partner_portals'
                         )
+
+    def get_client_side_dict(self, **kwargs):
+        ret = PRBase.get_client_side_dict(self, **kwargs)
+        ret['rights'] = self.get_rights()
+        return ret
 
     def __init__(self, company_id=None, portal=None, company=None, plan=None):
         if company_id and company:
