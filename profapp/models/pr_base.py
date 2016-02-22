@@ -191,8 +191,7 @@ class Search(Base):
 
         for cls in args:
             filter_params = cls.get('filter')
-            fields = cls.get('fields') or \
-                     [key for key in vars(cls['class']).keys() if key[0] != '_']
+            fields = cls.get('fields') or [key for key in vars(cls['class']).keys() if key[0] != '_']
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
