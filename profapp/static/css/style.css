@@ -429,8 +429,13 @@ body {
 .reader-content .item-short-content {
   color: #212121;
 }
+.reader-content .img-content {
+  width: 70%;
+  display: block;
+  margin: 0 auto;
+}
 .logo-portal-news {
-  width: 50px;
+  width: 100%;
 }
 /* ---MEDIA--- */
 @media screen and (max-width: 764px) {
