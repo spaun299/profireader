@@ -159,7 +159,7 @@ def material_details(material_id):
     company=Company.get(ArticleCompany.get(material_id).company.id)
     return render_template('company/material_details.html',
                            article=ArticleCompany.get(material_id).get_client_side_dict(more_fields='company|long'),
-                           company=company, user_rights_in_company = UserCompany.get(company_id=company.id).get_rights())
+                           company=company, user_rights_in_company = UserCompany.get(company_id=company.id).rights)
 
 
 # def format_material_published(publication, portal):
@@ -169,7 +169,7 @@ def get_portal_dict_for_material(portal, company_id, material_id=None, publicati
     ret = portal.get_client_side_dict(
             fields='id, name, host, logo_file_id, divisions.id|name|portal_division_type_id, own_company.name|id|logo_file_id')
     mcp = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id'])
-    # ret['rights_company_at_portal'] = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id']).get_rights()
+    # ret['rights'] = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id']).rights
     ret['divisions'] = PRBase.get_ordered_dict([d for d in ret['divisions'] if (
         d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
     if material_id:
@@ -191,7 +191,7 @@ def get_portal_dict_for_material(portal, company_id, material_id=None, publicati
     else:
         ret['publication'] = None
         ret['actions'] = {'submit':
-                              (UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL'])
+                              (UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_TO_PORTAL)
                               and mcp.has_rights(-1))
                                or 'MATERIALS_SUBMIT_TO_PORTAL'}
 
@@ -209,7 +209,7 @@ def material_details_load(json, material_id):
     return {
         'material': material.get_client_side_dict(more_fields='long'),
         'company': Company.get(material.company_id).get_client_side_dict(),
-        'rights_user_in_company': UserCompany.get(company_id=material.company_id).get_rights(),
+        'rights_user_in_company': UserCompany.get(company_id=material.company_id).rights,
         'portals': {
             'grid_data': portals,
             'grid_filters': {
@@ -235,7 +235,7 @@ def submit_publish(json, article_action):
             'material': {'id': material.id},
             'can_material_also_be_published':
                 MemberCompanyPortal.get(portal_id=json['portal']['id'], company_id=json['company']['id'])
-                    .has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL['PUBLICATION_PUBLISH'])
+                    .has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH)
         }
     else:
         publication = ArticlePortalDivision.get(json['publication']['id'])

@@ -1,4 +1,4 @@
-from ..constants.TABLE_TYPES import TABLE_TYPES
+from ..constants.TABLE_TYPES import TABLE_TYPES, BinaryRights
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.orm import relationship, remote
 from ..controllers import errors
@@ -293,39 +293,34 @@ class Portal(Base, PRBase):
 class MemberCompanyPortal(Base, PRBase):
     __tablename__ = 'member_company_portal'
 
-    class _RIGHT_AT_PORTAL():
-        PUBLICATION_PUBLISH = 2 ** (1 - 1)
-        PUBLICATION_UNPUBLISH = 2 ** (2 - 1),
-        PUBLICATION_EDIT = 2 ** (3 - 1),
-        # PUBLICATION_DELETE_UNDELETE = 2 ** (4 - 1)
+    # field = MemberCompanyPortal.rights
+    # PUBLICATION_DELETE_UNDELETE = 2 ** (4 - 1)
+
+    # RIGHT_AT_PORTAL = {
+    #     'PUBLICATION_PUBLISH': 2 ** (1 - 1),
+    #     'PUBLICATION_UNPUBLISH': 2 ** (2 - 1),
+    #     'PUBLICATION_EDIT': 2 ** (3 - 1),
+    #     # 'PUBLICATION_DELETE_UNDELETE': 2 ** (4 - 1),
+    # }
+
+    # _RIGHT_AT_PORTAL = _RIGHT_AT_PORTAL()
+
+    # RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL.PUBLICATION_PUBLISH
 
 
-        def bin(self, key):
-            return object.__getattribute__(self, key)
-
-        def __getattribute__(self, key):
-            if key == 'bin':
-                return object.__getattribute__(self, key)
-            else:
-                return key
-
-    RIGHT_AT_PORTAL = {
-        'PUBLICATION_PUBLISH': 2 ** (1 - 1),
-        'PUBLICATION_UNPUBLISH': 2 ** (2 - 1),
-        'PUBLICATION_EDIT': 2 ** (3 - 1),
-        # 'PUBLICATION_DELETE_UNDELETE': 2 ** (4 - 1),
-    }
-
-    _RIGHT_AT_PORTAL = _RIGHT_AT_PORTAL()
-
-    RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL['PUBLICATION_PUBLISH']
-
-    RIGHT_AT_PORTAL_FOR_OWN_PORTAL = 0x7fffffffffffffff
+    class RIGHT_AT_PORTAL(BinaryRights):
+        PUBLICATION_PUBLISH = 1
+        PUBLICATION_UNPUBLISH = 2
+        PUBLICATION_EDIT = 3
 
     id = Column(TABLE_TYPES['id_profireader'], nullable=False, primary_key=True)
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'))
     portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
-    rights_company_at_portal = Column(TABLE_TYPES['bigint'], default=RIGHT_AT_PORTAL_DEFAULT, nullable=False)
+    rights = Column(TABLE_TYPES['binary_rights'](RIGHT_AT_PORTAL),
+                    default={RIGHT_AT_PORTAL.PUBLICATION_EDIT: True, RIGHT_AT_PORTAL.PUBLICATION_PUBLISH: True},
+                    nullable=False)
+
+    # rights_company_at_portal = PRColumn(TABLE_TYPES['bigint'], nullable=False)
 
     member_company_portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))
 
@@ -348,10 +343,8 @@ class MemberCompanyPortal(Base, PRBase):
                         # , backref='partner_portals'
                         )
 
-    def get_client_side_dict(self, **kwargs):
-        ret = PRBase.get_client_side_dict(self, **kwargs)
-        ret['rights'] = self.get_rights()
-        return ret
+    def get_client_side_dict(self, fields='id,rights', more_fields=None):
+        return self.to_dict(fields, more_fields)
 
     def __init__(self, company_id=None, portal=None, company=None, plan=None):
         if company_id and company:
@@ -362,25 +355,23 @@ class MemberCompanyPortal(Base, PRBase):
             self.company = company
         self.portal = portal
         self.plan = plan
+        self.binaryRight
 
     @staticmethod
     def apply_company_to_portal(company_id, portal_id):
         """Add company to MemberCompanyPortal table. Company will be partner of this portal"""
         g.db.add(MemberCompanyPortal(company_id=company_id,
                                      portal=db(Portal, id=portal_id).one(),
-                                     plan=db(MemberCompanyPortalPlan).first()))
+                                     plan=db(MemberCompanyPrights_company_at_portalortalPlan).first()))
         g.db.flush()
 
     @staticmethod
     def get(portal_id=None, company_id=None):
         return db(MemberCompanyPortal).filter_by(portal_id=portal_id, company_id=company_id).one()
 
-    def get_rights(self):
-        return PRBase.convert_rights_binary_to_dict(self.rights_company_at_portal, self.RIGHT_AT_PORTAL)
-
     def set_client_side_dict(self, status, rights):
         self.status = status
-        self.rights_company_at_portal = PRBase.convert_rights_dict_to_binary(rights, self.RIGHT_AT_PORTAL)
+        self.rights = rights
 
         # @staticmethod
         # def show_companies_on_my_portal(company_id):
@@ -392,7 +383,7 @@ class MemberCompanyPortal(Base, PRBase):
         # def subquery_company_partners(company_id, search_text, **kwargs):
         #     sub_query = db(MemberCompanyPortal, company_id=company_id)
         #     if search_text:
-        #         sub_query = sub_query.join(MemberCompanyPortal.portal)
+        #         sub_query = sub_query.join(MemberCompanyPrights_company_at_portalortal.portal)
         #         if 'portal' in search_text:
         #             sub_query = sub_query.filter(Portal.name.ilike("%" + search_text['portal'] + "%"))
         #         if 'company' in search_text:
@@ -402,16 +393,14 @@ class MemberCompanyPortal(Base, PRBase):
         #             sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
         #     return sub_query
 
-
-    def has_rights(self, binary_right):
+    def has_rights(self, rightname):
         if self.portal.own_company.id == self.company_id:
             return True
 
-        if binary_right == -1:
+        if rightname == 'RIGHT_ANY':
             return True if self.status == self.STATUSES['ACTIVE'] else False
 
-        return True if self.status == self.STATUSES['ACTIVE'] and (
-        binary_right & self.rights_company_at_portal) else False
+        return True if (self.status == self.STATUSES['ACTIVE'] and self.rights[rightname]) else False
         # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
         # return user_company.rights_set if user_company and user_company.status == STATUS.ACTIVE() and user_company.employer.status == STATUS.ACTIVE() else []
 
@@ -494,24 +483,25 @@ class PortalDivision(Base, PRBase):
         self.name = name
         self.settings = settings
 
-    # @staticmethod
-    # def after_attach(session, target):
-    #     #     pass
-    #     if target.portal_division_type_id == 'company_subportal':
-    #         # member_company_portal = db(MemberCompanyPortal, company_id = target.settings['company_id'], portal_id = target.portal_id).one()
-    #         addsettings = PortalDivisionSettingsCompanySubportal(
-    #             member_company_portal=target.settings['member_company_portal'], portal_division=target)
-    #         g.db.add(addsettings)
-    #         # target.settings = db(PortalDivisionSettingsCompanySubportal).filter_by(
-    #         #     portal_division_id=self.id).one()
+        # @staticmethod
+        # def after_attach(session, target):
+        #     #     pass
+        #     if target.portal_division_type_id == 'company_subportal':
+        #         # member_company_portal = db(MemberCompanyPortal, company_id = target.settings['company_id'], portal_id = target.portal_id).one()
+        #         addsettings = PortalDivisionSettingsCompanySubportal(
+        #             member_company_portal=target.settings['member_company_portal'], portal_division=target)
+        #         g.db.add(addsettings)
+        #         # target.settings = db(PortalDivisionSettingsCompanySubportal).filter_by(
+        #         #     portal_division_id=self.id).one()
 
-    def search_filter(self):
-        from .articles import ArticlePortalDivision
-
-        return and_(ArticlePortalDivision.portal_division_id.in_(
-                db(PortalDivision.id, portal_id=portal.id)),
-                ArticlePortalDivision.status ==
-                ArticlePortalDivision.STATUSES['PUBLISHED'])
+    # TODO: VK by OZ: do we need this func? i have cemented it becouse IDE shows error here
+    # def search_filter(self):
+    #     from .articles import ArticlePortalDivision
+    #
+    #     return and_(ArticlePortalDivision.portal_division_id.in_(
+    #             db(PortalDivision.id, portal_id=portal.id)),
+    #             ArticlePortalDivision.status ==
+    #             ArticlePortalDivision.STATUSES['PUBLISHED'])
 
     @orm.reconstructor
     def init_on_load(self):
@@ -613,7 +603,7 @@ class UserPortalReader(Base, PRBase):
     id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
     user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'))
     portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
-# TODO: VK by OZ: status should be of enum type
+    # TODO: VK by OZ: status should be of enum type
     status = Column(TABLE_TYPES['id_profireader'], default='active', nullable=False)
     portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('reader_user_portal_plan.id'))
     start_tm = Column(TABLE_TYPES['timestamp'])
@@ -647,7 +637,7 @@ class UserPortalReader(Base, PRBase):
             yield (portal.id, portal.name,)
 
     @staticmethod
-    def get(user_id=None, portal_id = None):
+    def get(user_id=None, portal_id=None):
         return db(UserPortalReader).filter_by(user_id=user_id if user_id else g.user.id, portal_id=portal_id).first()
 
     @staticmethod

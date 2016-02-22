@@ -28,7 +28,7 @@
             <div class="item-publication-date">{{ article['publishing_tm']|safe }}</div>
         </div>
         <div class="bottom-hide"></div>
-        <img src="/static/images/0.gif" class="block-item-img" style="background-image: url({{ fileUrl(article['image_file_id']) }})"/>
+        <img src="//static.profireader.com/static/images/0.gif" class="block-item-img" style="background-image: url({{ fileUrl(article['image_file_id']) }})"/>
     </div>
 {% else %}
     {{ __('Your portals does"t have articles') }}
