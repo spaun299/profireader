@@ -37,6 +37,7 @@
                 {{ _('Employee `%(data.employee.profireader_name)s` at company `%(data.employer.name)s`') }}</h2>
 
             <img pr-image="employer.logo_file_id"/>
+            {{ data.employment.status }}
             {{ _('status') }} <select id="select-status" ng-model="data.employment.status"
                                       ng-options="status as status disable when !available for (status, available) in data.statuses_available"></select><br>
             {{ _('position') }} <input ng-model="data.employment.position"/><br>
