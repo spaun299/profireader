@@ -56,8 +56,8 @@ class User(Base, UserMixin, PRBase):
                            default=datetime.datetime.utcnow)
     last_seen = Column(TABLE_TYPES['timestamp'],
                        default=datetime.datetime.utcnow)
-    profireader_avatar_url = Column(TABLE_TYPES['url'], nullable=False, default='/static/no_avatar.png')
-    profireader_small_avatar_url = Column(TABLE_TYPES['url'], nullable=False, default='/static/no_avatar_small.png')
+    profireader_avatar_url = Column(TABLE_TYPES['url'], nullable=False, default='//static.profireader.com/static/no_avatar.png')
+    profireader_small_avatar_url = Column(TABLE_TYPES['url'], nullable=False, default='//static.profireader.com/static/no_avatar_small.png')
     # status_id = Column(Integer, db.ForeignKey('status.id'))
 
     email_conf_token = Column(TABLE_TYPES['token'])

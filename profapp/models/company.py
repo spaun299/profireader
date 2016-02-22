@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, backref
 from flask.ext.login import current_user
 from sqlalchemy import Column, String, ForeignKey, update
 from sqlalchemy.orm import relationship
-from ..constants.TABLE_TYPES import TABLE_TYPES
+from ..constants.TABLE_TYPES import TABLE_TYPES, BinaryRights
 from flask import g
 from config import Config
 from ..constants.STATUS import STATUS
@@ -123,7 +123,7 @@ class Company(Base, PRBase):
                 'data': self.get_client_side_dict()})
 
         user_company = UserCompany(status=UserCompany.STATUSES['ACTIVE'],
-                                   rights=UserCompany.RIGHTS_AT_COMPANY_FOR_OWNER)
+                                   rights=UserCompany.RIGHT_AT_COMPANY._ALL_RIGHT_IN_ADVANCE)
         user_company.employer = self
         g.user.employer_assoc.append(user_company)
         g.user.companies.append(self)
@@ -263,35 +263,59 @@ class UserCompany(Base, PRBase):
     STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED',
                 'FIRED': 'FIRED'}
 
-    RIGHT_AT_COMPANY = {
-        'FILES_BROWSE': 2 ** (4 - 1),
-        'FILES_UPLOAD': 2 ** (5 - 1),
-        'FILES_DELETE_OTHERS': 2 ** (14 - 1),
+    # RIGHT_AT_COMPANY = {
+    #     'FILES_BROWSE': 2 ** (4 - 1),
+    #     'FILES_UPLOAD': 2 ** (5 - 1),
+    #     'FILES_DELETE_OTHERS': 2 ** (14 - 1),
+    #
+    #     'MATERIALS_SUBMIT_TO_PORTAL': 2 ** (8 - 1),
+    #     'MATERIALS_EDIT_OTHERS': 2 ** (12 - 1),
+    #
+    #     'PUBLICATION_PUBLISH_AT_OWN_PORTAL': 2 ** (2 - 1),
+    #     'PUBLICATION_UNPUBLISH_AT_OWN_PORTAL': 2 ** (3 - 1),
+    #     'PUBLICATION_SET_PRIORITY': 2 ** (11 - 1),
+    #
+    #     'EMPLOYEE_CONFIRM_NEW': 2 ** (6 - 1),
+    #     'EMPLOYEE_SUSPEND_UNSUSPEND': 2 ** (7 - 1),
+    #
+    #     'COMPANY_REQUIRE_MEMBEREE_AT_PORTALS': 2 ** (15 - 1),
+    #     'COMPANY_MANAGE_USER_RIGHTS': 2 ** (9 - 1),
+    #     'COMPANY_EDIT_PROFILE': 2 ** (1 - 1),
+    #
+    #     'PORTAL_EDIT_PROFILE': 2 ** (10 - 1),
+    #
+    #     'PORTAL_MANAGE_READERS': 2 ** (16 - 1),
+    #     'PORTAL_MANAGE_COMMENTS': 2 ** (18 - 1),
+    #     'PORTAL_MANAGE_MEMBERS_COMPANIES': 2 ** (13 - 1),
+    # }
 
-        'MATERIALS_SUBMIT_TO_PORTAL': 2 ** (8 - 1),
-        'MATERIALS_EDIT_OTHERS': 2 ** (12 - 1),
+    class RIGHT_AT_COMPANY(BinaryRights):
+        FILES_BROWSE = 4
+        FILES_UPLOAD = 5
+        FILES_DELETE_OTHERS = 14
 
-        'PUBLICATION_PUBLISH_AT_OWN_PORTAL': 2 ** (2 - 1),
-        'PUBLICATION_UNPUBLISH_AT_OWN_PORTAL': 2 ** (3 - 1),
-        'PUBLICATION_SET_PRIORITY': 2 ** (11 - 1),
+        MATERIALS_SUBMIT_TO_PORTAL = 8
+        MATERIALS_EDIT_OTHERS = 12
 
-        'EMPLOYEE_CONFIRM_NEW': 2 ** (6 - 1),
-        'EMPLOYEE_SUSPEND_UNSUSPEND': 2 ** (7 - 1),
+        PUBLICATION_PUBLISH_AT_OWN_PORTAL = 2
+        PUBLICATION_UNPUBLISH_AT_OWN_PORTAL = 3
+        PUBLICATION_SET_PRIORITY = 11
 
-        'COMPANY_REQUIRE_MEMBEREE_AT_PORTALS': 2 ** (15 - 1),
-        'COMPANY_MANAGE_USER_RIGHTS': 2 ** (9 - 1),
-        'COMPANY_EDIT_PROFILE': 2 ** (1 - 1),
+        EMPLOYEE_CONFIRM_NEW = 6
+        EMPLOYEE_SUSPEND_UNSUSPEND = 7
 
-        'PORTAL_EDIT_PROFILE': 2 ** (10 - 1),
+        COMPANY_REQUIRE_MEMBEREE_AT_PORTALS = 15
+        COMPANY_MANAGE_USER_RIGHTS = 9
+        COMPANY_EDIT_PROFILE = 1
 
-        'PORTAL_MANAGE_READERS': 2 ** (16 - 1),
-        'PORTAL_MANAGE_COMMENTS': 2 ** (18 - 1),
-        'PORTAL_MANAGE_MEMBERS_COMPANIES': 2 ** (13 - 1)
-    }
+        PORTAL_EDIT_PROFILE = 10
 
-    RIGHTS_AT_COMPANY_DEFAULT = RIGHT_AT_COMPANY['FILES_BROWSE'] | RIGHT_AT_COMPANY['MATERIALS_SUBMIT_TO_PORTAL'] | RIGHT_AT_COMPANY['PUBLICATION_PUBLISH_AT_OWN_PORTAL']
+        PORTAL_MANAGE_READERS = 16
+        PORTAL_MANAGE_COMMENTS = 18
+        PORTAL_MANAGE_MEMBERS_COMPANIES = 13
 
-    RIGHTS_AT_COMPANY_FOR_OWNER = 0x7fffffffffffffff
+
+
 
     position = Column(TABLE_TYPES['short_name'], default='')
 
@@ -300,12 +324,10 @@ class UserCompany(Base, PRBase):
 
     banned = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
 
-    # _rights = Column(TABLE_TYPES['bigint'],
-    #                  CheckConstraint('_rights >= 0',
-    #                                  name='cc_unsigned_rights'),
-    #                  default=0, nullable=False)
 
-    _rights = Column(TABLE_TYPES['bigint'], default=RIGHTS_AT_COMPANY_DEFAULT, nullable=False)
+    rights = Column(TABLE_TYPES['binary_rights'](RIGHT_AT_COMPANY),
+                                        default={RIGHT_AT_COMPANY.PUBLICATION_EDIT: True, RIGHT_AT_COMPANY.PUBLICATION_PUBLISH: True},
+                                        nullable=False)
 
     employer = relationship('Company', backref='employee_assoc')
     employee = relationship('User', backref=backref('employer_assoc', lazy='dynamic'))
@@ -327,7 +349,7 @@ class UserCompany(Base, PRBase):
 
     def get_statuses_avaible(self):
         available_statuses = {s: True for s in self.STATUSES}
-        user_rights = self.get_rights()
+        user_rights = self.rights
         if user_rights['EMPLOYEE_CONFIRM_NEW'] == False:
             available_statuses['ACTIVE']= False
         if user_rights['EMPLOYEE_SUSPEND_UNSUSPEND'] == False:
@@ -338,14 +360,8 @@ class UserCompany(Base, PRBase):
     def get_rights_avaible(self):
         return {s: True for s in self.RIGHT_AT_COMPANY}
 
-    def get_rights(self):
-        return PRBase.convert_rights_binary_to_dict(self._rights, self.RIGHT_AT_COMPANY)
-
-    def get_client_side_dict(self, fields='id,user_id,company_id,position,status',
-                             more_fields=None):
-        ret = self.to_dict(fields, more_fields)
-        ret['rights'] = self.get_rights()
-        return ret
+    def get_client_side_dict(self, fields='id,user_id,company_id,position,status,rights', more_fields=None):
+        return self.to_dict(fields, more_fields)
 
     def set_client_side_dict(self, json):
         self.attr(g.filter_json(json, 'status|position'))
@@ -407,12 +423,12 @@ class UserCompany(Base, PRBase):
         db(UserCompany, company_id=company_id, user_id=user_id,
            status=UserCompany.STATUSES['APPLICANT']).update({'status': stat})
 
-    def has_rights(self, binary_right):
+    def has_rights(self, rightname):
 
-        if binary_right == -1:
+        if rightname == 'RIGHT_ANY':
             return True if self.status == self.STATUSES['ACTIVE'] else False
 
-        return True if self.status == self.STATUSES['ACTIVE'] and (binary_right & self._rights) else False
+        return True if (self.status == self.STATUSES['ACTIVE'] and self.rights[rightname]) else False
         # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
         # return user_company.rights_set if user_company and user_company.status == STATUS.ACTIVE() and user_company.employer.status == STATUS.ACTIVE() else []
 

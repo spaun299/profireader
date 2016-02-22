@@ -19,18 +19,18 @@ from . import views_index, views_user, views_filemanager, views_article, views_i
     views_company, views_portal, errors, views_file, views_admin, views_tools, views_help, views_reader
 
 
-def register(app):
-    app.register_blueprint(general_bp, url_prefix='/')
+def register_profi(app):
 
     # we can not change this url_prefix due to soc-network authentication
     # the following string must be exactly here. why?
     from . import views_auth
+    app.register_blueprint(front_bp, url_prefix='/')
+    app.register_blueprint(general_bp, url_prefix='/')
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(tools_bp, url_prefix='/tools')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(user_bp, url_prefix='/users')
     app.register_blueprint(filemanager_bp, url_prefix='/filemanager')
-    app.register_blueprint(static_bp, url_prefix='/static')
     app.register_blueprint(article_bp, url_prefix='/articles')
     app.register_blueprint(image_editor_bp, url_prefix='/image_editor')
     app.register_blueprint(company_bp, url_prefix='/company')
@@ -38,7 +38,7 @@ def register(app):
     app.register_blueprint(exception_bp, url_prefix='/exception')
     app.register_blueprint(help_bp, url_prefix='/help')
     from . import views_front
-    app.register_blueprint(front_bp, url_prefix='/')
+
     app.register_blueprint(reader_bp, url_prefix='/reader')
 
     # app.register_blueprint(reader_bp, url_prefix='/')
@@ -48,6 +48,9 @@ def register_front(app):
     from . import views_front
     app.register_blueprint(front_bp, url_prefix='/')
     # app.register_blueprint(reader_bp, url_prefix='/')
+
+def register_static(app):
+    app.register_blueprint(static_bp)
 
 
 def register_file(app):

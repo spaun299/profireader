@@ -412,7 +412,7 @@ def profile_edit_load(json, portal_id):
 # @check_rights(simple_permissions([]))
 def companies_partners(company_id):
     return render_template('company/portals_partners.html',
-                           company=Company.get(company_id), rights_user_in=UserCompany.get(company_id=company_id).get_rights()['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'])
+                           company=Company.get(company_id), rights_user_in=UserCompany.get(company_id=company_id).rights['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'])
 
 
 @portal_bp.route('/portals_partners/<string:company_id>/', methods=['POST'])
@@ -434,9 +434,8 @@ def portal_partner_details(partner_id, company_id):
                            company=Company.get(company_id),
                            company_member=Company.get(partner_id).get_client_side_dict(fields='name, id, own_portal.id'),
                            employeer=Company.get(company_id).get_client_side_dict(),
-                           rights = partner.get_rights(),
-                           member = partner.get_client_side_dict(fields='portal_id, status'),
-                           user_right_in=UserCompany.get(company_id=company_id).get_rights()['PORTAL_MANAGE_MEMBERS_COMPANIES']
+                           member = partner.get_client_side_dict(fields='portal_id, status, rights'),
+                           user_right_in=UserCompany.get(company_id=company_id).rights['PORTAL_MANAGE_MEMBERS_COMPANIES']
                            )
 
 @portal_bp.route('/<string:company_id>/portal_partner_update/<string:partner_id>/', methods=['GET'])
@@ -460,7 +459,7 @@ def partner_update_load(json, company_id, partner_id):
                 'partner': Company.get(partner_id).get_client_side_dict(fields='id,name,own_portal'),
                 'statuses_available': MemberCompanyPortal.STATUSES,
                 'employeer': Company.get(company_id).get_client_side_dict(),
-                'rights': partner.get_rights()}
+                'rights': partner.rights}
     else:
         partner.set_client_side_dict(json['status'],json['rights'])
         if action == 'validate':
@@ -468,14 +467,15 @@ def partner_update_load(json, company_id, partner_id):
             return partner.validate(False)
         else:
             partner.save()
-    return partner.get_client_side_dict(fields='id, status, rights_company_at_portal')
+    return partner.get_client_side_dict(fields='id, status, rights')
 
 @portal_bp.route('/portals_partners/<string:company_id>/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
 def portals_partners(company_id):
-    return render_template('company/companies_partners.html', company=Company.get(company_id),rights_user_in=UserCompany.get(company_id=company_id).get_rights()['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'])
+    return render_template('company/companies_partners.html', company=Company.get(company_id),
+                           rights_user_in=UserCompany.get(company_id=company_id).rights['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'])
 
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['POST'])
@@ -487,8 +487,9 @@ def companies_partners_load(json, company_id):
         MemberCompanyPortal.portal_id == db(Portal, company_owner_id=company_id).subquery().c.id)
     partners, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
     portal = partners[0].portal if partners else db(Company, id=company_id).one().own_portal
+
     grid_data = [{'member_id': partner.company.id, 'member_name': partner.company.name,
-                  'rights': partner.get_rights(),
+                  'rights': partner.rights,
                   'status': partner.status,
                   'company_id':company_id,
                   'logo': partner.company.logo_file_id if partner.company.logo_file_id
@@ -546,7 +547,7 @@ def publications_load(json, company_id):
     return {
         'company': company.get_client_side_dict(),
         'portal': portal.get_client_side_dict(),
-        'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights(),
+        'rights_user_in_company': UserCompany.get(company_id=company_id).rights,
         'grid_data': list(map(get_publication_dict, publications))}
 
 
@@ -577,7 +578,7 @@ def publication_details_load(json, article_id, company_id):
     allowed_statuses = ArticlePortalDivision.STATUSES.keys()
 
     return {'article': article,
-            'rights_user_in_company': UserCompany.get(company_id=company_id).get_rights(),
+            'rights_user_in_company': UserCompany.get(company_id=company_id).rights,
             'allowed_statuses': allowed_statuses}
 
 
