@@ -22,6 +22,7 @@ from sqlalchemy import and_
 import datetime
 import operator
 from collections import OrderedDict
+from functools import reduce
 
 Base = declarative_base()
 
@@ -313,7 +314,8 @@ class Grid:
 
     @staticmethod
     def page_options(client_json):
-        return {'page': client_json['pageNumber'], 'getPageOfId': client_json.get('pageNumber'), 'items_per_page': client_json['pageSize']} if client_json else {}
+        return {'page': client_json['pageNumber'], 'getPageOfId': client_json.get('pageNumber'),
+                'items_per_page': client_json['pageSize']} if client_json else {}
 
     @staticmethod
     def subquery_grid(query, filters=None, sorts=None):
@@ -369,17 +371,7 @@ class PRBase:
             ret.update(d)
         return ret
 
-    @staticmethod
-    def convert_rights_binary_to_dict(binary_rights, all_rights):
-        return {right_name: True if (binary_rights & right_binary_value) else False for right_name, right_binary_value
-                in all_rights.items()}
 
-    @staticmethod
-    def convert_rights_dict_to_binary(dict_rights, all_rights):
-        ret = 0
-        for right_name, right_binary_value in all_rights.items():
-            ret |= (right_binary_value if (right_name in dict_rights and dict_rights[right_name]) else 0)
-        return ret
 
     # if insert_after_id == False - insert at top
     # if insert_after_id == True - insert at bottom
@@ -666,6 +658,7 @@ class PRBase:
         event.listen(cls, 'after_update', cls.update_search_table)
         event.listen(cls, 'after_delete', cls.delete_from_search)
 
+
 #
 #
 #
@@ -691,3 +684,4 @@ class PRBase:
 # event.listen(ArticlePortal, 'before_insert', set_long_striped)
 # event.listen(ArticleCompany, 'before_update', set_long_striped)
 # event.listen(ArticleCompany, 'before_insert', set_long_striped)
+

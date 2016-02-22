@@ -1,11 +1,88 @@
-from sqlalchemy import Integer, String, TIMESTAMP, SMALLINT, BOOLEAN, Column, ForeignKey, UnicodeText, BigInteger, Binary, Float
+from sqlalchemy import Integer, String, TIMESTAMP, SMALLINT, BOOLEAN, Column, ForeignKey, UnicodeText, BigInteger, \
+    Binary, Float
 from sqlalchemy.dialects.postgresql import BIGINT, INTEGER, JSON
-from sqlalchemy_utils.types.phone_number import PhoneNumberType
-from sqlalchemy_utils import URLType
+from functools import reduce
+
+
+class BinaryRightsMetaClass1(type):
+    def all(self):
+        return [name for (name, val) in self.__dict__.items() if name not in ['__doc__', '__module__']]
+
+    def todict(self, bin):
+        return {name: (True if (type.__getattribute__(self, name) & bin) else False) for (name, val) in
+                self.__dict__.items() if name not in ['__doc__', '__module__']}
+
+    def tobin(self, dict):
+        ret = {'name': type.__getattribute__(self, name) for (name, val) in
+               self.__dict__.items() if name not in ['__doc__', '__module__']}
+        for (rightname, bitposition) in ret.items():
+            if bitposition == True:
+                bin = 0x7fffffffffffffff
+            bin = bin | (2 ** (1 - bitposition) if dict.get(rightname) else 0)
+        return bin
+
+    def __getattribute__(self, key):
+        return type.__getattribute__(self, key) if key in ['or_', 'all', 'todict', 'todict'] or (
+            key[:2] == '__' and key[-2:] == '__') else key
+
+
+class BinaryRights(metaclass=BinaryRightsMetaClass1):
+    _ALL_RIGHT_IN_ADVANCE = True
+    pass
+
+
+class RIGHTS(BIGINT):
+    _rights_class = None
+
+    def __init__(self, rights):
+        if isinstance(rights, BinaryRightsMetaClass1):
+            self._rights_class = rights
+        else:
+            raise Exception(
+                    'rights attribute should be BinaryRights class')
+
+        super(RIGHTS, self).__init__()
+
+    def result_processor(self, dialect, coltype):
+        def process(value):
+            return self._rights_class.todict(value)
+
+        return process
+
+    def bind_processor(self, dialect):
+        def process(array):
+            return self._rights_class.tobin(array)
+
+        return process
+
+    def adapt(self, impltype):
+        return RIGHTS(self._rights_class)
+
+
+# class PRColumn(Column):
+#
+#     right_class = None
+#
+#     def __init__(self, *args, **kwargs):
+#         if 'rights' in kwargs:
+#             self.right_class = kwargs['rights']
+#             args = [RIGHTS] + list(args)
+#             del kwargs['rights']
+#             pass
+#
+#         if 'searchable' in kwargs:
+#             pass
+#
+#         Column.__init__(self, *args, **kwargs)
+
+
+
+
 # read this about UUID:
 # http://stackoverflow.com/questions/183042/how-can-i-use-uuids-in-sqlalchemy
 # http://stackoverflow.com/questions/20532531/how-to-set-a-column-default-to-a-postgresql-function-using-sqlalchemy
 TABLE_TYPES = {
+    'binary_rights': RIGHTS,
     'id_profireader': String(36),
 
     'password_hash': String(128),  # String(128) SHA-256
@@ -43,7 +120,7 @@ TABLE_TYPES = {
     'text': UnicodeText(length=65535),
     'gender': String(6),
     'language': String(3),
-    'url': String(1000), #URLType,
+    'url': String(1000),  # URLType,
     'binary': Binary,
     'json': JSON
 }

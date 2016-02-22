@@ -140,7 +140,7 @@ def update_material_status(json, company_id, article_id):
 #     user_have_comp = True if len(user_companies) > 0 else False
 #     return render_template('company/company_profile.html',
 #                            company=db(Company, id=company_id).one(),
-#                            rights_user_in_company=UserCompany.get(company_id=company_id).get_rights(),
+#                            rights_user_in_company=UserCompany.get(company_id=company_id).rights,
 #                            user_company = user_have_comp
 #                            )
 
@@ -198,7 +198,7 @@ def employee_details(company_id, user_id):
                            employer=employment.employer.get_client_side_dict(),
                            employee=employment.employee.get_client_side_dict(),
                            employment=employment.get_client_side_dict(),
-                           user_right_in = UserCompany.get(company_id=company_id).get_rights()['COMPANY_MANAGE_USER_RIGHTS']
+                           user_right_in = UserCompany.get(company_id=company_id).rights['COMPANY_MANAGE_USER_RIGHTS']
                            )
 
 
@@ -210,7 +210,7 @@ def employee_update(company_id, user_id):
     return render_template('company/company_employee_update.html',
                            company = Company.get(company_id),
                            employment=UserCompany.get(user_id=user_id, company_id=company_id),
-                           user_right_in=UserCompany.get(company_id=company_id).get_rights()['COMPANY_MANAGE_USER_RIGHTS'])
+                           user_right_in=UserCompany.get(company_id=company_id).rights['COMPANY_MANAGE_USER_RIGHTS'])
     # employer=employment.employer.get_client_side_dict(),
     # employee=employment.employee.get_client_side_dict())
 
@@ -274,7 +274,7 @@ def update(company_id=None):
 # @check_rights(simple_permissions([]))
 def profile(company_id=None):
     return render_template('company/company_profile.html',
-                           rights_user_in_company=UserCompany.get(company_id=company_id).get_rights(),
+                           rights_user_in_company=UserCompany.get(company_id=company_id).rights,
                            company=db(Company, id=company_id).first())
 
 
@@ -284,7 +284,7 @@ def profile(company_id=None):
 @login_required
 @ok
 def load(json, company_id=None):
-    user_can_edit=UserCompany.get(company_id=company_id).get_rights()['PORTAL_EDIT_PROFILE'] if company_id else None
+    user_can_edit=UserCompany.get(company_id=company_id).rights['PORTAL_EDIT_PROFILE'] if company_id else None
     action = g.req('action', allowed=['load', 'validate', 'save'])
     company = Company() if company_id is None else Company.get(company_id)
     if action == 'load':
