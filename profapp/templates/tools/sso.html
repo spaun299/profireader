@@ -1,5 +1,11 @@
 {% if profi_cookie != local_cookie %}
-<script>
-    window.parent.postMessage('{{ profi_cookie }}','*')
-</script>
+    {%  if profi_cookie %}
+    <script>
+        window.parent.postMessage({'profireader_session_id': '{{ profi_cookie }}'},'*')
+    </script>
+        {% else %}
+        <script>
+        $.cookie('beaker.session.id', '{{ local_cookie }}');
+    </script>
+        {% endif %}
 {% endif %}

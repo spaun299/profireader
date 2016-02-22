@@ -13,10 +13,11 @@
 
 <script>
     window.addEventListener("message", function (messageevent) {
-        $.cookie('beaker.session.id', messageevent.data);
-        window.location.reload();
+        if (messageevent.data && messageevent.data.profireader_session_id) {
+            $.cookie('beaker.session.id', messageevent.data.profireader_session_id);
+            window.location.reload();
+            }
     }, false);
-
     $('body').prepend('<iframe style="positin: absolute; width: 1px; height: 1px; visibility: none; left: -1px;" src="http://profireader.com/tools/SSO/'+$.cookie('beaker.session.id')+'/"></iframe>');
 </script>
 
