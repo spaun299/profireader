@@ -198,7 +198,7 @@ def employee_details(company_id, user_id):
                            employer=employment.employer.get_client_side_dict(),
                            employee=employment.employee.get_client_side_dict(),
                            employment=employment.get_client_side_dict(),
-                           user_right_in = UserCompany.get(company_id=company_id).get_rights()['COMPANY_MANAGE_USER_RIGHTS']
+                           user_right_in = UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY['COMPANY_MANAGE_USER_RIGHTS'])
                            )
 
 
