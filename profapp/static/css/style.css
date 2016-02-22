@@ -6,24 +6,25 @@ body {
   min-height: 80vh;
 }
 .bg-index {
-  background-image: url("../images/auth6.jpg");
-  background-size: cover;
-  min-height: 50vh;
-  margin-top: -100px;
+  margin-bottom: 50px;
 }
-.bg-index h2 {
+.bg-index h4 {
   color: #18BC9C;
   text-align: center;
   margin-bottom: 25px;
 }
 .bg-index small {
-  color: #fff;
-}
-.index-profireader {
-  margin-top: 150px;
+  color: #424242;
 }
 .index-about {
-  margin: 50px 0px 50px 0px;
+  margin: 50px 0px 15px 0px;
+  background-size: cover;
+  min-height: 35vh;
+  margin-top: 100px;
+}
+.index-about h3 {
+  display: inline;
+  color: #18BC9C;
 }
 .index-links {
   background-color: #424242;
@@ -143,10 +144,6 @@ body {
 .menu-site a:hover {
   transition: all 0.2s ease-out;
 }
-.menu-site ul {
-  float: right;
-  margin-right: -25px;
-}
 .hamburger-menu span {
   background-color: #fff;
 }
@@ -168,6 +165,12 @@ body {
   border-bottom: 1px solid #fff;
 }
 .company-portal a:hover {
+  color: #18BC9C;
+  text-decoration: none;
+  border-bottom: 1px solid;
+  transition: all 0.2s ease-out;
+}
+.company-portal .selected a {
   color: #18BC9C;
   text-decoration: none;
   border-bottom: 1px solid;
@@ -408,6 +411,7 @@ body {
 }
 .reader-content .label {
   background-color: #00e676;
+  float: right;
 }
 .reader-content .label a {
   color: #fff;
@@ -424,6 +428,9 @@ body {
 }
 .reader-content .item-short-content {
   color: #212121;
+}
+.logo-portal-news {
+  width: 50px;
 }
 /* ---MEDIA--- */
 @media screen and (max-width: 764px) {
