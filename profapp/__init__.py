@@ -18,10 +18,6 @@ from flask.ext.babel import Babel
 import jinja2
 from jinja2 import Markup, escape
 
-from profapp.controllers.blueprints_register import register_profi as register_blueprints_profi
-from profapp.controllers.blueprints_register import register_front as register_blueprints_front
-from profapp.controllers.blueprints_register import register_file as register_blueprints_file
-from profapp.controllers.blueprints_register import register_static as register_blueprints_static
 from profapp.controllers.errors import csrf
 from .constants.SOCIAL_NETWORKS import INFO_ITEMS_NONE, SOC_NET_FIELDS
 from .constants.USER_REGISTERED import REGISTERED_WITH
@@ -517,7 +513,7 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
 
     def add_map_headers_to_less_files(response):
 
-
+        response.headers.add('Access-Control-Allow-Origin', '*')
         if (request.path and re.search(r'\.css$', request.path)):
             mapfile = re.sub(r'\.css$', r'.css.map', request.path)
             if os.path.isfile(os.path.realpath(os.path.dirname(__file__)) + mapfile):
@@ -529,9 +525,8 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
 
     app.after_request(add_map_headers_to_less_files)
 
-
-
     if apptype == 'front':
+        from profapp.controllers.blueprints_register import register_front as register_blueprints_front
         register_blueprints_front(app)
         my_loader = jinja2.ChoiceLoader([
             app.jinja_loader,
@@ -539,10 +534,13 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
         ])
         app.jinja_loader = my_loader
     elif apptype == 'static':
+        from profapp.controllers.blueprints_register import register_static as register_blueprints_static
         register_blueprints_static(app)
     elif apptype == 'file':
+        from profapp.controllers.blueprints_register import register_file as register_blueprints_file
         register_blueprints_file(app)
     else:
+        from profapp.controllers.blueprints_register import register_profi as register_blueprints_profi
         register_blueprints_profi(app)
 
     bootstrap.init_app(app)

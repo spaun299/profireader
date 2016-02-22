@@ -1,6 +1,6 @@
 from flask import Blueprint
 
-static_bp = Blueprint('static', __name__)
+static_bp = Blueprint('static', __name__, static_folder='static')
 general_bp = Blueprint('general', __name__)
 auth_bp = Blueprint('auth', __name__)
 admin_bp = Blueprint('admin', __name__)

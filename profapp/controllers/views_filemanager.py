@@ -51,7 +51,7 @@ def filemanager():
         # Company.get_emploees('can_read', status = 'active')
         # Company.get_emploees(['can_read', 'can_write'], status = ['active','banned'])
         # similar function User.get_emploers ...
-        if user_company.has_rights(UserCompany.RIGHT_AT_COMPANY['FILES_BROWSE']):
+        if user_company.has_rights(UserCompany.RIGHT_AT_COMPANY.FILES_BROWSE):
             library.append({'id': user_company.employer.journalist_folder_file_id,
             'name': "%s files" % (user_company.employer.name,), 'icon': ''})
             if user_company.employer.journalist_folder_file_id == last_root_id:

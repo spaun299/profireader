@@ -22,6 +22,7 @@ from sqlalchemy import and_
 import datetime
 import operator
 from collections import OrderedDict
+from functools import reduce
 
 Base = declarative_base()
 
@@ -370,17 +371,7 @@ class PRBase:
             ret.update(d)
         return ret
 
-    @staticmethod
-    def convert_rights_binary_to_dict(binary_rights, all_rights):
-        return {right_name: True if (binary_rights & right_binary_value) else False for right_name, right_binary_value
-                in all_rights.items()}
 
-    @staticmethod
-    def convert_rights_dict_to_binary(dict_rights, all_rights):
-        ret = 0
-        for right_name, right_binary_value in all_rights.items():
-            ret |= (right_binary_value if (right_name in dict_rights and dict_rights[right_name]) else 0)
-        return ret
 
     # if insert_after_id == False - insert at top
     # if insert_after_id == True - insert at bottom
@@ -693,22 +684,4 @@ class PRBase:
 # event.listen(ArticlePortal, 'before_insert', set_long_striped)
 # event.listen(ArticleCompany, 'before_update', set_long_striped)
 # event.listen(ArticleCompany, 'before_insert', set_long_striped)
-
-class BinaryRights(object):
-
-
-    @classmethod
-    def bin(cls):
-        return [name for (name, val) in cls.__dict__.items() if name not in ['__doc__', '__module__'] and val > 0]
-
-    @classmethod
-    def all(cls):
-        return [name for (name, val) in cls.__dict__.items() if name not in ['__doc__', '__module__'] and val > 0]
-
-    @classmethod
-    def dict(cls):
-        return {name: True for (name, val) in cls.__dict__.items() if name not in ['__doc__', '__module__'] and val > 0}
-
-    def __getattribute__(self, key):
-        return object.__getattribute__(self, key) if key in ['bin', 'all', 'dict'] else key
 
