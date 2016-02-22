@@ -17,11 +17,11 @@
     {% endblock company_base %}
 
     <script>
-    module.controller('grid_companiess', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce)  {
+    module.controller('company_partners', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce)  {
         angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_partners')
         $scope.url_companies_partners = '{{ url_for('portal.companies_partners_load', company_id=company.id)
          }}';
-        $scope.url_portal_partner_details = {{ raw_url_for('portal.portal_partner_details')| safe}};
+        $scope.url_company_partner_details = {{ raw_url_for('portal.company_partner_details')| safe}};
 
         {% raw %}
         $scope.sendData = function (grid_data, callback) {
@@ -35,13 +35,9 @@
         $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                         loadGridData: $scope.sendData,
                         columnDefs: [
-                             {
-                                name: 'member_name', type: 'link',img:'logo',
-                                href: 'url_portal_partner_details({company_id: row.entity.company_id,partner_id:row.entity.member_id})'
-                            },
-                                {
-                                name: 'status'},
-                            {name: 'rights', width: '500', type: 'icons', afilter: {type: 'input'}}
+                             {name: 'member_name', type: 'link',img:'logo', href: 'url_company_partner_details({employeer_id: row.entity.company_id,member_id:row.entity.member_id})'},
+                             {name: 'status'},
+                             {name: 'rights', width: '500', type: 'icons', afilter: {type: 'input'}}
                         ]
                     });
         {% endraw %}
@@ -50,7 +46,7 @@
 
     {% raw %}
 
-       <div ng-controller="grid_companiess">
+       <div ng-controller="company_partners">
         <div class="grid" id="grid1" ui-grid-pagination ui-grid="gridOptions1"></div>
         </div>
     {% endraw %}

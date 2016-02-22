@@ -406,11 +406,11 @@ def profile_edit_load(json, portal_id):
             'tag': tags_dict}
 
 
-@portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])
+@portal_bp.route('/portals_partners/<string:company_id>/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
-def companies_partners(company_id):
+def portals_partners(company_id):
     return render_template('company/portals_partners.html',
                            company=Company.get(company_id), rights_user_in=UserCompany.get(company_id=company_id).get_rights()['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'])
 
@@ -426,55 +426,55 @@ def portals_partners_load(json, company_id):
             'grid_data': [partner.get_client_side_dict(fields='id,status,company,portal') for partner in partners_g],
             'total': count}
 
-@portal_bp.route('/<string:company_id>/portal_partner_details/<string:partner_id>/', methods=['GET'])
+@portal_bp.route('/<string:employeer_id>/company_partner_details/<string:member_id>/', methods=['GET'])
 @login_required
-def portal_partner_details(partner_id, company_id):
-    partner = MemberCompanyPortal.get(Company.get(company_id).own_portal.id, partner_id)
-    return render_template('company/portal_partner_details.html',
-                           company=Company.get(company_id),
-                           company_member=Company.get(partner_id).get_client_side_dict(fields='name, id, own_portal.id'),
-                           employeer=Company.get(company_id).get_client_side_dict(),
-                           rights = partner.get_rights(),
-                           member = partner.get_client_side_dict(fields='portal_id, status'),
-                           user_right_in=UserCompany.get(company_id=company_id).get_rights()['PORTAL_MANAGE_MEMBERS_COMPANIES']
+def company_partner_details(member_id, employeer_id):
+    member = MemberCompanyPortal.get(Company.get(employeer_id).own_portal.id, member_id)
+    return render_template('company/company_partner_details.html',
+                           company=Company.get(employeer_id),
+                           company_member=Company.get(member_id).get_client_side_dict(fields='name, id, own_portal.id'),
+                           employeer=Company.get(employeer_id).get_client_side_dict(),
+                           rights = member.get_rights(),
+                           member = member.get_client_side_dict(fields='portal_id, status'),
+                           user_right_in=UserCompany.get(company_id=employeer_id).get_rights()['PORTAL_MANAGE_MEMBERS_COMPANIES']
                            )
 
-@portal_bp.route('/<string:company_id>/portal_partner_update/<string:partner_id>/', methods=['GET'])
+@portal_bp.route('/<string:employeer_id>/company_partner_update/<string:member_id>/', methods=['GET'])
 @login_required
-def portal_partner_update(company_id,partner_id):
-    return render_template('company/portal_partner_update.html',
-                           company = Company.get(company_id),
-                           partner=MemberCompanyPortal.get(Company.get(company_id).own_portal.id, company_id=partner_id).company.get_client_side_dict('id, status'))
+def company_partner_update(employeer_id,member_id):
+    return render_template('company/company_partner_update.html',
+                           company = Company.get(employeer_id),
+                           member=MemberCompanyPortal.get(Company.get(employeer_id).own_portal.id, company_id=member_id).company.get_client_side_dict('id, status'))
 
 
-@portal_bp.route('/<string:company_id>/portal_partner_update/<string:partner_id>/', methods=['POST'])
+@portal_bp.route('/<string:employeer_id>/company_partner_update/<string:member_id>/', methods=['POST'])
 @tos_required
 @login_required
 @ok
 # @check_rights(simple_permissions([]))
-def partner_update_load(json, company_id, partner_id):
+def company_update_load(json, employeer_id, member_id):
     action = g.req('action', allowed=['load', 'validate', 'save'])
-    partner = MemberCompanyPortal.get(Company.get(company_id).own_portal.id, partner_id)
+    member = MemberCompanyPortal.get(Company.get(employeer_id).own_portal.id, member_id)
     if action == 'load':
-        return {'status':partner.status,
-                'partner': Company.get(partner_id).get_client_side_dict(fields='id,name,own_portal'),
+        return {'status':member.status,
+                'member': Company.get(member_id).get_client_side_dict(fields='id,name,own_portal'),
                 'statuses_available': MemberCompanyPortal.STATUSES,
-                'employeer': Company.get(company_id).get_client_side_dict(),
-                'rights': partner.get_rights()}
+                'employeer': Company.get(employeer_id).get_client_side_dict(),
+                'rights': member.get_rights()}
     else:
-        partner.set_client_side_dict(json['status'],json['rights'])
+        member.set_client_side_dict(json['status'],json['rights'])
         if action == 'validate':
-            partner.detach()
-            return partner.validate(False)
+            member.detach()
+            return member.validate(False)
         else:
-            partner.save()
-    return partner.get_client_side_dict(fields='id, status, rights_company_at_portal')
+            member.save()
+    return member.get_client_side_dict(fields='id, status, rights_company_at_portal')
 
-@portal_bp.route('/portals_partners/<string:company_id>/', methods=['GET'])
+@portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])
 @tos_required
 @login_required
 # @check_rights(simple_permissions([]))
-def portals_partners(company_id):
+def companies_partners(company_id):
     return render_template('company/companies_partners.html', company=Company.get(company_id),rights_user_in=UserCompany.get(company_id=company_id).get_rights()['COMPANY_REQUIRE_MEMBEREE_AT_PORTALS'])
 
 
