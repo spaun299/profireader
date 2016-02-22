@@ -187,26 +187,25 @@ class Search(Base):
                         index=subquery_search.subquery().c.index).filter(
                 Search.kind.in_(tuple(field_name))).group_by(Search.index)
             return joined
-
         for cls in args:
             filter_params = cls.get('filter')
-            fields = cls.get('fields') or [key for key in vars(cls['class']).keys() if key[0] != '_']
+            fields = cls.get('fields') or [key for key in vars(cls['class']).keys() if not key.startswith('_')]
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
 
-            if filter_params is not None:
-                filter_array = [Search.index == db(cls['class'].id).filter(filter_params).subquery().c.id]
-            else:
+            if filter_params is None:
                 filter_array = [Search.index == db(cls['class'].id).subquery().c.id]
+            else:
+                filter_array = [Search.index == db(cls['class'].id).filter(filter_params).subquery().c.id]
 
             filter_array.append(Search.table_name == cls['class'].__tablename__)
             filter_array.append(Search.kind.in_(fields))
 
-            if search_text is not None and search_text != '':
+            if search_text:
                 filter_array.append(Search.text.ilike("%" + search_text + "%"))
 
-            search_params.append(and_(*filter_array), )
+            search_params.append(and_(*filter_array))
 
         subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
@@ -214,7 +213,7 @@ class Search(Base):
                              func.min(Search.md_tm).label('md_tm'),
                              func.max(Search.position).label('position'),
                              func.max(Search.text).label('text')).filter(
-            or_(*search_params)).group_by(Search.index)
+            or_(*search_params)).group_by('index')
         if type(kwargs.get('order_by')) in (str, list, tuple):
             order = get_order('text', desc_asc, 'text')
             subquery_search = add_joined_search(kwargs['order_by'])
@@ -234,10 +233,9 @@ class Search(Base):
         subquery_search = subquery_search.subquery()
         join_search = []
         for arg in args:
-            join_params = arg.get('join') or False
-            join_search.append(db(subquery_search).join(
-                    join_params or arg['class'],
-                    arg['class'].id == subquery_search.c.index).subquery())
+            join_params = arg.get('join') or arg['class']
+            join_search.append(db(subquery_search).join(join_params,
+                                                        arg['class'].id == subquery_search.c.index).subquery())
         objects = collections.OrderedDict()
         to_order = {}
         _order_by = kwargs.get('order_by') or Search.ORDER_MD_TM
