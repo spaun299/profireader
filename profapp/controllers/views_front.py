@@ -79,7 +79,7 @@ def index(page=1):
     # portal.config.set_division_page_size(page_size_for_divisions={division.name: 1})
     items_per_page = portal.get_value_from_config(key=PortalConfig.PAGE_SIZE_PER_DIVISION,
                                                   division_name=division.name)
-    articles, pages, page = Search.search(
+    articles, pages, page = Search().search(
         ArticlePortalDivision().search_filter_default(division.id),
         search_text=search_text, page=page, order_by=order, pagination=True,
         items_per_page=items_per_page)
@@ -106,7 +106,7 @@ def division(division_name, page=1):
         return redirect(url_for('front.index', search_text=search_text))
     if division.portal_division_type_id == 'news' or division.portal_division_type_id == 'events':
         order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
-        articles, pages, page = Search.search(
+        articles, pages, page = Search().search(
             ArticlePortalDivision().search_filter_default(division.id),
             search_text=search_text, page=page, order_by=order, pagination=True,
             items_per_page=items_per_page)
@@ -196,7 +196,7 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
     order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
     items_per_page = portal.get_value_from_config(key=PortalConfig.PAGE_SIZE_PER_DIVISION,
                                                   division_name=subportal_division.name)
-    articles, pages, page = Search.search(ArticlePortalDivision().search_filter_default(
+    articles, pages, page = Search().search(ArticlePortalDivision().search_filter_default(
         subportal_division.id, company_id=member_company_id), search_text=search_text, page=page,
         order_by=order, pagination=True, items_per_page=items_per_page)
 
