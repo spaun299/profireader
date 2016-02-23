@@ -464,7 +464,7 @@ def company_update_load(json, employeer_id, member_id):
             return member.validate(False)
         else:
             member.save()
-    return member.get_client_side_dict(fields='id, status, rights')
+    return member.get_client_side_dict()
 
 @portal_bp.route('/companies_partners/<string:company_id>/', methods=['GET'])
 @tos_required
@@ -482,7 +482,7 @@ def companies_partners_load(json, company_id):
     subquery = db(MemberCompanyPortal).filter(
         MemberCompanyPortal.portal_id == db(Portal, company_owner_id=company_id).subquery().c.id)
     members, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
-    return {'grid_data': [{'member': member.get_client_side_dict(fields='id,status, company'),
+    return {'grid_data': [{'member': member.get_client_side_dict(more_fields='company'),
                   'company_id':company_id}
                  for member in members],
             'total': count,

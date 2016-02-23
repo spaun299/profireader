@@ -378,14 +378,12 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                 })
 
                 var disable = function(allow){
-                    console.log(allow)
                     if(allow === false){
                         if(elementType === 'BUTTON' || elementType === 'INPUT'){
                             element.prop('disabled', true)
                         }else if(elementType === 'A'){
-                             element.hide()
+                             element.css({'pointer-events': 'none', 'cursor': 'default'})
                         }else{
-
                             element.hide()
                         }
                     }
@@ -1170,6 +1168,9 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             gridApi.grid.all_grid_data.paginationOptions.pageSize = gridApi.grid.options.paginationPageSize;
             var col = gridApi.grid.options.columnDefs;
 
+            var rowClass = gridApi.grid.options.rowClass
+            gridApi.grid.options.rowTemplate = '<div ng-repeat="(colRenderIndex, col) in colContainer.renderedColumns track by col.colDef.name" class="ui-grid-cell'+rowClass+'ddd" ng-class="{ \'ui-grid-row-header-cell\': col.isRowHeader, \'custom\': true }" ui-grid-cell></div>'
+
             $.each(col, function (ind, c) {
                 col[ind] = $.extend({
                     enableSorting: false,
@@ -1177,9 +1178,6 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     displayName: c['displayName'] ? c['displayName'] : (c['name'].replace(".", ' ') + ' grid column name')
                 }, c);
             });
-
-            //TODO: SS by OZ: maybe we have access to this variable already?
-            scope.columns = col;
 
             gridApi.grid.options.headerTemplate = '<div class="ui-grid-header" ><div class="ui-grid-top-panel"><div class="ui-grid-header-viewport"><div class="ui-grid-header"></div><div class="ui-grid-header-canvas" >' +
                 '<div class="ui-grid-header-cell-wrapper" ng-style="colContainer.headerCellWrapperStyle()"><div role="row" class="ui-grid-header-cell-row">' +
@@ -1225,10 +1223,9 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 }
 
                 function generateCellTemplate(col, columnindex) {
-                    var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + (col.type ? col.type : 'text') + ' pr-grid-cell-field-name-' + col.name.replace(/\./g, '-') + ' ' + (typeof col.classes === 'string' ? col.classes : '') + ' ';
-                    console.log('col.classes', col.classes, typeof  col.classes);
+                    var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + (col.type ? col.type : 'text') + ' pr-grid-cell-field-name-' + col.name.replace(/\./g, '-') + ' ' + (typeof col.classes === 'string' ? col.classes : '') + '';
                     if (typeof  col.classes === 'function') {
-                        classes_for_row += ' {{ columns[' + columnindex + '].classes() }} ';
+                        classes_for_row += '{{ grid.options.columnDefs[' + columnindex + '].classes(row.entity.id, row.entity, col.field) }}';
                     }
                     var prefix_img = '';
                     if (col.img) {
