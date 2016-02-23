@@ -86,6 +86,10 @@ class Search(Base):
         self.__search_text = None
         self.__return_objects = None
 
+    ORDER_RELEVANCE = 1
+    ORDER_POSITION = 2
+    ORDER_MD_TM = 3
+
     def search(self, *args: dict, **kwargs):
         """ *args: dictionary with following values -
                              -class = sqlalchemy table class object,
@@ -144,42 +148,11 @@ class Search(Base):
         assert all(filter(lambda arg: type(arg) is dict, args)), '*args should be a dictionary'
         return self.__search_start(*args, **self.__dict__)
 
-    ORDER_RELEVANCE = 1
-    ORDER_POSITION = 2
-    ORDER_MD_TM = 3
-
     def __search_start(self, *args: dict, **kwargs):
         """ Don't use this method, use Search().search() method """
         self.__init_arguments(*args, **kwargs)
         self.__catch_errors(*args, **kwargs)
-
-        def add_joined_search(field_name):
-            joined = db(Search.index, func.min(Search.text).label('text'),
-                        func.min(Search.table_name).label('table_name'),
-                        index=subquery_search.subquery().c.index).filter(
-                Search.kind.in_(tuple(field_name))).group_by(Search.index)
-            return joined
-        search_params = Search.__get_search_params(self, *args)
-        subquery_search = db(Search.index.label('index'),
-                             func.sum(Search.relevance).label('relevance'),
-                             func.min(Search.table_name).label('table_name'),
-                             func.min(Search.md_tm).label('md_tm'),
-                             func.max(Search.position).label('position'),
-                             func.max(Search.text).label('text')).filter(
-            or_(*search_params)).group_by('index')
-        if type(kwargs.get('order_by')) in (str, list, tuple):
-            order = self.__get_order('text', 'text')
-            subquery_search = add_joined_search(kwargs['order_by'])
-        elif type(kwargs.get('order_by')) == int:
-            ord_to_str = self.__order_by_to_str[kwargs['order_by']]
-            order = self.__get_order(ord_to_str, ord_to_str)
-        else:
-            order = self.__get_order('relevance', 'relevance')
-        if 'md_tm' in str(order):
-            subquery_search = subquery_search.order_by(order)
-        else:
-            subquery_search = subquery_search.order_by(order).order_by(
-                self.__get_order('md_tm', 'md_tm'))
+        subquery_search = self.__get_subquery(*args, ord_by=kwargs.get('order_by'))
         if self.__pagination:
             from ..controllers.pagination import pagination as pagination_func
             subquery_search, self.__pages, page, _ = pagination_func(subquery_search, page=self.__page,
@@ -209,6 +182,35 @@ class Search(Base):
         else:
             objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
         return objects, self.__pages, self.__page
+
+    def __get_subquery(self, *args, ord_by=None):
+        def add_joined_search(field_name):
+            joined = db(Search.index, func.min(Search.text).label('text'),
+                        func.min(Search.table_name).label('table_name'),
+                        index=subquery_search.subquery().c.index).filter(
+                Search.kind.in_(tuple(field_name))).group_by(Search.index)
+            return joined
+        subquery_search = db(Search.index.label('index'),
+                             func.sum(Search.relevance).label('relevance'),
+                             func.min(Search.table_name).label('table_name'),
+                             func.min(Search.md_tm).label('md_tm'),
+                             func.max(Search.position).label('position'),
+                             func.max(Search.text).label('text')).filter(
+            or_(*self.__get_search_params(*args))).group_by('index')
+        if type(ord_by) in (str, list, tuple):
+            order = self.__get_order('text', 'text')
+            subquery_search = add_joined_search(ord_by)
+        elif type(ord_by) == int:
+            ord_to_str = self.__order_by_to_str[ord_by]
+            order = self.__get_order(ord_to_str, ord_to_str)
+        else:
+            order = self.__get_order('relevance', 'relevance')
+        if 'md_tm' in str(order):
+            subquery_search = subquery_search.order_by(order)
+        else:
+            subquery_search = subquery_search.order_by(order).order_by(
+                self.__get_order('md_tm', 'md_tm'))
+        return subquery_search
 
     def __get_order(self, order_name, field):
         order_name += '+' if self.__desc_asc == 'desc' else '-'
