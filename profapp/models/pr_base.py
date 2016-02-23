@@ -150,62 +150,8 @@ class Search(Base):
 
     def __search_start(self, *args: dict, **kwargs):
         """ Don't use this method, use Search().search() method """
-
-        self.__page = kwargs.get('page') or 1
-        self.__items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
-        self.__pagination = kwargs.get('pagination') or True
-        self.__desc_asc = kwargs.get('desc_asc') or 'desc'
-        self.__pages = None
-        self.__search_text = kwargs.get('search_text') or ''
-        self.__return_objects = any(list(map(lambda arg: bool(arg.get('return_fields')), args)))
-        try:
-            assert (self.__desc_asc == 'desc' or self.__desc_asc == 'asc'), \
-                'Parameter desc_asc should be desc or asc but %s given' % self.__desc_asc
-            assert type(self.__search_text) is str, \
-                'Parameter search_text should be string but %s given' % type(self.__search_text)
-            assert type(args[0]) is dict, \
-                'Args should be dictionaries with class of model but %s inspected' % type(args[0])
-            assert type(self.__pagination) is bool, \
-                'Parameter pagination should be boolean but %s given' % type(self.__pagination)
-            assert (type(self.__page), type(self.__items_per_page) is int) and self.__page >= 0, \
-                'Parameter page is not integer, or page < 1 .'
-            assert (getattr(args[0]['class'], str(kwargs.get('order_by')), False) is not False) or \
-                   (type(kwargs.get('order_by')) is int) or type(
-                kwargs.get('order_by') is (list or tuple)), \
-                'Bad value for parameter "order_by".' \
-                'You requested attribute which is not in class %s or give bad kwarg type.' \
-                'Can be string, list or tuple %s given' % \
-                (args[0]['class'], type(kwargs.get('order_by')))
-            assert type(self.__return_objects) is bool, \
-                'Parameter "return_objects" must be boolean but %s given' % type(self.__return_objects)
-        except AssertionError as e:
-            _, _, tb = sys.exc_info()
-            traceback.print_tb(tb)
-            tb_info = traceback.extract_tb(tb)
-            filename_, line_, func_, text_ = tb_info[-1]
-            message = 'An error occurred on File "{file}" line {line}\n {assert_message}'.format(
-                line=line_, assert_message=e.args, file=filename_)
-            raise errors.BadDataProvided({'message': message})
-
-        def get_order(order_name, desc_asc, field):
-            order_name += '+' if desc_asc == 'desc' else '-'
-            result = {'text+': lambda field_name: desc(func.max(getattr(Search, field_name, Search.text))),
-                      'text-': lambda field_name: asc(func.max(
-                          getattr(Search, field_name, Search.text))),
-                      'md_tm+': lambda field_name: desc(func.min(
-                          getattr(Search, field_name, Search.md_tm))),
-                      'md_tm-': lambda field_name: asc(func.min(
-                          getattr(Search, field_name, Search.md_tm))),
-                      'relevance+': lambda field_name: desc(func.sum(
-                          getattr(Search, field_name, Search.relevance))),
-                      'relevance-': lambda field_name: asc(func.sum(
-                          getattr(Search, field_name, Search.relevance))),
-                      'position+': lambda field_name: desc(func.max(
-                          getattr(Search, field_name, Search.position))),
-                      'position-': lambda field_name: asc(func.max(
-                          getattr(Search, field_name, Search.position)))
-                      }[order_name](field)
-            return result
+        self.__init_arguments(*args, **kwargs)
+        self.__catch_errors(*args, **kwargs)
 
         def add_joined_search(field_name):
             joined = db(Search.index, func.min(Search.text).label('text'),
@@ -214,7 +160,6 @@ class Search(Base):
                 Search.kind.in_(tuple(field_name))).group_by(Search.index)
             return joined
         search_params = Search.__get_search_params(self, *args)
-
         subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
                              func.min(Search.table_name).label('table_name'),
@@ -223,18 +168,18 @@ class Search(Base):
                              func.max(Search.text).label('text')).filter(
             or_(*search_params)).group_by('index')
         if type(kwargs.get('order_by')) in (str, list, tuple):
-            order = get_order('text', self.__desc_asc, 'text')
+            order = self.__get_order('text', 'text')
             subquery_search = add_joined_search(kwargs['order_by'])
         elif type(kwargs.get('order_by')) == int:
             ord_to_str = self.__order_by_to_str[kwargs['order_by']]
-            order = get_order(ord_to_str, self.__desc_asc, ord_to_str)
+            order = self.__get_order(ord_to_str, ord_to_str)
         else:
-            order = get_order('relevance', self.__desc_asc, 'relevance')
+            order = self.__get_order('relevance', 'relevance')
         if 'md_tm' in str(order):
             subquery_search = subquery_search.order_by(order)
         else:
             subquery_search = subquery_search.order_by(order).order_by(
-                get_order('md_tm', self.__desc_asc, 'md_tm'))
+                self.__get_order('md_tm', 'md_tm'))
         if self.__pagination:
             from ..controllers.pagination import pagination as pagination_func
             subquery_search, self.__pages, page, _ = pagination_func(subquery_search, page=self.__page,
@@ -259,12 +204,40 @@ class Search(Base):
                    collections.OrderedDict(sorted(objects.items())).values()}
         ordered = sorted(tuple(to_order.items()), reverse=False if self.__desc_asc == 'asc' else True,
                          key=operator.itemgetter(1))
-        # objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
         if self.__return_objects:
             objects = self.__get_objects_from_db(*args, ordered_objects_list=ordered)
         else:
             objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
         return objects, self.__pages, self.__page
+
+    def __get_order(self, order_name, field):
+        order_name += '+' if self.__desc_asc == 'desc' else '-'
+        result = {'text+': lambda field_name: desc(func.max(getattr(Search, field_name, Search.text))),
+                  'text-': lambda field_name: asc(func.max(
+                      getattr(Search, field_name, Search.text))),
+                  'md_tm+': lambda field_name: desc(func.min(
+                      getattr(Search, field_name, Search.md_tm))),
+                  'md_tm-': lambda field_name: asc(func.min(
+                      getattr(Search, field_name, Search.md_tm))),
+                  'relevance+': lambda field_name: desc(func.sum(
+                      getattr(Search, field_name, Search.relevance))),
+                  'relevance-': lambda field_name: asc(func.sum(
+                      getattr(Search, field_name, Search.relevance))),
+                  'position+': lambda field_name: desc(func.max(
+                      getattr(Search, field_name, Search.position))),
+                  'position-': lambda field_name: asc(func.max(
+                      getattr(Search, field_name, Search.position)))
+                  }[order_name](field)
+        return result
+
+    def __init_arguments(self, *args, **kwargs):
+        self.__page = kwargs.get('page') or 1
+        self.__items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
+        self.__pagination = kwargs.get('pagination') or True
+        self.__desc_asc = kwargs.get('desc_asc') or 'desc'
+        self.__pages = None
+        self.__search_text = kwargs.get('search_text') or ''
+        self.__return_objects = any(list(map(lambda arg: bool(arg.get('return_fields')), args)))
 
     def __get_objects_from_db(self, *args, ordered_objects_list=None):
             items = dict()
@@ -309,6 +282,37 @@ class Search(Base):
 
             search_params.append(and_(*filter_array))
             return search_params
+
+    def __catch_errors(self, *args, **kwargs):
+        try:
+            assert (self.__desc_asc == 'desc' or self.__desc_asc == 'asc'), \
+                'Parameter desc_asc should be desc or asc but %s given' % self.__desc_asc
+            assert type(self.__search_text) is str, \
+                'Parameter search_text should be string but %s given' % type(self.__search_text)
+            assert type(args[0]) is dict, \
+                'Args should be dictionaries with class of model but %s inspected' % type(args[0])
+            assert type(self.__pagination) is bool, \
+                'Parameter pagination should be boolean but %s given' % type(self.__pagination)
+            assert (type(self.__page), type(self.__items_per_page) is int) and self.__page >= 0, \
+                'Parameter page is not integer, or page < 1 .'
+            assert (getattr(args[0]['class'], str(kwargs.get('order_by')), False) is not False) or \
+                   (type(kwargs.get('order_by')) is int) or type(
+                kwargs.get('order_by') is (list or tuple)), \
+                'Bad value for parameter "order_by".' \
+                'You requested attribute which is not in class %s or give bad kwarg type.' \
+                'Can be string, list or tuple %s given' % \
+                (args[0]['class'], type(kwargs.get('order_by')))
+            assert type(self.__return_objects) is bool, \
+                'Parameter "return_objects" must be boolean but %s given' % type(self.__return_objects)
+        except AssertionError as e:
+            _, _, tb = sys.exc_info()
+            traceback.print_tb(tb)
+            tb_info = traceback.extract_tb(tb)
+            filename_, line_, func_, text_ = tb_info[-1]
+            message = 'An error occurred on File "{file}" line {line}\n {assert_message}'.format(
+                line=line_, assert_message=e.args, file=filename_)
+            raise errors.BadDataProvided({'message': message})
+
 
 class MLStripper(HTMLParser):
     def __init__(self):
