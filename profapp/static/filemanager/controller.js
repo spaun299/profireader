@@ -138,9 +138,9 @@
             };
 
             $scope.time_out = function () {
-                $scope.timer = True;
+                $scope.timer = true;
                 $timeout(function () {
-                    $scope.timer = False
+                    $scope.timer = false
                 }, 2000);
             };
 
@@ -277,8 +277,10 @@
                     if($scope.f){
                         $scope.f.upload.abort();
                         $scope.f.progress = 0;
+                        $scope.auto_remove($scope.uploadFileList, $scope.fileNavigator.getCurrentFolder());
                     }
-                    $('#uploadfile').find('input[type=file], input[type=password], input[type=number], input[type=email], textarea').val('');
+                    console.log('s')
+                    $('#uploadfile').find('input[type=file], input[type=number], textarea').val('');
                 }
             };
 
@@ -295,47 +297,75 @@
 
             $scope.uploadUsingUpload = function () {
                 $scope.uploadingProgress = true;
-                var file = $scope.uploadFileList[0];
-                console.log(file)
-                $scope.f = file;
                 var url = '/filemanager/send/' + $scope.fileNavigator.getCurrentFolder() + '/';
-                file.upload = Upload.upload({
-                    url: url,
-                    data: $scope.name,
-                    resumeSizeUrl: '/filemanager/resumeupload/',
-                    resumeChunkSize: $scope.config['chunkSize'],
-                    ftype: $scope.f.type,
-                    upload_file_id: $scope.upload_file_id,
-                    headers: {
-                        'optional-header': 'header-value'
-                    },
-                    fields: {username: $scope.username},
-                    file: file
-                });
-                file.upload.progress(function (evt) {
-                    file.progress = Math.min(100, parseInt(100.0 *
-                        evt.loaded / evt.total));
-                }).success(function (data) {
+                var count = 0
+                var total = 0
+                for(var i=0;i<$scope.uploadFileList.length;i++){
+                    total += $scope.uploadFileList[i].size
+                }
+                var oldprogress = 0
+                var uploading = function(file){
+                    file.upload = Upload.upload({
+                        url: url,
+                        data: $scope.name,
+                        resumeSizeUrl: '/filemanager/resumeupload/',
+                        resumeChunkSize: $scope.config['chunkSize'],
+                        ftype: file.type,
+                        upload_file_id: $scope.upload_file_id,
+                        headers: {
+                            'optional-header': 'header-value'
+                        },
+                        fields: {username: $scope.username},
+                        file: file
+                    });
+                    $scope.f.upload.progress(function (evt) {
+                        $scope.thisprogress = Math.min(100, parseInt(100.0 *
+                            evt.loaded / total))
+                        $scope.f.progress = Math.min(100, parseInt(100.0 *
+                            evt.loaded / total)) + oldprogress;
+                    }).success(function (data) {
+                        count += 1;
+                        oldprogress += $scope.thisprogress;
+                        console.log(oldprogress);
+                        if($scope.uploadFileList[count]){
+
+                            $scope.f = $scope.uploadFileList[count];
+                            uploading($scope.uploadFileList[count])
+
+                        }else {
+                            close()
+                        }
+                    }).error(function (data) {
+                        $scope.hide = false;
+                        $scope.uploadingProgress = false;
+                        $scope.thisprogress = 0
+                        $scope.f.progress = 0;
+                        var errorMsg =  $translate.instant('error_uploading_files');
+                        //for(var i=0;i<$scope.uploadFileList.length;i++){
+                        //    $scope.auto_remove($scope.uploadFileList[i].name, $scope.fileNavigator.getCurrentFolder());
+                        //}
+                        $scope.temp.error = errorMsg;
+                        $timeout(function () {
+                            $scope.temp.error = ''
+                        }, 2000);
+
+                    });
+                }
+
+                if ($scope.uploadFileList){
+                    $scope.f = $scope.uploadFileList[count];
+                    uploading($scope.uploadFileList[count])
+                }
+
+                var close = function(){
+                    $scope.thisprogress = 0
                     $scope.hide = false;
                     $scope.uploadingProgress = false;
                     $scope.f.progress = 0;
                     $scope.fileNavigator.refresh();
                     $('#uploadfile').find('input[type=file]').val('');
                     $('#uploadfile').modal('hide');
-
-                }).error(function (data) {
-                    $scope.hide = false;
-                    $scope.uploadingProgress =false;
-                    $scope.f.progress = 0;
-                    var errorMsg =  $translate.instant('error_uploading_files');
-                    $scope.auto_remove($scope.f.name, $scope.fileNavigator.getCurrentFolder());
-                    $scope.temp.error = errorMsg;
-                    $timeout(function () {
-                        $scope.temp.error = ''
-                    }, 2000);
-
-                });
-
+                }
             };
 
             $scope.getQueryParam = function (param) {

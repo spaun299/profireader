@@ -1,6 +1,7 @@
 <!-- TODO: OZ by OZ: move this templates to separate .js file with cached templates -->
 
 {% include 'pager.html' %}
+{% raw %}
 <script type="text/ng-template" id="typeaheadTemplate.html">
     <a class="typeahead-item" href="#">
         <span ng-show="match.model.id" ng-bind-html="match.label | uibTypeaheadHighlight:query"></span>
@@ -15,3 +16,115 @@
     </div>
 </script>
 
+<script type="text/ng-template" id="filemanager.html">
+    <iframe src="{{ src }}"
+            style="border: none; margin: 0px; padding: 0px; width: 100%; height: 100%"></iframe>
+</script>
+{% endraw %}
+
+<script>
+    module.controller('submit_publish_dialog', function ($scope, $ok, $uibModalInstance, action, material_or_publication_id, company_id, portal_id) {
+
+        $scope.$$translate = {{ translates('submit_publish_dialog')|safe }};
+        $scope.url_submit_to_portal = {{ raw_url_for('article.submit_publish')|safe }};
+        {% raw %}
+
+        $scope.object_name = (action === 'submit') ? 'material' : 'publication';
+        $scope.action = action;
+
+        $scope.data = {
+            action: action,
+            portal: {id: portal_id},
+            company: {id: company_id}
+        };
+        $scope.data[(action === 'submit') ? 'material' : 'publication'] = {id: material_or_publication_id}
+
+        $scope.afterSave = function (resp, defcallback) {
+            $uibModalInstance.close(resp)
+        }
+
+        $scope.amidLoad = function (resp, defaultcallback) {
+            if (resp.publication.publishing_tm)
+                resp.publication.publishing_tm = new Date(resp.publication.publishing_tm);
+            if (resp.publication.event_tm)
+                resp.publication.event_tm = new Date(resp.publication.event_tm);
+            return resp;
+        };
+
+        $scope.action_cancel = $uibModalInstance.dismiss;
+
+        $scope.is_selection_division_event = function () {
+            if (!$scope.data || !$scope.data.publication || !$scope.data.publication.portal_division_id || !$scope.data.portal.divisions[$scope.data.publication.portal_division_id]) return false;
+            return ($scope.data.portal.divisions[$scope.data.publication.portal_division_id]['portal_division_type_id'] === 'events');
+        };
+
+        {% endraw %}
+
+    });
+</script>
+
+{% raw %}
+<script type="text/ng-template" id="submit_publish_dialog.html">
+    <div af ng-model="data" af-url="{{ url_submit_to_portal({'article_action': action}) }}"
+         af-after-save="afterSave"
+         af-amid-load="amidLoad"
+         af-watch="data.publication">
+        <div class="modal-header">
+            <h3 class="modal-title">{{ _(action + ' ' + object_name + ' at portal') }}</h3>
+        </div>
+        <div class="modal-body">
+            {{ _('You are going to ' + action + ' ' + object_name + ' `%(data.publication.title)s` at portal
+            `%(data.portal.name)s`') }}<br/>
+            <div ng-if="action !== 'unpublish' && action !== 'delete' && action !== 'undelete'">
+                <br/>
+                {{ _('Select portal division') }}<span
+                    af-validation-answer="data_validation:portal_division_id"></span><br/>
+                <div ng-repeat="division in data.portal.divisions"><label><input
+                        name="material_details_publish_dialog_division"
+                        ng-value="division.id" ng-model="data.publication.portal_division_id"
+                        type="radio"> {{ division.name }}</label></div>
+
+                {{ _('Select publication date') }}<span
+                    af-validation-answer="data_validation:publishing_tm"></span><br/>
+                <div pr-datepicker ng-model="data.publication.publishing_tm"></div>
+                <div ng-if="is_selection_division_event()">
+                    {{ _('Select event date') }}<span af-validation-answer="data_validation:event_tm"></span><br/>
+                    <div pr-datepicker ng-model="data.publication.event_tm"></div>
+                </div>
+                <div ng-if="object_name === 'material'">
+                    <hr/>
+                    <label ng-class="{disabled: !data.can_material_also_be_published}"><input
+                            ng-disabled="!data.can_material_also_be_published"
+                            ng-model="$parent.$parent.$parent.also_publish"
+                            type="checkbox">&nbsp;{{
+                        _('also publish material') }}</label><br/>
+                    <div ng-if="!data.can_material_also_be_published">
+                        {{ _('Sorry, you company `%(data.company.name)s` have no permission to publish at portal
+                        %(data.portal.name)s') }}<br/>
+                    </div>
+                    {{ _('You can send message to company administration') }}<br/>
+                    <textarea disabled="disabled" style="width: 100%" ng-model="message"></textarea>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="modal-footer">
+            <button ng-if="action === 'submit'" class="btn btn-primary"
+                    ng-disabled="!$af.isActionAllowed(data, 'save')"
+                    type="button" ng-click="$af.save(data)"><span ng-if="!also_publish">{{ _('Do submit') }}</span>
+                <span ng-if="also_publish">{{ _('Do submit & publish') }}</span>
+            </button>
+
+            <button ng-if="action !== 'submit' " class="btn btn-primary"
+                    ng-disabled="!$af.isActionAllowed(data, 'save')"
+                    type="button" ng-click="$af.save(data)">{{ _('Do ' + action) }}
+            </button>
+
+            <button class="btn btn-warning" type="button" ng-click="action_cancel()">{{ _('Cancel ' + action) }}
+            </button>
+        </div>
+    </div>
+</script>
+
+{% endraw %}

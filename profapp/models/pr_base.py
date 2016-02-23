@@ -21,8 +21,11 @@ from utils.validators import validators
 from sqlalchemy import and_
 import datetime
 import operator
+from collections import OrderedDict
+from functools import reduce
 
 Base = declarative_base()
+
 
 # this event is called whenever an attribute
 # on a class is instrumented
@@ -66,7 +69,7 @@ class Search(Base):
     ORDER_MD_TM = 3
 
     @staticmethod
-    def search(*args, **kwargs):
+    def search(*args: dict, **kwargs):
         """ *args: dictionary with following values -
                              -class = sqlalchemy table class object,
                 optional:    -filter: sqlalchemy filter with your own parameters,
@@ -94,7 +97,7 @@ class Search(Base):
                       'fields': all_fields}
             ** kwargs optional
             **kwargs: -search_text = string text for search,
-                      -pagination = boolean, default False
+                      -pagination = boolean, default True
                       , if True this func return n numbers elements which produce in pagination
                       -page = integer current page for pagination,
                       -items_per_page = integer items per page for pagination
@@ -114,7 +117,7 @@ class Search(Base):
                        {'class': ArticlePortalDivision,
                         'filter' and_(ArticlePortalDivision.portal_division_id == division.id,
                                       ArticlePortalDivision.status ==
-                                      ARTICLE_STATUS_IN_PORTAL.published)},
+                                      ArticlePortalDivision.STATUSES['PUBLISHED'])},
                         order_by = ('name', 'title', ). Because class Company does not have 'title'
                         field, and class ArticlePortalDivision does not have 'name' field.
                       -desc_asc = sort by desc or asc default = desc,
@@ -122,14 +125,13 @@ class Search(Base):
                        and current page """
         page = kwargs.get('page') or 1
         items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
-        page -= 1
         search_params = []
         order_by_to_str = {1: 'relevance', 2: 'position', 3: 'md_tm'}
-        pagination = kwargs.get('pagination') or False
+        pagination = kwargs.get('pagination') or True
         desc_asc = kwargs.get('desc_asc') or 'desc'
         pages = None
         search_text = kwargs.get('search_text') or ''
-        return_objects = True if [arg.get('return_fields') for arg in args][0] else False
+        return_objects = any(list(map(lambda arg: bool(arg.get('return_fields')), args)))
         try:
             assert (desc_asc == 'desc' or desc_asc == 'asc'), \
                 'Parameter desc_asc should be desc or asc but %s given' % desc_asc
@@ -143,7 +145,7 @@ class Search(Base):
                 'Parameter page is not integer, or page < 1 .'
             assert (getattr(args[0]['class'], str(kwargs.get('order_by')), False) is not False) or \
                    (type(kwargs.get('order_by')) is int) or type(
-                kwargs.get('order_by') is (list or tuple)), \
+                    kwargs.get('order_by') is (list or tuple)), \
                 'Bad value for parameter "order_by".' \
                 'You requested attribute which is not in class %s or give bad kwarg type.' \
                 'Can be string, list or tuple %s given' % \
@@ -157,13 +159,11 @@ class Search(Base):
             filename_, line_, func_, text_ = tb_info[-1]
             message = 'An error occurred on File "{file}" line {line}\n {assert_message}'.format(
                 line=line_, assert_message=e.args, file=filename_)
-            print(message)
             raise errors.BadDataProvided({'message': message})
 
         def get_order(order_name, desc_asc, field):
             order_name += '+' if desc_asc == 'desc' else '-'
-            result = {'text+': lambda field_name: desc(
-                func.max(getattr(Search, field_name, Search.text))),
+            result = {'text+': lambda field_name: desc(func.max(getattr(Search, field_name, Search.text))),
                       'text-': lambda field_name: asc(func.max(
                           getattr(Search, field_name, Search.text))),
                       'md_tm+': lambda field_name: desc(func.min(
@@ -190,15 +190,24 @@ class Search(Base):
 
         for cls in args:
             filter_params = cls.get('filter')
-            fields = cls.get('fields') or \
-                [key for key in vars(cls['class']).keys() if key[0] != '_']
+            fields = cls.get('fields') or [key for key in vars(cls['class']).keys() if key[0] != '_']
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
-            search_params.append(and_(Search.index == db(cls['class'].id).filter(
-                filter_params).subquery().c.id, Search.text.ilike(
-                "%" + search_text + "%"), Search.table_name == cls['class'].__tablename__,
-                Search.kind.in_(fields)), )
+
+            if filter_params is not None:
+                filter_array = [Search.index == db(cls['class'].id).filter(filter_params).subquery().c.id]
+            else:
+                filter_array = [Search.index == db(cls['class'].id).subquery().c.id]
+
+            filter_array.append(Search.table_name == cls['class'].__tablename__)
+            filter_array.append(Search.kind.in_(fields))
+
+            if search_text is not None and search_text != '':
+                filter_array.append(Search.text.ilike("%" + search_text + "%"))
+
+            search_params.append(and_(*filter_array), )
+
         subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
                              func.min(Search.table_name).label('table_name'),
@@ -220,24 +229,20 @@ class Search(Base):
             subquery_search = subquery_search.order_by(order).order_by(
                 get_order('md_tm', desc_asc, 'md_tm'))
         if pagination:
-            pages = math.ceil(subquery_search.count() / items_per_page)
-            if items_per_page:
-                subquery_search = subquery_search.limit(items_per_page)
-            if page:
-                subquery_search = subquery_search.offset(page * items_per_page) \
-                    if int(page) in range(
-                    0, int(pages)) else subquery_search.offset(pages * items_per_page)
+            from ..controllers.pagination import pagination as pagination_func
+            subquery_search, pages, page, _ = pagination_func(subquery_search, page=page, items_per_page=items_per_page)
         subquery_search = subquery_search.subquery()
         join_search = []
         for arg in args:
             join_params = arg.get('join') or False
             join_search.append(db(subquery_search).join(
-                join_params or arg['class'],
-                arg['class'].id == subquery_search.c.index).subquery())
+                    join_params or arg['class'],
+                    arg['class'].id == subquery_search.c.index).subquery())
         objects = collections.OrderedDict()
         to_order = {}
-        ord_by = 'text' if type(kwargs.get('order_by')) in (str, list, tuple) \
-            else order_by_to_str[kwargs['order_by']]
+        _order_by = kwargs.get('order_by') or Search.ORDER_MD_TM
+        ord_by = 'text' if type(_order_by) in (str, list, tuple) \
+            else order_by_to_str[_order_by]
         for search in join_search:
             for cls in db(search).all():
                 objects[cls.index] = {'id': cls.index, 'table_name': cls.table_name,
@@ -269,6 +274,7 @@ class Search(Base):
             objects = collections.OrderedDict((id, items[id]) for id, val in ordered)
         return objects, pages, page + 1
 
+
 class MLStripper(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -292,12 +298,71 @@ class MLStripper(HTMLParser):
         return data
 
 
+class Grid:
+    @staticmethod
+    def filter_for_status(statuses):
+        return [{'value': status, 'label': status} for status in statuses.keys()]
+
+    @staticmethod
+    def page_options(client_json):
+        return {'page': client_json['pageNumber'], 'getPageOfId': client_json.get('pageNumber'),
+                'items_per_page': client_json['pageSize']} if client_json else {}
+
+    @staticmethod
+    def subquery_grid(query, filters=None, sorts=None):
+        if filters:
+            for filter in filters:
+                if filter['type'] == 'text':
+                    query = query.filter(filter['field'].ilike("%" + filter['value'] + "%"))
+                elif filter['type'] == 'text_multi':
+                    query = query.filter(or_(v.ilike("%" + filter['value'] + "%") for v in filter['field']))
+                elif filter['type'] == 'select':
+                    query = query.filter(filter['field'] == filter['value'])
+                elif filter['type'] == 'date_range':
+                    fromm = datetime.datetime.utcfromtimestamp((filter['value']['from'] + 1) / 1000)
+                    to = datetime.datetime.utcfromtimestamp((filter['value']['to'] + 86399999) / 1000)
+                    query = query.filter(filter['field'].between(fromm, to))
+                elif filter['type'] == 'range':
+                    query = query.filter(filter['field'].between(filter['value']['from'], filter['value']['to']))
+                elif filter['type'] == 'multiselect':
+                    query = query.filter(or_(filter['field'] == v for v in filter['value']))
+        if sorts:
+            for sort in sorts:
+                if sort['type'] == 'date':
+                    query = query.order_by(sort['field'].asc()) if sort['value'] == 'asc' else query.order_by(
+                            sort['field'].desc())
+        return query
+
+    @staticmethod
+    def grid_tuple_to_dict(tuple):
+        list = []
+        for t in tuple:
+            list.extend([t[0]] + t[1])
+        return list
+
+
 class PRBase:
     def __init__(self):
         self.query = g.db.query_property()
 
+    @staticmethod
+    def parseDate(str):
+        try:
+            return datetime.datetime.strptime(str, "%a, %d %b %Y %H:%M:%S %Z")
+        except:
+            return None
+
     def position_unique_filter(self):
         return self.__class__.position != None
+
+    @staticmethod
+    def merge_dicts(*args):
+        ret = {}
+        for d in args:
+            ret.update(d)
+        return ret
+
+
 
     # if insert_after_id == False - insert at top
     # if insert_after_id == True - insert at bottom
@@ -383,6 +448,13 @@ class PRBase:
         g.db.expunge(self)
         return self
 
+    @staticmethod
+    def get_ordered_dict(list_of_dicts, **kwargs):
+        ret = OrderedDict()
+        for item in list_of_dicts:
+            ret[item['id']] = item
+        return ret
+
     def get_client_side_dict(self, fields='id',
                              more_fields=None):
         return self.to_dict(fields, more_fields)
@@ -394,7 +466,8 @@ class PRBase:
     def to_dict_object_property(self, object_name):
         object_property = getattr(self, object_name)
         if isinstance(object_property, datetime.datetime):
-            return object_property.replace(object_property.year, object_property.month, object_property.day, object_property.hour, object_property.minute, object_property.second, 0)
+            return object_property.replace(object_property.year, object_property.month, object_property.day,
+                                           object_property.hour, object_property.minute, object_property.second, 0)
         elif isinstance(object_property, dict):
             return object_property
         else:
@@ -446,8 +519,8 @@ class PRBase:
             columns_not_in_relations = list(set(req_columns.keys()) - set(relations.keys()))
             if len(columns_not_in_relations) > 0:
                 raise ValueError(
-                    "you requested not existing attribute(s) `%s%s`" % (
-                        prefix, '`, `'.join(columns_not_in_relations),))
+                        "you requested not existing attribute(s) `%s%s`" % (
+                            prefix, '`, `'.join(columns_not_in_relations),))
             else:
                 for rel_name in req_columns:
                     add_to_req_relationships(rel_name, '~')
@@ -485,16 +558,16 @@ class PRBase:
 
         if len(req_relationships) > 0:
             relations_not_in_columns = list(set(
-                req_relationships.keys()) - set(columns))
+                    req_relationships.keys()) - set(columns))
             if len(relations_not_in_columns) > 0:
                 raise ValueError(
-                    "you requested not existing relation(s) `%s%s`" % (
-                        prefix, '`, `'.join(relations_not_in_columns),))
+                        "you requested not existing relation(s) `%s%s`" % (
+                            prefix, '`, `'.join(relations_not_in_columns),))
             else:
                 raise ValueError("you requested for relation(s) but "
                                  "column(s) found `%s%s`" % (
                                      prefix, '`, `'.join(set(columns).intersection(
-                                         req_relationships)),))
+                                             req_relationships)),))
 
         return ret
 
@@ -520,6 +593,7 @@ class PRBase:
     #     ret = target.validate('delete')
     #     if len(ret['errors'].keys()):
     #         raise errors.ValidationException(ret)
+
 
     @staticmethod
     def add_to_search(mapper=None, connection=None, target=None):
@@ -575,7 +649,7 @@ class PRBase:
         event.listen(cls, 'after_update', cls.update_search_table)
         event.listen(cls, 'after_delete', cls.delete_from_search)
 
-#
+
 #
 #
 #
@@ -601,3 +675,4 @@ class PRBase:
 # event.listen(ArticlePortal, 'before_insert', set_long_striped)
 # event.listen(ArticleCompany, 'before_update', set_long_striped)
 # event.listen(ArticleCompany, 'before_insert', set_long_striped)
+

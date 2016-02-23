@@ -1,14 +1,15 @@
-{% extends "index_layout.html" %}
+{% extends "_ruslan/_index_layout.html" %}
+
 {% block title %}Profireader{% endblock title %}
 {% block head %}
     {{ super() }}
-    {% include add_head %}
+    {% include 'partials/empty_page.html' %}
 {% endblock head %}
 
 {% block portal_base %}
-    {% include portal_base_profireader %}
+    {% include 'partials/portal_base_Profireader.html' %}
 {% endblock portal_base %}
 
 {% block portal_content %}
-    {% include profireader_content %}
+    {% include 'partials/Profireader_content.html' %}
 {% endblock portal_content %}

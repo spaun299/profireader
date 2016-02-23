@@ -1,0 +1,101 @@
+<script>
+
+    module.controller('UserLoginController', ['$scope', '$uibModal', '$ok', '$timeout', function ($scope, $uibModal, $ok, $timeout) {
+
+
+        $scope.user = {{ g.user_dict|tojson|safe }};
+
+        $scope.tos = function () {
+            var accepted = $scope.user.tos;
+            if (accepted != true) {
+                $('#licence').modal('show');
+                return true
+            }
+        };
+
+        $scope.url_list_reader = {{ raw_url_for('reader.list_reader')|safe }}
+                $scope.url_general = {{ raw_url_for('general.index')|safe }}
+
+                        $scope.url_company_show = {{ raw_url_for('company.show')|safe }}
+                                $scope.url_general_help = {{ raw_url_for('general.help')|safe }}
+                                        $scope.url_auth_logout = {{ raw_url_for('auth.logout')|safe }}
+                                                $scope.url_user_profile = {{ raw_url_for('user.profile')|safe }}
+                                                        $scope.user_avatar_url = '{{ current_user.profireader_avatar_url }}'
+        $scope.login_url = {{ raw_url_for('auth.login_signup_endpoint')|safe }}
+
+
+                login_signup = '{{ login_signup }}';  // login_signup = 'login' or 'signup' or None
+        $scope.login_signup = (login_signup === 'signup') ? 'signup' : 'login';
+        $scope.$$translate = {{ translates('UserLoginController')|safe }};
+        $scope.open_filemanager = function () {
+            window.location.href = '/filemanager/';
+        };
+
+        $scope.selected_user_menu = '';
+        $scope.set_selected_user_menu = function (menu_item) {
+            $timeout(function () {
+                $scope.selected_user_menu = menu_item;
+            }, 0);
+        };
+    }]);
+
+</script>
+{% raw %}
+<nav ng-controller="UserLoginController" class="navbar navbar-fixed-top nav-bg">
+    <div class="container">
+        <div class="row">
+            <div class="navbar-header col-lg-4 col-md-4 col-sm-4 col-xs-12 hamburger-menu">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                        data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{{ url_general()}}"><img src="//static.profireader.com/static/front/img/profi.png"></a>
+            </div>
+            <div class="col-lg-offset-2 col-md-offset-1 col-lg-6 col-md-7 col-sm-8 col-xs-12 menu-site">
+
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul>
+                        <li><a href="{{ url_list_reader() }}" title="Стрічка читача"
+                               ng-class="{'selected': selected_user_menu == 'line_readers'}"><i
+                                class="fa fa-newspaper-o"></i></a></li>
+                        <li><a href="#" title="Всі повідомлення"
+                               ng-class="{'selected': selected_user_menu == 'messages'}"><i
+                                class="fa fa-envelope-o"></i></a></li>
+                        <li><a href="{{ url_company_show() }}" title="Компанії"
+                               ng-class="{'selected': selected_user_menu == 'companies_list'}"><i
+                                class="fa fa-building-o"></i></a></li>
+                        <li><a href="#" ng-click="open_filemanager()" title="Менеджер файлів"
+                               ng-class="{'selected': selected_user_menu == 'file_manager'}"><i
+                                class="fa fa-folder-open-o"></i></a></li>
+                        <li><a href="{{ url_general_help() }}" title="Інформація"
+                               ng-class="{'selected': selected_user_menu == 'info'}"><i class="fa fa-info"></i></a></li>
+
+                        <li ng-show="user.id" role="presentation" class="menu-profile">
+                            <a href="{{ url_user_profile({user_id:user.id}) }}" role="button" aria-haspopup="true"
+                               aria-expanded="false">
+                                <img class="person-small-cover" pr-image="" pr-no-image="{{ user_avatar_url }}">
+                                {{user.name}}
+                            </a>
+                            <a class="login-profile" href="{{ url_auth_logout() }}">Log out</a>
+                            <!--<ul class="dropdown-menu">
+                                <li ng-show="user.id"><a href="{{ url_user_profile({user_id:user.id}) }}">{{ _('Profile') }}</a></li>
+                                <li ng-show="user.id" ><a href="{{ url_auth_logout() }}" >{{_('Log Out') }}</a></li>
+                                <li ng-show="!user.id" class="dropdown-link"><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=login' }}">{{_('Log In') }}</a></li>
+                                <li ng-show="!user.id" class="dropdown-link"><a href="{{ url_for('auth.login_signup_endpoint') + '?login_signup=signup' }}">{{_('Sign Up') }}</a></li>
+                            </ul>-->
+                        </li>
+                        <li ng-show="!user.id" role="presentation" class="menu-profile">
+                            <a class="login-profile" href="{{ login_url() }}?login_signup=login">Login</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            </ul>
+        </div>
+    </div>
+    </div>
+</nav>
+{% endraw %}

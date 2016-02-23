@@ -1,0 +1,132 @@
+{% extends "index_lazy_layout.html" %}
+
+{% block title %}Profireader - Config{% endblock title %}
+
+{% block portal_content %}
+
+
+
+    <script type="text/ng-template" id="config.html">
+
+    </script>
+
+    <script>
+
+
+        module.controller('config_list', ['$scope', '$modal', '$ok', '$sce', 'uiGridConstants', '$timeout', function ($scope, $modal, $ok, $sce, uiGridConstants, $timeout) {
+
+                    $scope.url_search_config = {{ raw_url_for('admin.config_load')|safe }};
+
+
+                            {% raw %}
+                    $scope.noData = 'No config';
+                    $scope.error = '';
+                    $scope.allow_html_text = 'dsa';
+
+
+                    $scope.showModalForEditNew = function (row, col, text) {
+                        var modalInstance = $modal.open({
+                            templateUrl: 'config_tinymce.html',
+                            controller: 'config_tinymce_controller',
+                            resolve: {
+                                'EdittextWithHtml': function () {
+                                    return text
+                                }
+                            }
+                        });
+                        modalInstance.result.then(function (returnedtext) {
+                            $scope.saveTranslWithHtml(returnedtext, row, col);
+                        });
+                    };
+
+                    $scope.saveTranslWithHtml = function (text, row, col) {
+                        var grid_data = $scope.all_grid_data;
+                        grid_data['editItem'] = {
+                            'name': row.entity.name,
+                            'newValue': text,
+                            'template': row.entity.template,
+                            'col': col.field
+                        };
+                        $scope.sendData(grid_data);
+                    };
+
+                    $scope.sendData = function (grid_data) {
+                        $scope.loading = true;
+                        $scope.isSelectedRows = false;
+                        $scope.error = '';
+                        return $ok($scope.url_search_config({}), grid_data, function (resp) {
+                            $scope.datas = resp;
+                            $scope.applyGridExtarnals(resp);
+                        }).finally(function () {
+                            $scope.loading = false;
+                            $scope.load_contr = true
+                        });
+                    };
+
+                    $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+                        remoteData: $scope.sendData,
+                        onRegisterApi: function (gridApi) {
+                            $scope.setGridExtarnals(gridApi)
+                        },
+                        columnDefs: [
+                            {
+                                name: 'id',
+                                enableCellEdit: false,
+                                enableFiltering: false,
+                                enableSorting: true,
+                                displayName: 'Id'
+                            },{
+                                name: 'value',
+                                enableCellEdit: false,
+                                enableFiltering: false,
+                                enableSorting: true,
+                                displayName: 'value'
+                            },{
+                                name: 'type',
+                                enableCellEdit: false,
+                                enableFiltering: false,
+                                enableSorting: true,
+                                displayName: 'type'
+                            },{
+                                name: 'comment',
+                                enableCellEdit: false,
+                                enableFiltering: false,
+                                enableSorting: true,
+                                displayName: 'comment'
+                            },{
+                                name: 'client_side',
+                                enableCellEdit: false,
+                                enableFiltering: false,
+                                enableSorting: true,
+                                displayName: 'client_side'
+                            },{
+                                name: 'server_side',
+                                enableCellEdit: false,
+                                enableFiltering: false,
+                                enableSorting: true,
+                                displayName: 'server_side'
+                            }
+                            // TODO SS by OZ: 1. why allow_html is not visible?. 2 Pls allow dot-delimitted keys fields format like `portal.name`
+
+
+                        ]
+                    });
+                }]);
+
+        {% endraw %}
+    </script>
+    {% raw %}
+    <style>
+        .editable-buttons {
+            display: none;
+        }
+    </style>
+    <div ng-init="sendData(all_grid_data)" ng-controller="config_list">
+        <div style="clear: right"></div>
+        <div>
+            <div class="grid" id="grid1" ui-grid-pagination ui-grid-selection ui-grid-edit ui-grid="gridOptions1"></div>
+
+    {% endraw %}
+{% endblock portal_content %}
+
+

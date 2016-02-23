@@ -18,6 +18,7 @@ from io import BytesIO
 from .google import GoogleAuthorize,GoogleToken
 import sys
 import os
+
 class File(Base, PRBase):
     __tablename__ = 'file'
     id = Column(TABLE_TYPES['id_profireader'], primary_key=True)
@@ -193,7 +194,6 @@ class File(Base, PRBase):
             default_actions['choose'] = lambda file: True
             actions['choose'] = lambda file: True
         actions = {act: default_actions[act] for act in default_actions}
-
         actions['remove'] = lambda file: None if file.mime == "root" else True
         actions['copy'] = lambda file: None if file.mime == "root" else True
         actions['paste'] = lambda file: None if file == None else True
@@ -252,7 +252,9 @@ class File(Base, PRBase):
                     self.thumbnail.append(thumbnail)
                     g.db.add(thumbnail)
                     g.db.flush()
-                except:  # truncated png/gif
+                except Exception as e:  # truncated png/gif
+                    a = e
+                    print(self.id)
                     File.remove(self.id)
                 # resized = image_pil.resize(size)
 
@@ -294,7 +296,7 @@ class File(Base, PRBase):
 
     def url(self):
         server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', self.id)
-        return '//file' + server + '.profireader.com/' + self.id + '/'
+        return 'http://file' + server + '.profireader.com/' + self.id + '/'
 
     @staticmethod
     def get_index(file, lists):
@@ -407,16 +409,20 @@ class File(Base, PRBase):
             return True
 
     @staticmethod
-    def auto_remove(name, folder_id):
-        file = db(File, name=name, parent_id=folder_id).first()
-        if file.mime == 'video/*':
-            YoutubeVideo.delfile(YoutubeVideo.get(file.id))
-        else:
-            FileContent.delfile(FileContent.get(file.id))
-        return 's'
+    def auto_remove(list, folder_id):
+        for file in [db(File, name=file.name, parent_id=folder_id).first() for file in list]:
+            g.sql_connection.execute("DELETE FROM file WHERE id='%s';"
+                             % file.id)
+            # FileContent.delfile(FileContent.get(file.thumbnail_id)) if file.thumbnail_id else None
+            # YoutubeVideo.delfile(YoutubeVideo.get(file.id)) if file.mime == 'video/*' else  FileContent.delfile(FileContent.get(file.id))
+
+    @staticmethod
+    def removeAll(parent_id, mime):
+        list = [FileContent.delfile(FileContent.get(file.id)) for file in db(File, parent_id=parent_id, mime=mime)]
 
     @staticmethod
     def remove(file_id):
+        # File.removeAll('563c8429-17a5-4001-a2c1-806bdb740b9d', 'image/thumbnail')
         file = File.get(file_id)
         if file == None:
             return False
@@ -428,16 +434,16 @@ class File(Base, PRBase):
                 elif f.mime == 'video/*':
                     YoutubeVideo.delfile(YoutubeVideo.get(f.id))
                 else:
-                    FileContent.delfile(FileContent.get(f.id))
+                   g.sql_connection.execute("DELETE FROM file WHERE id='%s';"
+                             % f.id)
             File.delfile(file)
         elif file.mime == 'video/*':
             YoutubeVideo.delfile(YoutubeVideo.get(file.id))
         else:
             # file = file.get_thumbnail(any=True) or file
-            FileContent.delfile(FileContent.get(file_id))
-
-        resp = (False if File.get(file_id) else "Success")
-        return resp
+            g.sql_connection.execute("DELETE FROM file WHERE id='%s';"
+                             % file_id)
+        return 'Success'
 
     @staticmethod
     def save_files(files, new_id, attr):

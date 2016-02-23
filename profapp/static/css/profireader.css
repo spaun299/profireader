@@ -47,7 +47,16 @@ We have something similar in bootstrap? Can correct this class to look nicer?
     padding-left: 10px;
     margin-bottom: 1px;
 }
-
+.dataPickerForGrid{
+    float:left
+}
+.fieldFromTo{
+    clear:both;
+    text-align:right;
+}
+.dataPickerForGrid label{
+    float:left;
+}
 .form-control{
     float: none!important;
 }
@@ -184,7 +193,6 @@ a {
 a:hover,
 a:focus {
     text-decoration: none;
-    color: #5b6268;
 }
 
 h1 {
@@ -215,7 +223,7 @@ h1.nice-title span{
     display: block;
     width: 10px;
     height: 10px;
-    background: transparent url("../../static/front/img/corner.png") no-repeat;
+    background: transparent url("//static.profireader.com/static/front/img/corner.png") no-repeat;
 }
 
 
@@ -226,7 +234,7 @@ h2 {
 }
 
 h3 {
-    font-size: 18px;
+    /*font-size: 18px;*/
     line-height: 18px;
     font-weight: normal;
     font-family: 'Open Sans', sans-serif;
@@ -1621,14 +1629,13 @@ fieldset[disabled] .btn-tales-two.active {
 .top-style-line {
     height: 3px;
     background: #481a1c; /* Old browsers */
-    background: -moz-linear-gradient(left, #481A1C 0%, #cd2027 100%); /* FF3.6+ */
-    background: -webkit-gradient(linear, left top, right top, color-stop(0%, #481A1C), color-stop(100%, #cd2027)); /* Chrome,Safari4+ */
-    background: -webkit-linear-gradient(left, #481A1C 0%, #cd2027 100%); /* Chrome10+,Safari5.1+ */
-    background: -o-linear-gradient(left, #481A1C 0%, #cd2027 100%); /* Opera 11.10+ */
-    background: -ms-linear-gradient(left, #481A1C 0%, #cd2027 100%); /* IE10+ */
-    background: linear-gradient(to right, #481A1C 0%, #cd2027 100%); /* W3C */
+    background: -moz-linear-gradient(left, #18BCAB 0%, #119C8D 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, right top, color-stop(0%, #18BCAB), color-stop(100%, #119C8D)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(left, #18BCAB 0%, #119C8D 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(left, #18BCAB 0%, #119C8D 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(left, #18BCAB 0%, #119C8D 100%); /* IE10+ */
+    background: linear-gradient(to right, #18BCAB 0%, #119C8D 100%); /* W3C */
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#481A1C', endColorstr='#cd2027', GradientType=1); /* IE6-9 */
-
 }
 
 .navbar-default {
@@ -1644,12 +1651,9 @@ a {
     color: #3E090B;
 }
 
-a:hover {
-    color: #8A2121;
-}
 
 input {
-    width: 300px;
+    width: 100%;
     /*margin: 3px;*/
     padding: 1px 3px;
 }
@@ -1719,7 +1723,7 @@ form {
     height: 50px;
     padding: 0;
     margin: 0;
-    /*background: url("/profapp/static/front/img/ico/articles.png") center center no-repeat;*/
+    /*background: url("/profapp//static.profireader.com/static/front/img/ico/articles.png") center center no-repeat;*/
     background: transparent center center no-repeat;
     color: #fff;
     font-size: 16px;
@@ -1743,24 +1747,29 @@ form {
 }
 
 .top-menu li a.messages_btn {
-    background-image: url("../../static/front/img/ico/messenger.png");
+    background-image: url("//static.profireader.com/static/front/img/ico/messenger.png");
 }
 
 .top-menu li a.company_btn {
-    background-image: url("../../static/front/img/ico/companies.png");
+    background-image: url("//static.profireader.com/static/front/img/ico/companies.png");
 }
 
 .top-menu li a.article_btn {
-    background-image: url("../../static/front/img/ico/articles.png");
+    background-image: url("//static.profireader.com/static/front/img/ico/articles.png");
 }
 
 .top-menu li a.filemanager_btn {
-    background-image: url("../../static/front/img/ico/files.png");
+    background-image: url("//static.profireader.com/static/front/img/ico/files.png");
 }
 
 .person-small-cover {
     border-radius: 50%;
     border: 3px #999 solid;
+    width: 36px;
+    height: 36px;
+}
+
+.logo-small-cover {
     width: 36px;
     height: 36px;
 }
@@ -1895,6 +1904,7 @@ form {
     cursor: pointer;
 }
 
+
 .profile-thumbnail .control a:hover {
     background: #fff;
 }
@@ -1940,7 +1950,7 @@ input[type=radio   ]:not(old) + label {
     display: inline-block;
     margin-left: -28px;
     padding-left: 28px;
-    background: url('../../static/images/checks.png') no-repeat 0 0;
+    background: url('//static.profireader.com/static/images/checks.png') no-repeat 0 0;
     line-height: 24px;
 }
 
@@ -2013,7 +2023,7 @@ a.title-btn {
 }
 
 .login-by:hover {
-    border-color: #ca2027;
+    border-color: #18BCAB;
 }
 
 .login-by:hover span {
@@ -2028,19 +2038,19 @@ a.title-btn {
 }
 
 .login-by-google {
-    background-image: url("../../static/images/social/g.png");
+    background-image: url("//static.profireader.com/static/images/social/g.png");
 }
 
 .login-by-facebook {
-    background-image: url("../../static/images/social/f.png");
+    background-image: url("//static.profireader.com/static/images/social/f.png");
 }
 
 .login-by-linkedin {
-    background-image: url("../../static/images/social/l.png");
+    background-image: url("//static.profireader.com/static/images/social/l.png");
 }
 
 .login-by-microsoft {
-    background-image: url("../../static/images/social/m.png");
+    background-image: url("//static.profireader.com/static/images/social/m.png");
 }
 
 .by-socials-block {
@@ -2060,20 +2070,22 @@ a.title-btn {
     padding: 10px 15px;
     font-size: 16px;
     margin-bottom: -1px;
-    color: #ca2027;
+    color: #119C8D;
 }
-
 .tab.actual {
     border: 1px #ccc solid;
-    border-bottom: 1px #eee solid !important;
-    background-color: #eee;
+    border-bottom: 1px #fff solid !important;
+    background-color: #fff;
     color: #555;
 }
-
+.tab:hover{
+    color: #18BCAB;
+}
 .auth-form {
-    padding-top: 15px;
-    width: 340px;
+    padding-top: 30px;
     margin: 0 auto;
+    display: block;
+    float: none;
 }
 
 .auth-form h3 {
@@ -2086,19 +2098,19 @@ a.title-btn {
 
 .auth-form input[type="submit"] {
     border: none;
-    background: #555;
+    background: #18BCAB;
     color: #eee;
     padding: 15px;
     text-align: center;
 }
 
 .auth-form input[type="submit"]:hover {
-    background: #ca2027;
+    background: #119C8D;
     color: #fff;
 }
 
 .content-block {
-    background: #eee;
+    background: #fff;
     border: 1px solid #ccc;
     padding: 15px;
     margin-top: -1px;

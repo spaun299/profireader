@@ -55,8 +55,7 @@ def url_page(endpoint=None, **kwargs):
 
     if ('search_text' in kwargs_new.keys()) and not kwargs_new['search_text']:
         kwargs_new.pop('search_text', None)
+    if ('favorite' in kwargs_new.keys()) and not kwargs_new['favorite']:
+        kwargs_new.pop('favorite', None)
 
     return url_for(ep, **kwargs_new)
-
-
-

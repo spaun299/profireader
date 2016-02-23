@@ -1,10 +1,10 @@
-{% extends "index_layout.html" %}
+{% extends "_ruslan/_index_layout.html" %}
 
 {% block content %}
     {% include 'templates-angular.html' %}
 
-    <div class="container main-site-block">
-        <div class="over-block">
+    <div class="container">
+        <div class="over-block widewrapper row">
             {% include 'flashed-messages.html' %}
 
             {% block portal_content %}

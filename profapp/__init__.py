@@ -3,6 +3,7 @@ import re
 import json
 
 from flask import Flask, g, request, current_app
+from beaker.middleware import SessionMiddleware
 from authomatic import Authomatic
 from profapp.utils.redirect_url import url_page
 from flask import url_for
@@ -17,9 +18,6 @@ from flask.ext.babel import Babel
 import jinja2
 from jinja2 import Markup, escape
 
-from profapp.controllers.blueprints_register import register as register_blueprints
-from profapp.controllers.blueprints_register import register_front as register_blueprints_front
-from profapp.controllers.blueprints_register import register_file as register_blueprints_file
 from profapp.controllers.errors import csrf
 from .constants.SOCIAL_NETWORKS import INFO_ITEMS_NONE, SOC_NET_FIELDS
 from .constants.USER_REGISTERED import REGISTERED_WITH
@@ -29,6 +27,10 @@ from profapp.controllers.errors import BadDataProvided
 from .models.translate import TranslateTemplate
 from .models.tools import HtmlHelper
 from .models.pr_base import MLStripper
+import os.path
+
+from flask.sessions import SessionInterface
+from beaker.middleware import SessionMiddleware
 
 
 def req(name, allowed=None, default=None, exception=True):
@@ -128,7 +130,7 @@ def db_session_func(db_config):
     from sqlalchemy import create_engine
     from sqlalchemy.orm import scoped_session, sessionmaker
 
-    engine = create_engine(db_config)
+    engine = create_engine(db_config, echo=False)
     g.sql_connection = engine.connect()
     db_session = scoped_session(sessionmaker(autocommit=False,
                                              autoflush=False,
@@ -172,7 +174,7 @@ def setup_authomatic(app):
     return func
 
 
-def load_user():
+def load_user(apptype):
     user_init = current_user
     user = None
 
@@ -253,16 +255,16 @@ def load_portal_id(app):
     return func
 
 
-def flask_endpoint_to_angular(endpoint, **kwargs):
-    options = {}
-    for kw in kwargs:
-        options[kw] = "{{" + "{0}".format(kwargs[kw]) + "}}"
-    url = url_for(endpoint, **options)
-    import urllib.parse
-
-    url = urllib.parse.unquote(url)
-    url = url.replace('{{', '{{ ').replace('}}', ' }}')
-    return url
+# def flask_endpoint_to_angular(endpoint, **kwargs):
+#     options = {}
+#     for kw in kwargs:
+#         options[kw] = "{{" + "{0}".format(kwargs[kw]) + "}}"
+#     url = url_for(endpoint, **options)
+#     import urllib.parse
+#
+#     url = urllib.parse.unquote(url)
+#     url = url.replace('{{', '{{ ').replace('}}', ' }}')
+#     return url
 
 
 def fileUrl(id, down=False, if_no_file=None):
@@ -274,9 +276,9 @@ def fileUrl(id, down=False, if_no_file=None):
 
 
 def prImage(id, if_no_image=None):
-    file = fileUrl(id, False, if_no_image if if_no_image else "/static/images/no_image.png")
+    file = fileUrl(id, False, if_no_image if if_no_image else "//static.profireader.com/static/images/no_image.png")
     return Markup(
-        ' src="/static/images/0.gif" style="background-position: center; background-size: contain; background-repeat: no-repeat; background-image: url(\'%s\')" ' % (
+        ' src="//static.profireader.com/static/images/0.gif" style="background-position: center; background-size: contain; background-repeat: no-repeat; background-image: url(\'%s\')" ' % (
             file,))
 
 
@@ -344,14 +346,40 @@ def nl2br(value):
 def config_variables():
     variables = g.db.query(Config).filter_by(client_side=1).all()
     ret = {}
+
+    for variable in variables:
+        var_id = variable.id
+        if variable.type == 'int':
+            ret[var_id] = '%s' % (int(variable.value))
+        elif variable.type == 'bool':
+            ret[var_id] = 'false' if int(variable.value) == 0 else 'true'
+        elif variable.type == 'float':
+             ret[var_id] = '%s' % (float(variable.value))
+        elif variable.type == 'timestamp':
+            ret[var_id] = 'new Date(%s)' % (int(variable.value))
+        else:
+            ret[var_id] = '\'' + variable.value + '\''
+    return "<script>\nConfig = {};\n" + ''.join(
+        [("Config['%s']=%s;\n" % (var_id, ret[var_id])) for var_id in ret]) + '</script>'
+
+
+def config_variables():
+    variables = g.db.query(Config).filter_by(server_side=1).all()
+    ret = {}
     for variable in variables:
         var_id = variable.id
         if variable.type == 'int':
             ret[var_id] = '%s' % (int(variable.value),)
         elif variable.type == 'bool':
             ret[var_id] = 'false' if int(variable.value) == 0 else 'true'
+        elif variable.type == 'float':
+             ret[var_id] = '%s' % (float(variable.value))
+        elif variable.type == 'timestamp':
+            ret[var_id] = 'new Date(%s)' % (int(variable.value))
         else:
-            ret[var_id] = '\'' + variable.value + '\''
+            ret[var_id] = '\'' + variable.value.replace('\\','\\\\').replace('\n','\\n').replace('\'','\\\'') + '\''
+
+
     return "<script>\nConfig = {};\n" + ''.join(
         [("Config['%s']=%s;\n" % (var_id, ret[var_id])) for var_id in ret]) + '</script>'
 
@@ -412,7 +440,7 @@ class AnonymousUser(AnonymousUserMixin):
     #    'guest@profireader.com'.encode('utf-8')).hexdigest()
     # return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
     #    url=url, hash=hash, size=size, default=default, rating=rating)
-    # return '/static/no_avatar.png'
+    # return '//static.profireader.com/static/no_avatar.png'
 
     @staticmethod
     def check_rights(permissions):
@@ -459,11 +487,15 @@ class AnonymousUser(AnonymousUserMixin):
         return "<User(id = %r)>" % self.id
 
 
+
+
+
+
 login_manager.anonymous_user = AnonymousUser
 
 
 def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder = './static')
 
     app.config.from_object(config)
     # app.config['SERVER_NAME'] = host
@@ -474,21 +506,43 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     app.before_request(load_database(app.config['SQLALCHEMY_DATABASE_URI']))
     app.config['DEBUG'] = True
 
-    app.before_request(load_user)
+    app.before_request(lambda: load_user(apptype))
     app.before_request(setup_authomatic(app))
     app.before_request(load_portal_id(app))
 
+
+    def add_map_headers_to_less_files(response):
+
+        response.headers.add('Access-Control-Allow-Origin', '*')
+
+        if (request.path and re.search(r'\.css$', request.path)):
+            mapfile = re.sub(r'\.css$', r'.css.map', request.path)
+            if os.path.isfile(os.path.realpath(os.path.dirname(__file__)) + mapfile):
+                response.headers.add('X-Sourcemap', mapfile)
+                # :/packages/ian_accounts-ui-bootstrap-3/a3d4ce536f173c44d48a89e9da63d0f75025b4ec.map
+
+        return response
+
+
+    app.after_request(add_map_headers_to_less_files)
+
     if apptype == 'front':
+        from profapp.controllers.blueprints_register import register_front as register_blueprints_front
         register_blueprints_front(app)
         my_loader = jinja2.ChoiceLoader([
             app.jinja_loader,
             jinja2.FileSystemLoader('templates_front'),
         ])
         app.jinja_loader = my_loader
+    elif apptype == 'static':
+        from profapp.controllers.blueprints_register import register_static as register_blueprints_static
+        register_blueprints_static(app)
     elif apptype == 'file':
+        from profapp.controllers.blueprints_register import register_file as register_blueprints_file
         register_blueprints_file(app)
     else:
-        register_blueprints(app)
+        from profapp.controllers.blueprints_register import register_profi as register_blueprints_profi
+        register_blueprints_profi(app)
 
     bootstrap.init_app(app)
     mail.init_app(app)
@@ -506,7 +560,7 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     csrf.init_app(app)
 
     # read this: http://stackoverflow.com/questions/6036082/call-a-python-function-from-jinja2
-    app.jinja_env.globals.update(flask_endpoint_to_angular=flask_endpoint_to_angular)
+    # app.jinja_env.globals.update(flask_endpoint_to_angular=flask_endpoint_to_angular)
     app.jinja_env.globals.update(raw_url_for=raw_url_for)
     app.jinja_env.globals.update(pre=pre)
     app.jinja_env.globals.update(translates=translates)
@@ -537,5 +591,22 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     #     finally:
     #         session.close()  # optional, depends on use case
     #     # db_session.remove()
+
+    session_opts = {
+        'session.type': 'ext:memcached',
+        'session.url': 'memcached.profi:11211'
+    }
+
+    class BeakerSessionInterface(SessionInterface):
+        def open_session(self, app, request):
+            _session = request.environ['beaker.session']
+            return _session
+
+
+        def save_session(self, app, session, response):
+            session.save()
+
+    app.wsgi_app = SessionMiddleware(app.wsgi_app, session_opts)
+    app.session_interface = BeakerSessionInterface()
 
     return app

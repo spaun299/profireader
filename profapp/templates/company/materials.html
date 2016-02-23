@@ -1,79 +1,69 @@
 {% extends "index_lazy_layout.html" %}
 
-{% block title %}Profireader - Articles{% endblock title %}
+{% block head %}
+    {{ super() }}
+    {% include '_ruslan/partials/_header_files_grid.html' %}
+{% endblock head %}
+
+{% block title %}{{ _('Materials at %(company_name)s', {'company_name': company.name}) }}{% endblock title %}
 
 {% block portal_content %}
 
+    {% include 'company/company_base_angular.html' %}
 
     <script>
-        module.controller('article_list', ['$scope', '$ok', '$sce', 'uiGridConstants', 'uiGridGroupingConstants', '$timeout', function ($scope, $ok, $sce, uiGridConstants, uiGridGroupingConstants, $timeout) {
-            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
-            $scope.url_details = {{ raw_url_for('company.material_details')|safe }};
-            $scope.url_search_article = {{ raw_url_for('company.materials_load')|safe }};
-            $scope.url_edit_article_portal = {{ raw_url_for('article.article_show_form')|safe }};
+        module.controller('materials_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
 
-            $scope.company_id = '{{ company_id }}';
-            $scope.$$translate = {{ translates('article_list')|safe }};
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('materials')
+{#            $scope.company_id = '{{ company.id }}';#}
+            $scope.company = {{ company.get_client_side_dict()|tojson|safe }};
+            $scope.$$translate = {{ translates('materials_list')|safe }};
+
+            $scope.url_search_article = {{ raw_url_for('company.materials_load')|safe }};
+
+            $scope.url_material_details = {{ raw_url_for('article.material_details')|safe }};
+            $scope.url_material_create = {{ raw_url_for('article.article_show_form')|safe }};
+            $scope.url_material_update = {{ raw_url_for('article.article_show_form')|safe }};
+            $scope.url_publication_update = {{ raw_url_for('article.article_show_form')|safe }};
+
 
             {% raw %}
             $scope.noData = 'No materials';
 
-            $scope.sendData = function (grid_data) {
-                $scope.loading = true;
-                $ok($scope.url_search_article({company_id: $scope.company_id}), grid_data, function (resp) {
-                    $scope.datas = resp;
-                    $scope.applyGridExtarnals(resp);
-                }).finally(function () {
-                    $scope.loading = false;
-                    $scope.load_contr = true;
-                });
-            };
-
-            $scope.lclass = function (portal) {
-                return portal === 'not sent' ? "display:inline-block;pointer-events: none;cursor: text;color:#404b55;font-weight: bold;" : '';
+            $scope.sendData = function (grid_data, setdatafuctions) {
+                $ok($scope.url_search_article({company_id: $scope.company.id}), grid_data, setdatafuctions)
             };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
-                remoteData: $scope.sendData,
-                remoteUrl: $scope.url_search_article({company_id: $scope.company_id}),
-                onRegisterApi: function (gridApi) {
-                    $scope.setGridExtarnals(gridApi)
-                },
+                loadGridData: $scope.sendData,
+                category: [{
+                    name: 'searching',
+                    field: 'title&editor.profireader_name',
+                    visible: true,
+                    filtering: true,
+                    filter: {type: 'input'}
+                }],
                 columnDefs: [
                     {
-                        name: 'title', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
-                        displayName: 'Title',
-                        width: '35%',
-                        cellTemplate: '<div class="link" title="{{ row.entity.title }}"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.title"></a></div>',
-                        filter: {type: uiGridConstants.filter.INPUT}
-                    },
-                    {
-                        name: 'date', enableCellEdit: false, enableFiltering: false, groupingShowAggregationMenu: false,
-                        displayName: 'Date',
-                        groupingShowGroupingMenu: false
-                    },
-                    {
-                        name: 'portals', enableSorting: false, enableCellEdit: false, enableColumnMenu: false,
-                        displayName: 'Portals',
-                        cellTemplate: '<div class="link" title="{{ row.entity.portals}}"><a style="{{grid.appScope.lclass(row.entity.portals)}}" href="{{ grid.appScope.url_edit_article_portal({article_portal_division_id: row.entity.id}) }}">{{row.entity.portals}}</a></div>',
-                        filter: $scope.filterForSelect(uiGridConstants)
-                    },
-                    {
-                        name: 'publication_status',
-                        enableSorting: false,
-                        enableCellEdit: false,
-                        enableColumnMenu: false,
-                        displayName: 'Publication status',
-                        filter: $scope.filterForSelect(uiGridConstants)
-                    },
-                    {
-                        name: 'material_status', enableSorting: false, //editableCellTemplate: $scope.editableTemplate,
-                        //editDropdownValueLabel: 'value',
-                        //cellTemplate: $scope.selectRowTemplate,
-                        displayName: 'Material status',
-                        enableCellEdit: false,
-                        enableColumnMenu: false,
-                        filter: $scope.filterForSelect(uiGridConstants)
+                        name: 'title', category:"searching",  width: '30%',
+                        type: 'link',
+                        href: 'url_material_details({company_id:grid.appScope.company.id,material_id:row.entity.id})'
+                    },{
+                        name: 'editor.profireader_name', category:"searching"
+                    },{
+                        name: 'md_tm',enableCellEdit: true,
+                        afilter: {type: 'date_range'}
+                    },{
+                        name: 'portal.name', type: 'link',
+                        href: 'url_edit_article_portal({article_portal_division_id: row.entity.id})',
+                        classes: 'link',
+                        filter: {type:'multi_select'}
+                    },{
+                        name: 'status',
+                        filter: {type: 'multi_select'}
+                    },{
+                        name: 'publication_visibility',
+                        afilter: {type: 'select'}
                     }
                 ]
             });
@@ -81,16 +71,14 @@
         }]);
         {% endraw %}
     </script>
-    {% include 'company/company_base_angular.html' %}
+
     {% raw %}
-    <div ng-init="sendData(all_grid_data)" ng-controller="article_list">
-        <div ng-if="!load_contr">{{_('Loading...')}}</div>
-        <div ng-if="load_contr">
-            <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
-        </div>
+    <div ng-controller="materials_list">
+        <h2>{{ _('Materials of company `%(company.name)s`')}}</h2>
+        <a href="{{ url_material_create({company_id: company.id}) }}">{{ _('Create new material') }}</a>
+        <div class="grid" id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
     </div>
     {% endraw %}
 
+
 {% endblock portal_content %}
-
-

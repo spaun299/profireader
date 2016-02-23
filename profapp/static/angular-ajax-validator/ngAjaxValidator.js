@@ -72,6 +72,9 @@
         ret.validate = function (model) {
             return ret.$callDirectiveMethod(model, 'validate');
         };
+        ret.reset = function (model) {
+            return ret.$callDirectiveMethod(model, 'reset');
+        };
         ret.isActionAllowed = function (model, action) {
             return ret.$callDirectiveMethod(model, 'isActionAllowed', action);
         };
@@ -99,11 +102,12 @@
 
                 var $parent = $scope['$parent'];
                 var ctrl = afModelCtrl[0];
+                $parent.$af = $af;
 
 
                 var params = {};
 
-                cloneIfExistsAttributes(params, {'af-url': window.location.href}, attrs);
+                cloneIfExistsAttributes(params, {'afUrl': window.location.href}, attrs);
                 var trans = '';
                 if (attrs['afLoadTranslate']) {
                     trans = '&__translate=' + attrs['afLoadTranslate'];
@@ -114,9 +118,9 @@
                     }
                 }
                 cloneIfExistsAttributes(params, {
-                    'afUrlLoad': AppendParameter(params['af-url'], 'action=load' + trans),
-                    'afUrlValidate': AppendParameter(params['af-url'], 'action=validate'),
-                    'afUrlSave': AppendParameter(params['af-url'], 'action=save')
+                    'afUrlLoad': AppendParameter(params['afUrl'], 'action=load' + trans),
+                    'afUrlValidate': AppendParameter(params['afUrl'], 'action=validate'),
+                    'afUrlSave': AppendParameter(params['afUrl'], 'action=save')
                 }, attrs);
 
 //TODO oz by OZ: allow model name dictionary
@@ -141,6 +145,8 @@
                 var defaultCallbacks = {
                     afBeforeLoad: trivialbefore,
                     afAmidLoad: trivialbefore,
+                    afBeforeReset: trivialbefore,
+                    afAmidReset: trivialbefore,
                     afBeforeValidate: trivialbefore,
                     afAmidValidate: trivialbefore,
                     afAmidSave: trivialbefore,
@@ -151,6 +157,7 @@
                             return true;
                         }
                     },
+                    afAfterReset: trivialbefore,
                     afAfterValidate: function () {
                         return function (resp) {
                             setInParent('afValidationResult', cloneObject(resp));
@@ -206,7 +213,7 @@
                                     }, 0);
                                 }
                                 catch (e) {
-                                    console.error(e);
+                                    add_message(e, 'warning');
                                     if (stateonfail) setInParent('afState', stateonfail);
                                     notok(resp);
                                 }
@@ -223,7 +230,7 @@
                         return true;
                     }
                     catch (e) {
-                        console.error(e);
+                        add_message(e, 'warning');
                         if (stateonok) setInParent('afState', stateonfail);
                         notok(undefined);
                         validationdict['http'] = null;
@@ -236,9 +243,18 @@
                         func1('Load', 'loading', 'clean', 'loading_failed',
                             function (resp) {
                                 $scope.model = cloneObject(resp);
+                                $scope.$af_original_model = cloneObject(resp);
                             });
                     }
                 };
+
+                $scope.reset = function () {
+                    if ($scope.isActionAllowed('reset')) {
+                        $scope.model = cloneObject($scope.$af_original_model);
+                        $scope.$af_original_model_dirty = false;
+                    }
+                };
+
 
                 $scope.validate = function () {
                     if ($scope.isActionAllowed('validate')) {
@@ -261,6 +277,10 @@
                 };
 
                 $scope.isActionAllowed = function (action) {
+                    if (action === 'reset') {
+                        return $scope.$af_original_model_dirty?true:false;
+                    }
+
                     var http = $af.$getValidationDict($scope['model']);
                     if (http && http['http']) {
                         //console.error('called method `' + action + '` is forbidden for model because http sent');
@@ -288,6 +308,7 @@
 
                 var watchfunc = function (oldval, newval) {
                     setInParent('afState', 'dirty');
+                    $scope.$af_original_model_dirty = true;
                     debouncedvalidate();
                 };
 

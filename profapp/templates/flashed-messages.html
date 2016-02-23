@@ -1,6 +1,6 @@
 <script>
 
-    module.controller('message-controller', ['$scope', '$modal', '$ok', '$timeout', function ($scope, $modal, $ok, $timeout) {
+    module.controller('message-controller', ['$scope', '$uibModal', '$ok', '$timeout', function ($scope, $uibModal, $ok, $timeout) {
 
         $scope.alerts = [];
 
@@ -35,6 +35,7 @@
 
     }]);
 </script>
+{#  TODO: MY BY OZ: #}
 <div ng-controller="message-controller" id="controller-message-controller" style="position: fixed; top: 0px;z-index: 1; width: 1000px; ">
     {% raw %}
     <uib-alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}</uib-alert>
