@@ -210,7 +210,7 @@ class Search(Base):
                         index=subquery_search.subquery().c.index).filter(
                 Search.kind.in_(tuple(field_name))).group_by(Search.index)
             return joined
-        search_params = self.__get_search_params(*args)
+        search_params = Search.__get_search_params(self, *args)
 
         subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
@@ -294,9 +294,9 @@ class Search(Base):
 
             filter_array.append(Search.table_name == arg['class'].__tablename__)
             filter_array.append(Search.kind.in_(fields))
-
-            if self.__search_text:
-                filter_array.append(Search.text.ilike("%" + getattr(self, '__search_text') + "%"))
+            search_text = self.__search_text
+            if search_text:
+                filter_array.append(Search.text.ilike("%" + search_text + "%"))
 
             search_params.append(and_(*filter_array))
             return search_params

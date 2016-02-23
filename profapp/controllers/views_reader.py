@@ -44,10 +44,10 @@ def list_reader(page=1):
         articles, pages, page = Search().search({'class': ArticlePortalDivision,
                                                  'filter': and_(ArticlePortalDivision.portal_division_id ==
                                                                 db(PortalDivision).filter(
-                                                                        PortalDivision.portal_id ==
-                                                                        db(UserPortalReader,
-                                                                           user_id=g.user.id).subquery().
-                                                                        c.portal_id).subquery().c.id,
+                                                                    PortalDivision.portal_id ==
+                                                                    db(UserPortalReader,
+                                                                       user_id=g.user.id).subquery().
+                                                                    c.portal_id).subquery().c.id,
                                                                 ArticlePortalDivision.status ==
                                                                 ArticlePortalDivision.STATUSES['PUBLISHED']),
                                                  'tags': True, 'return_fields': article_fields}, page=page)
