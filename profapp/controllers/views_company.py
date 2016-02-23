@@ -131,20 +131,6 @@ def update_material_status(json, company_id, article_id):
             'status': 'ok'}
 
 
-# @company_bp.route('/profile/<string:company_id>/')
-# @tos_required
-# @login_required
-# # @check_rights(simple_permissions(['manage_rights_company']))
-# def profile(company_id):
-#     user_companies = [user_comp for user_comp in current_user.employer_assoc]
-#     user_have_comp = True if len(user_companies) > 0 else False
-#     return render_template('company/company_profile.html',
-#                            company=db(Company, id=company_id).one(),
-#                            rights_user_in_company=UserCompany.get(company_id=company_id).rights,
-#                            user_company = user_have_comp
-#                            )
-
-
 @company_bp.route('/<string:company_id>/employees/', methods=['GET'])
 @tos_required
 @login_required
@@ -165,26 +151,6 @@ def employees_load(json, company_id):
         'company': company.get_client_side_dict(fields='id,name'),
         'grid_data': employees_list
     }
-    # company_user_rights = UserCompany.show_rights(company_id)
-    # ordered_rights = sorted(Right.keys(), key=lambda t: Right.RIGHT_POSITION()[t.lower()])
-    # ordered_rights = list(map((lambda x: getattr(x, 'lower')()), ordered_rights))
-
-    # for user_id in company_user_rights.keys():
-    #     rights = company_user_rights[user_id]['rights']
-    #     rez = OrderedDict()
-    #     for elem in ordered_rights:
-    #         rez[elem] = True if elem in rights else False
-    #     company_user_rights[user_id]['rights'] = rez
-
-    # user_id = current_user.get_id()
-    # curr_user = {user_id: company_user_rights[user_id]}
-    # curr_user = {user_id: []}
-
-    # return render_template('company/company_employees.html',
-    #                        company=db(Company, id=company_id).one(),
-    #                        company_user_rights=[],
-    #                        curr_user=curr_user,
-    #                        rights={})
 
 
 @company_bp.route('/<string:company_id>/employee_details/<string:user_id>/', methods=['GET'])
@@ -198,7 +164,7 @@ def employee_details(company_id, user_id):
                            employer=employment.employer.get_client_side_dict(),
                            employee=employment.employee.get_client_side_dict(),
                            employment=employment.get_client_side_dict(),
-                           user_right_in = UserCompany.get(company_id=company_id).rights['COMPANY_MANAGE_USER_RIGHTS']
+                           user_right_in = UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY.COMPANY_MANAGE_USER_RIGHTS)
                            )
 
 
@@ -210,7 +176,7 @@ def employee_update(company_id, user_id):
     return render_template('company/company_employee_update.html',
                            company = Company.get(company_id),
                            employment=UserCompany.get(user_id=user_id, company_id=company_id),
-                           user_right_in=UserCompany.get(company_id=company_id).rights['COMPANY_MANAGE_USER_RIGHTS'])
+                           user_right_in=UserCompany.get(company_id=company_id).has_rights(UserCompany.RIGHT_AT_COMPANY.COMPANY_MANAGE_USER_RIGHTS))
     # employer=employment.employer.get_client_side_dict(),
     # employee=employment.employee.get_client_side_dict())
 
@@ -228,7 +194,8 @@ def employee_update_load(json, company_id, user_id):
                 'employee': employment.employee.get_client_side_dict(),
                 'employer': employment.employer.get_client_side_dict(fields='id|logo_file_id|name'),
                 'statuses_available': employment.get_statuses_avaible(),
-                'rights_available': employment.get_rights_avaible()}
+                # 'rights_available': employment.get_rights_avaible()
+                 }
     else:
         employment.set_client_side_dict(json['employment'])
         if action == 'validate':
@@ -392,24 +359,8 @@ def send_article_to_user(json):
 @ok
 # @check_rights(simple_permissions([]))
 def join_to_company(json, company_id):
-    company_role = UserCompany(user_id=g.user_dict['id'],
-                               company_id=json.get('company_id'),
-                               status=UserCompany.STATUSES['APPLICANT'])
-    company_role.subscribe_to_company().save()
+    UserCompany(user_id=g.user_dict['id'], company_id=json.get('company_id')).save()
     return {'companies': [employer.get_client_side_dict() for employer in current_user.employers]}
-
-
-@company_bp.route('/subscribe/<string:company_id>/')
-@tos_required
-@login_required
-# @check_rights(simple_permissions([]))
-def subscribe(company_id):
-    company_role = UserCompany(user_id=g.user_dict['id'],
-                               company_id=company_id,
-                               status=UserCompany.STATUSES['APPLICANT'])
-    company_role.subscribe_to_company().save()
-
-    return redirect(url_for('company.profile', company_id=company_id))
 
 
 @company_bp.route('/add_subscriber/', methods=['POST'])
@@ -424,54 +375,55 @@ def confirm_subscriber():
     return redirect(url_for('company.profile', company_id=data['company_id']))
 
 
-@company_bp.route('/suspend_employee/', methods=['POST'])
-@login_required
-# @check_rights(simple_permissions([RIGHTS.SUSPEND_EMPLOYEE()]))
-def suspend_employee():
-    data = request.form
-    UserCompany.change_status_employee(user_id=data['user_id'],
-                                       company_id=data['company_id'])
-    return redirect(url_for('company.employees',
-                            company_id=data['company_id']))
-
-
-@company_bp.route('/fire_employee/', methods=['POST'])
-@login_required
-def fire_employee():
-    data = request.form
-    UserCompany.change_status_employee(company_id=data.get('company_id'),
-                                       user_id=data.get('user_id'),
-                                       status=UserCompany.STATUSES['FIRED'])
-    return redirect(url_for('company.employees', company_id=data.get('company_id')))
-
-
-@company_bp.route('/unsuspend/<string:user_id>,<string:company_id>')
-@login_required
-def unsuspend(user_id, company_id):
-    UserCompany.change_status_employee(user_id=user_id,
-                                       company_id=company_id,
-                                       status=UserCompany.STATUSES['ACTIVE'])
-    return redirect(url_for('company.employees', company_id=company_id))
-
-
-@company_bp.route('/suspended_employees/<string:company_id>',
-                  methods=['GET'])
-@tos_required
-@login_required
-# @check_rights(simple_permissions([]))
-def suspended_employees(company_id):
-    company = db(Company, id=company_id).one()
-    return render_template('company/company_fired.html', company_id=company_id, company=company)
-
-
-@company_bp.route('/suspended_employees/<string:company_id>', methods=['POST'])
-@login_required
-# @check_rights(simple_permissions([]))
-@ok
-def load_suspended_employees(json, company_id):
-    suspend_employees = Company.query_company(company_id)
-    suspend_employees = suspend_employees.suspended_employees()
-    return suspend_employees
+#TODO: VK by OZ: following 3 functions would have to be joined into one
+# @company_bp.route('/suspend_employee/', methods=['POST'])
+# @login_required
+# # @check_rights(simple_permissions([RIGHTS.SUSPEND_EMPLOYEE()]))
+# def suspend_employee():
+#     data = request.form
+#     UserCompany.change_status_employee(user_id=data['user_id'],
+#                                        company_id=data['company_id'])
+#     return redirect(url_for('company.employees',
+#                             company_id=data['company_id']))
+#
+#
+# @company_bp.route('/fire_employee/', methods=['POST'])
+# @login_required
+# def fire_employee():
+#     data = request.form
+#     UserCompany.change_status_employee(company_id=data.get('company_id'),
+#                                        user_id=data.get('user_id'),
+#                                        status=UserCompany.STATUSES['FIRED'])
+#     return redirect(url_for('company.employees', company_id=data.get('company_id')))
+#
+#
+# @company_bp.route('/unsuspend/<string:user_id>,<string:company_id>')
+# @login_required
+# def unsuspend(user_id, company_id):
+#     UserCompany.change_status_employee(user_id=user_id,
+#                                        company_id=company_id,
+#                                        status=UserCompany.STATUSES['ACTIVE'])
+#     return redirect(url_for('company.employees', company_id=company_id))
+#
+#
+# @company_bp.route('/suspended_employees/<string:company_id>',
+#                   methods=['GET'])
+# @tos_required
+# @login_required
+# # @check_rights(simple_permissions([]))
+# def suspended_employees(company_id):
+#     company = db(Company, id=company_id).one()
+#     return render_template('company/company_fired.html', company_id=company_id, company=company)
+#
+#
+# @company_bp.route('/suspended_employees/<string:company_id>', methods=['POST'])
+# @login_required
+# # @check_rights(simple_permissions([]))
+# @ok
+# def load_suspended_employees(json, company_id):
+#     suspend_employees = Company.query_company(company_id)
+#     suspend_employees = suspend_employees.suspended_employees()
+#     return suspend_employees
 
 
 @company_bp.route('/readers/<string:company_id>/', methods=['GET'])

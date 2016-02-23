@@ -293,21 +293,6 @@ class Portal(Base, PRBase):
 class MemberCompanyPortal(Base, PRBase):
     __tablename__ = 'member_company_portal'
 
-    # field = MemberCompanyPortal.rights
-    # PUBLICATION_DELETE_UNDELETE = 2 ** (4 - 1)
-
-    # RIGHT_AT_PORTAL = {
-    #     'PUBLICATION_PUBLISH': 2 ** (1 - 1),
-    #     'PUBLICATION_UNPUBLISH': 2 ** (2 - 1),
-    #     'PUBLICATION_EDIT': 2 ** (3 - 1),
-    #     # 'PUBLICATION_DELETE_UNDELETE': 2 ** (4 - 1),
-    # }
-
-    # _RIGHT_AT_PORTAL = _RIGHT_AT_PORTAL()
-
-    # RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL.PUBLICATION_PUBLISH
-
-
     class RIGHT_AT_PORTAL(BinaryRights):
         PUBLICATION_PUBLISH = 1
         PUBLICATION_UNPUBLISH = 2
@@ -320,7 +305,6 @@ class MemberCompanyPortal(Base, PRBase):
                     default={RIGHT_AT_PORTAL.PUBLICATION_EDIT: True, RIGHT_AT_PORTAL.PUBLICATION_PUBLISH: True},
                     nullable=False)
 
-    # rights_company_at_portal = PRColumn(TABLE_TYPES['bigint'], nullable=False)
 
     member_company_portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))
 
@@ -343,7 +327,7 @@ class MemberCompanyPortal(Base, PRBase):
                         # , backref='partner_portals'
                         )
 
-    def get_client_side_dict(self, fields='id,rights', more_fields=None):
+    def get_client_side_dict(self, fields='id,status,rights', more_fields=None):
         return self.to_dict(fields, more_fields)
 
     def __init__(self, company_id=None, portal=None, company=None, plan=None):
@@ -394,15 +378,13 @@ class MemberCompanyPortal(Base, PRBase):
         #     return sub_query
 
     def has_rights(self, rightname):
+        if rightname == '_ANY':
+            return True if self.status == self.STATUSES['ACTIVE'] else False
+
         if self.portal.own_company.id == self.company_id:
             return True
 
-        if rightname == 'RIGHT_ANY':
-            return True if self.status == self.STATUSES['ACTIVE'] else False
-
         return True if (self.status == self.STATUSES['ACTIVE'] and self.rights[rightname]) else False
-        # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
-        # return user_company.rights_set if user_company and user_company.status == STATUS.ACTIVE() and user_company.employer.status == STATUS.ACTIVE() else []
 
 
 class ReaderUserPortalPlan(Base, PRBase):

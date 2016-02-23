@@ -122,8 +122,7 @@ class Company(Base, PRBase):
                 'message': 'Company name %(name)s already exist. Please choose another name',
                 'data': self.get_client_side_dict()})
 
-        user_company = UserCompany(status=UserCompany.STATUSES['ACTIVE'],
-                                   rights=UserCompany.RIGHT_AT_COMPANY._ALL_RIGHT_IN_ADVANCE)
+        user_company = UserCompany(status=UserCompany.STATUSES['ACTIVE'], rights={UserCompany.RIGHT_AT_COMPANY._ANY: True})
         user_company.employer = self
         g.user.employer_assoc.append(user_company)
         g.user.companies.append(self)
@@ -259,47 +258,16 @@ class UserCompany(Base, PRBase):
     user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'), nullable=False)
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'), nullable=False)
 
-    status = Column(TABLE_TYPES['status'], default='APPLICANT')
-    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED',
-                'FIRED': 'FIRED'}
-
-    # RIGHT_AT_COMPANY = {
-    #     'FILES_BROWSE': 2 ** (4 - 1),
-    #     'FILES_UPLOAD': 2 ** (5 - 1),
-    #     'FILES_DELETE_OTHERS': 2 ** (14 - 1),
-    #
-    #     'MATERIALS_SUBMIT_TO_PORTAL': 2 ** (8 - 1),
-    #     'MATERIALS_EDIT_OTHERS': 2 ** (12 - 1),
-    #
-    #     'PUBLICATION_PUBLISH_AT_OWN_PORTAL': 2 ** (2 - 1),
-    #     'PUBLICATION_UNPUBLISH_AT_OWN_PORTAL': 2 ** (3 - 1),
-    #     'PUBLICATION_SET_PRIORITY': 2 ** (11 - 1),
-    #
-    #     'EMPLOYEE_CONFIRM_NEW': 2 ** (6 - 1),
-    #     'EMPLOYEE_SUSPEND_UNSUSPEND': 2 ** (7 - 1),
-    #
-    #     'COMPANY_REQUIRE_MEMBEREE_AT_PORTALS': 2 ** (15 - 1),
-    #     'COMPANY_MANAGE_USER_RIGHTS': 2 ** (9 - 1),
-    #     'COMPANY_EDIT_PROFILE': 2 ** (1 - 1),
-    #
-    #     'PORTAL_EDIT_PROFILE': 2 ** (10 - 1),
-    #
-    #     'PORTAL_MANAGE_READERS': 2 ** (16 - 1),
-    #     'PORTAL_MANAGE_COMMENTS': 2 ** (18 - 1),
-    #     'PORTAL_MANAGE_MEMBERS_COMPANIES': 2 ** (13 - 1),
-    # }
+    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED', 'FIRED': 'FIRED'}
+    status = Column(TABLE_TYPES['status'], default=STATUSES['APPLICANT'], nullable=False)
 
     class RIGHT_AT_COMPANY(BinaryRights):
         FILES_BROWSE = 4
         FILES_UPLOAD = 5
         FILES_DELETE_OTHERS = 14
 
-        MATERIALS_SUBMIT_TO_PORTAL = 8
+        MATERIALS_SUBMIT_AND_PUBLISH = 8
         MATERIALS_EDIT_OTHERS = 12
-
-        PUBLICATION_PUBLISH_AT_OWN_PORTAL = 2
-        PUBLICATION_UNPUBLISH_AT_OWN_PORTAL = 3
-        PUBLICATION_SET_PRIORITY = 11
 
         EMPLOYEE_CONFIRM_NEW = 6
         EMPLOYEE_SUSPEND_UNSUSPEND = 7
@@ -309,32 +277,23 @@ class UserCompany(Base, PRBase):
         COMPANY_EDIT_PROFILE = 1
 
         PORTAL_EDIT_PROFILE = 10
-
         PORTAL_MANAGE_READERS = 16
         PORTAL_MANAGE_COMMENTS = 18
         PORTAL_MANAGE_MEMBERS_COMPANIES = 13
 
-
-
-
     position = Column(TABLE_TYPES['short_name'], default='')
 
     md_tm = Column(TABLE_TYPES['timestamp'])
-    # works_since_tm = Column(TABLE_TYPES['timestamp'])
+    works_since_tm = Column(TABLE_TYPES['timestamp'])
 
     banned = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
 
-
     rights = Column(TABLE_TYPES['binary_rights'](RIGHT_AT_COMPANY),
-                                        default={RIGHT_AT_COMPANY.PUBLICATION_EDIT: True, RIGHT_AT_COMPANY.PUBLICATION_PUBLISH: True},
+                                        default={RIGHT_AT_COMPANY.FILES_BROWSE: True, RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH: True},
                                         nullable=False)
 
     employer = relationship('Company', backref='employee_assoc')
     employee = relationship('User', backref=backref('employer_assoc', lazy='dynamic'))
-
-    UniqueConstraint('user_id', 'company_id', name='uc_user_id_company_id')
-
-    # todo (AA to AA): check handling md_tm
 
     def __init__(self, user_id=None, company_id=None, status=STATUSES['APPLICANT']):
 
@@ -348,6 +307,7 @@ class UserCompany(Base, PRBase):
         return db(UserCompany).filter_by(user_id=user_id if user_id else g.user.id, company_id=company_id).one()
 
     def get_statuses_avaible(self):
+# TODO: SS by OZ: you mixed up rights object and subject
         available_statuses = {s: True for s in self.STATUSES}
         user_rights = self.rights
         if user_rights['EMPLOYEE_CONFIRM_NEW'] == False:
@@ -357,57 +317,38 @@ class UserCompany(Base, PRBase):
             available_statuses['UNSUSPEND'] = False
         return available_statuses
 
-    def get_rights_avaible(self):
-        return {s: True for s in self.RIGHT_AT_COMPANY}
-
     def get_client_side_dict(self, fields='id,user_id,company_id,position,status,rights', more_fields=None):
         return self.to_dict(fields, more_fields)
 
     def set_client_side_dict(self, json):
-        self.attr(g.filter_json(json, 'status|position'))
-        self._rights = PRBase.convert_rights_dict_to_binary(json['rights'], self.RIGHT_AT_COMPANY)
+        self.attr(g.filter_json(json, 'status|position|rights'))
 
-    @property
-    def rights_set(self):
-        return Right.transform_rights_into_set(self.rights_int)
-
-    @rights_set.setter
-    #  rights_iterable may be a set or list
-    def rights_set(self, rights_iterable=[]):
-        rights_int = Right.transform_rights_into_integer(rights_iterable)
-        self.rights_int = rights_int
+# TODO: VK by OZ: pls teach everybody what is done here
+    # # do we provide any rights to user at subscribing? Not yet
+    # def subscribe_to_company(self):
+    #     """Add user to company with non-active status. After that Employer can accept request,
+    #     and add necessary rights, or reject this user. Method need instance of class with
+    #     parameters : user_id, company_id, status"""
+    #     if db(UserCompany, user_id=self.user_id,
+    #           company_id=self.company_id).count():
+    #         raise errors.AlreadyJoined({
+    #             'message': 'user already joined to company %(name)s',
+    #             'data': self.get_client_side_dict()})
+    #     self.employee = User.user_query(self.user_id)
+    #     self.employer = db(Company, id=self.company_id).one()
+    #     return self
 
     # @staticmethod
-    # def user_in_company(user_id, company_id):
-    #     """Return user (status, rights) in some company"""
-    #     ret = db(UserCompany, user_id=user_id, company_id=company_id).one()
-    #     return ret
-
-    # do we provide any rights to user at subscribing? Not yet
-    def subscribe_to_company(self):
-        """Add user to company with non-active status. After that Employer can accept request,
-        and add necessary rights, or reject this user. Method need instance of class with
-        parameters : user_id, company_id, status"""
-        if db(UserCompany, user_id=self.user_id,
-              company_id=self.company_id).count():
-            raise errors.AlreadyJoined({
-                'message': 'user already joined to company %(name)s',
-                'data': self.get_client_side_dict()})
-        self.employee = User.user_query(self.user_id)
-        self.employer = db(Company, id=self.company_id).one()
-        return self
-
-    @staticmethod
-    def change_status_employee(company_id, user_id, status=STATUSES['SUSPENDED']):
-        """This method make status employee in this company suspended"""
-        db(UserCompany, company_id=company_id, user_id=user_id). \
-            update({'status': status})
-        if status == UserCompany.STATUSES['FIRED']:
-            UserCompany.update_rights(user_id=user_id,
-                                      company_id=company_id,
-                                      new_rights=()
-                                      )
-            # db_session.flush()
+    # def change_status_employee(company_id, user_id, status=STATUSES['SUSPENDED']):
+    #     """This method make status employee in this company suspended"""
+    #     db(UserCompany, company_id=company_id, user_id=user_id). \
+    #         update({'status': status})
+    #     if status == UserCompany.STATUSES['FIRED']:
+    #         UserCompany.update_rights(user_id=user_id,
+    #                                   company_id=company_id,
+    #                                   new_rights=()
+    #                                   )
+    #         # db_session.flush()
 
     @staticmethod
     def apply_request(company_id, user_id, bool):
@@ -424,51 +365,26 @@ class UserCompany(Base, PRBase):
            status=UserCompany.STATUSES['APPLICANT']).update({'status': stat})
 
     def has_rights(self, rightname):
-
-        if rightname == 'RIGHT_ANY':
+        if rightname == '_ANY':
             return True if self.status == self.STATUSES['ACTIVE'] else False
 
         return True if (self.status == self.STATUSES['ACTIVE'] and self.rights[rightname]) else False
         # user_company = self.employer_assoc.filter_by(company_id=company_id).first()
         # return user_company.rights_set if user_company and user_company.status == STATUS.ACTIVE() and user_company.employer.status == STATUS.ACTIVE() else []
 
-    @staticmethod
-    # @check_rights(simple_permissions([Right['manage_rights_company']]))
-    # @check_rights(forbidden_for_current_user)
-    def update_rights(user_id, company_id, new_rights, position=None):
-        """This method defines for update user-rights in company. Apply list of rights"""
-        new_rights_binary = Right.transform_rights_into_integer(new_rights)
-        user_company = db(UserCompany, user_id=user_id, company_id=company_id)
-        rights_dict = {'_rights': new_rights_binary}
-        if position is not None:
-            rights_dict['position'] = position
-        # rights_dict = {'rights_int': new_rights_binary}  # TODO (AA to AA): does it work?
-        user_company.update(rights_dict)
+    # @staticmethod
+    # # @check_rights(simple_permissions([Right['manage_rights_company']]))
+    # # @check_rights(forbidden_for_current_user)
+    # def update_rights(user_id, company_id, new_rights, position=None):
+    #     """This method defines for update user-rights in company. Apply list of rights"""
+    #     new_rights_binary = Right.transform_rights_into_integer(new_rights)
+    #     user_company = db(UserCompany, user_id=user_id, company_id=company_id)
+    #     rights_dict = {'_rights': new_rights_binary}
+    #     if position is not None:
+    #         rights_dict['position'] = position
+    #     # rights_dict = {'rights_int': new_rights_binary}  # TODO (AA to AA): does it work?
+    #     user_company.update(rights_dict)
 
-    #  corrected
-    @staticmethod
-    def show_rights(company_id):
-        """Show all rights all users in current company with all statuses"""
-        emplo = {}
-        for user in db(Company, id=company_id).one().employees:
-            user_company = user.employer_assoc.filter_by(company_id=company_id).one()
-            emplo[user.id] = {'id': user.id,
-                              'name': user.user_name,
-                              # TODO (AA to AA): don't pass user object
-                              'user': user,
-                              'rights': {},
-                              'companies': [user.employers],
-                              'status': user_company.status,
-                              'date': user_company.md_tm,
-                              'position': user_company.position}
-
-            # emplo[user.id]['rights'] = \
-            #     Right.transform_rights_into_set(user_company.rights_set)
-
-            emplo[user.id]['rights'] = user_company.rights_set
-            # earlier it was a dictionary:
-            # {'right_1': True, 'right_2': False, ...}
-        return emplo
 
     @staticmethod
     def search_for_user_to_join(company_id, searchtext):
