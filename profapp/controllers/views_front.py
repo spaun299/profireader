@@ -81,6 +81,7 @@ def index(page=1):
                                                   division_name=division.name)
     articles, pages, page = Search().search(
         ArticlePortalDivision().search_filter_default(division.id),
+        {'class': Company, 'filter': Company.name.ilike('ssssssss')},
         search_text=search_text, page=page, order_by=order, pagination=True,
         items_per_page=items_per_page)
     session['original_search_text'] = search_text
