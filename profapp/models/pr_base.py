@@ -256,15 +256,23 @@ class Search(Base):
                    collections.OrderedDict(sorted(objects.items())).values()}
         ordered = sorted(tuple(to_order.items()), reverse=False if self.__desc_asc == 'asc' else True,
                          key=operator.itemgetter(1))
-        objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
+        # objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
         if self.__return_objects:
+            objects = self.__get_objects_from_db(*args, ordered_objects_list=ordered)
+        else:
+            objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
+        return objects, self.__pages, self.__page
+
+    @staticmethod
+    def __get_objects_from_db(*args, ordered_objects_list=None):
             items = dict()
             for cls in args:
                 fields = cls.get('return_fields') or 'id'
                 tags = cls.get('tags')
                 assert type(fields) is str, \
                     'Arg parameter return_fields must be string but %s given' % fields
-                for a in db(cls['class']).filter(cls['class'].id.in_(objects.keys())).all():
+                for a in db(cls['class']).filter(cls['class'].id.in_(
+                        list(map(lambda x: x[0], ordered_objects_list)))).all():
                     if fields != 'default_dict' and not tags:
                         items[a.id] = a.get_client_side_dict(fields=fields)
                     elif fields != 'default_dict' and tags:
@@ -275,8 +283,7 @@ class Search(Base):
                     else:
                         items[a.id] = a.get_client_side_dict()
                         items[a.id].update(dict(tags=a.tags))
-            objects = collections.OrderedDict((id, items[id]) for id, val in ordered)
-        return objects, self.__pages, self.__page
+            return collections.OrderedDict((id, items[id]) for id, val in ordered_objects_list)
 
     def __get_search_params(self, *args: dict):
         search_params = []
