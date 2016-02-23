@@ -311,10 +311,10 @@ class UserCompany(Base, PRBase):
     def get(user_id=None, company_id=None):
         return db(UserCompany).filter_by(user_id=user_id if user_id else g.user.id, company_id=company_id).one()
 
-    def get_statuses_avaible(self):
-# TODO: SS by OZ: you mixed up rights object and subject
-        available_statuses = {s: True for s in self.STATUSES}
-        user_rights = self.rights
+    @staticmethod
+    def get_statuses_avaible(company_id):
+        available_statuses = {s: True for s in UserCompany.STATUSES}
+        user_rights = UserCompany.get(user_id=current_user.id, company_id=company_id).rights
         if user_rights['EMPLOYEE_CONFIRM_NEW'] == False:
             available_statuses['ACTIVE']= False
         if user_rights['EMPLOYEE_SUSPEND_UNSUSPEND'] == False:
