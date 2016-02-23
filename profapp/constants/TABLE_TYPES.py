@@ -10,7 +10,7 @@ class BinaryRightsMetaClass1(type):
                 self.__dict__.items() if name not in ['__doc__', '__module__']}
 
     def _todict(self, bin):
-        return {name: (True if (2 ** (type.__getattribute__(self, name) - 1) & bin) else False) for (name, val) in
+        return {name: (True if ((1 << type.__getattribute__(self, name)) & bin) else False) for (name, val) in
                 self._allrights().items()}
 
     def _tobin(self, dict):
@@ -23,16 +23,22 @@ class BinaryRightsMetaClass1(type):
                 bit_position = all_rights.get(rightname)
                 if bit_position is None:
                     raise Exception(
-                            "You passed right {}. but this right do not exist among allowed column rights {}".format(
-                                    rightname, self._allrights()))
+                            "right `{}` doesn't exists in allowed columns rights: {}".format(rightname,
+                                                                                             self._allrights()))
                 else:
-                    ret |= 2 ** (bit_position - 1) if truefalse else 0
+                    ret |= (1 << bit_position) if truefalse else 0
 
         return ret
 
     def __getattribute__(self, key):
-        return type.__getattribute__(self, key) if key in ['_todict', '_tobin', '_allrights'] or (
-            key[:2] == '__' and key[-2:] == '__') else key
+        if key in ['_todict', '_tobin', '_allrights'] or (key[:2] == '__' and key[-2:] == '__'):
+            return type.__getattribute__(self, key)
+        elif key in type.__getattribute__(self, '_allrights')():
+            return key
+        else:
+            raise Exception(
+                            "right `{}` doesn't exists in allowed columns rights: {}".format(key,
+                                                                                             self._allrights()))
 
 
 class BinaryRights(metaclass=BinaryRightsMetaClass1):
@@ -65,25 +71,6 @@ class RIGHTS(BIGINT):
 
     def adapt(self, impltype):
         return RIGHTS(self._rights_class)
-
-
-# class PRColumn(Column):
-#
-#     right_class = None
-#
-#     def __init__(self, *args, **kwargs):
-#         if 'rights' in kwargs:
-#             self.right_class = kwargs['rights']
-#             args = [RIGHTS] + list(args)
-#             del kwargs['rights']
-#             pass
-#
-#         if 'searchable' in kwargs:
-#             pass
-#
-#         Column.__init__(self, *args, **kwargs)
-
-
 
 
 # read this about UUID:

@@ -293,21 +293,6 @@ class Portal(Base, PRBase):
 class MemberCompanyPortal(Base, PRBase):
     __tablename__ = 'member_company_portal'
 
-    # field = MemberCompanyPortal.rights
-    # PUBLICATION_DELETE_UNDELETE = 2 ** (4 - 1)
-
-    # RIGHT_AT_PORTAL = {
-    #     'PUBLICATION_PUBLISH': 2 ** (1 - 1),
-    #     'PUBLICATION_UNPUBLISH': 2 ** (2 - 1),
-    #     'PUBLICATION_EDIT': 2 ** (3 - 1),
-    #     # 'PUBLICATION_DELETE_UNDELETE': 2 ** (4 - 1),
-    # }
-
-    # _RIGHT_AT_PORTAL = _RIGHT_AT_PORTAL()
-
-    # RIGHT_AT_PORTAL_DEFAULT = RIGHT_AT_PORTAL.PUBLICATION_PUBLISH
-
-
     class RIGHT_AT_PORTAL(BinaryRights):
         PUBLICATION_PUBLISH = 1
         PUBLICATION_UNPUBLISH = 2
@@ -320,7 +305,6 @@ class MemberCompanyPortal(Base, PRBase):
                     default={RIGHT_AT_PORTAL.PUBLICATION_EDIT: True, RIGHT_AT_PORTAL.PUBLICATION_PUBLISH: True},
                     nullable=False)
 
-    # rights_company_at_portal = PRColumn(TABLE_TYPES['bigint'], nullable=False)
 
     member_company_portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))
 

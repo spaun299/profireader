@@ -61,13 +61,6 @@ class ArticlePortalDivision(Base, PRBase):
                            secondaryjoin="ArticleCompany.company_id == Company.id",
                            viewonly=True, uselist=False)
 
-    # portal_division_tags = relationship('TagPortalDivision',
-    #                                     secondary='tag_portal_division_article',
-    #                                     back_populates='articles')
-
-    # tag_assoc_ = relationship('TagPortalDivisionArticle',
-    #                                 back_populates='article_portal_division_select')
-
     search_fields = {'title': {'relevance': lambda field='title': RELEVANCE.title},
                      'short': {'relevance': lambda field='short': RELEVANCE.short},
                      'long': {'relevance': lambda field='long': RELEVANCE.long},
@@ -78,67 +71,156 @@ class ArticlePortalDivision(Base, PRBase):
                                     passive_deletes=True
                                     )
 
-    def get_actions_for_status(self, company_id):
-        # action_rights_user = {
-        #     'edit': UserCompany.RIGHT_AT_COMPANY.MATERIALS_EDIT_OTHERS,
-        #     'publish': UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_TO_PORTAL,
-        #     'republish': UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_TO_PORTAL,
-        #     'unpublish': UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_TO_PORTAL
-        # }
-        #
-        # action_rights_company = {
-        #     'edit': MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT,
-        #     'publish': UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_TO_PORTAL,
-        #     'republish': UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_TO_PORTAL,
-        #     'unpublish': UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_TO_PORTAL
-        # }
+    ACTIONS = {
+        'PUBLISH': 'PUBLISH',
+        'UNPUBLISH': 'UNPUBLISH',
+        'EDIT': 'EDIT',
+        'REPUBLISH': 'REPUBLISH',
+        'DELETE': 'DELETE',
+        'UNDELETE': 'UNDELETE'
+    }
 
-        ucr = UserCompany.get(company_id=company_id)
-        cpr = MemberCompanyPortal.get(portal_id=self.division.portal_id, company_id=company_id)
-        print(MemberCompanyPortal._RIGHT_AT_PORTAL.PUBLICATION_DELETE_UNDELETE)
-        print(MemberCompanyPortal._RIGHT_AT_PORTAL.bin(MemberCompanyPortal._RIGHT_AT_PORTAL.PUBLICATION_DELETE_UNDELETE))
+    ACTIONS_FOR_STATUSES = {
+        STATUSES['SUBMITTED']: {
+            ACTIONS['PUBLISH']: {'membership': [MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH],
+                                 'employment': [UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH]},
+            ACTIONS['DELETE']: {},
+        },
+        STATUSES['PUBLISHED']: {
+            ACTIONS['REPUBLISH']: {},
+            ACTIONS['UNPUBLISH']: {},
+            ACTIONS['EDIT']: {},
+            ACTIONS['DELETE']: {}
+        },
+        STATUSES['UNPUBLISHED']: {
+            ACTIONS['REPUBLISH']: {},
+            ACTIONS['EDIT']: {},
+            ACTIONS['DELETE']: {}
+        },
+        STATUSES['DELETED']: {
+            ACTIONS['UNPUBLISH']: {},
+        }
+    }
 
-        MemberCompanyPortal._RIGHT_AT_PORTAL.PUBLICATION_EDIT
+    # actions = {
+    #     ArticlePortalDivision.STATUSES['SUBMITTED']:
+    #         'edit':
+    # {
+    #     'employment': '',
+    #     'membership': '',
+    #     ArticlePortalDivision.STATUSES['SUBMITTED']: {
+    #
+    #     },
+    #     ArticlePortalDivision.STATUSES['PUBLISHED']: {
+    #
+    #     },
+    #     ArticlePortalDivision.STATUSES['UNPUBLISHED']: {
+    #
+    #     },
+    # }
+    # (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT,
+    #  UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH),
+    # 'publish': (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH,
+    #             UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH),
+    #            'republish': (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT,
+    #                          UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH)
+    # 'unpublish': (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT,
+    #               UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH)
+    # 'delete': (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT,
+    #            UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH)
+    # 'undelete': (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT,
+    #              UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH)
+    # }
+    #
+    # if action_name is None:
+    #     # get all actions as dict
+    #     ret = {}
+    #
+    # if action_name == 'edit':
+    #     return self.action_is_allowed('edit')
+    # if action_name is None:
+    #     ret['action'] = self.action_is_allowed()
+    #
+    # if action_name == 'edit':
+    #     return self.action_is_allowed('edit')
+    # if action_name is None:
+    #     ret['action'] = self.action_is_allowed()
 
-        def cr(o):
-            print(o)
-            return True
+    # def action_is_disabled(action, membership, employment):
+    #
+    #     if membership.status != MemberCompanyPortal.STATUSES['ACTIVE']:
+    #         return "Action {} is not allowed for membership status {}".format(action, membership.status)
+    #
+    #     if employment.status != UserCompany.STATUSES['ACTIVE']:
+    #         return "Action {} is not allowed for employer with status {}".format(action, membership.status)
+    #
+    #     if action == 'edit':
+    #         if not membership.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT):
+    #             return "Action {} require {} membership right {}".format(
+    #                     MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT)
+    #         if not membership.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT):
+    #             return "Action {} require {} membership right {}".format(
+    #                     MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT)
+    #
+    #     elif action == 'publish':
+    #         return cr(MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH)
+    #         # return (cpr.has_rights(
+    #         #         MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH) or 'PUBLICATION_PUBLISH') or \
+    #         #        ucr.has_rights(UserCompany.RIGHT_AT_COMPANY.PUBLICATION_PUBLISH_AT_OWN_PORTAL)
+    #
+    #     if action == 'republish':
+    #         return membership.has_rights(
+    #                 MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH) or 'PUBLICATION_PUBLISH'
+    #     if action == 'unpublish':
+    #         return membership.has_rights(
+    #                 MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_UNPUBLISH) or 'PUBLICATION_UNPUBLISH'
+    #     if action == 'delete':
+    #         return membership.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL[
+    #                                          'PUBLICATION_DELETE_UNDELETE']) or 'PUBLICATION_DELETE_UNDELETE'
+    #     if action == 'undelete':
+    #         return membership.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL[
+    #                                          'PUBLICATION_DELETE_UNDELETE']) or 'PUBLICATION_DELETE_UNDELETE'
 
+    def action_is_allowed(self, action_name, employment, membership):
 
-        def action_is_allowed(action):
-            if action == 'edit':
-                return cpr.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT) or 'PUBLICATION_EDIT'
-            if action == 'publish':
-                return cr(MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH)
-                # return (cpr.has_rights(
-                #         MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH) or 'PUBLICATION_PUBLISH') or \
-                #        ucr.has_rights(UserCompany.RIGHT_AT_COMPANY.PUBLICATION_PUBLISH_AT_OWN_PORTAL)
+        if not action_name in self.ACTIONS:
+            return "Unrecognized publication action `{}`".format(action_name)
 
-            if action == 'republish':
-                return cpr.has_rights(
-                        MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH) or 'PUBLICATION_PUBLISH'
-            if action == 'unpublish':
-                return cpr.has_rights(
-                        MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_UNPUBLISH) or 'PUBLICATION_UNPUBLISH'
-            if action == 'delete':
-                return cpr.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL[
-                                          'PUBLICATION_DELETE_UNDELETE']) or 'PUBLICATION_DELETE_UNDELETE'
-            if action == 'undelete':
-                return cpr.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL[
-                                          'PUBLICATION_DELETE_UNDELETE']) or 'PUBLICATION_DELETE_UNDELETE'
+        if not self.status in self.ACTIONS_FOR_STATUSES:
+            return "Unrecognized publication status `{}`".format(self.status)
 
-        if self.status == ArticlePortalDivision.STATUSES['SUBMITTED']:
-            ret = ['edit', 'publish', 'delete']
-        elif self.status == ArticlePortalDivision.STATUSES['UNPUBLISHED']:
-            ret = ['edit', 'republish', 'delete']
-        elif self.status == ArticlePortalDivision.STATUSES['PUBLISHED']:
-            ret = ['edit', 'unpublish', 'republish']
-        elif self.status == ArticlePortalDivision.STATUSES['DELETED']:
-            ret = ['undelete']
-        else:
-            ret = []
+        if not action_name in self.ACTIONS_FOR_STATUSES[self.status]:
+            return "Action `{}` is not applicable for publication with status `{}`".format(action_name, self.status)
 
-        return {r: action_is_allowed(r) for r in ret}
+        if membership.status != MemberCompanyPortal.STATUSES['ACTIVE']:
+            return "Company need membership with status `{}` to perform action `{}`".format(
+                    MemberCompanyPortal.STATUSES['ACTIVE'], action_name)
+
+        if employment.status != UserCompany.STATUSES['ACTIVE']:
+            return "User need employment with status `{}` to perform action `{}`".format(
+                    UserCompany.STATUSES['ACTIVE'], action_name)
+
+        required_rights = self.ACTIONS_FOR_STATUSES[self.status][action_name]
+
+        if 'employment' in required_rights:
+            for required_right in required_rights['employment']:
+                if not employment.has_right(required_right):
+                    return "Employment need right `{}` to perform action `{}`".format(required_right, action_name)
+
+        if 'membership' in required_rights:
+            for required_right in required_rights['membership']:
+                if not membership.has_right(required_right):
+                    return "Membership need right `{}` to perform action `{}`".format(required_right, action_name)
+
+        return True
+
+    def actions(self, company_id):
+
+        employment = UserCompany.get(company_id=company_id)
+        membership = MemberCompanyPortal.get(portal_id=self.division.portal_id, company_id=company_id)
+
+        return {action_name: self.action_is_allowed(action_name, employment, membership) for action_name in
+                self.ACTIONS_FOR_STATUSES[self.status]}
 
     def check_favorite_status(self, user_id):
         return db(ReaderArticlePortalDivision, user_id=user_id, article_portal_division_id=self.id,

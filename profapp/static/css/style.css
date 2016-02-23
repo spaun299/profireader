@@ -437,6 +437,36 @@ body {
 .logo-portal-news {
   width: 100%;
 }
+/* ---reader--- */
+.name-news-details {
+  margin-bottom: 10px;
+}
+.name-news-details h2 {
+  color: #000;
+}
+.name-news-details small {
+  color: #212121;
+}
+.reader-short-info {
+  border-bottom: 1px solid #212121;
+  text-align: center;
+  margin-bottom: 15px;
+}
+.reader-short-info i {
+  color: #424242;
+  margin-right: 5px;
+}
+.reader-short-info a {
+  color: #424242;
+}
+.image-reader-details img {
+  width: 50%;
+  float: left;
+  margin-right: 15px;
+}
+.news-details {
+  margin-bottom: 50px;
+}
 /* ---MEDIA--- */
 @media screen and (max-width: 764px) {
   .menu-site ul {
