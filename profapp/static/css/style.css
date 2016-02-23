@@ -402,6 +402,9 @@ body {
   list-style: none;
   padding-left: 0;
 }
+.list-reader-image {
+  width: 100%;
+}
 .reader-content {
   margin-top: 30px;
   background-color: #fff;
@@ -415,6 +418,9 @@ body {
 }
 .reader-content .label a {
   color: #fff;
+}
+.reader-content .item-title {
+  margin-top: 0;
 }
 .reader-content .item-title a {
   color: #212121;
