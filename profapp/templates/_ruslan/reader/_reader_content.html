@@ -1,31 +1,40 @@
 {#TODO AA by OZ: pls remove explicit url. use url_for#}
 <script>
     var favorite = {{ favorite }}
-    favorite?addToMenu_Selected('favorite'):addToMenu_Selected('list')
+            favorite ? addToMenu_Selected('favorite') : addToMenu_Selected('list')
 </script>
 {% for article_id, article in articles.items() %}
+
     <div class="container">
-        <div class="row reader-content">
+        <div class="col-lg-offset-3 col-lg-6 col-md-offset-3 col-md-7 reader-content">
 
             <div class="block-item list-elements">
                 <div class="item-type article">
-                    <span class="label label-success"><a href="//{{ article['portal']['host']|safe }}/{{ article['division']['name'] }}/1/?search_text=">{{ article['division']['name']|safe }}</a></span>
+                    <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+                        <img class="logo-portal-news" src="{{ article['portal']['logo']|safe }}">
+                    </div>
+                    <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+                        <a target="_blank" href="">{{ article['portal']['name']|safe }}</a>
+                        <span class="label label-success"><a target="_blank" href="//{{ article['portal']['host']|safe }}/{{ article['division']['name'] }}/1/?search_text=">{{ article['division']['name']|safe }}</a></span>
+                    </div>
                 </div>
-                <h2 class="item-title">
-                    <a href="{{ url_for('article.details_reader', article_portal_division_id=article_id) }}">{{ article['title']|safe }}</a>
+                <img class="img-content" src="https://s.tcdn.co/93c/ef5/93cef59e-767d-38e5-a8a6-182457707ce2/4.png">
+                <h3 class="item-title">
+                    <a target="_blank" href="{{ url_for('article.details_reader', article_portal_division_id=article_id) }}">{{ article['title']|safe }}</a>
                     {% if article['tags'] %}
                         <span class="tag-in-article">
                             {% for tag in article['tags'] %}
-                                <a href="#">{{ tag }}</a>
+                                <a target="_blank" href="#">{{ tag }}</a>
                             {% endfor %}
                         </span>
                     {% endif %}
-                </h2>
+                </h3>
                 <div class="item-short-content">
                     <p>{{ article['short']|safe }}</p>
                 </div>
                 <div class="item-additional-info">
-                    <a href="//{{ article['portal']['host']|safe }}/_c/{{ article['company']['id']|safe }}/{{ article['company']['name']|safe }}"
+                    <a target="_blank"
+                       href="//{{ article['portal']['host']|safe }}/_c/{{ article['company']['id']|safe }}/{{ article['company']['name']|safe }}"
                        class="item-company">{{ article['company']['name']|safe }}</a>
                     <div class="item-read_count">Read: {{ article['read_count'] }}</div>
                     <div class="item-publication-date">{{ article['publishing_tm']|safe }}</div>

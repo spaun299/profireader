@@ -64,6 +64,7 @@ def list_reader(page=1):
         articles[article_id]['company']['logo'] = File().get(articles[article_id]['company']['logo_file_id']).url()
         articles[article_id]['portal']['logo'] = File().get(articles[article_id]['portal']['logo_file_id']).url()
         del articles[article_id]['company']['logo_file_id'], articles[article_id]['portal']['logo_file_id']
+
     return render_template('partials/reader/reader_base.html',
                            articles=articles,
                            pages=pages,

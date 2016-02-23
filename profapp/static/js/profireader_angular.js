@@ -1224,6 +1224,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
                 function generateCellTemplate(col, columnindex) {
                     var classes_for_row = ' ui-grid-cell-contents pr-grid-cell-field-type-' + (col.type ? col.type : 'text') + ' pr-grid-cell-field-name-' + col.name.replace(/\./g, '-') + ' ' + (typeof col.classes === 'string' ? col.classes : '') + ' ';
+                    console.log('col.classes', col.classes, typeof  col.classes);
                     if (typeof  col.classes === 'function') {
                         classes_for_row += ' {{ columns[' + columnindex + '].classes() }} ';
                     }
