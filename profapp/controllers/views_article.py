@@ -383,24 +383,24 @@ def list_reader(page=1):
     search_text = request.args.get('search_text') or ''
     favorite = 'favorite' in request.args
     if not favorite:
-        articles, pages, page = Search.search({'class': ArticlePortalDivision,
-                                               'filter': and_(ArticlePortalDivision.portal_division_id ==
-                                                              db(PortalDivision).filter(
-                                                                      PortalDivision.portal_id ==
-                                                                      db(UserPortalReader,
-                                                                         user_id=g.user.id).subquery().
-                                                                      c.portal_id).subquery().c.id,
-                                                              ArticlePortalDivision.status ==
-                                                              ArticlePortalDivision.STATUSES['PUBLISHED']),
-                                               'tags': True, 'return_fields': 'default_dict'}, page=page)
+        articles, pages, page = Search().search({'class': ArticlePortalDivision,
+                                                 'filter': and_(ArticlePortalDivision.portal_division_id ==
+                                                                db(PortalDivision).filter(
+                                                                    PortalDivision.portal_id ==
+                                                                    db(UserPortalReader,
+                                                                       user_id=g.user.id).subquery().
+                                                                    c.portal_id).subquery().c.id,
+                                                                ArticlePortalDivision.status ==
+                                                                ArticlePortalDivision.STATUSES['PUBLISHED']),
+                                                 'tags': True, 'return_fields': 'default_dict'}, page=page)
     else:
-        articles, pages, page = Search.search({'class': ArticlePortalDivision,
-                                               'filter': (ArticlePortalDivision.id == db(ReaderArticlePortalDivision,
-                                                                                         user_id=g.user.id,
-                                                                                         favorite=True).subquery().c.
-                                                          article_portal_division_id),
-                                               'tags': True, 'return_fields': 'default_dict'}, page=page,
-                                              search_text=search_text)
+        articles, pages, page = Search().search({'class': ArticlePortalDivision,
+                                                 'filter': (ArticlePortalDivision.id == db(ReaderArticlePortalDivision,
+                                                                                           user_id=g.user.id,
+                                                                                           favorite=True).subquery().c.
+                                                            article_portal_division_id),
+                                                 'tags': True, 'return_fields': 'default_dict'}, page=page,
+                                                search_text=search_text)
     portals = UserPortalReader.get_portals_for_user() if not articles else None
 
     return render_template('partials/reader/reader_base.html',

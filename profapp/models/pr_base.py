@@ -84,38 +84,6 @@ class Search(Base):
         self.__search_text = None
         self.__return_objects = None
 
-    def search_from_cls(self, *args):
-        """ *args: dictionary with following values -
-                             -class = sqlalchemy table class object,
-                optional:    -filter: sqlalchemy filter with your own parameters,
-                optional:    -fields: (tuple ot list) with fields name from table Search.kind
-                             , if provided and search_text is not None, this function will look
-                             for search text only in this fields.
-                             -tags: boolean. If True, function will return dict with fields
-                             updated with tags
-                optional:    -return_fields: String. If return_fields provided,
-                             this function return dictionary with fields you want, else return id's.
-                             example: "name,country,region". Also you can pass to this argument
-                             string 'default_dict' which also return sorted dictionaries with
-                             default fields provided in 'get_client_side_to_dict' func
-                             for this class.
-                if you want to pass one fieldname you almost should make tuple
-                or list. example: ('title', ):
-                optional:    -join: subquery wich you want to join without filters.
-            For example: {'class': Company,
-                          'filter': ~db(User, company_id=1).exists(),
-                          'join': Article,
-                          'fields': (tuple) with fields name in table Search.kind}
-            default: {'class': class,
-                      'filter': class.id == Search.index,
-                      'join': class,
-                      'fields': all_fields} """
-        return self.search(*args, **self.__dict__)
-
-    ORDER_RELEVANCE = 1
-    ORDER_POSITION = 2
-    ORDER_MD_TM = 3
-
     def search(self, *args: dict, **kwargs):
         """ *args: dictionary with following values -
                              -class = sqlalchemy table class object,
@@ -170,6 +138,16 @@ class Search(Base):
                       -desc_asc = sort by desc or asc default = desc,
                       :return id's objects or objects which you want, all pages for pagination
                        and current page """
+        self.__dict__.update(**kwargs)
+        assert all(filter(lambda arg: type(arg) is dict, args)), '*args should be a dictionary'
+        return self.search_start(*args, **self.__dict__)
+
+    ORDER_RELEVANCE = 1
+    ORDER_POSITION = 2
+    ORDER_MD_TM = 3
+
+    def search_start(self, *args: dict, **kwargs):
+
         self.__page = kwargs.get('page') or 1
         self.__items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
         self.__pagination = kwargs.get('pagination') or True
@@ -232,7 +210,7 @@ class Search(Base):
                         index=subquery_search.subquery().c.index).filter(
                 Search.kind.in_(tuple(field_name))).group_by(Search.index)
             return joined
-        search_params = self.__get_search_params(*args, search_text=self.__search_text)
+        search_params = self.__get_search_params(*args)
 
         subquery_search = db(Search.index.label('index'),
                              func.sum(Search.relevance).label('relevance'),
@@ -300,25 +278,25 @@ class Search(Base):
             objects = collections.OrderedDict((id, items[id]) for id, val in ordered)
         return objects, self.__pages, self.__page
 
-    def __get_search_params(*args: dict, search_text=None):
+    def __get_search_params(self, *args: dict):
         search_params = []
-        for cls in args:
-            filter_params = cls.get('filter')
-            fields = cls.get('fields') or [key for key in vars(cls['class']).keys() if not key.startswith('_')]
+        for arg in args:
+            filter_params = arg.get('filter')
+            fields = arg.get('fields') or [key for key in vars(arg['class']).keys() if not key.startswith('_')]
 
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
 
             if filter_params is None:
-                filter_array = [Search.index == db(cls['class'].id).subquery().c.id]
+                filter_array = [Search.index == db(arg['class'].id).subquery().c.id]
             else:
-                filter_array = [Search.index == db(cls['class'].id).filter(filter_params).subquery().c.id]
+                filter_array = [Search.index == db(arg['class'].id).filter(filter_params).subquery().c.id]
 
-            filter_array.append(Search.table_name == cls['class'].__tablename__)
+            filter_array.append(Search.table_name == arg['class'].__tablename__)
             filter_array.append(Search.kind.in_(fields))
 
-            if search_text:
-                filter_array.append(Search.text.ilike("%" + search_text + "%"))
+            if self.__search_text:
+                filter_array.append(Search.text.ilike("%" + getattr(self, '__search_text') + "%"))
 
             search_params.append(and_(*filter_array))
             return search_params

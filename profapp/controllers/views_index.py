@@ -30,7 +30,7 @@ def portals_list():
 @general_bp.route('portals_list/', methods=['POST'])
 @ok
 def portals_list_load(json):
-    ret, page, page2 = Search.search(
+    ret, page, page2 = Search().search(
         {'class': Portal, 'return_fields': 'default_dict'},
         page=json.get('page'), search_text=json.get('text'), pagination=True)
     return [PRBase.merge_dicts(p, {'subscribed': True if UserPortalReader.get(portal_id=p_id) else False})
