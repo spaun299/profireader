@@ -189,11 +189,13 @@ def employee_update(company_id, user_id):
 def employee_update_load(json, company_id, user_id):
     action = g.req('action', allowed=['load', 'validate', 'save'])
     employment = UserCompany.get(user_id=user_id, company_id=company_id)
+    print(employment.get_client_side_dict())
+
     if action == 'load':
         return  {'employment': employment.get_client_side_dict(),
                 'employee': employment.employee.get_client_side_dict(),
                 'employer': employment.employer.get_client_side_dict(fields='id|logo_file_id|name'),
-                'statuses_available': employment.get_statuses_avaible(),
+                'statuses_available': UserCompany.get_statuses_avaible(company_id),
                 # 'rights_available': employment.get_rights_avaible()
                  }
     else:

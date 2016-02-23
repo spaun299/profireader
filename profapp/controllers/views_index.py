@@ -1,6 +1,6 @@
 from flask import render_template, request, session, redirect, url_for, g, flash
 from .blueprints_declaration import general_bp
-from flask.ext.login import login_required
+from flask.ext.login import login_required, current_user
 from ..models.portal import Portal, UserPortalReader, ReaderUserPortalPlan
 from ..models.company import Company
 from ..models.pr_base import Search, PRBase
@@ -18,6 +18,8 @@ def help():
 
 @general_bp.route('')
 def index():
+    if current_user.is_authenticated():
+        return redirect(url_for('reader.list_reader'))
     return render_template('general/index.html')
 
 
