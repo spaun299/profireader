@@ -85,6 +85,7 @@ class Search(Base):
         self.__pages = None
         self.__search_text = None
         self.__return_objects = None
+        self.__start_reloading = lambda *args: self.__search_start(*args, **self.__dict__)
 
     ORDER_RELEVANCE = 1
     ORDER_POSITION = 2
@@ -146,12 +147,21 @@ class Search(Base):
                        and current page """
         self.__dict__.update(**kwargs)
         assert all(filter(lambda arg: type(arg) is dict, args)), '*args should be a dictionary'
+        self.__init_arguments(*args, **self.__dict__)
+        self.__catch_errors(*args, ord_by=kwargs.get('order_by'))
         return self.__search_start(*args, **self.__dict__)
+
+    def __init_arguments(self, *args, **kwargs):
+        self.__page = kwargs.get('page') or 1
+        self.__items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
+        self.__pagination = kwargs.get('pagination') or True
+        self.__desc_asc = kwargs.get('desc_asc') or 'desc'
+        self.__pages = None
+        self.__search_text = kwargs.get('search_text') or ''
+        self.__return_objects = any(list(map(lambda arg: bool(arg.get('return_fields')), args)))
 
     def __search_start(self, *args: dict, **kwargs):
         """ Don't use this method, use Search().search() method """
-        self.__init_arguments(*args, **kwargs)
-        self.__catch_errors(*args, **kwargs)
         subquery_search = self.__get_subquery(*args, ord_by=kwargs.get('order_by'))
         if self.__pagination:
             from ..controllers.pagination import pagination as pagination_func
@@ -177,11 +187,22 @@ class Search(Base):
                    collections.OrderedDict(sorted(objects.items())).values()}
         ordered = sorted(tuple(to_order.items()), reverse=False if self.__desc_asc == 'asc' else True,
                          key=operator.itemgetter(1))
+        self.__reload_func(len(ordered), *args)
         if self.__return_objects:
             objects = self.__get_objects_from_db(*args, ordered_objects_list=ordered)
         else:
             objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
         return objects, self.__pages, self.__page
+
+    def __reload_func(self, elements_length, *args):
+        if elements_length or (len(args) == 1):
+            return
+        else:
+            args = list(args)
+            for arg in args:
+                if not self.__get_subquery(arg, ord_by=Search.ORDER_MD_TM).limit(1).count():
+                    args.remove(arg)
+            self.__start_reloading(*args)
 
     def __get_subquery(self, *args, ord_by=None):
         def add_joined_search(field_name):
@@ -232,15 +253,6 @@ class Search(Base):
                   }[order_name](field)
         return result
 
-    def __init_arguments(self, *args, **kwargs):
-        self.__page = kwargs.get('page') or 1
-        self.__items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
-        self.__pagination = kwargs.get('pagination') or True
-        self.__desc_asc = kwargs.get('desc_asc') or 'desc'
-        self.__pages = None
-        self.__search_text = kwargs.get('search_text') or ''
-        self.__return_objects = any(list(map(lambda arg: bool(arg.get('return_fields')), args)))
-
     def __get_objects_from_db(self, *args, ordered_objects_list=None):
             items = dict()
             for cls in args:
@@ -267,25 +279,21 @@ class Search(Base):
         for arg in args:
             filter_params = arg.get('filter')
             fields = arg.get('fields') or [key for key in vars(arg['class']).keys() if not key.startswith('_')]
-
             assert type(fields) is list or tuple, \
                 'Arg parameter fields should be list or tuple but %s given' % type(fields)
-
             if filter_params is None:
                 filter_array = [Search.index == db(arg['class'].id).subquery().c.id]
             else:
                 filter_array = [Search.index == db(arg['class'].id).filter(filter_params).subquery().c.id]
-
             filter_array.append(Search.table_name == arg['class'].__tablename__)
             filter_array.append(Search.kind.in_(fields))
             search_text = self.__search_text
             if search_text:
                 filter_array.append(Search.text.ilike("%" + search_text + "%"))
-
             search_params.append(and_(*filter_array))
-            return search_params
+        return search_params
 
-    def __catch_errors(self, *args, **kwargs):
+    def __catch_errors(self, *args, ord_by=None):
         try:
             assert (self.__desc_asc == 'desc' or self.__desc_asc == 'asc'), \
                 'Parameter desc_asc should be desc or asc but %s given' % self.__desc_asc
@@ -297,13 +305,13 @@ class Search(Base):
                 'Parameter pagination should be boolean but %s given' % type(self.__pagination)
             assert (type(self.__page), type(self.__items_per_page) is int) and self.__page >= 0, \
                 'Parameter page is not integer, or page < 1 .'
-            assert (getattr(args[0]['class'], str(kwargs.get('order_by')), False) is not False) or \
-                   (type(kwargs.get('order_by')) is int) or type(
-                kwargs.get('order_by') is (list or tuple)), \
+            assert (getattr(args[0]['class'], str(ord_by), False) is not False) or \
+                   (type(ord_by) is int) or type(
+                ord_by is (list or tuple)), \
                 'Bad value for parameter "order_by".' \
                 'You requested attribute which is not in class %s or give bad kwarg type.' \
                 'Can be string, list or tuple %s given' % \
-                (args[0]['class'], type(kwargs.get('order_by')))
+                (args[0]['class'], type(ord_by))
             assert type(self.__return_objects) is bool, \
                 'Parameter "return_objects" must be boolean but %s given' % type(self.__return_objects)
         except AssertionError as e:
