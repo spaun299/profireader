@@ -52,7 +52,7 @@ def portal_and_settings(portal):
     for di in ret['divisions']:
         if di['portal_division_type_id'] == 'company_subportal':
             pdset = g.db().query(PortalDivisionSettingsCompanySubportal). \
-                filter_by(portal_division_id=di['id']).one()
+                filter_by(portal_division_id=di['id']).first()
             com_port = g.db().query(MemberCompanyPortal).get(pdset.member_company_portal_id)
             di['member_company'] = Company.get(com_port.company_id)
         newd.append(di)

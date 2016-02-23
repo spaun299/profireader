@@ -9,7 +9,6 @@ from ..constants.UNCATEGORIZED import AVATAR_SIZE, AVATAR_SMALL_SIZE
 from ..forms.user import EditProfileForm
 from ..controllers.request_wrapers import tos_required
 from .request_wrapers import ok
-from config import Config
 
 @user_bp.route('/profile/<user_id>')
 @tos_required
@@ -19,6 +18,14 @@ def profile(user_id):
     if not user:
         abort(404)
     return render_template('general/user_profile.html', user=user, avatar_size=AVATAR_SIZE)
+
+@user_bp.route('/avatar_update')
+@ok
+def avatar_update(json):
+    image = json.get('update_image')
+    user = json.get('user')
+    return user.avatar_update(image)
+
 
 # TODO (AA to AA): Here admin must have the possibility to change user profile
 @user_bp.route('/edit-profile/<user_id>', methods=['GET', 'POST'])
@@ -33,7 +40,7 @@ def edit_profile(user_id):
     #form = EditProfileForm()
     #if form.validate_on_submit():
     #    pass
-    error = None
+
     user = user_query.first()
 
     if request.method == 'GET':
@@ -42,15 +49,12 @@ def edit_profile(user_id):
     if 'avatar' in request.form.keys():
         avatar_type = request.form.get('avatar')
         avatar_methods = {'Upload Image': 'upload', 'Use Gravatar': 'gravatar', 'facebook': 'facebook',
-                          'google': 'google', 'linkedin': 'linkedin', 'microsoft': 'microsoft', 'vkontakte': 'vkontakte'}
+                          'google': 'google', 'linkedin': 'linkedin', 'microsoft': 'microsoft'}
         avatar_type = avatar_methods[avatar_type]
-        if avatar_type == 'upload':
+        if avatar_type == 'Upload Image':
             user = user_query.first()
             image = request.files['avatar']
-            if image.content_type.split('/')[1].upper() in Config.ALLOWED_IMAGE_FORMATS:
-                user.avatar_update(image)
-            else:
-                error = 'Wrong image format'
+            user.avatar_update(image)
         else:
             user.avatar(avatar_type, size=AVATAR_SIZE, small_size=AVATAR_SMALL_SIZE)
         g.db.add(user)
@@ -69,7 +73,7 @@ def edit_profile(user_id):
         user_fields['about_me'] = request.form['about_me']
 
         user_query.update(user_fields)
-        flash('You have successfully updated your profile.')
+        flash('You have successfully updated you profile.')
 
     #return redirect(url_for('user.profile', user_id=user_id, avatar_size=2*AVATAR_SIZE))
-    return render_template('general/user_edit_profile.html',  user=user, avatar_size=AVATAR_SIZE, error=error)
+    return render_template('general/user_edit_profile.html',  user=user, avatar_size=AVATAR_SIZE)
