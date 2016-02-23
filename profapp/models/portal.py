@@ -378,11 +378,12 @@ class MemberCompanyPortal(Base, PRBase):
         #     return sub_query
 
     def has_rights(self, rightname):
-        if rightname == '_ANY':
-            return True if self.status == self.STATUSES['ACTIVE'] else False
 
         if self.portal.own_company.id == self.company_id:
             return True
+
+        if rightname == '_ANY':
+            return True if self.status == self.STATUSES['ACTIVE'] else False
 
         return True if (self.status == self.STATUSES['ACTIVE'] and self.rights[rightname]) else False
 

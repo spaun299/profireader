@@ -187,12 +187,7 @@ def get_portal_dict_for_material(portal, company, material=None, publication=Non
 
     else:
         ret['publication'] = None
-        ret['actions'] = {'submit': True}
-                              # (UserCompany.get(company_id=company.id).has_rights(
-                              #         UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_TO_PORTAL)
-                              #  and MemberCompanyPortal.get(company_id=company.id, portal_id=ret['id']).has_rights(
-                              #         MemberCompanyPortal.RIGHT_AT_PORTAL._ANY))
-                              # or 'MATERIALS_SUBMIT_TO_PORTAL'}
+        ret['actions'] = {'SUBMIT': True}
 
     return ret
 

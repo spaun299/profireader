@@ -365,6 +365,9 @@ class UserCompany(Base, PRBase):
            status=UserCompany.STATUSES['APPLICANT']).update({'status': stat})
 
     def has_rights(self, rightname):
+        if self.company.user_owner.id == self.user_id:
+            return True
+
         if rightname == '_ANY':
             return True if self.status == self.STATUSES['ACTIVE'] else False
 

@@ -71,36 +71,7 @@ class ArticlePortalDivision(Base, PRBase):
                                     passive_deletes=True
                                     )
 
-    ACTIONS = {
-        'PUBLISH': 'PUBLISH',
-        'UNPUBLISH': 'UNPUBLISH',
-        'EDIT': 'EDIT',
-        'REPUBLISH': 'REPUBLISH',
-        'DELETE': 'DELETE',
-        'UNDELETE': 'UNDELETE'
-    }
 
-    ACTIONS_FOR_STATUSES = {
-        STATUSES['SUBMITTED']: {
-            ACTIONS['PUBLISH']: {'membership': [MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH],
-                                 'employment': [UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH]},
-            ACTIONS['DELETE']: {},
-        },
-        STATUSES['PUBLISHED']: {
-            ACTIONS['REPUBLISH']: {},
-            ACTIONS['UNPUBLISH']: {},
-            ACTIONS['EDIT']: {},
-            ACTIONS['DELETE']: {}
-        },
-        STATUSES['UNPUBLISHED']: {
-            ACTIONS['REPUBLISH']: {},
-            ACTIONS['EDIT']: {},
-            ACTIONS['DELETE']: {}
-        },
-        STATUSES['DELETED']: {
-            ACTIONS['UNPUBLISH']: {},
-        }
-    }
 
     # actions = {
     #     ArticlePortalDivision.STATUSES['SUBMITTED']:
@@ -181,6 +152,40 @@ class ArticlePortalDivision(Base, PRBase):
     #         return membership.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL[
     #                                          'PUBLICATION_DELETE_UNDELETE']) or 'PUBLICATION_DELETE_UNDELETE'
 
+
+    ACTIONS = {
+        'PUBLISH': 'PUBLISH',
+        'UNPUBLISH': 'UNPUBLISH',
+        'EDIT': 'EDIT',
+        'REPUBLISH': 'REPUBLISH',
+        'DELETE': 'DELETE',
+        'UNDELETE': 'UNDELETE'
+    }
+
+    ACTIONS_FOR_STATUSES = {
+        STATUSES['SUBMITTED']: {
+            ACTIONS['PUBLISH']: {'membership': [MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH],
+                                 'employment': [UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH]},
+
+            ACTIONS['DELETE']: {'membership': [MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH],
+                                 'employment': [UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH]},
+        },
+        STATUSES['PUBLISHED']: {
+            ACTIONS['REPUBLISH']: {},
+            ACTIONS['UNPUBLISH']: {},
+            ACTIONS['EDIT']: {},
+            ACTIONS['DELETE']: {}
+        },
+        STATUSES['UNPUBLISHED']: {
+            ACTIONS['REPUBLISH']: {},
+            ACTIONS['EDIT']: {},
+            ACTIONS['DELETE']: {}
+        },
+        STATUSES['DELETED']: {
+            ACTIONS['UNPUBLISH']: {},
+        }
+    }
+
     def action_is_allowed(self, action_name, employment, membership):
 
         if not action_name in self.ACTIONS:
@@ -192,13 +197,13 @@ class ArticlePortalDivision(Base, PRBase):
         if not action_name in self.ACTIONS_FOR_STATUSES[self.status]:
             return "Action `{}` is not applicable for publication with status `{}`".format(action_name, self.status)
 
-        if membership.status != MemberCompanyPortal.STATUSES['ACTIVE']:
-            return "Company need membership with status `{}` to perform action `{}`".format(
-                    MemberCompanyPortal.STATUSES['ACTIVE'], action_name)
-
         if employment.status != UserCompany.STATUSES['ACTIVE']:
             return "User need employment with status `{}` to perform action `{}`".format(
                     UserCompany.STATUSES['ACTIVE'], action_name)
+
+        if membership.status != MemberCompanyPortal.STATUSES['ACTIVE']:
+            return "Company need membership with status `{}` to perform action `{}`".format(
+                    MemberCompanyPortal.STATUSES['ACTIVE'], action_name)
 
         required_rights = self.ACTIONS_FOR_STATUSES[self.status][action_name]
 
