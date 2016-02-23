@@ -1,6 +1,6 @@
 from flask import render_template, request, session, redirect, url_for, g, flash
 from .blueprints_declaration import general_bp
-from flask.ext.login import login_required
+from flask.ext.login import login_required, current_user
 from ..models.portal import Portal, UserPortalReader, ReaderUserPortalPlan
 from ..models.company import Company
 from ..models.pr_base import Search, PRBase
@@ -18,6 +18,8 @@ def help():
 
 @general_bp.route('')
 def index():
+    if current_user.is_authenticated():
+        return redirect(url_for('reader.list_reader'))
     return render_template('general/index.html')
 
 
@@ -30,7 +32,7 @@ def portals_list():
 @general_bp.route('portals_list/', methods=['POST'])
 @ok
 def portals_list_load(json):
-    ret, page, page2 = Search.search(
+    ret, page, page2 = Search().search(
         {'class': Portal, 'return_fields': 'default_dict'},
         page=json.get('page'), search_text=json.get('text'), pagination=True)
     return [PRBase.merge_dicts(p, {'subscribed': True if UserPortalReader.get(portal_id=p_id) else False})

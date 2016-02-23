@@ -37,34 +37,33 @@ def details_reader(article_portal_division_id):
 @tos_required
 def list_reader(page=1):
     search_text = request.args.get('search_text') or ''
-    article_fields = 'title|short|subtitle|publishing_tm,company.name|logo_file_id,' \
+    article_fields = 'title|short|image_file_id|subtitle|publishing_tm,company.name|logo_file_id,' \
                      'division.name,portal.name|host|logo_file_id'
     favorite = request.args.get('favorite') == 'True'
     if not favorite:
-        articles, pages, page = Search.search({'class': ArticlePortalDivision,
-                                               'filter': and_(ArticlePortalDivision.portal_division_id ==
-                                                              db(PortalDivision).filter(
-                                                                      PortalDivision.portal_id ==
-                                                                      db(UserPortalReader,
-                                                                         user_id=g.user.id).subquery().
-                                                                      c.portal_id).subquery().c.id,
-                                                              ArticlePortalDivision.status ==
-                                                              ArticlePortalDivision.STATUSES['PUBLISHED']),
-                                               'tags': True, 'return_fields': article_fields}, page=page)
+        articles, pages, page = Search().search({'class': ArticlePortalDivision,
+                                                 'filter': and_(ArticlePortalDivision.portal_division_id ==
+                                                                db(PortalDivision).filter(
+                                                                    PortalDivision.portal_id ==
+                                                                    db(UserPortalReader,
+                                                                       user_id=g.user.id).subquery().
+                                                                    c.portal_id).subquery().c.id,
+                                                                ArticlePortalDivision.status ==
+                                                                ArticlePortalDivision.STATUSES['PUBLISHED']),
+                                                 'tags': True, 'return_fields': article_fields}, page=page)
     else:
-        articles, pages, page = Search.search({'class': ArticlePortalDivision,
-                                               'filter': (ArticlePortalDivision.id == db(ReaderArticlePortalDivision,
-                                                                                         user_id=g.user.id,
-                                                                                         favorite=True).subquery().c.
-                                                          article_portal_division_id),
-                                               'tags': True, 'return_fields': article_fields}, page=page,
-                                              search_text=search_text)
+        articles, pages, page = Search().search({'class': ArticlePortalDivision,
+                                                 'filter': (ArticlePortalDivision.id == db(ReaderArticlePortalDivision,
+                                                                                           user_id=g.user.id,
+                                                                                           favorite=True).subquery().c.
+                                                            article_portal_division_id),
+                                                 'tags': True, 'return_fields': article_fields}, page=page,
+                                                search_text=search_text)
     portals = UserPortalReader.get_portals_for_user() if not articles else None
     for article_id, article in articles.items():
         articles[article_id]['company']['logo'] = File().get(articles[article_id]['company']['logo_file_id']).url()
         articles[article_id]['portal']['logo'] = File().get(articles[article_id]['portal']['logo_file_id']).url()
         del articles[article_id]['company']['logo_file_id'], articles[article_id]['portal']['logo_file_id']
-
     return render_template('partials/reader/reader_base.html',
                            articles=articles,
                            pages=pages,
