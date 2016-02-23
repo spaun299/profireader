@@ -17,6 +17,7 @@ from sqlalchemy import desc
 from io import BytesIO
 from .google import GoogleAuthorize,GoogleToken
 import sys
+import os
 
 class File(Base, PRBase):
     __tablename__ = 'file'
@@ -46,8 +47,7 @@ class File(Base, PRBase):
 
     UniqueConstraint('name', 'parent_id', name='unique_name_in_folder')
     thumbnail_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'))
-    thumbnail = relationship('File', uselist=True, foreign_keys='File.thumbnail_id',
-                             cascade='all, delete')
+    thumbnail = relationship('File', uselist=True, foreign_keys='File.thumbnail_id')
 
     owner = relationship('User',
                          backref=backref('files', lazy='dynamic'),
@@ -57,7 +57,7 @@ class File(Base, PRBase):
     def __init__(self, parent_id=None, name=None, mime='text/plain', size=0,
                  user_id=None, cr_tm=None, md_tm=None, ac_tm=None,
                  root_folder_id=None, youtube_id=None,
-                 company_id=None, author_user_id=None, image_croped=None, thumbnail_id=None):
+                 company_id=None, copyright_author_name=None, author_user_id=None, image_croped=None, thumbnail_id=None):
         super(File, self).__init__()
         self.parent_id = parent_id
         self.name = name
@@ -69,6 +69,7 @@ class File(Base, PRBase):
         self.md_tm = md_tm
         self.root_folder_id = root_folder_id
         self.ac_tm = ac_tm
+        self.copyright_author_name=copyright_author_name
         self.author_user_id = author_user_id
         self.company_id = company_id
         self.youtube_id = youtube_id
@@ -172,7 +173,7 @@ class File(Base, PRBase):
                     'description': file.description,
                     'actions': {action: actions[action](file) for action in actions}
                     }
-                                        for file in s)
+                                        for file in s if file.mime != 'image/thumbnail')
         return ret
 
     @staticmethod
@@ -193,7 +194,6 @@ class File(Base, PRBase):
             default_actions['choose'] = lambda file: True
             actions['choose'] = lambda file: True
         actions = {act: default_actions[act] for act in default_actions}
-
         actions['remove'] = lambda file: None if file.mime == "root" else True
         actions['copy'] = lambda file: None if file.mime == "root" else True
         actions['paste'] = lambda file: None if file == None else True
@@ -212,6 +212,7 @@ class File(Base, PRBase):
                         'parent_id': file.parent_id, 'type': File.type(file),
                         'date': str(file.md_tm).split('.')[0],
                         'url': file.get_thumbnail_url(size=str_size),
+                        'youtube_data': {'id':file.youtube_video.video_id, 'playlist_id': file.youtube_video.playlist_id} if file.mime == 'video/*' else {},
                         'path_to': File.path(file),
                         'author_name': file.copyright_author_name,
                         'description': file.description,
@@ -229,7 +230,6 @@ class File(Base, PRBase):
                         'description': parent.description,
                         'actions': {action: actions[action](parent) for action in actions},
                         })
-
         return ret
 
     def get_thumbnails(self, size):
@@ -237,25 +237,33 @@ class File(Base, PRBase):
             str_size = '{height}x{width}'.format(height=str(size[0]), width=str(size[1]))
             if not self.get_thumbnail(size=str_size):
                 image_pil = Image.open(BytesIO(self.file_content.content))
-                resized = image_pil.resize(size)
-                bytes_file = BytesIO()
-                resized.save(bytes_file, self.mime.split('/')[-1].upper())
-                thumbnail = File(md_tm=self.md_tm, size=sys.getsizeof(bytes_file.getvalue()),
-                                 name=self.name + '_thumbnail_{str_size}'.format(
-                                     str_size=str_size),
-                                 parent_id=self.parent_id,
-                                 root_folder_id=self.root_folder_id,
-                                 mime=self.mime.split('/')[0]+'/thumbnail',
-                                 thumbnail_id=self.id)
-                FileContent(content=bytes_file.getvalue(), file=thumbnail)
-                self.thumbnail.append(thumbnail)
-                g.db.add(thumbnail)
-                g.db.flush()
+                try:
+                    resized = image_pil.resize(size)
+                    bytes_file = BytesIO()
+                    resized.save(bytes_file, self.mime.split('/')[-1].upper())
+                    thumbnail = File(md_tm=self.md_tm, size=sys.getsizeof(bytes_file.getvalue()),
+                                     name=self.name + '_thumbnail_{str_size}'.format(
+                                         str_size=str_size),
+                                     parent_id=self.parent_id,
+                                     root_folder_id=self.root_folder_id,
+                                     mime=self.mime.split('/')[0]+'/thumbnail',
+                                     thumbnail_id=self.id)
+                    FileContent(content=bytes_file.getvalue(), file=thumbnail)
+                    self.thumbnail.append(thumbnail)
+                    g.db.add(thumbnail)
+                    g.db.flush()
+                except Exception as e:  # truncated png/gif
+                    a = e
+                    print(self.id)
+                    File.remove(self.id)
+                # resized = image_pil.resize(size)
+
 
         return self
 
     def get_thumbnail_url(self, size='133x100'):
         thumbnail = self.get_thumbnail(size=size)
+
         return thumbnail.url() if thumbnail else self.url()
 
     def get_thumbnail(self, size=None, any=False):
@@ -273,7 +281,7 @@ class File(Base, PRBase):
         elif re.search('^image/.*', self.mime):
             return 'img'
         elif self.mime == 'application/pdf':
-            return 'pdf'
+            return 'fpdf'
         else:
             return 'file'
 
@@ -288,7 +296,7 @@ class File(Base, PRBase):
 
     def url(self):
         server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', self.id)
-        return '//file' + server + '.profireader.com/' + self.id + '/'
+        return 'http://file' + server + '.profireader.com/' + self.id + '/'
 
     @staticmethod
     def get_index(file, lists):
@@ -339,7 +347,7 @@ class File(Base, PRBase):
             ext = File.ext(name)
             name = File.if_copy(name)
             list = []
-            for n in db(File, parent_id=parent_id, mime=mime):
+            for n in db(File,parent_id = parent_id, mime=mime):
                 if re.match(r'^'+name+'\(\d+\)'+''+ext+'', n.name):
                     pos = (len(n.name) - 2) - len(ext)
                     list.append(int(n.name[pos:pos+1]))
@@ -356,10 +364,10 @@ class File(Base, PRBase):
 
     @staticmethod
     def createdir(parent_id=None, name=None, author_user_id=None,
-                  root_folder_id=None,
+                  root_folder_id = None,
                   company_id=None, copyright='', author=''):
         f = File(parent_id=parent_id, author_user_id=author_user_id,
-                 root_folder_id=root_folder_id,
+                 root_folder_id = root_folder_id,
                  name=name, size=0, company_id=company_id, mime='directory')
         g.db.add(f)
         g.db.commit()
@@ -378,9 +386,8 @@ class File(Base, PRBase):
     def set_properties(self, add_all, **kwargs):
         if self == None:
             return False
-        attr = {f: kwargs[f] for f in kwargs}
-        check = File.is_name(attr['name'], self.mime, self.parent_id) if \
-            attr['name'] != 'None' else True
+        attr = {f:kwargs[f] for f in kwargs}
+        check = File.is_name(attr['name'], self.mime, self.parent_id) if attr['name'] != 'None' else True
         if attr['name'] == 'None':
             del attr['name']
         self.updates(attr)
@@ -393,7 +400,7 @@ class File(Base, PRBase):
         return check
 
     def rename(self, name):
-        if not self:
+        if self == None:
             return False
         if File.is_name(name, self.mime, self.parent_id):
             return False
@@ -402,18 +409,22 @@ class File(Base, PRBase):
             return True
 
     @staticmethod
-    def auto_remove(name, folder_id):
-        file = db(File, name=name, parent_id=folder_id).first()
-        if file.mime == 'video/*':
-            YoutubeVideo.delfile(YoutubeVideo.get(file.id))
-        else:
-            FileContent.delfile(FileContent.get(file.id))
-        return 's'
+    def auto_remove(list, folder_id):
+        for file in [db(File, name=file.name, parent_id=folder_id).first() for file in list]:
+            g.sql_connection.execute("DELETE FROM file WHERE id='%s';"
+                             % file.id)
+            # FileContent.delfile(FileContent.get(file.thumbnail_id)) if file.thumbnail_id else None
+            # YoutubeVideo.delfile(YoutubeVideo.get(file.id)) if file.mime == 'video/*' else  FileContent.delfile(FileContent.get(file.id))
+
+    @staticmethod
+    def removeAll(parent_id, mime):
+        list = [FileContent.delfile(FileContent.get(file.id)) for file in db(File, parent_id=parent_id, mime=mime)]
 
     @staticmethod
     def remove(file_id):
+        # File.removeAll('563c8429-17a5-4001-a2c1-806bdb740b9d', 'image/thumbnail')
         file = File.get(file_id)
-        if not file:
+        if file == None:
             return False
         if file.mime == 'directory':
             list = File.get_all_in_dir_rev(file_id)
@@ -423,25 +434,22 @@ class File(Base, PRBase):
                 elif f.mime == 'video/*':
                     YoutubeVideo.delfile(YoutubeVideo.get(f.id))
                 else:
-                    FileContent.delfile(FileContent.get(f.id))
+                   g.sql_connection.execute("DELETE FROM file WHERE id='%s';"
+                             % f.id)
             File.delfile(file)
         elif file.mime == 'video/*':
             YoutubeVideo.delfile(YoutubeVideo.get(file.id))
         else:
-            if file.thumbnail:
-                for thumbnail in file.thumbnail:
-                    g.db.delete(thumbnail.file_content)
-            FileContent.delfile(FileContent.get(file_id))
-
-        resp = (False if File.get(file_id) else "Success")
-        return resp
+            # file = file.get_thumbnail(any=True) or file
+            g.sql_connection.execute("DELETE FROM file WHERE id='%s';"
+                             % file_id)
+        return 'Success'
 
     @staticmethod
     def save_files(files, new_id, attr):
         for file in files:
             attr['parent_id'] = new_id
-            file_content = YoutubeVideo.get(file.id).detach() if file.mime == 'video/*'\
-                else FileContent.get(file.id).detach()
+            file_content = YoutubeVideo.get(file.id).detach() if file.mime == 'video/*' else FileContent.get(file.id).detach()
             file.detach().attr(attr)
             file.save()
             if file.mime == 'video/*':
@@ -474,6 +482,37 @@ class File(Base, PRBase):
         return old_list, new_list
 
     @staticmethod
+    def uploadForCompany(content, name, type, company):
+        size = len(content)
+        file = File(parent_id=company.journalist_folder_file_id,
+                            root_folder_id=company.journalist_folder_file_id,
+                            name=name,
+                            mime=type,
+                            size=size
+                            ).save()
+        file_cont = FileContent(file=file, content=content)
+        g.db.add(file, file_cont)
+        g.db.commit()
+        return file.id
+
+    def uploadWithoutChunk(self, user):
+        if self:
+            old_file_position = self.tell()
+            self.seek(0, os.SEEK_END)
+            size = self.tell()
+            self.seek(old_file_position, os.SEEK_SET)
+            file = File(parent_id=user.system_folder_file_id,
+                            root_folder_id=user.system_folder_file_id,
+                            name=self.filename,
+                            mime=self.content_type,
+                            size=size
+                            ).save()
+            file_cont = FileContent(file=file, content=self.stream.read(-1))
+            g.db.add(file, file_cont)
+            g.db.commit()
+            return file
+
+    @staticmethod
     def upload(name, data, parent, root, content):
         if data.get('chunkNumber') == '0':
             file = File(parent_id=parent,
@@ -496,15 +535,15 @@ class File(Base, PRBase):
             return id
 
     @staticmethod
-    def update_files(files, attr):
+    def update_files(files,attr):
         for file in files:
             file.updates(attr)
         return files
 
     @staticmethod
     def update_all_in_dir(id, attr):
-        lists = [file for file in db(File, parent_id=id) if file.mime == 'directory']
-        files = [file for file in db(File, parent_id=id) if file.mime != 'directory']
+        lists = [file for file in db(File, parent_id = id) if file.mime == 'directory']
+        files = [file for file in db(File, parent_id = id) if file.mime != 'directory']
         c = len(lists)
         c_ = 1
         File.update_files(files, attr)
@@ -513,7 +552,7 @@ class File(Base, PRBase):
             if c_ <= c:
                 list.updates(attr)
                 new_list.append(list)
-            for file in db(File, parent_id=list.id):
+            for file in db(File,parent_id = list.id):
                 if file.mime == 'directory':
                         lists.append(file)
                         file.updates(attr)
@@ -525,7 +564,7 @@ class File(Base, PRBase):
 
     @staticmethod
     def update_all(id, attr):
-        files_in_parent = [file for file in db(File, parent_id=id)]
+        files_in_parent = [file for file in db(File, parent_id = id)]
         del attr['name']
         del attr['parent_id']
         for fil in files_in_parent:
@@ -563,16 +602,16 @@ class File(Base, PRBase):
 
     def move_to(self, parent_id, **kwargs):
         folder = File.get(parent_id)
-        if not self or not folder:
+        if self == None or folder == None:
             return False
-        if not File.can_paste_in_dir(self.id, parent_id) and self.mime == 'directory':
+        if File.can_paste_in_dir(self.id, parent_id) == False and self.mime == 'directory':
             return False
         if self.parent_id == parent_id:
             return self.id
         root = folder.root_folder_id
-        if not folder.root_folder_id:
+        if folder.root_folder_id == None:
             root = folder.id
-        attr = {f: kwargs[f] for f in kwargs}
+        attr = {f:kwargs[f] for f in kwargs}
         attr['name'] = File.get_unique_name(self.name, self.mime, parent_id)
         attr['parent_id'] = parent_id
         attr['root_folder_id'] = root
@@ -587,12 +626,12 @@ class FileContent(Base, PRBase):
     id = Column(TABLE_TYPES['id_profireader'], ForeignKey('file.id'),
                 primary_key=True)
     content = Column(Binary, nullable=False)
-    file = relationship('File', uselist=False,
-                        backref=backref('file_content', uselist=False),
-                        cascade='save-update,delete')
+    file = relationship('File',
+                                uselist=False,
+                                backref=backref('file_content', uselist=False),
+                                cascade='save-update,delete')
 
     def __init__(self, file=None, content=None):
-        super(FileContent, self).__init__()
         self.file = file
         self.content = content
 
@@ -788,15 +827,13 @@ class YoutubeApi(GoogleAuthorize):
                 r = req.Request(url=session['url'], headers=headers, method='PUT')
                 response = req.urlopen(r, data=self.video_file,)
                 if response.code == 200 or response.code == 201:
-                    name = File.get_unique_name(self.body_dict['title'], 'video/*',
-                                                self.parent_folder_id)
+                    name = File.get_unique_name(self.body_dict['title'], 'video/*', self.parent_folder_id)
                     file = File(parent_id=self.parent_folder_id,
                                 root_folder_id=self.root_folder_id,
                                 name=name,
                                 size=self.chunk_info.get('total_size'),
                                 mime='video/*')
-                    youtube = YoutubeVideo(file=file,
-                                           authorization=session['authorization'].split(' ')[-1],
+                    youtube = YoutubeVideo(file=file, authorization=session['authorization'].split(' ')[-1],
                                            size=self.chunk_info.get('total_size'),
                                            user_id=g.user_dict['id'],
                                            video_id=session['video_id'],
@@ -809,15 +846,13 @@ class YoutubeApi(GoogleAuthorize):
                     return 'success'
         except response_code as e:
             if e.code == 308 and not chunk_number:
-                name = File.get_unique_name(self.body_dict['title'],
-                                            'video/*', self.parent_folder_id)
+                name = File.get_unique_name(self.body_dict['title'], 'video/*', self.parent_folder_id)
                 file = File(parent_id=self.parent_folder_id,
                             root_folder_id=self.root_folder_id,
                             name=name,
                             size=self.chunk_info.get('total_size'),
                             mime='video/*')
-                youtube = YoutubeVideo(file=file,
-                                       authorization=session['authorization'].split(' ')[-1],
+                youtube = YoutubeVideo(file=file, authorization=session['authorization'].split(' ')[-1],
                                        size=int(e.headers.get('Range').split('-')[-1])+1,
                                        user_id=g.user_dict['id'],
                                        video_id=session['video_id'],
@@ -846,7 +881,7 @@ class YoutubeApi(GoogleAuthorize):
         except response_code as e:
             if e.code == 308:
                 db(YoutubeVideo, id=session['id']).update(
-                    {'size': int(e.headers.get('Range').split('-')[-1])+1})
+                    {'size': int(e.headers.get('Range').split('-')[-1]) + 1})
             return 'uploading'
 
 
@@ -871,8 +906,8 @@ class YoutubeVideo(Base, PRBase):
                                 backref=backref('youtube_video', uselist=False),
                                 cascade='save-update,delete')
 
-    def __init__(self, file=None, title='Title', authorization=None, size=None, user_id=None,
-                 video_id=None, status='uploading', playlist_id=None, playlist=None):
+    def __init__(self, file=None, title='Title', authorization=None, size=None, user_id=None, video_id=None,
+                 status='uploading', playlist_id=None, playlist=None):
         super(YoutubeVideo, self).__init__()
         self.file = file
         self.title = title

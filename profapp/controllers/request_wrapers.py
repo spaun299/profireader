@@ -92,7 +92,7 @@ def need_we_column(name, arr, is_relationship=False):
 def tos_required(func):
     @wraps(func)
     def decorated_view(*args, **kwargs):
-        if not g.user.tos:
+        if not g.user or not g.user.tos:
             flash('You have not accept licence and terms')
             return redirect(url_for('general.index'))
         return func(*args, **kwargs)

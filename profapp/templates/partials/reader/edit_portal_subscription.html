@@ -1,0 +1,52 @@
+{% extends "index_lazy_layout.html" %}
+
+
+{% block head %}
+    {{ super() }}
+    {% include '_ruslan/partials/_header_files_grid.html' %}
+{% endblock head %}
+{% block title %}{{ _('Profireader reader edit') }}{% endblock title %}
+
+{% block portal_content %}
+    <script>
+        module.controller('reader_edit_profile', ['$scope', '$http', function ($scope, $http) {
+            $scope.edit_data = function(data){console.log(data);};
+            $scope.reader_edit_url = {{ raw_url_for('reader.edit_profile_submit')|safe }};
+            $scope.edit = function (){
+                console.log($scope.data);
+                $http({
+                    method: 'POST',
+                    url: $scope.reader_edit_url({reader_portal_id: $scope.data.reader_portal_id}),
+                    data: $scope.data
+                    }).success(function (resp) {
+                            $scope.data = resp.data}
+            )}}]);
+    </script>
+{% include 'partials/reader/reader_nav.html' %}
+{% raw %}
+    <div ng-controller="reader_edit_profile" ng-model="data">
+        <div>
+            <div af
+             af-after-save="afterSave"
+             af-after-load="afterLoad"
+             ng-model="data">
+                <span style="display:block; width: 50px">
+                </span>Division name<span style="margin-left: 85px;display:inline-block;">| Show articles | Show comments | Show favorite comments | Show liked comments
+            </span><br>
+                <form >
+            <span ng-repeat="division in data.divisions"><br>
+                <span style="display:inline-block; width: 70px">{{ division.name }}</span>
+                <span style="margin-left: 130px;" ng-repeat="show in division.show_divisions_and_comments">
+                    <label style="position: absolute; width: 70px; margin-left: 5px">
+                        <input ng-model="show[1]" type="checkbox" class="show_checkbox">
+                    </label>
+                </span>
+            </span>
+                <input style="margin-left: 100px" type="submit" ng-click="edit()">
+                    </form>
+            </div>
+
+        </div>
+    </div>
+{% endraw %}
+{% endblock portal_content %}

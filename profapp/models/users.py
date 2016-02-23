@@ -5,9 +5,12 @@ from sqlalchemy.orm import relationship, backref
 from flask.ext.login import logout_user
 from flask import session, json
 from urllib import request as req
+from config import Config
+import re
+import urllib
 
 # from db_init import Base, g.db
-
+from authomatic.providers import oauth2
 from ..constants.TABLE_TYPES import TABLE_TYPES
 from ..constants.SOCIAL_NETWORKS import SOCIAL_NETWORKS, SOC_NET_NONE
 from ..constants.USER_REGISTERED import REGISTERED_WITH_FLIPPED, \
@@ -23,11 +26,9 @@ from flask.ext.login import UserMixin, AnonymousUserMixin
 from .files import File
 from .pr_base import PRBase, Base
 from ..constants.SEARCH import RELEVANCE
-from .rights import Right
 from sqlalchemy import CheckConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
-from ..constants.USER_ROLES import GOD_RIGHTS
-
+from ..constants.STATUS import STATUS
 
 class User(Base, UserMixin, PRBase):
     __tablename__ = 'user'
@@ -55,8 +56,8 @@ class User(Base, UserMixin, PRBase):
                            default=datetime.datetime.utcnow)
     last_seen = Column(TABLE_TYPES['timestamp'],
                        default=datetime.datetime.utcnow)
-    profireader_avatar_url = Column(TABLE_TYPES['url'], nullable=False, default='/static/no_avatar.png')
-    profireader_small_avatar_url = Column(TABLE_TYPES['url'], nullable=False, default='/static/no_avatar_small.png')
+    profireader_avatar_url = Column(TABLE_TYPES['url'], nullable=False, default='//static.profireader.com/static/no_avatar.png')
+    profireader_small_avatar_url = Column(TABLE_TYPES['url'], nullable=False, default='//static.profireader.com/static/no_avatar_small.png')
     # status_id = Column(Integer, db.ForeignKey('status.id'))
 
     email_conf_token = Column(TABLE_TYPES['token'])
@@ -70,7 +71,6 @@ class User(Base, UserMixin, PRBase):
 
     employers = relationship('Company', secondary='user_company', back_populates='employees')
     companies = relationship('Company', back_populates='user_owner')
-
 
     # FB_NET_FIELD_NAMES = ['id', 'email', 'first_name', 'last_name', 'name', 'gender', 'link', 'phone']
     # SOCIAL_NETWORKS = ['profireader', 'google', 'facebook', 'linkedin', 'twitter', 'microsoft', 'yahoo']
@@ -124,6 +124,16 @@ class User(Base, UserMixin, PRBase):
     microsoft_gender = Column(TABLE_TYPES['gender'])
     microsoft_link = Column(TABLE_TYPES['link'])
     microsoft_phone = Column(TABLE_TYPES['phone'])
+
+    # VKONTAKTE
+    # vkontakte_id = Column(TABLE_TYPES['id_soc_net'])
+    # vkontakte_email = Column(TABLE_TYPES['email'], unique=True, index=True)
+    # vkontakte_first_name = Column(TABLE_TYPES['name'])
+    # vkontakte_last_name = Column(TABLE_TYPES['name'])
+    # vkontakte_name = Column(TABLE_TYPES['name'])
+    # vkontakte_gender = Column(TABLE_TYPES['gender'])
+    # vkontakte_link = Column(TABLE_TYPES['link'])
+    # vkontakte_phone = Column(TABLE_TYPES['phone'])
 
     # YAHOO
     yahoo_id = Column(TABLE_TYPES['id_soc_net'])
@@ -284,23 +294,68 @@ class User(Base, UserMixin, PRBase):
         g.db.add(self)
         g.db.commit()
 
-    def avatar(self, size=100):
-        logged_via = REGISTERED_WITH[self.logged_in_via()]
-        if logged_via == 'facebook':
-            avatar = json.load(req.urlopen(
-                url='//graph.facebook.com/{facebook_id}/picture?width={size}&height={size}&redirect=0'.
-                    format(facebook_id=self.facebook_id, size=size)))
+    def avatar(self, avatar_via, size=500, small_size=100, url=None):
+        if avatar_via == 'upload':
+            return self
+        avatar_urls = dict(facebook=lambda s: 'http://graph.facebook.com/{facebook_id}/picture?width={size}&'
+                                              'height={size}&redirect=0'.format(facebook_id=self.facebook_id, size=s),
+                           google=lambda s: 'https://www.googleapis.com/plus/v1/people/{google_id}?'
+                                            'fields=image&key={key}'.format(google_id=self.google_id,
+                                                                            size=s, key=Config.GOOGLE_API_KEY_SIMPLE),
+                           linkedin=lambda s, u=url: u if u else self.gravatar(size=s),
+                           # vkontakte=lambda s, u=url: u if u else self.gravatar(size=s),
+                           gravatar=lambda s: self.gravatar(size=s),
+                           microsoft=lambda _: 'https://apis.live.net/v5.0/{microsoft_id}/picture'.format(
+                                   microsoft_id=self.microsoft_id))
+        url = avatar_urls[avatar_via](size)
+        url_small = avatar_urls[avatar_via](small_size)
+        if avatar_via == 'facebook':
+            avatar = json.load(req.urlopen(url=url))
+            avatar_small = json.load(req.urlopen(url=url_small))
             if avatar['data'].get('is_silhouette'):
-                avatar = self.gravatar(size=size)
+                self.profireader_avatar_url = self.gravatar(size=size)
+                self.profireader_small_avatar_url = self.gravatar(size=small_size)
             else:
-                avatar = avatar['data'].get('url')
-        else:
-            avatar = self.gravatar(size=size)
+                self.profireader_avatar_url = avatar['data'].get('url')
+                self.profireader_small_avatar_url = avatar_small['data'].get('url')
+        elif avatar_via == 'google':
+            avatar = json.load(req.urlopen(url=url))
+            avatar_small = json.load(req.urlopen(url=url_small))
+            if avatar['image'].get('isDefault'):
+                self.profireader_avatar_url = self.gravatar(size=size)
+                self.profireader_small_avatar_url = self.gravatar(size=small_size)
+            else:
+                self.profireader_avatar_url = avatar['image'].get('url')
+                self.profireader_small_avatar_url = avatar_small['image'].get('url')
+        elif avatar_via == 'linkedin':
+            self.profireader_avatar_url = url
+            self.profireader_small_avatar_url = url
+        # elif avatar_via == 'vkontakte':
+        #     avatar = json.load(urllib.urlopen("https://api.vk.com/method/users.get?v=5.8&fields="
+        #                                 "photo_{size}&access_token={access_token}".
+        #                                 format(size=str(size),
+        #                                      access_token=access_token)))['response'][0].get(# Here needs right token from VK
+        #                                         'photo_{size}'.format(size=size))
+        #     avatar_small = json.load(urllib.urlopen("https://api.vk.com/method/users.get?v=5.8&fields="
+        #                                       "photo_{size}&access_token={access_token}".
+        #                                       format(size=str(small_size),
+        #                                              access_token=access_token)))['response'][0].get(# Here needs right token from VK
+        #                                              'photo_{size}'.format(size=small_size))
+        #     self.profireader_avatar_url = url
+        #     self.profireader_small_avatar_url = url
+        elif avatar_via == 'microsoft':
+            avatar = req.urlopen(url=url)
+            if 'Default' not in avatar.url:
+                self.profireader_avatar_url = avatar.url
+                self.profireader_small_avatar_url = avatar.url
+            else:
+                self.profireader_avatar_url = self.gravatar(size=size)
+                self.profireader_small_avatar_url = self.gravatar(size=small_size)
+        elif avatar_via == 'gravatar':
+            self.profireader_avatar_url = url
+            self.profireader_small_avatar_url = url_small
 
-        # if logged_via == 'google':
-        #     avatar = json.load(req.urlopen(url='https://www.googleapis.com/oauth2/v1/userinfo?alt=json'))
-        #     avatar = avatar['data'].get('url')
-        return avatar
+        return self
 
     def gravatar(self, size=100, default='identicon', rating='g'):
         if request.is_secure:
@@ -311,7 +366,7 @@ class User(Base, UserMixin, PRBase):
         email = getattr(self, 'profireader_email', 'guest@profireader.com')
         hash = hashlib.md5(email.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
-            url=url, hash=hash, size=size, default=default, rating=rating)
+                url=url, hash=hash, size=size, default=default, rating=rating)
 
     def profile_completed(self):
         completeness = True
@@ -446,23 +501,21 @@ class User(Base, UserMixin, PRBase):
         self.profireader_email = new_email
         return True
 
-    # TODO (AA to ???): file.upload(content=content).url() is wrong and should be corrected
     def avatar_update(self, passed_file):
-        content = passed_file.stream.read(-1)
-
-        file = File(
-            author_user_id=self.id,
-            name=passed_file.filename,
-            mime=passed_file.content_type)
-        self.profireader_avatar_url = file.upload(content=content).url()
-
-        # TODO: this image should be cropped
-        file = File(
-            author_user_id=self.id,
-            name=passed_file.filename,
-            mime=passed_file.content_type)
-        self.profireader_small_avatar_url = file.upload(content=content).url()
-
+        if passed_file:
+            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if re.search('^image/.*', file.mime)]
+            file = File.uploadWithoutChunk(passed_file, self)
+            self.profireader_avatar_url = file.url()
+            file_thumbnail = file.get_thumbnails(size=(133,100)).thumbnail
+            self.profireader_small_avatar_url = file_thumbnail[0].url()
+        else:
+            list = [file for file in db(File, parent_id=self.system_folder_file_id, ) if
+                    re.search('^image/.*', file.mime)]
+            self.profireader_avatar_url = self.gravatar(size=100)
+            self.profireader_small_avatar_url = self.gravatar(size=100)
+        if list:
+            for f in list:
+                File.remove(f.id)
         return self
 
     # def can(self, permissions):
@@ -471,11 +524,6 @@ class User(Base, UserMixin, PRBase):
 
     # def is_administrator(self):
     #    return self.can(Permission.ADMINISTER)
-
-    # TODO (AA to AA): it should be corrected
-    def user_rights_in_company(self, company_id):
-        user_company = self.employer_assoc.filter_by(company_id=company_id).first()
-        return user_company.rights_set if user_company else []
 
     def get_client_side_dict(self, fields='id|profireader_name|profireader_avatar_url|profireader_small_avatar_url',
                              more_fields=None):

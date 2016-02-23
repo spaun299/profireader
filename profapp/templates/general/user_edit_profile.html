@@ -1,4 +1,4 @@
-{% extends "index_layout.html" %}
+{% extends "index_lazy_layout.html" %}
 {% block title %}Profireader - {{ current_user.profireader_name }}{% endblock title %}
 {% block head %}
     {{ super() }}
@@ -9,19 +9,39 @@
 {% endblock portal_base %}
 
 {% block portal_content %}
+    <script>
+    module.controller('edit_user', ['$scope', function ($scope) {
+
+            $scope.error = '{{ error }}';
+{#            $scope.update_url = {{ raw_url_for('user.avatar_update')|safe }};#}
+
+            $scope.data = {};
+
+
+            $scope.afterLoad = function (resp, deff) {
+                deff(resp);
+                $scope.setImageUrl(resp['logo_file_id']);
+            };
+
+            $scope.setImageUrl = function (logo_file_id) {
+                $scope.logo_file_url = fileUrl(logo_file_id);
+            };
+
+        }])
+
+    </script>
 <div ng-controller="UserLoginController">
     <h1 class="nice-title">{{ '{{' }}_('Your Profile'){{ '}}' }}<span></span></h1>
-
 
     <div class="form info">
         {#<img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=256) }}"><br>#}
 
-        <div class="profile-thumbnail" style="background-image: url('{{ user.avatar() }}');">
+
+        <div class="profile-thumbnail" style="background-image: url('{{ user.profireader_small_avatar_url }}')">
             <div class="control">
                 <a ng-click="mySwitch = !mySwitch">
                     <span ng-hide="mySwitch">[{{ '{{' }}_('upload picture'){{ '}}' }}]</span><span ng-show="mySwitch">[{{ '{{' }}_('hide'){{ '}}' }}]</span>
                 </a>
-
                 <form ng-hide="mySwitch" id="myform" method="post" style="display: inline;">
                     <input type="hidden" name="avatar" value="Use Gravatar"/><a onclick="document.getElementById('myform').submit();" style="border: none;">[{{ '{{' }}_('use gravatar'){{ '}}' }}]</a>
                 </form>
@@ -32,16 +52,17 @@
         {#<a>#}
         {#    <span ng-hide="mySwitch">[{{ '{{' }}_('use gravatar'){{ '}}' }}]</span>#}
         {#</a>#}
+
         <div class="img-upload-form">
             <form id="avatar" ng-show="mySwitch" ng-init="mySwitch=false" action="{{ request.path }}" method="post"
               enctype="multipart/form-data">
-            {{ '{{' }}_('Select image to upload'){{ '}}' }}:
-            <input style="font-size: 12px;" type="file" name="avatar" id="fileToUpload">
-            <input type="submit" name="avatar" value="{{ '{{' }}_('Upload Image'){{ '}}' }}">
-        </form>
-
+                {{ '{{' }}_('Select image to upload'){{ '}}' }}:
+                <input style="font-size: 12px;" type="file" name="avatar" id="fileToUpload" accept="image/*">
+                <input type="submit" name="avatar" value="{{ '{{' }}_('Upload Image'){{ '}}' }}">
+            </form>
         </div>
-        <form action="{{ url_for('user.edit_profile', user_id=user.id) }}" onsubmit="return AjaxPost()" method="post">
+            <form action="{{ url_for('user.edit_profile', user_id=user.id) }}" onsubmit="return AjaxPost()" method="post">
+
             <div class="item"><span>{{ '{{' }}_('Your display name'){{ '}}' }}:</span><input type="text" placeholder="name" name="name"
                                                                     value="{{ user.profireader_name }}"></div>
             <div class="item"><span>{{ '{{' }}_('Your email'){{ '}}' }}:</span>{{ user.profireader_email }} <a
@@ -112,7 +133,7 @@
         });
 
         function AjaxPost() {
-            $.post({{ request.path }}, {
+            $.post('{{ request.path }}', {
                         'name': $("#name").val(),
                         'short': $("#short").val(),
                         'full': $("#full").val()

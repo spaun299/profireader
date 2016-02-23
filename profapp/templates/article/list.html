@@ -19,11 +19,9 @@
             {% raw %}
             $scope.noData = 'No publications';
 
-            $scope.sendData = function () {
+            $scope.sendData = function (data) {
                 $scope.loading = true;
                 $scope.error = '';
-                var data = {};
-                data.gr_data = $scope.all_grid_data;
                 $ok($scope.url_search_article, data, function (resp) {
                     $scope.datas = resp;
                     $scope.applyGridExtarnals(resp);
@@ -33,50 +31,43 @@
                 });
             };
 
-            $scope.gridOptions1 = {
-                    data: 'datas.grid_data',
-                    paginationPageSizes: [10, 25, 50, 75],
-                    paginationPageSize: $scope.paginationOptions.pageSize,
-                    enableFiltering: true,
-                    enableSorting: true,
-                    useExternalPagination: true,
-                    useExternalSorting: true,
-                    useExternalFiltering: true,
-                    showTreeExpandNoChildren: false,
+            $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
+                    onRegisterApi: function (gridApi) {
+                        $scope.setGridExtarnals(gridApi)
+                    },
                     treeRowHeaderAlwaysVisible: false,
                     columnDefs: [
-                      { name: 'title', enableSorting:false,enableCellEdit: false,groupingShowAggregationMenu: false, enableColumnMenu: false,
-                          displayName: 'Title',
-                          width: '35%', cellTemplate: '<div class="link"><a href="{{ grid.appScope.url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})}}" ng-bind="row.entity.title"></a></div>',
-                          filter: {type: uiGridConstants.filter.INPUT}
+                      { name: 'title', enableSorting:false,enableCellEdit: false,groupingShowAggregationMenu: false, enableColumnMenu: false, displayName: 'Title', width: '35%',
+                          type: 'link',
+                          href: 'url_details({company_id:grid.appScope.company_id,article_id:row.entity.id})',
+                          classes: 'link',
+                          filter: {type:'input'}
                       },
-                      { name: 'date', enableSorting: true,enableCellEdit: false, enableFiltering: false,groupingShowAggregationMenu: false, enableColumnMenus: true,
+                      { name: 'date', enableSorting: true,enableCellEdit: false, groupingShowAggregationMenu: false, enableColumnMenus: true,
                           displayName: 'Date',
                           groupingShowGroupingMenu: false
                       },
                       { name: 'company', enableSorting: false,enableCellEdit: false,groupingShowAggregationMenu: false,enableColumnMenu: false,
                           displayName: 'Companies',
-                          filter: $scope.filterForSelect(uiGridConstants)
+                          filter: {type:'select'}
                       },
                       { name: 'status', enableSorting: false,enableCellEdit: false,groupingShowAggregationMenu: false,enableColumnMenu: false,
                           displayName: 'Status',
-                          filter: $scope.filterForSelect(uiGridConstants)
+                          filter: {type:'select'}
                       }
-                    ],
-                    onRegisterApi: function (gridApi) {$scope.setGridExtarnals(gridApi, $scope.sendData, $scope.paginationOptions)}
-                  };
+                    ]
+                  });
         }]);
     {% endraw %}
     </script>
     {% raw %}
-    <div ng-init="sendData()" ng-controller="article_list">
+    <h1 class="nice-title">{{ _('Sorry this page is not avaible in this version. If you have unattached article pls contact with administrator') }}<span></span></h1>
+    <div ng-controller="article_list">
         <h1 class="nice-title">{{ _('Article list') }}<span></span></h1>
         <h1 class="nice-title" style="margin-left: 125px">{{ _('Create article') }}<span></span></h1>
-        <a class="h1-btn icon icon-add" href="{{ url_create_article }}" title="{{ _('CREATE NEW ARTICLE') }}"><img src="../../static/front/img/ico/articles.png" /></a>
+        <a class="h1-btn icon icon-add" href="{{ url_create_article }}" title="{{ _('CREATE NEW ARTICLE') }}"><img src="//static.profireader.com/static/front/img/ico/articles.png" /></a>
         <div ng-if="!load_contr">{{_('Loading...')}}</div>
-        <div ng-if="load_contr">
-            <div id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
-        </div>
+        <div id="grid1" ui-grid-edit ui-grid-grouping ui-grid-pagination ui-grid="gridOptions1"></div>
     </div>
     {% endraw %}
 {% endblock portal_content %}

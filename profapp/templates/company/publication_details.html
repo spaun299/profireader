@@ -6,7 +6,6 @@
     <script>
         module.controller('article_list', ['$scope', '$ok', '$sce', function ($scope, $ok, $sce) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('publications')
-            $scope.url_details = {{ raw_url_for('company.material_details')|safe }};
             $scope.url_change_status = {{ raw_url_for('portal.update_article_portal')|safe }};
             $scope.get_colored_title = function (text_to_change) {
                 return text_to_change
@@ -65,15 +64,17 @@
 
                 return $sce.trustAsHtml(full_text.replace(re, '<span style="color:blue">' + search_text + '</span>'));
             }
-            $scope.myRights = function () {
-                if (!$scope.data || !$scope.data.user_rights) return false;
-                for (var i = 0; i < arguments.length; i++) {
-                    if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {
-                        return false;
-                    }
-                }
-                return true;
-            };
+
+{#            $scope.myRights = function () {#}
+{#                if (!$scope.data || !$scope.data.user_rights) return false;#}
+{#                for (var i = 0; i < arguments.length; i++) {#}
+{#                    if ($scope.data.user_rights.indexOf(arguments[i]) === -1) {#}
+{#                        return false;#}
+{#                    }#}
+{#                }#}
+{#                return true;#}
+{#            };#}
+
         }]);
 
     </script>

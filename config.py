@@ -26,13 +26,13 @@ class Config(object):
     DEBUG = False
     TESTING = False
 
-    MAIL_SERVER = 'smtp.googlemail.com'
-    MAIL_PORT = 587
+    MAIL_SERVER = 'smtp.gmail.com:587'
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or \
                     secret_data.MAIL_USERNAME
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or \
                     secret_data.MAIL_PASSWORD
+    MAIL_GMAIL = 'profireader.service@gmail.com'
     PROFIREADER_MAIL_SUBJECT_PREFIX = '[Profireader]'
     PROFIREADER_MAIL_SENDER = 'Profireader Admin ' \
                               '<profireader.service@gmail.com>'
@@ -61,6 +61,7 @@ class Config(object):
 # GOOGLE API
     GOOGLE_API_SECRET_KEY = secret_data.GOOGLE_API_SECRET_KEY
     GOOGLE_API_SECRET_JSON = secret_data.GOOGLE_API_SECRET_JSON
+    GOOGLE_API_KEY_SIMPLE = secret_data.GOOGLE_API_KEY_SIMPLE
     YOUTUBE_API = dict(SCOPE="https://www.googleapis.com/auth/youtube",
                        UPLOAD=dict(REDIRECT_URI="http://profireader.com/filemanager/uploader/",
                                    SEND_URI="https://www.googleapis.com/upload/youtube/v3/"

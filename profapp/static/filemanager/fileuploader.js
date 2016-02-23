@@ -5,6 +5,7 @@
         var self = this;
         self.requesting = false; 
         self.upload = function(fileList, path, root_id, folder_id) {
+            console.log('here')
             var form = new window.FormData();
             console.log(form);
             form.append('destination', '/' + path.join('/'));

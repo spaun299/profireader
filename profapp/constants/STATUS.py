@@ -2,12 +2,12 @@ from profapp.models.rights import Right
 
 
 class STATUS_NAME(dict):
-    ACTIVE = 'active'
-    NONACTIVE = 'nonactive'
-    BLOCKED = 'blocked'
-    DELETED = 'deleted'
-    REJECTED = 'rejected'
-    SUSPENDED = 'suspended'
+    ACTIVE = 'ACTIVE'
+    NONACTIVE = 'NONACTIVE'
+    BLOCKED = 'BLOCKED'
+    DELETED = 'DELETED'
+    REJECTED = 'REJECTED'
+    SUSPENDED = 'SUSPENDED'
 
     @classmethod
     def __getitem__(cls, attr):
@@ -20,27 +20,27 @@ class STATUS:
 
     @staticmethod
     def NONACTIVE():
-        return 'nonactive'
+        return 'NONACTIVE'
 
     @staticmethod
     def ACTIVE():
-        return 'active'
+        return 'ACTIVE'
 
     @staticmethod
     def BLOCKED():
-        return 'blocked'
+        return 'BLOCKED'
 
     @staticmethod
     def DELETED():
-        return 'deleted'
+        return 'DELETED'
 
     @staticmethod
     def REJECTED():
-        return 'rejected'
+        return 'REJECTED'
 
     @staticmethod
     def SUSPENDED():
-        return 'suspended'
+        return 'SUSPENDED'
 
 
 class UserStatusInCompanyRights:
