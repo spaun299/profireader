@@ -147,6 +147,8 @@ class Search(Base):
                        and current page """
         self.__dict__.update(**kwargs)
         assert all(filter(lambda arg: type(arg) is dict, args)), '*args should be a dictionary'
+        self.__init_arguments(*args, **self.__dict__)
+        self.__catch_errors(*args, ord_by=kwargs.get('order_by'))
         return self.__search_start(*args, **self.__dict__)
 
     def __init_arguments(self, *args, **kwargs):
@@ -160,8 +162,6 @@ class Search(Base):
 
     def __search_start(self, *args: dict, **kwargs):
         """ Don't use this method, use Search().search() method """
-        self.__init_arguments(*args, **kwargs)
-        self.__catch_errors(*args, **kwargs)
         subquery_search = self.__get_subquery(*args, ord_by=kwargs.get('order_by'))
         if self.__pagination:
             from ..controllers.pagination import pagination as pagination_func
@@ -200,7 +200,7 @@ class Search(Base):
         else:
             args = list(args)
             for arg in args:
-                if not db(self.__get_subquery(arg, ord_by=Search.ORDER_MD_TM)).limit(1).count():
+                if not self.__get_subquery(arg, ord_by=Search.ORDER_MD_TM).limit(1).count():
                     args.remove(arg)
             self.__start_reloading(*args)
 
@@ -293,7 +293,7 @@ class Search(Base):
             search_params.append(and_(*filter_array))
         return search_params
 
-    def __catch_errors(self, *args, **kwargs):
+    def __catch_errors(self, *args, ord_by=None):
         try:
             assert (self.__desc_asc == 'desc' or self.__desc_asc == 'asc'), \
                 'Parameter desc_asc should be desc or asc but %s given' % self.__desc_asc
@@ -305,13 +305,13 @@ class Search(Base):
                 'Parameter pagination should be boolean but %s given' % type(self.__pagination)
             assert (type(self.__page), type(self.__items_per_page) is int) and self.__page >= 0, \
                 'Parameter page is not integer, or page < 1 .'
-            assert (getattr(args[0]['class'], str(kwargs.get('order_by')), False) is not False) or \
-                   (type(kwargs.get('order_by')) is int) or type(
-                kwargs.get('order_by') is (list or tuple)), \
+            assert (getattr(args[0]['class'], str(ord_by), False) is not False) or \
+                   (type(ord_by) is int) or type(
+                ord_by is (list or tuple)), \
                 'Bad value for parameter "order_by".' \
                 'You requested attribute which is not in class %s or give bad kwarg type.' \
                 'Can be string, list or tuple %s given' % \
-                (args[0]['class'], type(kwargs.get('order_by')))
+                (args[0]['class'], type(ord_by))
             assert type(self.__return_objects) is bool, \
                 'Parameter "return_objects" must be boolean but %s given' % type(self.__return_objects)
         except AssertionError as e:
