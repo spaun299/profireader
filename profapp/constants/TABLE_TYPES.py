@@ -5,30 +5,38 @@ from functools import reduce
 
 
 class BinaryRightsMetaClass1(type):
-    def all(self):
-        return [name for (name, val) in self.__dict__.items() if name not in ['__doc__', '__module__']]
+    def _allrights(self):
+        return {name: type.__getattribute__(self, name) for (name, val) in
+                self.__dict__.items() if name not in ['__doc__', '__module__']}
 
-    def todict(self, bin):
+    def _todict(self, bin):
         return {name: (True if (2 ** (type.__getattribute__(self, name) - 1) & bin) else False) for (name, val) in
-               self.__dict__.items() if name not in ['__doc__', '__module__']}
+                self._allrights().items()}
 
-    def tobin(self, dict):
-        ret = {'name': type.__getattribute__(self, name) for (name, val) in
-               self.__dict__.items() if name not in ['__doc__', '__module__']}
-        for (rightname, bitposition) in ret.items():
-            if bitposition == True:
-                bin = 0x7fffffffffffffff
-            bin = bin | (2 ** (bitposition - 1) if dict.get(rightname) else 0)
-        return bin
+    def _tobin(self, dict):
+        ret = 0
+        all_rights = self._allrights()
+        for (rightname, truefalse) in dict.items():
+            if rightname == self._ANY and truefalse:  # any right
+                ret = 0x7fffffffffffffff
+            else:
+                bit_position = all_rights.get(rightname)
+                if bit_position is None:
+                    raise Exception(
+                            "You passed right {}. but this right do not exist among allowed column rights {}".format(
+                                    rightname, self._allrights()))
+                else:
+                    ret |= 2 ** (bit_position - 1) if truefalse else 0
+
+        return ret
 
     def __getattribute__(self, key):
-        return type.__getattribute__(self, key) if key in ['or_', 'all', 'todict', 'todict'] or (
+        return type.__getattribute__(self, key) if key in ['_todict', '_tobin', '_allrights'] or (
             key[:2] == '__' and key[-2:] == '__') else key
 
 
 class BinaryRights(metaclass=BinaryRightsMetaClass1):
-    _ALL_RIGHT_IN_ADVANCE = True
-    pass
+    _ANY = -1
 
 
 class RIGHTS(BIGINT):
@@ -45,13 +53,13 @@ class RIGHTS(BIGINT):
 
     def result_processor(self, dialect, coltype):
         def process(value):
-            return self._rights_class.todict(value)
+            return self._rights_class._todict(value)
 
         return process
 
     def bind_processor(self, dialect):
         def process(array):
-            return self._rights_class.tobin(array)
+            return self._rights_class._tobin(array)
 
         return process
 
