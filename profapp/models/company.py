@@ -266,12 +266,8 @@ class UserCompany(Base, PRBase):
         FILES_UPLOAD = 5
         FILES_DELETE_OTHERS = 14
 
-        MATERIALS_SUBMIT_TO_PORTAL = 8
+        MATERIALS_SUBMIT_AND_PUBLISH = 8
         MATERIALS_EDIT_OTHERS = 12
-
-        PUBLICATION_PUBLISH_AT_OWN_PORTAL = 2
-        PUBLICATION_UNPUBLISH_AT_OWN_PORTAL = 3
-        PUBLICATION_SET_PRIORITY = 11
 
         EMPLOYEE_CONFIRM_NEW = 6
         EMPLOYEE_SUSPEND_UNSUSPEND = 7
@@ -281,7 +277,6 @@ class UserCompany(Base, PRBase):
         COMPANY_EDIT_PROFILE = 1
 
         PORTAL_EDIT_PROFILE = 10
-
         PORTAL_MANAGE_READERS = 16
         PORTAL_MANAGE_COMMENTS = 18
         PORTAL_MANAGE_MEMBERS_COMPANIES = 13
@@ -294,7 +289,7 @@ class UserCompany(Base, PRBase):
     banned = Column(TABLE_TYPES['boolean'], default=False, nullable=False)
 
     rights = Column(TABLE_TYPES['binary_rights'](RIGHT_AT_COMPANY),
-                                        default={RIGHT_AT_COMPANY.FILES_BROWSE: True, RIGHT_AT_COMPANY.MATERIALS_SUBMIT_TO_PORTAL: True},
+                                        default={RIGHT_AT_COMPANY.FILES_BROWSE: True, RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH: True},
                                         nullable=False)
 
     employer = relationship('Company', backref='employee_assoc')
