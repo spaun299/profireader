@@ -56,7 +56,9 @@ class Search(Base):
 
     def __init__(self, index=None, table_name=None, text=None, relevance=None, kind=None,
                  position=None, md_tm=datetime.datetime.now(), **kwargs):
-        """ **kwargs: search_text = string text for search,
+        """ **kwargs: This parameters optionally, and useful when you will use search function.
+                      You can pass kwargs arguments in class constructor or when call function.
+                      search_text = string text for search,
                       pagination = boolean, default True
                       , if True this func return n numbers elements which produce in pagination
                       page = integer current page for pagination,
@@ -140,13 +142,14 @@ class Search(Base):
                        and current page """
         self.__dict__.update(**kwargs)
         assert all(filter(lambda arg: type(arg) is dict, args)), '*args should be a dictionary'
-        return self.search_start(*args, **self.__dict__)
+        return self.__search_start(*args, **self.__dict__)
 
     ORDER_RELEVANCE = 1
     ORDER_POSITION = 2
     ORDER_MD_TM = 3
 
-    def search_start(self, *args: dict, **kwargs):
+    def __search_start(self, *args: dict, **kwargs):
+        """ Don't use this method, use Search().search() method """
 
         self.__page = kwargs.get('page') or 1
         self.__items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
@@ -263,8 +266,7 @@ class Search(Base):
             objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
         return objects, self.__pages, self.__page
 
-    @staticmethod
-    def __get_objects_from_db(*args, ordered_objects_list=None):
+    def __get_objects_from_db(self, *args, ordered_objects_list=None):
             items = dict()
             for cls in args:
                 fields = cls.get('return_fields') or 'id'
