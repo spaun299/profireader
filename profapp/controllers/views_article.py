@@ -182,7 +182,7 @@ def get_portal_dict_for_material(portal, company, material=None, publication=Non
         ret['publication']['division'] = ret['divisions'][ret['publication']['portal_division_id']]
         ret['publication']['counts'] = '0/0/0/0'
 
-        ret['actions'] = publication_in_portal.get_actions_for_status(company.id)
+        ret['actions'] = publication_in_portal.actions(company.id)
         ret['publication']['actions'] = ret['actions']
 
     else:

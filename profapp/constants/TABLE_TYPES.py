@@ -33,7 +33,7 @@ class BinaryRightsMetaClass1(type):
     def __getattribute__(self, key):
         if key in ['_todict', '_tobin', '_allrights'] or (key[:2] == '__' and key[-2:] == '__'):
             return type.__getattribute__(self, key)
-        elif key in type.__getattribute__(self, '__allrights')():
+        elif key in type.__getattribute__(self, '_allrights')():
             return key
         else:
             raise Exception(
