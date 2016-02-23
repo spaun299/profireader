@@ -28,7 +28,7 @@
                         </div>
                     </div>
                 </div>
-                <img class="list-reader-image" {{ prImage(article['image_file_id']) }} alt="img">
+                <img class="list-reader-image" src="{{ fileUrl(article['image_file_id']) }}" alt="img">
                 <h3 class="item-title">
                     <a target="_blank"
                        href="{{ url_for('article.details_reader', article_portal_division_id=article_id) }}">{{ article['title']|safe }}</a>

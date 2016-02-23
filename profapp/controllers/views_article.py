@@ -20,42 +20,6 @@ import time
 import datetime
 
 
-# @article_bp.route('/list/', methods=['GET'])
-# @tos_required
-# def show_mine():
-#     return render_template('article/list.html')
-#
-#
-# @article_bp.route('/list/', methods=['POST'])
-# @ok
-# def load_mine(json):
-#     page = json.get('paginationOptions')['pageNumber']
-#     pageSize = json.get('paginationOptions')['pageSize']
-#     search_text = json.get('search_text')
-#     params = {'user_id': g.user_dict['id']}
-#     params['sort'] = {}
-#     params['filter'] = {}
-#     if json.get('sort'):
-#         for n in json.get('sort'):
-#             params['sort'][n] = json.get('sort')[n]
-#     if json.get('filter'):
-#         for b in json.get('filter'):
-#             if json.get('filter')[b] != '-- all --':
-#                 params['filter'][b] = json.get('filter')[b]
-#     subquery = ArticleCompany.subquery_user_articles(search_text=search_text, **params)
-#     articles, pages, current_page = pagination(subquery,
-#                                                page=page, items_per_page=pageSize)
-#     add_param = {'value': '1', 'label': '-- all --'}
-#     statuses = Article.list_for_grid_tables(ARTICLE_STATUS_IN_COMPANY.all, add_param, False)
-#     company_list_for_grid = Article.list_for_grid_tables(
-#             ArticleCompany.get_companies_where_user_send_article(g.user_dict['id']), add_param, True)
-#     articles_drid_data = Article.getListGridDataArticles(articles.all())
-#     grid_filters = {'company': company_list_for_grid, 'status': statuses}
-#     return {'grid_data': articles_drid_data,
-#             'grid_filters': grid_filters,
-#             'total': subquery.count()}
-
-
 @article_bp.route('/material_update/<string:material_id>/', methods=['GET'])
 @article_bp.route('/publication_update/<string:publication_id>/', methods=['GET'])
 @article_bp.route('/material_create/company/<string:company_id>/', methods=['GET'])
@@ -169,6 +133,7 @@ def get_portal_dict_for_material(portal, company, material=None, publication=Non
     # ret['rights'] = MemberCompanyPortal.get(company_id=company_id, portal_id=ret['id']).rights
     ret['divisions'] = PRBase.get_ordered_dict([d for d in ret['divisions'] if (
         d['portal_division_type_id'] == 'events' or d['portal_division_type_id'] == 'news')])
+
     if material:
         publication_in_portal = db(ArticlePortalDivision).filter_by(article_company_id=material.id).filter(
                 ArticlePortalDivision.portal_division_id.in_(
@@ -182,12 +147,16 @@ def get_portal_dict_for_material(portal, company, material=None, publication=Non
         ret['publication']['division'] = ret['divisions'][ret['publication']['portal_division_id']]
         ret['publication']['counts'] = '0/0/0/0'
 
-        ret['actions'] = publication_in_portal.actions(company.id)
+        ret['actions'] = publication_in_portal.actions(company)
         ret['publication']['actions'] = ret['actions']
 
     else:
         ret['publication'] = None
-        ret['actions'] = {'SUBMIT': True}
+        canbesubmited = material.actions(company)[ArticleCompany.ACTIONS['SUBMIT']]
+        if canbesubmited is True:
+            membership = MemberCompanyPortal.get(portal_id=portal.id, company_id=company.id)
+            canbesubmited = membership.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH)
+        ret['actions'] = {ArticleCompany.ACTIONS['SUBMIT']: canbesubmited}
 
     return ret
 
@@ -200,6 +169,7 @@ def material_details_load(json, material_id):
 
     return {
         'material': material.get_client_side_dict(more_fields='long'),
+        'actions': material.actions(company),
         'company': company.get_client_side_dict(),
         'portals': {
             'grid_data': [get_portal_dict_for_material(portal, company, material) for portal in
@@ -220,7 +190,7 @@ def submit_publish(json, article_action):
 
     company = Company.get(json['company']['id'])
 
-    if article_action == 'submit':
+    if article_action == 'SUBMIT':
         material = ArticleCompany.get(json['material']['id'])
         publication = ArticlePortalDivision(title=material.title, subtitle=material.subtitle,
                                             keywords=material.keywords,
@@ -253,18 +223,19 @@ def submit_publish(json, article_action):
         if 'also_publish' in json and json['also_publish']:
             publication.status = ArticlePortalDivision.STATUSES['PUBLISHED']
         else:
-            if article_action in ['publish', 'republish']:
+            if article_action in [ArticlePortalDivision.ACTIONS['PUBLISH'], ArticlePortalDivision.ACTIONS['REPUBLISH']]:
                 publication.status = ArticlePortalDivision.STATUSES['PUBLISHED']
-            elif article_action in ['unpublish', 'undelete']:
+            elif article_action in [ArticlePortalDivision.ACTIONS['UNPUBLISH'], ArticlePortalDivision.ACTIONS[
+                'UNDELETE']]:
                 publication.status = ArticlePortalDivision.STATUSES['UNPUBLISHED']
-            elif article_action in ['delete']:
+            elif article_action in [ArticlePortalDivision.ACTIONS['DELETE']]:
                 publication.status = ArticlePortalDivision.STATUSES['DELETED']
 
         if action == 'validate':
             publication.detach()
-            return publication.validate(True if article_action == 'submit' else False)
+            return publication.validate(True if article_action == 'SUBMIT' else False)
         else:
-            if article_action == 'submit':
+            if article_action == 'SUBMIT':
                 publication.long = material.clone_for_portal_images_and_replace_urls(publication.portal_division_id,
                                                                                      publication)
             publication.save()

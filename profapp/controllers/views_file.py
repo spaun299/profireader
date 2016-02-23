@@ -291,6 +291,8 @@ def crop_with_coordinates(image, coordinates,  ratio=Config.IMAGE_EDITOR_RATIO,
         area = [int(a) for a in (coordinates['x'], coordinates['y'], coordinates['width'],
                                  coordinates['height'])
                 if int(a) in range(0, max(image_pil.size))]
+# TODO: VK bt OZ: error in line above. if any condition in this line is not true then area[3] raise exception. and it
+# does!
         angle = int(coordinates["rotate"])*-1
         area[2] = (area[0]+area[2])
         area[3] = (area[1]+area[3])

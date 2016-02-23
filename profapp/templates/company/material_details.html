@@ -50,8 +50,8 @@
 
 
             $scope.updateMaterial = function (material_id) {
-                console.log($scope.rights.MATERIALS_EDIT_OTHERS)
-                $scope.rights.MATERIALS_EDIT_OTHERS ?
+                console.log($scope.rights.ARTICLES_EDIT_OTHERS)
+                $scope.rights.ARTICLES_EDIT_OTHERS ?
                         window.location.href = $scope.url_update_material({'material_id': material_id}) :
                         add_message('Sorry!!!You haven\'t got  appropriate rights!', 'danger', 8000)
             };
@@ -59,14 +59,15 @@
 
             $scope.grid_action = function (id, action, row, column_name) {
                 'use strict'
-                if (action === 'edit') {
+                if (action === 'EDIT') {
                     window.location.href = $scope.url_update_material({'publication_id': row['publication']['id']});
                     return;
                 }
 
                 else {
                     var modalInstance = $publish({
-                        material_or_publication_id: (action === 'submit') ? $scope.data['material']['id'] : row['publication']['id'],
+                        material_or_publication_id: (action === 'SUBMIT') ? $scope.data['material']['id'] :
+                                row['publication']['id'],
                         action: action,
                         portal_id: row['id'],
                         company_id: $scope.data.company['id']
@@ -147,11 +148,11 @@
         <h4>{{ _('Created at') }} {{data.material.cr_tm}}</h4>
         <h4>{{ _('Last modified at') }} {{data.material.md_tm}}</h4>
         <hr/>
-        <button pr-user-rights="rights.MATERIALS_EDIT_OTHERS" class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+        <button pr-user-rights="rights.ARTICLES_EDIT_OTHERS" class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
         <div class="material-details-article-preview">
             {% endraw %}{% include 'partials/article_details.html' %}{% raw %}
         </div>
-        <button pr-user-rights="rights.MATERIALS_EDIT_OTHERS" class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+        <button pr-user-rights="rights.ARTICLES_EDIT_OTHERS" class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
         <br/><br/>
         <hr/>
 

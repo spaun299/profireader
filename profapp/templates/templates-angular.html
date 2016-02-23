@@ -29,7 +29,7 @@
         $scope.url_submit_to_portal = {{ raw_url_for('article.submit_publish')|safe }};
         {% raw %}
 
-        $scope.object_name = (action === 'submit') ? 'material' : 'publication';
+        $scope.object_name = (action === 'SUBMIT') ? 'material' : 'publication';
         $scope.action = action;
 
         $scope.data = {
@@ -37,7 +37,7 @@
             portal: {id: portal_id},
             company: {id: company_id}
         };
-        $scope.data[(action === 'submit') ? 'material' : 'publication'] = {id: material_or_publication_id}
+        $scope.data[(action === 'SUBMIT') ? 'material' : 'publication'] = {id: material_or_publication_id}
 
         $scope.afterSave = function (resp, defcallback) {
             $uibModalInstance.close(resp)
@@ -75,7 +75,7 @@
         <div class="modal-body">
             {{ _('You are going to ' + action + ' ' + object_name + ' `%(data.publication.title)s` at portal
             `%(data.portal.name)s`') }}<br/>
-            <div ng-if="action !== 'unpublish' && action !== 'delete' && action !== 'undelete'">
+            <div ng-if="action !== 'UNPUBLISH' && action !== 'DELETE' && action !== 'UNDELETE'">
                 <br/>
                 {{ _('Select portal division') }}<span
                     af-validation-answer="data_validation:portal_division_id"></span><br/>
@@ -110,13 +110,13 @@
 
 
         <div class="modal-footer">
-            <button ng-if="action === 'submit'" class="btn btn-primary"
+            <button ng-if="action === 'SUBMIT'" class="btn btn-primary"
                     ng-disabled="!$af.isActionAllowed(data, 'save')"
                     type="button" ng-click="$af.save(data)"><span ng-if="!also_publish">{{ _('Do submit') }}</span>
                 <span ng-if="also_publish">{{ _('Do submit & publish') }}</span>
             </button>
 
-            <button ng-if="action !== 'submit' " class="btn btn-primary"
+            <button ng-if="action !== 'SUBMIT' " class="btn btn-primary"
                     ng-disabled="!$af.isActionAllowed(data, 'save')"
                     type="button" ng-click="$af.save(data)">{{ _('Do ' + action) }}
             </button>
