@@ -335,6 +335,18 @@ function menu_db_load_full {
     runsql_dump 'Enter sql full dump filename' database_full.sql db_save_full
     }
 
+function menu_db_reassign_ownership {
+
+    profidb=$(get_profidb)
+
+    profiuser=`cat secret_data.py | grep 'DB_USER' | sed -e 's/^\s*DB_USER\s*=\s*['"'"'"]\([^'"'"'"]*\).*$/\1/g' `
+
+    conf_comm "
+su postgres -c \"for tbl in \\\$(psql -qAt -c 'SELECT tablename      FROM pg_tables                     WHERE schemaname      = '\\\"'\\\"public\\\"'\\\"';' $profidb); do echo \\\$tbl; psql -c 'ALTER table \\\"'\\\$tbl'\\\" owner to $profiuser' $profidb ; done\"
+su postgres -c \"for tbl in \\\$(psql -qAt -c 'SELECT sequence_name  FROM information_schema.sequences  WHERE sequence_schema = '\\\"'\\\"public\\\"'\\\"';' $profidb); do echo \\\$tbl; psql -c 'ALTER table \\\"'\\\$tbl'\\\" owner to $profiuser' $profidb ; done\"
+su postgres -c \"for tbl in \\\$(psql -qAt -c 'SELECT table_name     FROM information_schema.views      WHERE table_schema    = '\\\"'\\\"public\\\"'\\\"';' $profidb); do echo \\\$tbl; psql -c 'ALTER table \\\"'\\\$tbl'\\\" owner to $profiuser' $profidb ; done\"
+" sudo 'exit'
+    }
 
 function menu_db_save_full {
     profidb=$(get_profidb)
@@ -383,6 +395,7 @@ dialog --title "profireader" --nocancel --default-item $next --menu "Choose an o
 "db_save_full" "save full database to file" \
 "db_download_full" "get full database from x.m.ntaxa.com" \
 "db_load_full" "load full database from file" \
+"db_reassign_ownership" "reassign ownership" \
 "compare_local_makarony" "compare local database and dev version" \
 "compare_local_artek" "compare local database and production version" \
 "compare_makarony_artek" "compare dev database and production version" \
