@@ -191,9 +191,9 @@ def edit_portal_subscription_load(json, reader_portal_id):
     return
 
 
-@reader_bp.route('/edit_profile_submit/<string:reader_portal_id>', methods=['POST'])
+@reader_bp.route('/edit_profile_/<string:reader_portal_id>', methods=['POST'])
 @ok
-def edit_profile_submit(json, reader_portal_id):
+def edit_profile_(json, reader_portal_id):
     divisions_and_comments = db(UserPortalReader, id=reader_portal_id).one().show_divisions_and_comments
     for item in json['divisions']:
         for show_division_and_comments in divisions_and_comments:
