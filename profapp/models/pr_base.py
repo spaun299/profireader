@@ -55,7 +55,19 @@ class Search(Base):
     position = Column(TABLE_TYPES['position'])
 
     def __init__(self, index=None, table_name=None, text=None, relevance=None, kind=None,
-                 position=None, md_tm=datetime.datetime.now()):
+                 position=None, md_tm=datetime.datetime.now(), **kwargs):
+        """ **kwargs: search_text = string text for search,
+                      pagination = boolean, default True
+                      , if True this func return n numbers elements which produce in pagination
+                      page = integer current page for pagination,
+                      items_per_page = integer items per page for pagination
+                      , default Config.ITEMS_PER_PAGE,
+                      order_by = (string, integer, tuple or list)
+                      ,string :(with field for which you want sort)
+                      ,integer: (position, relevance, md_tm default=relevance)
+                      (USE CONSTANTS IN SEARCH CLASS)
+                      ,tuple or list: multiple fields which you want to use.
+                      desc_asc = sort by desc or asc default = desc """
         self.index = index
         self.table_name = table_name
         self.text = text
@@ -63,13 +75,48 @@ class Search(Base):
         self.kind = kind
         self.position = position
         self.md_tm = md_tm
+        self.__order_by_to_str = {1: 'relevance', 2: 'position', 3: 'md_tm'}
+        self.__page = None
+        self.__items_per_page = None
+        self.__pagination = None
+        self.__desc_asc = None
+        self.__pages = None
+        self.__search_text = None
+        self.__return_objects = None
+
+    def search_from_cls(self, *args):
+        """ *args: dictionary with following values -
+                             -class = sqlalchemy table class object,
+                optional:    -filter: sqlalchemy filter with your own parameters,
+                optional:    -fields: (tuple ot list) with fields name from table Search.kind
+                             , if provided and search_text is not None, this function will look
+                             for search text only in this fields.
+                             -tags: boolean. If True, function will return dict with fields
+                             updated with tags
+                optional:    -return_fields: String. If return_fields provided,
+                             this function return dictionary with fields you want, else return id's.
+                             example: "name,country,region". Also you can pass to this argument
+                             string 'default_dict' which also return sorted dictionaries with
+                             default fields provided in 'get_client_side_to_dict' func
+                             for this class.
+                if you want to pass one fieldname you almost should make tuple
+                or list. example: ('title', ):
+                optional:    -join: subquery wich you want to join without filters.
+            For example: {'class': Company,
+                          'filter': ~db(User, company_id=1).exists(),
+                          'join': Article,
+                          'fields': (tuple) with fields name in table Search.kind}
+            default: {'class': class,
+                      'filter': class.id == Search.index,
+                      'join': class,
+                      'fields': all_fields} """
+        return self.search(*args, **self.__dict__)
 
     ORDER_RELEVANCE = 1
     ORDER_POSITION = 2
     ORDER_MD_TM = 3
 
-    @staticmethod
-    def search(*args: dict, **kwargs):
+    def search(self, *args: dict, **kwargs):
         """ *args: dictionary with following values -
                              -class = sqlalchemy table class object,
                 optional:    -filter: sqlalchemy filter with your own parameters,
@@ -123,35 +170,33 @@ class Search(Base):
                       -desc_asc = sort by desc or asc default = desc,
                       :return id's objects or objects which you want, all pages for pagination
                        and current page """
-        page = kwargs.get('page') or 1
-        items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
-        search_params = []
-        order_by_to_str = {1: 'relevance', 2: 'position', 3: 'md_tm'}
-        pagination = kwargs.get('pagination') or True
-        desc_asc = kwargs.get('desc_asc') or 'desc'
-        pages = None
-        search_text = kwargs.get('search_text') or ''
-        return_objects = any(list(map(lambda arg: bool(arg.get('return_fields')), args)))
+        self.__page = kwargs.get('page') or 1
+        self.__items_per_page = kwargs.get('items_per_page') or getattr(Config, 'ITEMS_PER_PAGE')
+        self.__pagination = kwargs.get('pagination') or True
+        self.__desc_asc = kwargs.get('desc_asc') or 'desc'
+        self.__pages = None
+        self.__search_text = kwargs.get('search_text') or ''
+        self.__return_objects = any(list(map(lambda arg: bool(arg.get('return_fields')), args)))
         try:
-            assert (desc_asc == 'desc' or desc_asc == 'asc'), \
-                'Parameter desc_asc should be desc or asc but %s given' % desc_asc
-            assert type(search_text) is str, \
-                'Parameter search_text should be string but %s given' % type(search_text)
+            assert (self.__desc_asc == 'desc' or self.__desc_asc == 'asc'), \
+                'Parameter desc_asc should be desc or asc but %s given' % self.__desc_asc
+            assert type(self.__search_text) is str, \
+                'Parameter search_text should be string but %s given' % type(self.__search_text)
             assert type(args[0]) is dict, \
                 'Args should be dictionaries with class of model but %s inspected' % type(args[0])
-            assert type(pagination) is bool, \
-                'Parameter pagination should be boolean but %s given' % type(pagination)
-            assert (type(page), type(items_per_page) is int) and page >= 0, \
+            assert type(self.__pagination) is bool, \
+                'Parameter pagination should be boolean but %s given' % type(self.__pagination)
+            assert (type(self.__page), type(self.__items_per_page) is int) and self.__page >= 0, \
                 'Parameter page is not integer, or page < 1 .'
             assert (getattr(args[0]['class'], str(kwargs.get('order_by')), False) is not False) or \
                    (type(kwargs.get('order_by')) is int) or type(
-                    kwargs.get('order_by') is (list or tuple)), \
+                kwargs.get('order_by') is (list or tuple)), \
                 'Bad value for parameter "order_by".' \
                 'You requested attribute which is not in class %s or give bad kwarg type.' \
                 'Can be string, list or tuple %s given' % \
                 (args[0]['class'], type(kwargs.get('order_by')))
-            assert type(return_objects) is bool, \
-                'Parameter "return_objects" must be boolean but %s given' % type(return_objects)
+            assert type(self.__return_objects) is bool, \
+                'Parameter "return_objects" must be boolean but %s given' % type(self.__return_objects)
         except AssertionError as e:
             _, _, tb = sys.exc_info()
             traceback.print_tb(tb)
@@ -187,6 +232,76 @@ class Search(Base):
                         index=subquery_search.subquery().c.index).filter(
                 Search.kind.in_(tuple(field_name))).group_by(Search.index)
             return joined
+        search_params = self.__get_search_params(*args, search_text=self.__search_text)
+
+        subquery_search = db(Search.index.label('index'),
+                             func.sum(Search.relevance).label('relevance'),
+                             func.min(Search.table_name).label('table_name'),
+                             func.min(Search.md_tm).label('md_tm'),
+                             func.max(Search.position).label('position'),
+                             func.max(Search.text).label('text')).filter(
+            or_(*search_params)).group_by('index')
+        if type(kwargs.get('order_by')) in (str, list, tuple):
+            order = get_order('text', self.__desc_asc, 'text')
+            subquery_search = add_joined_search(kwargs['order_by'])
+        elif type(kwargs.get('order_by')) == int:
+            ord_to_str = self.__order_by_to_str[kwargs['order_by']]
+            order = get_order(ord_to_str, self.__desc_asc, ord_to_str)
+        else:
+            order = get_order('relevance', self.__desc_asc, 'relevance')
+        if 'md_tm' in str(order):
+            subquery_search = subquery_search.order_by(order)
+        else:
+            subquery_search = subquery_search.order_by(order).order_by(
+                get_order('md_tm', self.__desc_asc, 'md_tm'))
+        if self.__pagination:
+            from ..controllers.pagination import pagination as pagination_func
+            subquery_search, self.__pages, page, _ = pagination_func(subquery_search, page=self.__page,
+                                                                     items_per_page=self.__items_per_page)
+        subquery_search = subquery_search.subquery()
+        join_search = []
+        for arg in args:
+            join_params = arg.get('join') or arg['class']
+            join_search.append(db(subquery_search).join(join_params,
+                                                        arg['class'].id == subquery_search.c.index).subquery())
+        objects = collections.OrderedDict()
+        to_order = {}
+        _order_by = kwargs.get('order_by') or Search.ORDER_MD_TM
+        ord_by = 'text' if type(_order_by) in (str, list, tuple) \
+            else self.__order_by_to_str[_order_by]
+        for search in join_search:
+            for cls in db(search).all():
+                objects[cls.index] = {'id': cls.index, 'table_name': cls.table_name,
+                                      'order': getattr(cls, ord_by), 'md_tm': cls.md_tm}
+                to_order[cls.index] = (getattr(cls, ord_by), getattr(cls, 'md_tm'))
+        objects = {obj['id']: obj for obj in
+                   collections.OrderedDict(sorted(objects.items())).values()}
+        ordered = sorted(tuple(to_order.items()), reverse=False if self.__desc_asc == 'asc' else True,
+                         key=operator.itemgetter(1))
+        objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
+        if self.__return_objects:
+            items = dict()
+            for cls in args:
+                fields = cls.get('return_fields') or 'id'
+                tags = cls.get('tags')
+                assert type(fields) is str, \
+                    'Arg parameter return_fields must be string but %s given' % fields
+                for a in db(cls['class']).filter(cls['class'].id.in_(objects.keys())).all():
+                    if fields != 'default_dict' and not tags:
+                        items[a.id] = a.get_client_side_dict(fields=fields)
+                    elif fields != 'default_dict' and tags:
+                        items[a.id] = a.get_client_side_dict(fields=fields)
+                        items[a.id].update(dict(tags=a.tags))
+                    elif fields == 'default_dict' and not tags:
+                        items[a.id] = a.get_client_side_dict()
+                    else:
+                        items[a.id] = a.get_client_side_dict()
+                        items[a.id].update(dict(tags=a.tags))
+            objects = collections.OrderedDict((id, items[id]) for id, val in ordered)
+        return objects, self.__pages, self.__page
+
+    def __get_search_params(*args: dict, search_text=None):
+        search_params = []
         for cls in args:
             filter_params = cls.get('filter')
             fields = cls.get('fields') or [key for key in vars(cls['class']).keys() if not key.startswith('_')]
@@ -206,72 +321,7 @@ class Search(Base):
                 filter_array.append(Search.text.ilike("%" + search_text + "%"))
 
             search_params.append(and_(*filter_array))
-
-        subquery_search = db(Search.index.label('index'),
-                             func.sum(Search.relevance).label('relevance'),
-                             func.min(Search.table_name).label('table_name'),
-                             func.min(Search.md_tm).label('md_tm'),
-                             func.max(Search.position).label('position'),
-                             func.max(Search.text).label('text')).filter(
-            or_(*search_params)).group_by('index')
-        if type(kwargs.get('order_by')) in (str, list, tuple):
-            order = get_order('text', desc_asc, 'text')
-            subquery_search = add_joined_search(kwargs['order_by'])
-        elif type(kwargs.get('order_by')) == int:
-            ord_to_str = order_by_to_str[kwargs['order_by']]
-            order = get_order(ord_to_str, desc_asc, ord_to_str)
-        else:
-            order = get_order('relevance', desc_asc, 'relevance')
-        if 'md_tm' in str(order):
-            subquery_search = subquery_search.order_by(order)
-        else:
-            subquery_search = subquery_search.order_by(order).order_by(
-                get_order('md_tm', desc_asc, 'md_tm'))
-        if pagination:
-            from ..controllers.pagination import pagination as pagination_func
-            subquery_search, pages, page, _ = pagination_func(subquery_search, page=page, items_per_page=items_per_page)
-        subquery_search = subquery_search.subquery()
-        join_search = []
-        for arg in args:
-            join_params = arg.get('join') or arg['class']
-            join_search.append(db(subquery_search).join(join_params,
-                                                        arg['class'].id == subquery_search.c.index).subquery())
-        objects = collections.OrderedDict()
-        to_order = {}
-        _order_by = kwargs.get('order_by') or Search.ORDER_MD_TM
-        ord_by = 'text' if type(_order_by) in (str, list, tuple) \
-            else order_by_to_str[_order_by]
-        for search in join_search:
-            for cls in db(search).all():
-                objects[cls.index] = {'id': cls.index, 'table_name': cls.table_name,
-                                      'order': getattr(cls, ord_by), 'md_tm': cls.md_tm}
-                to_order[cls.index] = (getattr(cls, ord_by), getattr(cls, 'md_tm'))
-        objects = {obj['id']: obj for obj in
-                   collections.OrderedDict(sorted(objects.items())).values()}
-        ordered = sorted(tuple(to_order.items()), reverse=False if desc_asc == 'asc' else True,
-                         key=operator.itemgetter(1))
-        objects = collections.OrderedDict((id, objects[id]) for id, ord in ordered)
-        if return_objects:
-            items = dict()
-            for cls in args:
-                fields = cls.get('return_fields') or 'id'
-                tags = cls.get('tags')
-                assert type(fields) is str, \
-                    'Arg parameter return_fields must be string but %s given' % fields
-                for a in db(cls['class']).filter(cls['class'].id.in_(objects.keys())).all():
-                    if fields != 'default_dict' and not tags:
-                        items[a.id] = a.get_client_side_dict(fields=fields)
-                    elif fields != 'default_dict' and tags:
-                        items[a.id] = a.get_client_side_dict(fields=fields)
-                        items[a.id].update(dict(tags=a.tags))
-                    elif fields == 'default_dict' and not tags:
-                        items[a.id] = a.get_client_side_dict()
-                    else:
-                        items[a.id] = a.get_client_side_dict()
-                        items[a.id].update(dict(tags=a.tags))
-            objects = collections.OrderedDict((id, items[id]) for id, val in ordered)
-        return objects, pages, page + 1
-
+            return search_params
 
 class MLStripper(HTMLParser):
     def __init__(self):
