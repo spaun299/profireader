@@ -11,7 +11,7 @@ from utils.db_utils import db
 import datetime
 from ..models.files import File
 from collections import OrderedDict
-
+from flask.ext.login import login_required
 
 @reader_bp.route('/details_reader/<string:article_portal_division_id>')
 @tos_required
@@ -35,6 +35,7 @@ def details_reader(article_portal_division_id):
 @reader_bp.route('/list_reader')
 @reader_bp.route('/list_reader/<int:page>/')
 @tos_required
+@login_required
 def list_reader(page=1):
     search_text = request.args.get('search_text') or ''
     article_fields = 'title|short|image_file_id|subtitle|publishing_tm,company.name|logo_file_id,' \
