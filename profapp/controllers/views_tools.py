@@ -29,7 +29,7 @@ def update_last_accessed(json):
 
 @tools_bp.route('/SSO/<string:local_cookie>/', methods=['GET'])
 def SSO(local_cookie):
-    return render_template('tools/sso.html', local_cookie = local_cookie, profi_cookie= request.cookies.get('beaker.session.id'))
+    return render_template('tools/sso.html', local_cookie=local_cookie, profi_cookie=request.cookies.get('beaker.session.id'))
 
 
 

@@ -62,9 +62,9 @@ def get(file_id):
     if allowed_referrers(allowedreferrer):
         return send_file(BytesIO(image_query_content.content),
                          mimetype=image_query.mime, as_attachment=(request.args.get('d') is not None), attachment_filename=urllib.parse.quote(image_query.name, safe='!"#$%&\'()*+,-.0123456789:;<=>?@[\]^_`{|}~ ¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ'),
-                         headers={
-#                             'Content-Disposition': 'filename=%s' % (urllib.parse.quote(image_query.name),),
-                             'Access-Control-Allow-Origin': allowedreferrer}
+#                          headers={
+# #                             'Content-Disposition': 'filename=%s' % (urllib.parse.quote(image_query.name),),
+#                              'Access-Control-Allow-Origin': '*'}
                          )
     else:
         return abort(403)

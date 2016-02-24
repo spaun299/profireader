@@ -82,10 +82,14 @@ def login_signup_general(*soc_network_names):
                 # session['user_id'] = user.id assignment
                 # is automatically executed by login_user(user)
 
-                if 'portal_id' in session.keys():
+                if session.get('portal_id'):
                     portal_id = session['portal_id']
                     session.pop('portal_id')
                     return redirect(url_for('reader.reader_subscribe', portal_id=portal_id))
+                if session.get('back_to'):
+                    back_to = session['back_to']
+                    session.pop('back_to')
+                    return redirect(back_to)
                 # return redirect(url_for('general.index'))  # #  http://profireader.com/
                 # url = redirect_url()
                 # print(url)
@@ -122,8 +126,10 @@ def unconfirmed():
 def login_signup_endpoint():
     # if g.user_init and g.user_init.is_authenticated():
     if g.user_init.is_authenticated():
-        if 'portal_id' in session.keys():
+        if session.get('portal_id'):
             return redirect(url_for('reader.reader_subscribe', portal_id=session['portal_id']))
+        elif session.get('back_to'):
+            return redirect(session['back_to'])
         # flash('You are already logged in')
 
     login_signup = request.args.get('login_signup', 'login')
@@ -205,7 +211,8 @@ def login_signup_soc_network(soc_network_name):
 def login():
     # if g.user_init and g.user_init.is_authenticated():
     # portal_id = request.args.get('subscribe', None)
-    portal_id = session['portal_id'] if ('portal_id' in session.keys()) else None
+    portal_id = session.get('portal_id')
+    back_to = session.get('back_to')
 
     if g.user_init.is_authenticated():
         if portal_id:
@@ -228,6 +235,9 @@ def login():
             if portal_id:
                 session.pop('portal_id')
                 return redirect(url_for('reader.reader_subscribe', portal_id=portal_id))
+            elif back_to:
+                session.pop('back_to')
+                return redirect(back_to)
             # return redirect(request.args.get('next') or url_for('general.index'))
             return redirect(redirect_url())
         flash('Invalid username or password.')

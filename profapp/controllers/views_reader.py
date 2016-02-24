@@ -37,7 +37,7 @@ def details_reader(article_portal_division_id):
 @tos_required
 def list_reader(page=1):
     search_text = request.args.get('search_text') or ''
-    article_fields = 'title|short|subtitle|publishing_tm,company.name|logo_file_id,' \
+    article_fields = 'title|short|image_file_id|subtitle|publishing_tm,company.name|logo_file_id,' \
                      'division.name,portal.name|host|logo_file_id'
     favorite = request.args.get('favorite') == 'True'
     if not favorite:
@@ -64,7 +64,6 @@ def list_reader(page=1):
         articles[article_id]['company']['logo'] = File().get(articles[article_id]['company']['logo_file_id']).url()
         articles[article_id]['portal']['logo'] = File().get(articles[article_id]['portal']['logo_file_id']).url()
         del articles[article_id]['company']['logo_file_id'], articles[article_id]['portal']['logo_file_id']
-
     return render_template('partials/reader/reader_base.html',
                            articles=articles,
                            pages=pages,
@@ -192,9 +191,9 @@ def edit_portal_subscription_load(json, reader_portal_id):
     return
 
 
-@reader_bp.route('/edit_profile_submit/<string:reader_portal_id>', methods=['POST'])
+@reader_bp.route('/edit_profile_/<string:reader_portal_id>', methods=['POST'])
 @ok
-def edit_profile_submit(json, reader_portal_id):
+def edit_profile_(json, reader_portal_id):
     divisions_and_comments = db(UserPortalReader, id=reader_portal_id).one().show_divisions_and_comments
     for item in json['divisions']:
         for show_division_and_comments in divisions_and_comments:
