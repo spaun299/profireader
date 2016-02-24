@@ -8,6 +8,7 @@ from .errors import BadDataProvided
 from config import Config
 from .request_wrapers import ok
 from utils.db_utils import db
+from flask.ext.login import login_required
 import datetime
 from ..models.files import File
 from collections import OrderedDict
@@ -35,6 +36,7 @@ def details_reader(article_portal_division_id):
 @reader_bp.route('/list_reader')
 @reader_bp.route('/list_reader/<int:page>/')
 @tos_required
+@login_required
 def list_reader(page=1):
     search_text = request.args.get('search_text') or ''
     article_fields = 'title|short|image_file_id|subtitle|publishing_tm,company.name|logo_file_id,' \
@@ -61,8 +63,10 @@ def list_reader(page=1):
                                                 search_text=search_text)
     portals = UserPortalReader.get_portals_for_user() if not articles else None
     for article_id, article in articles.items():
-        articles[article_id]['company']['logo'] = File().get(articles[article_id]['company']['logo_file_id']).url()
-        articles[article_id]['portal']['logo'] = File().get(articles[article_id]['portal']['logo_file_id']).url()
+        articles[article_id]['company']['logo'] = File().get(articles[article_id]['company']['logo_file_id']).url() if \
+            articles[article_id]['company']['logo_file_id'] else None
+        articles[article_id]['portal']['logo'] = File().get(articles[article_id]['portal']['logo_file_id']).url() if \
+            articles[article_id]['portal']['logo_file_id'] else None
         del articles[article_id]['company']['logo_file_id'], articles[article_id]['portal']['logo_file_id']
     return render_template('partials/reader/reader_base.html',
                            articles=articles,
