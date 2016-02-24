@@ -1,24 +1,19 @@
 from .blueprints_declaration import front_bp
 from flask import render_template, request, url_for, redirect, g, current_app, session
-from ..models.articles import Article, ArticlePortalDivision, ArticleCompany
+from ..models.articles import Article, ArticlePortalDivision
 from ..models.portal import MemberCompanyPortal, PortalDivision, Portal, \
     PortalDivisionSettingsCompanySubportal, PortalConfig
 from ..models.company import Company
 from utils.db_utils import db
 from ..models.users import User
 from ..models.company import UserCompany
-from ..models.pr_base import Search, PRBase
+from ..models.pr_base import Search
+from utils.session_utils import back_to_url
 from config import Config
-# from profapp import
-from .pagination import pagination
-from sqlalchemy import Column, ForeignKey, text
-import os
-from flask import send_from_directory, jsonify, json
-import collections
 from sqlalchemy import and_
 from .request_wrapers import ok
 from ..utils.pr_email import send_email
-from flask.ext.login import current_user
+
 
 def get_division_for_subportal(portal_id, member_company_id):
     q = g.db().query(PortalDivisionSettingsCompanySubportal). \
@@ -28,7 +23,6 @@ def get_division_for_subportal(portal_id, member_company_id):
              PortalDivision.id == PortalDivisionSettingsCompanySubportal.portal_division_id). \
         filter(MemberCompanyPortal.company_id == member_company_id). \
         filter(PortalDivision.portal_id == portal_id)
-
     PortalDivisionSettings = q.all()
     if (len(PortalDivisionSettings)):
         return PortalDivisionSettings[0]
@@ -155,6 +149,7 @@ def details(article_portal_division_id):
     article = ArticlePortalDivision.get(article_portal_division_id)
     article_visibility = article.article_visibility_details()
     if article_visibility is not True:
+        back_to_url('front.details', host=portal.host, article_portal_division_id=article_portal_division_id)
         return article_visibility
     article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, visibility,'
                                                        'publishing_tm, keywords, status, long, image_file_id,'
@@ -187,11 +182,8 @@ def details(article_portal_division_id):
 @front_bp.route('<string:division_name>/_c/<string:member_company_id>/<string:member_company_name>/<int:page>/')
 def subportal_division(division_name, member_company_id, member_company_name, page=1):
     member_company = Company.get(member_company_id)
-
     search_text, portal, _ = get_params()
-
     division = get_division_for_subportal(portal.id, member_company_id)
-
     subportal_division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                                 name=division_name).one()
     order = Search.ORDER_POSITION if not search_text else Search.ORDER_RELEVANCE
@@ -236,14 +228,10 @@ def subportal(member_company_id, member_company_name, page=1):
     search_text, portal, _ = get_params()
     if search_text:
         return redirect(url_for('front.index', search_text=search_text))
-
     member_company = Company.get(member_company_id)
-
     division = get_division_for_subportal(portal.id, member_company_id)
-
     subportal_division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                                 portal_division_type_id='index').one()
-
     return render_template('front/bird/subportal.html',
                            subportal=True,
                            portal=portal_and_settings(portal),
