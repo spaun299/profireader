@@ -18,10 +18,7 @@ def help():
 
 @general_bp.route('')
 def index():
-    if current_user.is_authenticated():
-        return redirect(url_for('reader.list_reader'))
-    else:
-        return render_template('general/index.html')
+    return render_template('general/index.html')
 
 
 @general_bp.route('portals_list/', methods=['GET'])
