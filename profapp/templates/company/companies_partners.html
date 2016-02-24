@@ -21,7 +21,7 @@
         angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_partners')
         $scope.url_companies_partners = '{{ url_for('portal.companies_partners_load', company_id=company.id)
          }}';
-        $scope.url_company_partner_details = {{ raw_url_for('portal.company_partner_details')| safe}};
+        $scope.url_company_partner_details = {{ raw_url_for('portal.company_partner_update')| safe}};
 
         {% raw %}
         $scope.sendData = function (grid_data, callback) {

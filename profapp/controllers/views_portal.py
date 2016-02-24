@@ -423,19 +423,20 @@ def portals_partners_load(json, company_id):
     subquery = Company.subquery_company_partners(company_id, json.get('filter'))
     partners_g, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
     return {'page': current_page,
-            'grid_data': [partner.get_client_side_dict(fields='id,status,company,portal') for partner in partners_g],
+            'grid_data': [partner.get_client_side_dict(fields='id,status,company,portal,rights') for partner in
+                          partners_g],
             'total': count}
 
-@portal_bp.route('/<string:employeer_id>/company_partner_details/<string:member_id>/', methods=['GET'])
-@login_required
-def company_partner_details(member_id, employeer_id):
-    member = MemberCompanyPortal.get(Company.get(employeer_id).own_portal.id, member_id)
-    return render_template('company/company_partner_details.html',
-                           company=Company.get(employeer_id),
-                           employeer=Company.get(employeer_id).get_client_side_dict(),
-                           member = member.get_client_side_dict(more_fields='company'),
-                           user_right_in=UserCompany.get(company_id=employeer_id).has_rights(UserCompany.RIGHT_AT_COMPANY.PORTAL_MANAGE_MEMBERS_COMPANIES)
-                           )
+# @portal_bp.route('/<string:employeer_id>/company_partner_details/<string:member_id>/', methods=['GET'])
+# @login_required
+# def company_partner_details(member_id, employeer_id):
+#     member = MemberCompanyPortal.get(Company.get(employeer_id).own_portal.id, member_id)
+#     return render_template('company/company_partner_details.html',
+#                            company=Company.get(employeer_id),
+#                            employeer=Company.get(employeer_id).get_client_side_dict(),
+#                            member = member.get_client_side_dict(more_fields='company'),
+#                            user_right_in=UserCompany.get(company_id=employeer_id).has_rights(UserCompany.RIGHT_AT_COMPANY.PORTAL_MANAGE_MEMBERS_COMPANIES)
+#                            )
 
 @portal_bp.route('/<string:employeer_id>/company_partner_update/<string:member_id>/', methods=['GET'])
 @login_required

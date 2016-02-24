@@ -11,37 +11,145 @@
         {% include 'company/company_base_angular.html' %}
     {% endblock company_base %}
 
+    <script>
+        module.controller('employment_action_dialog', function ($scope, $ok, $uibModalInstance, action, user, company) {
+
+            $scope.$$translate = {{ translates('employment_action_dialog')|safe }};
+            $scope.employment_action = {{ raw_url_for('company.employment_action')|safe }};
+            {% raw %}
+
+            $scope.action = action;
+            $scope.user = user;
+            $scope.company = company;
+
+            $scope.do_action = function () {
+                $ok($scope.employment_action({
+                    employment_id: $scope.user.id,
+                    company_id: $scope.company.id,
+                    action: $scope.action
+                }), {}, $uibModalInstance.close);
+            }
+
+            $scope.action_cancel = $uibModalInstance.dismiss;
+
+
+            {% endraw %}
+
+        });
+    </script>
+
+    {% raw %}
+    <script type="text/ng-template" id="employment_action_dialog.html">
+        <div aaf ng-model="data" af-url="{{ url_submit_to_portal({'article_action': action}) }}"
+             af-after-save="afterSave"
+             af-amid-load="amidLoad"
+             af-watch="data.publication">
+            <div class="modal-header">
+                <h3 class="modal-title">{{ _(action + ' employee') }}</h3>
+            </div>
+            <div class="modal-body">
+                {{ _('You are going to ' + action + ' employee `%(user.profireader_name)s` at portal
+                `%(company.name)s`') }}<br/>
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button class="btn btn-primary"
+                        ang-disabled="!$af.isActionAllowed(data, 'save')"
+                        type="button" ng-click="do_action()">{{ _('Do ' + action) }}
+                </button>
+
+                <button class="btn btn-warning" type="button" ng-click="action_cancel()">{{ _('Cancel ' + action) }}
+                </button>
+            </div>
+        </div>
+    </script>
+    {% endraw %}
+
 
     <script>
-        module.controller('company_employees_controller', function ($scope, $ok, $timeout) {
+        module.controller('company_employees_controller', function ($scope, $ok, $timeout, $uibModal) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_employees');
 
             $scope.$$translate = {{ translates('company_employees_controller')|safe }};
             $scope.company = {{ company.get_client_side_dict(fields = 'id,name')|tojson|safe }};
             $scope.url_employee_update = {{ raw_url_for('company.employee_update')|safe }};
+            $scope.data = null;
+            {% raw %}
 
             $scope.loadData = function (data, callbackfunc) {
-                $ok('', data, callbackfunc);
+                $ok('', data, function (resp) {
+                    callbackfunc(resp)
+                    $scope.data = resp;
+                });
+            };
+//http://profireader.com/company/560b9f54-1727-4001-bda8-784be5762873/employment_action/5617835c-12a4-4001-b423-b7f13c696686
+
+            $scope.grid_action = function (id, action, row, column_name) {
+                'use strict'
+                if (action === 'ALLOW') {
+                    window.location.href = $scope.url_employee_update({
+                        'company_id': row.company_id, 'user_id': row.user_id
+                    });
+                    return;
+                }
+
+                else {
+                    var modalInstance = $uibModal.open({
+                        templateUrl: 'employment_action_dialog.html',
+                        controller: 'employment_action_dialog',
+                        resolve: resolveDictForAngularController({
+                            action: action,
+                            company: $scope.company,
+                            user: row,
+                        })
+                    });
+
+
+                    modalInstance.result.then(function (updated_row) {
+                        console.log($scope, updated_row);
+//                    TODO: SS by OZ: how i can access grid data without data cariable in my scope?
+                        $scope.grid_change_row($scope.data, updated_row);
+                    });
+                }
             };
 
             $scope.gridOptions1 = $.extend({}, $scope.gridOptions, {
                 loadGridData: $scope.loadData,
                 columnDefs: [
                     {
-                        name: 'profireader_name', width: '20%', type: 'link',
-                        href: 'url_employee_update({company_id:grid.appScope.company.id, user_id: row.entity.user_id})',
+                        name: 'profireader_name', width: '20%', atype: 'link',
+                        href: 'url_employee_update({company_id:grid.appScope.company.id, user_id: row.entity' +
+                        '.user_id})',
                         afilter: {type: 'input'}
                     },
 
                     {name: 'position', width: '20%', filter: {type: 'input'}}
                     ,
                     {name: 'status', width: '10%', afilter: {type: 'input'}},
-                    {name: 'rights', width: '*', type: 'icons', afilter: {type: 'input'}, classes: function (id, entity, field) {
-                        return entity.status !== 'ACTIVE'? 'non-active': '';
-                    }}
+                    {
+                        name: 'rights',
+                        width: '*',
+                        type: 'icons',
+                        afilter: {type: 'input'},
+                        classes: function (id, entity, field) {
+                            return entity.status !== 'ACTIVE' ? 'non-active' : '';
+                        }
+                    },
+                    {
+                        name: 'actions', width: '*', type: 'actions',
+                        onclick: 'grid_action',
+                        afilter: {type: 'input'}, classes: function (id,
+                                                                     entity, field) {
+                        return entity.status !== 'ACTIVE' ? 'non-active' : '';
+                    }
+                    }
                 ]
             });
-        });
+            {% endraw %}
+        })
+        ;
     </script>
 
     <div ng-controller="company_employees_controller">
