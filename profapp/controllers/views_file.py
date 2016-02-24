@@ -289,8 +289,9 @@ def crop_with_coordinates(image, coordinates,  ratio=Config.IMAGE_EDITOR_RATIO,
     image_pil = Image.open(BytesIO(image.file_content.content))
     try:
         area = [int(a) for a in (coordinates['x'], coordinates['y'], coordinates['width'],
-                                 coordinates['height'])
-                if int(a) in range(0, max(image_pil.size))]
+                                 coordinates['height'])]
+        if not (area[0] in range(0, image_pil.width)) or not (area[1] in range(0, image_pil.height)):
+            area[0], area[1], area[2], area[3] = 0, 0, image_pil.width, image_pil.height
         angle = int(coordinates["rotate"])*-1
         area[2] = (area[0]+area[2])
         area[3] = (area[1]+area[3])
