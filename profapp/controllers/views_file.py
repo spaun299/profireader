@@ -1,15 +1,12 @@
 from .blueprints_declaration import file_bp
-from flask import request, make_response, g, abort
+from flask import request, g, abort
 from ..models.files import File, FileContent, ImageCroped
 from io import BytesIO
-from .errors import BadCoordinates
 from PIL import Image
 from time import gmtime, strftime
 import sys
 import re
 from sqlalchemy import or_
-from ..models.articles import Article, ArticlePortalDivision
-from ..models.portal import MemberCompanyPortal, PortalDivision, Portal
 from config import Config
 from utils.db_utils import db
 from ..models.company import Company
@@ -26,6 +23,7 @@ try:
     from werkzeug.wsgi import wrap_file
 except ImportError:
     from werkzeug.utils import wrap_file
+
 
 def file_query(table, file_id):
     query = g.db.query(table).filter_by(id=file_id).first()
@@ -61,10 +59,11 @@ def get(file_id):
 
     if allowed_referrers(allowedreferrer):
         return send_file(BytesIO(image_query_content.content),
-                         mimetype=image_query.mime, as_attachment=(request.args.get('d') is not None), attachment_filename=urllib.parse.quote(image_query.name, safe='!"#$%&\'()*+,-.0123456789:;<=>?@[\]^_`{|}~ ¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ'),
-#                          headers={
-# #                             'Content-Disposition': 'filename=%s' % (urllib.parse.quote(image_query.name),),
-#                              'Access-Control-Allow-Origin': '*'}
+                         mimetype=image_query.mime, as_attachment=(request.args.get('d') is not None),
+                         attachment_filename=urllib.parse.quote(
+                             image_query.name,
+                             safe='!"#$%&\'()*+,-.0123456789:;<=>?@[\]^_`{|}~ ¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸'
+                                  '¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ')
                          )
     else:
         return abort(403)
@@ -222,13 +221,10 @@ def send_file(filename_or_fp, mimetype=None, as_attachment=False,
                 rv.headers.pop('x-sendfile', None)
     return rv
 
+
 def allowed_referrers(domain):
     return True if domain == 'https://profireader.com' or domain == 'https://profireader.com' or \
                    'http://rodynnifirmy.profireader.com' else False
-
-
-
-
 
 
 def crop_image(image_id, coordinates):
@@ -238,7 +234,7 @@ def crop_image(image_id, coordinates):
     company_owner = db(Company).filter(or_(
         Company.system_folder_file_id == image_query.root_folder_id,
         Company.journalist_folder_file_id == image_query.root_folder_id)).one()
-    bytes_file = crop_with_coordinates(image_query, coordinates)
+    bytes_file, area = crop_with_coordinates(image_query, coordinates)
     if bytes_file:
         croped = File()
         croped.md_tm = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -258,9 +254,9 @@ def crop_image(image_id, coordinates):
         g.db.flush()
         ImageCroped(original_image_id=copy_original_image_to_system_folder.id,
                     croped_image_id=croped.id,
-                    x=float(coordinates['x']), y=float(coordinates['y']),
-                    width=float(coordinates['width']),
-                    height=float(coordinates['height']), rotate=int(coordinates['rotate'])).save()
+                    x=float(area[0]), y=float(area[1]),
+                    width=float(area[2]),
+                    height=float(area[3]), rotate=int(coordinates['rotate'])).save()
         return croped.id
     else:
         return image_query.id
@@ -271,14 +267,14 @@ def update_croped_image(original_image_id, coordinates):
     croped = db(File, id=image_croped_assoc.croped_image_id).one()
 
     image_query = file_query(File, image_croped_assoc.original_image_id)
-    bytes_file = crop_with_coordinates(image_query, coordinates, )
+    bytes_file, area = crop_with_coordinates(image_query, coordinates, )
     if bytes_file:
         croped.size = sys.getsizeof(bytes_file.getvalue())
         croped.file_content.content = bytes_file.getvalue()
-        image_croped_assoc.x = float(coordinates['x'])
-        image_croped_assoc.y = float(coordinates['y'])
-        image_croped_assoc.width = float(coordinates['width'])
-        image_croped_assoc.height = float(coordinates['height'])
+        image_croped_assoc.x = float(area[0])
+        image_croped_assoc.y = float(area[1])
+        image_croped_assoc.width = float(area[2])
+        image_croped_assoc.height = float(area[3])
         image_croped_assoc.rotate = int(coordinates['rotate'])
     return croped.id
 
@@ -299,6 +295,6 @@ def crop_with_coordinates(image, coordinates,  ratio=Config.IMAGE_EDITOR_RATIO,
         cropped = rotated.crop(area).resize(size)
         bytes_file = BytesIO()
         cropped.save(bytes_file, image.mime.split('/')[-1].upper())
-        return bytes_file
+        return bytes_file, area
     except ValueError:
         return False
