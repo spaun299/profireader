@@ -37,8 +37,7 @@
 
             <img pr-image="employer.logo_file_id"/>
             {{ data.employment.status }}
-            {{ _('status') }} <select id="select-status" ng-model="data.employment.status"
-                                      ng-options="status as status disable when !available for (status, available) in data.statuses_available"></select><br>
+            {{ _('status') }} {{ data.employment.status }}
             {{ _('position') }} <input ng-model="data.employment.position"/><br>
             {{ _('permissions') }}<br>
             <div ng-class="{disabled: !permitted}" ng-repeat="(right_name, permitted) in data.employment.rights">

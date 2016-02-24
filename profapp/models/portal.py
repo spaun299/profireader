@@ -339,14 +339,13 @@ class MemberCompanyPortal(Base, PRBase):
             self.company = company
         self.portal = portal
         self.plan = plan
-        self.binaryRight
 
     @staticmethod
     def apply_company_to_portal(company_id, portal_id):
         """Add company to MemberCompanyPortal table. Company will be partner of this portal"""
         g.db.add(MemberCompanyPortal(company_id=company_id,
                                      portal=db(Portal, id=portal_id).one(),
-                                     plan=db(MemberCompanyPrights_company_at_portalortalPlan).first()))
+                                     plan=db(MemberCompanyPortalPlan).first()))
         g.db.flush()
 
     @staticmethod
@@ -357,32 +356,16 @@ class MemberCompanyPortal(Base, PRBase):
         self.status = status
         self.rights = rights
 
-        # @staticmethod
-        # def show_companies_on_my_portal(company_id):
-        #     """Return all companies partners at portal"""
-        #     portal = Portal().own_portal(company_id).companies
-        #     return portal
-
-        # @staticmethod
-        # def subquery_company_partners(company_id, search_text, **kwargs):
-        #     sub_query = db(MemberCompanyPortal, company_id=company_id)
-        #     if search_text:
-        #         sub_query = sub_query.join(MemberCompanyPrights_company_at_portalortal.portal)
-        #         if 'portal' in search_text:
-        #             sub_query = sub_query.filter(Portal.name.ilike("%" + search_text['portal'] + "%"))
-        #         if 'company' in search_text:
-        #             sub_query = sub_query.join(MemberCompanyPortal.company)
-        #             sub_query = sub_query.filter(Company.name.ilike("%" + search_text['company'] + "%"))
-        #         if 'link' in search_text:
-        #             sub_query = sub_query.filter(Portal.host.ilike("%" + search_text['link'] + "%"))
-        #     return sub_query
-
     def has_rights(self, rightname):
-        if rightname == '_ANY':
-            return True if self.status == self.STATUSES['ACTIVE'] else False
 
         if self.portal.own_company.id == self.company_id:
             return True
+
+        if rightname == '_OWNER':
+            return False
+
+        if rightname == '_ANY':
+            return True if self.status == self.STATUSES['ACTIVE'] else False
 
         return True if (self.status == self.STATUSES['ACTIVE'] and self.rights[rightname]) else False
 
