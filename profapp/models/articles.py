@@ -437,10 +437,13 @@ class ArticleCompany(Base, PRBase):
         # 'UNDELETE': 'UNDELETE'
     }
 
+    # TODO OZ by OZ: we need lambda function somewhere here and remove ugly code (search for line `move this ugly code to ACTIONS_FOR_STATUSES`)
     ACTIONS_FOR_STATUSES = {
         STATUSES['NORMAL']: {
-            ACTIONS['SUBMIT']: {'employment': [UserCompany.RIGHT_AT_COMPANY.ARTICLES_SUBMIT_OR_PUBLISH]},
-            ACTIONS['EDIT']:   {'employment': [UserCompany.RIGHT_AT_COMPANY.ARTICLES_EDIT_OTHERS]}
+            ACTIONS['SUBMIT']: {'employment': [UserCompany.RIGHT_AT_COMPANY.ARTICLES_SUBMIT_OR_PUBLISH]
+                                },
+            ACTIONS['EDIT']: {'employment': [UserCompany.RIGHT_AT_COMPANY.ARTICLES_EDIT_OTHERS]
+                              }
         }
 
     }
@@ -469,6 +472,10 @@ class ArticleCompany(Base, PRBase):
 
         required_rights = self.ACTIONS_FOR_STATUSES[self.status][action_name]
 
+        # TODO: OZ by OZ: move this ugly code to ACTIONS_FOR_STATUSES
+        if action_name == self.ACTIONS['EDIT'] and self.editor_user_id == employment.user_id:
+            return True
+
         if 'employment' in required_rights:
             for required_right in required_rights['employment']:
                 if not employment.has_rights(required_right):
@@ -478,6 +485,7 @@ class ArticleCompany(Base, PRBase):
         #     for required_right in required_rights['membership']:
         #         if not membership.has_rights(required_right):
         #             return "Membership need right `{}` to perform action `{}`".format(required_right, action_name)
+
 
         return True
 

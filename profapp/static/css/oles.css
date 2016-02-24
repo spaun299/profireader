@@ -172,6 +172,11 @@
 }
 
 
+.pr-grid-cell-field-type-icons-icon:before {
+    content: "\f00c";
+    color: dodgerblue;
+}
+
 .pr-grid-cell-field-type-icons-icon-FILES_BROWSE:before {
     content: "\f06e";
     color: dodgerblue;
@@ -211,22 +216,18 @@
     color: green;
 }
 
-.pr-grid-cell-field-type-icons-icon-EMPLOYEE_CONFIRM_NEW:before {
+.pr-grid-cell-field-type-icons-icon-EMPLOYEE_ENLIST_OR_FIRE:before {
     content: "\f234";
     color: dodgerblue;
 }
 
-.pr-grid-cell-field-type-icons-icon-EMPLOYEE_SUSPEND_UNSUSPEND:before {
-    content: "\f235";
-    color: dodgerblue;
-}
 
 .pr-grid-cell-field-type-icons-icon-COMPANY_REQUIRE_MEMBEREE_AT_PORTALS:before {
     content: "\f196";
     color: #790B79;
 }
 
-.pr-grid-cell-field-type-icons-icon-COMPANY_MANAGE_USER_RIGHTS:before {
+.pr-grid-cell-field-type-icons-icon-EMPLOYEE_ALLOW_RIGHTS:before {
     content: "\f0a1";
     color: #790B79;
 }

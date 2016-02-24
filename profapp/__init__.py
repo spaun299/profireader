@@ -40,7 +40,7 @@ def req(name, allowed=None, default=None, exception=True):
     elif default is not None:
         return default
     elif exception:
-        raise BadDataProvided
+        raise Exception("value `{}` is not among allowed `{}`".format(name, allowed))
     else:
         return None
 

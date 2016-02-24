@@ -222,8 +222,8 @@ class UserCompany(Base, PRBase):
     user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'), nullable=False)
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'), nullable=False)
 
-    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED',
-                'FIRED': 'FIRED'}
+# TODO: OZ by OZ: remove `SUSPENDED` status from db type
+    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'FIRED': 'FIRED'}
     status = Column(TABLE_TYPES['status'], default=STATUSES['APPLICANT'], nullable=False)
 
     class RIGHT_AT_COMPANY(BinaryRights):
@@ -236,17 +236,71 @@ class UserCompany(Base, PRBase):
         ARTICLES_DELETE = 19  # reset!
         ARTICLES_UNPUBLISH = 17  # reset!
 
-        EMPLOYEE_CONFIRM_NEW = 6
-        EMPLOYEE_SUSPEND_UNSUSPEND = 7
+        EMPLOYEE_ENLIST_OR_FIRE = 6
+        EMPLOYEE_ALLOW_RIGHTS = 9
 
         COMPANY_REQUIRE_MEMBEREE_AT_PORTALS = 15
-        COMPANY_MANAGE_USER_RIGHTS = 9
         COMPANY_EDIT_PROFILE = 1
 
         PORTAL_EDIT_PROFILE = 10
         PORTAL_MANAGE_READERS = 16
         PORTAL_MANAGE_COMMENTS = 18
         PORTAL_MANAGE_MEMBERS_COMPANIES = 13
+
+    ACTIONS = {
+        'ENLIST': 'ENLIST',
+        'REJECT': 'REJECT',
+        'FIRE': 'FIRE',
+        'ALLOW': 'ALLOW',
+    }
+
+    ACTIONS_FOR_STATUSES = {
+        STATUSES['APPLICANT']: {
+            ACTIONS['ENLIST']: {'employment': [RIGHT_AT_COMPANY.EMPLOYEE_ENLIST_OR_FIRE]},
+            ACTIONS['REJECT']: {'employment': [RIGHT_AT_COMPANY.EMPLOYEE_ENLIST_OR_FIRE]},
+        },
+        STATUSES['REJECTED']: {
+            ACTIONS['ENLIST']: {'employment': [RIGHT_AT_COMPANY.EMPLOYEE_ENLIST_OR_FIRE]},
+        },
+
+        STATUSES['FIRED']: {
+            ACTIONS['ENLIST']: {'employment': [RIGHT_AT_COMPANY.EMPLOYEE_ENLIST_OR_FIRE]},
+        },
+        STATUSES['ACTIVE']: {
+            ACTIONS['FIRE']: {'employment': [RIGHT_AT_COMPANY.EMPLOYEE_ENLIST_OR_FIRE]},
+            ACTIONS['ALLOW']: {'employment': [RIGHT_AT_COMPANY.EMPLOYEE_ALLOW_RIGHTS]},
+        }
+    }
+
+    def action_is_allowed(self, action_name, employment_subject):
+        if not employment_subject:
+            return "Unconfirmed employment"
+
+        if not action_name in self.ACTIONS:
+            return "Unrecognized employee action `{}`".format(action_name)
+
+        if not self.status in self.ACTIONS_FOR_STATUSES:
+            return "Unrecognized employee status `{}`".format(self.status)
+
+        if not action_name in self.ACTIONS_FOR_STATUSES[self.status]:
+            return "Action `{}` is not applicable for employee with status `{}`".format(action_name, self.status)
+
+        if employment_subject.status != UserCompany.STATUSES['ACTIVE']:
+            return "User need employment with status `{}` to perform action `{}`".format(
+                    UserCompany.STATUSES['ACTIVE'], action_name)
+
+        required_rights = self.ACTIONS_FOR_STATUSES[self.status][action_name]
+
+        if 'employment' in required_rights:
+            for required_right in required_rights['employment']:
+                if not employment_subject.has_rights(required_right):
+                    return "Employment need right `{}` to perform action `{}`".format(required_right, action_name)
+
+        return True
+
+    def actions(self, employment_subject):
+        return {action_name: self.action_is_allowed(action_name, employment_subject) for action_name in
+                self.ACTIONS_FOR_STATUSES[self.status]}
 
     position = Column(TABLE_TYPES['short_name'], default='')
 
@@ -274,12 +328,13 @@ class UserCompany(Base, PRBase):
         return db(UserCompany).filter_by(user_id=user_id if user_id else g.user.id, company_id=company_id).one()
 
     @staticmethod
+    # TODO: OZ by OZ: rework this as in action-style
     def get_statuses_avaible(company_id):
         available_statuses = {s: True for s in UserCompany.STATUSES}
         user_rights = UserCompany.get(user_id=current_user.id, company_id=company_id).rights
-        if user_rights['EMPLOYEE_CONFIRM_NEW'] == False:
+        if user_rights['EMPLOYEE_ENLIST_OR_FIRE'] == False:
             available_statuses['ACTIVE'] = False
-        if user_rights['EMPLOYEE_SUSPEND_UNSUSPEND'] == False:
+        if user_rights['EMPLOYEE_ENLIST_OR_FIRE'] == False:
             available_statuses['SUSPENDED'] = False
             available_statuses['UNSUSPEND'] = False
         return available_statuses

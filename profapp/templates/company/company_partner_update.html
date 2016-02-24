@@ -12,12 +12,11 @@
         module.controller('company_partner_update', function ($scope, $ok) {
             angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('companies_partners');
 
-            $scope.url_company_partner_details = {{ raw_url_for('portal.company_partner_details')|safe }};
+            $scope.url_companies_partners = {{ raw_url_for('portal.companies_partners')|safe }};
 
             $scope.after_save = function () {
-                window.location.href = $scope.url_company_partner_details({
-                    'employeer_id': $scope.data.employeer.id,
-                    'member_id': $scope.data.member.company.id
+                window.location.href = $scope.url_companies_partners({
+                    'company_id': $scope.data.employeer.id
                 });
             }
 

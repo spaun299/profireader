@@ -368,6 +368,7 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             }
         };
     }])
+    //TODO: SS by OZ: better use actions (prUserCan) not rights. action can depend on many rights
     .directive('prUserRights', function ($timeout) {
         return {
             restrict: 'AE',
@@ -377,15 +378,45 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
                     disable(val)
                 })
 
-                var disable = function(allow){
-                    if(allow === false){
-                        if(elementType === 'BUTTON' || elementType === 'INPUT'){
+                var disable = function (allow) {
+                    if (allow === false) {
+                        if (elementType === 'BUTTON' || elementType === 'INPUT') {
                             element.prop('disabled', true)
-                        }else if(elementType === 'A'){
-                             element.css({'pointer-events': 'none', 'cursor': 'default'})
-                        }else{
+                        } else if (elementType === 'A') {
+                            element.css({'pointer-events': 'none', 'cursor': 'default'})
+                        } else {
                             element.hide()
                         }
+                    }
+                }
+            }
+        };
+    })
+    .directive('prUserCan', function ($timeout) {
+        return {
+            restrict: 'AE',
+            link: function (scope, element, attrs) {
+                var elementType = element.prop('nodeName');
+                scope.$watch(attrs['prUserCan'], function (val) {
+                    enable(val)
+                })
+
+                var disable = function (allow) {
+                    if (allow === true) {
+                        element.removeProp('disabled');
+                        element.removeClass('disabled');
+                        element.prop('title', '');
+                    } else {
+                        if (elementType === 'BUTTON' || elementType === 'INPUT') {
+                            element.prop('disabled', true);
+                            element.prop('title', allow === false?'':allow);
+                        } else if (elementType === 'A') {
+                            element.addClass('disabled');
+                            element.prop('title', allow === false?'':allow);
+                        } else {
+                            element.hide()
+                        }
+
                     }
                 }
             }
@@ -1169,7 +1200,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             var col = gridApi.grid.options.columnDefs;
 
             var rowClass = gridApi.grid.options.rowClass
-            gridApi.grid.options.rowTemplate = '<div ng-repeat="(colRenderIndex, col) in colContainer.renderedColumns track by col.colDef.name" class="ui-grid-cell'+rowClass+'ddd" ng-class="{ \'ui-grid-row-header-cell\': col.isRowHeader, \'custom\': true }" ui-grid-cell></div>'
+            gridApi.grid.options.rowTemplate = '<div ng-repeat="(colRenderIndex, col) in colContainer.renderedColumns track by col.colDef.name" class="ui-grid-cell' + rowClass + 'ddd" ng-class="{ \'ui-grid-row-header-cell\': col.isRowHeader, \'custom\': true }" ui-grid-cell></div>'
 
             $.each(col, function (ind, c) {
                 col[ind] = $.extend({
@@ -1235,7 +1266,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                     switch (col.type) {
                         case 'link':
-                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">' + prefix_img + '<a ' + (col.target ? (' target="' + col.target + '" ') : '') + ' href="{{' + 'grid.appScope.' + col.href + '}}"><i ng-if="'+col.link+'" class="fa fa-external-link" style="font-size: 12px"></i> {{COL_FIELD}}</a></div>';
+                            return '<div class="' + classes_for_row + '" title="{{ COL_FIELD }}">' + prefix_img + '<a ' + (col.target ? (' target="' + col.target + '" ') : '') + ' href="{{' + 'grid.appScope.' + col.href + '}}"><i ng-if="' + col.link + '" class="fa fa-external-link" style="font-size: 12px"></i> {{COL_FIELD}}</a></div>';
                         case 'img':
                             return '<div class="' + classes_for_row + '" style="text-align:center;">' + prefix_img + '<img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>';
                         case 'show_modal':

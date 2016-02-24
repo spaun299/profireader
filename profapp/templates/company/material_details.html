@@ -50,10 +50,7 @@
 
 
             $scope.updateMaterial = function (material_id) {
-                console.log($scope.rights.ARTICLES_EDIT_OTHERS)
-                $scope.rights.ARTICLES_EDIT_OTHERS ?
-                        window.location.href = $scope.url_update_material({'material_id': material_id}) :
-                        add_message('Sorry!!!You haven\'t got  appropriate rights!', 'danger', 8000)
+                window.location.href = $scope.url_update_material({'material_id': material_id})
             };
 
 
@@ -148,11 +145,13 @@
         <h4>{{ _('Created at') }} {{data.material.cr_tm}}</h4>
         <h4>{{ _('Last modified at') }} {{data.material.md_tm}}</h4>
         <hr/>
-        <button pr-user-rights="rights.ARTICLES_EDIT_OTHERS" class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+        <button pr-user-can="data.actions.EDIT" class="btn fr" ng-click="updateMaterial(data.material.id)
+        ">{{ _('Update material') }}</button>
         <div class="material-details-article-preview">
             {% endraw %}{% include 'partials/article_details.html' %}{% raw %}
         </div>
-        <button pr-user-rights="rights.ARTICLES_EDIT_OTHERS" class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update material') }}</button>
+        <button pr-user-can="data.actions.EDIT" class="btn fr" ng-click="updateMaterial(data.material.id)">{{ _('Update
+            material') }}</button>
         <br/><br/>
         <hr/>
 
