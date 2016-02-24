@@ -326,12 +326,19 @@ class ArticlePortalDivision(Base, PRBase):
         actions = {ArticlePortalDivision.VISIBILITIES['OPEN']: lambda: True,
                    ArticlePortalDivision.VISIBILITIES['REGISTERED']:
                        lambda: True if getattr(g.user, 'id', False) else
-                       redirect('//profireader.com/auth/login_signup'),
-                   ArticlePortalDivision.VISIBILITIES['PAYED']: True,
+                       dict(redirect_url='//profireader.com/auth/login_signup',
+                            message='This article can read only by users which are logged in.',
+                            context='log in'),
+                   ArticlePortalDivision.VISIBILITIES['PAYED']: lambda:
+                   dict(redirect_url='//profireader.com/reader/buy_subscription',
+                        message='This article can read only by users which bought subscription on this portal.',
+                        context='buy subscription'),
                    ArticlePortalDivision.VISIBILITIES['CONFIDENTIAL']:
                        lambda portal_id=self.portal.id: True if
                        ArticlePortalDivision.articles_visibility_for_user(portal_id)[1] else
-                       redirect('//profireader.com/reader/buy_subscription')
+                       dict(redirect_url='//profireader.com/auth/login_signup',
+                            message='This article can read only employees of this company.',
+                            context='login as employee')
                    }
         return actions[self.visibility]()
 

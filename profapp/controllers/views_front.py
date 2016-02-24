@@ -148,9 +148,6 @@ def details(article_portal_division_id):
         return redirect(url_for('front.index', search_text=search_text))
     article = ArticlePortalDivision.get(article_portal_division_id)
     article_visibility = article.article_visibility_details()
-    if article_visibility is not True:
-        back_to_url('front.details', host=portal.host, article_portal_division_id=article_portal_division_id)
-        return article_visibility
     article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, visibility,'
                                                        'publishing_tm, keywords, status, long, image_file_id,'
                                                        'division.name, division.portal.id,'
@@ -158,7 +155,11 @@ def details(article_portal_division_id):
     article_dict['tags'] = article.tags
 
     division = g.db().query(PortalDivision).filter_by(id=article.portal_division_id).one()
-
+    if article_visibility is not True:
+        back_to_url('front.details', host=portal.host, article_portal_division_id=article_portal_division_id)
+        return render_template('front/bird/cant_read_article.html', redirect_info=article_visibility,
+                               portal=portal_and_settings(portal),
+                               current_division=division.get_client_side_dict())
     related_articles = g.db().query(ArticlePortalDivision).filter(
         and_(ArticlePortalDivision.id != article.id,
              ArticlePortalDivision.portal_division_id.in_(
