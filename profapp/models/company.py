@@ -316,12 +316,15 @@ class UserCompany(Base, PRBase):
     employer = relationship('Company', backref='employee_assoc')
     employee = relationship('User', backref=backref('employer_assoc', lazy='dynamic'))
 
-    def __init__(self, user_id=None, company_id=None, status=STATUSES['APPLICANT']):
+    def __init__(self, user_id=None, company_id=None, status=STATUSES['APPLICANT'],
+                 rights = None):
 
         super(UserCompany, self).__init__()
         self.user_id = user_id
         self.company_id = company_id
         self.status = status
+        self.rights = {self.RIGHT_AT_COMPANY.FILES_BROWSE: True, self.RIGHT_AT_COMPANY.ARTICLES_SUBMIT_OR_PUBLISH:
+            True} if rights is None else rights
 
     @staticmethod
     def get(user_id=None, company_id=None):

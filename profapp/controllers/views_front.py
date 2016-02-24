@@ -39,7 +39,7 @@ def get_params(**argv):
         sub_query = Article.subquery_articles_at_portal(search_text=search_text, portal_id=portal.id)
         return search_text, portal, sub_query
     else:
-        raise Exception("No portal with requested domain name `{}`".format(request.host))
+        return None, None, None
 
 
 def portal_and_settings(portal):

@@ -127,9 +127,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .site-content {
     background-color: #E1E1E1;
-    padding-top: 15px;
+    padding-top: 30px;
 }
-
+.site-content h1{
+    color: #424242;
+    font-size: 24px;
+}
 .social-block {
     top: -50px;
     right: 20px;
