@@ -18,6 +18,7 @@ def help():
 
 @general_bp.route('')
 def index():
+
     return render_template('general/index.html')
 
 
