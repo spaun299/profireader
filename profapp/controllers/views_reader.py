@@ -93,7 +93,6 @@ def reader_subscribe(portal_id):
     portal = Portal.get(portal_id)
     if not portal:
         raise BadDataProvided
-
     user_portal_reader = g.db.query(UserPortalReader).filter_by(user_id=user_dict['id'], portal_id=portal_id).count()
     if not user_portal_reader:
         free_plan = g.db.query(ReaderUserPortalPlan.id, ReaderUserPortalPlan.time,
@@ -107,9 +106,7 @@ def reader_subscribe(portal_id):
                                                                             for division in portal.divisions]])
         g.db.add(user_portal_reader)
         g.db.commit()
-
         flash('You have successfully subscribed to this portal')
-
     return redirect(url_for('reader.list_reader'))
 
 
