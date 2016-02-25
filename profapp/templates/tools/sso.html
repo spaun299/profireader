@@ -1,6 +1,3 @@
-<script>
-    console.log('{{ profi_cookie  }}', '{{ local_cookie }}');
-</script>
 {% if profi_cookie != local_cookie %}
     {%  if profi_cookie %}
     <script>
@@ -8,7 +5,8 @@
     </script>
         {% else %}
         <script>
+        $.cookie('beaker.session.id', $(this).val(), { path: '/', expires: -3600*24*365*10 }); //Null the previous session
         $.cookie('beaker.session.id', '{{ local_cookie }}');
-    </script>
+        </script>
         {% endif %}
 {% endif %}

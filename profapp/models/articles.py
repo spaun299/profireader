@@ -390,6 +390,11 @@ class ArticlePortalDivision(Base, PRBase):
                 elif self.event_tm and datetime.now() > self.event_tm:
                     ret['warnings']['event_tm'] = 'Event time in past'
 
+        if ret['errors']:
+            ret['errors']['_'] = 'You have some error'
+        else:
+            ret['notices']['_'] = 'Ok, you can click submit'
+
         # if not self.event_tm:
         #     ret['errors']['event_tm'] = 'Please select event date'
 
@@ -897,6 +902,11 @@ class ReaderArticlePortalDivision(Base, PRBase):
         article = db(ReaderArticlePortalDivision, article_portal_division_id=article_portal_division_id,
                      user_id=g.user_id).one()
         article.favorite = True if favorite else False
+
+    @staticmethod
+    def article_is_favorite(user_id, article_portal_division_id):
+        reader_article = db(ReaderArticlePortalDivision, user_id=user_id, article_portal_division_id=article_portal_division_id).first()
+        return reader_article.favorite if reader_article else False
 
     @staticmethod
     def add_to_table_if_not_exists(article_portal_division_id):
