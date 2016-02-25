@@ -397,11 +397,8 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
             restrict: 'AE',
             link: function (scope, element, attrs) {
                 var elementType = element.prop('nodeName');
-                scope.$watch(attrs['prUserCan'], function (val) {
-                    enable(val)
-                })
 
-                var disable = function (allow) {
+                var enable = function (allow) {
                     if (allow === true) {
                         element.removeProp('disabled');
                         element.removeClass('disabled');
@@ -419,6 +416,12 @@ angular.module('profireaderdirectives', ['ui.bootstrap', 'ui.bootstrap.tooltip']
 
                     }
                 }
+
+                scope.$watch(attrs['prUserCan'], function (val) {
+                    enable(val)
+                })
+
+
             }
         };
     })
