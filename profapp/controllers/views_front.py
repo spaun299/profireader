@@ -211,7 +211,7 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
 
     # articles, pages, page = pagination(query=sub_query, page=page)
 
-    def url_page_division(page=1, search_text=''):
+    def url_page_division(page=1, search_text='', **kwargs):
         return url_for('front.subportal_division', division_name=division_name,
                        member_company_id=member_company_id, member_company_name=member_company_name,
                        page=page, search_text=search_text)
