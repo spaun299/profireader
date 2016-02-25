@@ -23,11 +23,10 @@
                 window.location.href = $scope.url_back();
                 return false;
             };
-            $scope.getData = function () {
 
-                return $scope.data;
-            };
             $scope.$$translate = {{ translates('company_create')|safe }};
+
+
 
             $scope.afterSave = function (resp, deff) {
                 if (resp && !$scope.data.id) {
@@ -36,10 +35,6 @@
                 deff(resp);
             };
 
-            $scope.afterLoad = function (resp, deff) {
-                deff(resp);
-                $scope.logo_file_url = fileUrl(resp['logo_file_id']);
-            };
 
 
         }])
@@ -48,7 +43,6 @@
     <div ng-controller="company_create">
         <div class="container list-form" af
              af-after-save="afterSave"
-             af-after-load="afterLoad"
              ng-model="data">
             <div class="row company">
                 <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12"><h3>Create a new company</h3></div>
