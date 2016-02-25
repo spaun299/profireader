@@ -393,7 +393,7 @@ class ArticlePortalDivision(Base, PRBase):
         if ret['errors']:
             ret['errors']['_'] = 'You have some error'
         else:
-            ret['notice']['_'] = 'Ok, you can click submit'
+            ret['notices']['_'] = 'Ok, you can click submit'
 
         # if not self.event_tm:
         #     ret['errors']['event_tm'] = 'Please select event date'
