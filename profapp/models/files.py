@@ -296,7 +296,7 @@ class File(Base, PRBase):
 
     def url(self):
         server = re.sub(r'^[^-]*-[^-]*-4([^-]*)-.*$', r'\1', self.id)
-        return 'http://file' + server + '.profireader.com/' + self.id + '/'
+        return '//file' + server + '.profireader.com/' + self.id + '/'
 
     @staticmethod
     def get_index(file, lists):
