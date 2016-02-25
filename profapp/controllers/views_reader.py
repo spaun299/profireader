@@ -153,14 +153,9 @@ def profile_load(json):
     if json.get('paginationOptions'):
         pagination_params.extend([json['paginationOptions']['pageNumber'], json['paginationOptions']['pageSize']])
     if json.get('filter'):
-        if json.get('filter').get('portal_name'):
-            filter_params.append(UserPortalReader.portal_id.in_(db(Portal.id).filter(
-                    Portal.name.ilike('%' + json.get('filter').get('portal_name') + '%'))))
-        if json.get('filter').get('start_tm'):
-            from_tm = datetime.datetime.utcfromtimestamp(int(json.get('filter').get('start_tm')['from'] + 1) / 1000)
-            to_tm = datetime.datetime.utcfromtimestamp(int(json.get('filter').get('start_tm')['to'] + 86399999) / 1000)
-            filter_params.extend([UserPortalReader.start_tm >= from_tm,
-                                  UserPortalReader.start_tm <= to_tm])
+        filter_params = UserPortalReader.get_filter_for_portals_and_plans(
+            portal_name=json.get('filter').get('portal_name'), start_end_tm=json.get('filter').get('start_tm'),
+            package_name=json.get('filter').get('package_name'))
     portals_and_plans = UserPortalReader.get_portals_and_plan_info_for_user(g.user.id, *pagination_params,
                                                                             filter_params=and_(*filter_params))
     grid_data = []
