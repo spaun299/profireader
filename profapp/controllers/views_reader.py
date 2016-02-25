@@ -45,7 +45,7 @@ def list_reader():
 def list_reader_load(json):
     next_page = json.get('next_page') if json.get('next_page') else 1
     search_text = request.args.get('search_text') or ''
-    article_fields = 'title|id|short|image_file_id|subtitle|publishing_tm|read_count,company.name|logo_file_id|id,' \
+    article_fields = 'title|id|subtitle|short|image_file_id|subtitle|publishing_tm|read_count,company.name|logo_file_id|id,' \
                      'division.name,portal.name|host|logo_file_id'
     favorite = request.args.get('favorite') == 'True'
     if not favorite:
@@ -127,7 +127,7 @@ def list_reader_load(json):
 #                            )
 
 
-@reader_bp.route('add_to_favorite/', methods=['POST'])
+@reader_bp.route('/add_to_favorite/', methods=['POST'])
 def add_delete_favorite():
     favorite = json.loads(request.form.get('favorite'))
     article_portal_division_id = request.form.get('article_portal_division_id')
@@ -208,7 +208,7 @@ def profile_load(json):
     for field in portals_and_plans:
         grid_data.append({'user_portal_reader_id': field['id'], 'portal_logo': field['portal_logo'],
                           'portal_name': field['portal_name'], 'package_name': field['plan_name'] + ' - UPGRADE',
-                          'start_tm': field['start_tm'], 'end_tm': field['end_tm'], 'article_remains': field['amount'],
+                          'start_tm': field['start_tm'], 'end_tm': field['end_tm'], 'article_remains': field['amount'],'id':field['portal_id'],
                           'portal_host': field['portal_host'], 'configure': 'configure'})
 
     return {'grid_data': grid_data,

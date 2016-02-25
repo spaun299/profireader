@@ -1045,6 +1045,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
 
                     if (!dontRemove && exists) {
                         $scope.externalEvents.onItemDeselect(findObj);
+                        $scope.isSelectAll = false;
                         index = $scope.listElemens[$scope.addData.field].indexOf(label);
                         $scope.listElemens[$scope.addData.field].splice(index, 1);
                         if ($scope.listElemens[$scope.addData.field].length > 0) {
@@ -1671,7 +1672,7 @@ function highlight($el) {
     setTimeout(function () {
         $($el).removeClass('highlight');
     }, 3500);
-}
+};
 
 
 function highLightSubstring(substring, block, element) {

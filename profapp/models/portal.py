@@ -298,6 +298,7 @@ class MemberCompanyPortal(Base, PRBase):
         PUBLICATION_UNPUBLISH = 2
         PUBLICATION_EDIT = 3
 
+
     id = Column(TABLE_TYPES['id_profireader'], nullable=False, primary_key=True)
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'))
     portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
