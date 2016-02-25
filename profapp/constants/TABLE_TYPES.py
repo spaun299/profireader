@@ -17,7 +17,7 @@ class BinaryRightsMetaClass1(type):
         ret = 0
         all_rights = self._allrights()
         for (rightname, truefalse) in dict.items():
-            if rightname == self._ANY and truefalse:  # any right
+            if rightname == self._OWNER and truefalse:  # any right
                 ret = 0x7fffffffffffffff
             else:
                 bit_position = all_rights.get(rightname)
@@ -35,6 +35,8 @@ class BinaryRightsMetaClass1(type):
             return type.__getattribute__(self, key)
         elif key in type.__getattribute__(self, '_allrights')():
             return key
+        elif key in ['_OWNER', '_ANY']:
+            return key
         else:
             raise Exception(
                             "right `{}` doesn't exists in allowed columns rights: {}".format(key,
@@ -42,7 +44,8 @@ class BinaryRightsMetaClass1(type):
 
 
 class BinaryRights(metaclass=BinaryRightsMetaClass1):
-    _ANY = -1
+    _OWNER = -1
+    _ANY = -2
 
 
 class RIGHTS(BIGINT):

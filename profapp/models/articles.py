@@ -80,108 +80,48 @@ class ArticlePortalDivision(Base, PRBase):
         'UNDELETE': 'UNDELETE'
     }
 
+    delete_rights = {'membership': [MemberCompanyPortal.RIGHT_AT_PORTAL._OWNER],
+                     'employment': [UserCompany.RIGHT_AT_COMPANY.ARTICLES_DELETE]}
+
+    publish_rights = {'membership': [MemberCompanyPortal.RIGHT_AT_PORTAL._OWNER],
+                      'employment': [UserCompany.RIGHT_AT_COMPANY.ARTICLES_DELETE]}
+
+    unpublish_rights = {'membership': [MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_UNPUBLISH],
+                        'employment': [UserCompany.RIGHT_AT_COMPANY.ARTICLES_UNPUBLISH]}
+
+    republish_rights = {'membership': [MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH,
+                                       MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_UNPUBLISH],
+                        'employment': [UserCompany.RIGHT_AT_COMPANY.ARTICLES_UNPUBLISH,
+                                       UserCompany.RIGHT_AT_COMPANY.ARTICLES_SUBMIT_OR_PUBLISH]}
+
     ACTIONS_FOR_STATUSES = {
         STATUSES['SUBMITTED']: {
-            ACTIONS['PUBLISH']: {'membership': [MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH],
-                                 'employment': [UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH]},
-            ACTIONS['DELETE']: {},
+            ACTIONS['PUBLISH']: publish_rights,
+            ACTIONS['DELETE']: delete_rights,
         },
         STATUSES['PUBLISHED']: {
-            ACTIONS['REPUBLISH']: {},
-            ACTIONS['UNPUBLISH']: {},
-            ACTIONS['EDIT']: {},
-            ACTIONS['DELETE']: {}
+            ACTIONS['REPUBLISH']: republish_rights,
+            ACTIONS['UNPUBLISH']: unpublish_rights,
+            ACTIONS['EDIT']: publish_rights,
+            ACTIONS['DELETE']: delete_rights
         },
         STATUSES['UNPUBLISHED']: {
-            ACTIONS['REPUBLISH']: {},
-            ACTIONS['EDIT']: {},
-            ACTIONS['DELETE']: {}
+            ACTIONS['REPUBLISH']: publish_rights,
+            ACTIONS['EDIT']: republish_rights,
+            ACTIONS['DELETE']: delete_rights
         },
         STATUSES['DELETED']: {
-            ACTIONS['UNPUBLISH']: {},
+            ACTIONS['UNPUBLISH']: delete_rights,
         }
     }
 
-    # actions = {
-    #     ArticlePortalDivision.STATUSES['SUBMITTED']:
-    #         'edit':
-    # {
-    #     'employment': '',
-    #     'membership': '',
-    #     ArticlePortalDivision.STATUSES['SUBMITTED']: {
-    #
-    #     },
-    #     ArticlePortalDivision.STATUSES['PUBLISHED']: {
-    #
-    #     },
-    #     ArticlePortalDivision.STATUSES['UNPUBLISHED']: {
-    #
-    #     },
-    # }
-    # (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT,
-    #  UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH),
-    # 'publish': (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH,
-    #             UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH),
-    #            'republish': (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT,
-    #                          UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH)
-    # 'unpublish': (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT,
-    #               UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH)
-    # 'delete': (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT,
-    #            UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH)
-    # 'undelete': (MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT,
-    #              UserCompany.RIGHT_AT_COMPANY.MATERIALS_SUBMIT_AND_PUBLISH)
-    # }
-    #
-    # if action_name is None:
-    #     # get all actions as dict
-    #     ret = {}
-    #
-    # if action_name == 'edit':
-    #     return self.action_is_allowed('edit')
-    # if action_name is None:
-    #     ret['action'] = self.action_is_allowed()
-    #
-    # if action_name == 'edit':
-    #     return self.action_is_allowed('edit')
-    # if action_name is None:
-    #     ret['action'] = self.action_is_allowed()
-
-    # def action_is_disabled(action, membership, employment):
-    #
-    #     if membership.status != MemberCompanyPortal.STATUSES['ACTIVE']:
-    #         return "Action {} is not allowed for membership status {}".format(action, membership.status)
-    #
-    #     if employment.status != UserCompany.STATUSES['ACTIVE']:
-    #         return "Action {} is not allowed for employer with status {}".format(action, membership.status)
-    #
-    #     if action == 'edit':
-    #         if not membership.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT):
-    #             return "Action {} require {} membership right {}".format(
-    #                     MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT)
-    #         if not membership.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT):
-    #             return "Action {} require {} membership right {}".format(
-    #                     MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_EDIT)
-    #
-    #     elif action == 'publish':
-    #         return cr(MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH)
-    #         # return (cpr.has_rights(
-    #         #         MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH) or 'PUBLICATION_PUBLISH') or \
-    #         #        ucr.has_rights(UserCompany.RIGHT_AT_COMPANY.PUBLICATION_PUBLISH_AT_OWN_PORTAL)
-    #
-    #     if action == 'republish':
-    #         return membership.has_rights(
-    #                 MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_PUBLISH) or 'PUBLICATION_PUBLISH'
-    #     if action == 'unpublish':
-    #         return membership.has_rights(
-    #                 MemberCompanyPortal.RIGHT_AT_PORTAL.PUBLICATION_UNPUBLISH) or 'PUBLICATION_UNPUBLISH'
-    #     if action == 'delete':
-    #         return membership.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL[
-    #                                          'PUBLICATION_DELETE_UNDELETE']) or 'PUBLICATION_DELETE_UNDELETE'
-    #     if action == 'undelete':
-    #         return membership.has_rights(MemberCompanyPortal.RIGHT_AT_PORTAL[
-    #                                          'PUBLICATION_DELETE_UNDELETE']) or 'PUBLICATION_DELETE_UNDELETE'
-
     def action_is_allowed(self, action_name, employment, membership):
+
+        if not employment:
+            return "Unconfirmed employment"
+
+        if not membership:
+            return "Unconfirmed membership"
 
         if not action_name in self.ACTIONS:
             return "Unrecognized publication action `{}`".format(action_name)
@@ -192,32 +132,32 @@ class ArticlePortalDivision(Base, PRBase):
         if not action_name in self.ACTIONS_FOR_STATUSES[self.status]:
             return "Action `{}` is not applicable for publication with status `{}`".format(action_name, self.status)
 
-        if membership.status != MemberCompanyPortal.STATUSES['ACTIVE']:
-            return "Company need membership with status `{}` to perform action `{}`".format(
-                    MemberCompanyPortal.STATUSES['ACTIVE'], action_name)
-
         if employment.status != UserCompany.STATUSES['ACTIVE']:
             return "User need employment with status `{}` to perform action `{}`".format(
                     UserCompany.STATUSES['ACTIVE'], action_name)
+
+        if membership.status != MemberCompanyPortal.STATUSES['ACTIVE']:
+            return "Company need membership with status `{}` to perform action `{}`".format(
+                    MemberCompanyPortal.STATUSES['ACTIVE'], action_name)
 
         required_rights = self.ACTIONS_FOR_STATUSES[self.status][action_name]
 
         if 'employment' in required_rights:
             for required_right in required_rights['employment']:
-                if not employment.has_right(required_right):
+                if not employment.has_rights(required_right):
                     return "Employment need right `{}` to perform action `{}`".format(required_right, action_name)
 
         if 'membership' in required_rights:
             for required_right in required_rights['membership']:
-                if not membership.has_right(required_right):
+                if not membership.has_rights(required_right):
                     return "Membership need right `{}` to perform action `{}`".format(required_right, action_name)
 
         return True
 
-    def actions(self, company_id):
+    def actions(self, company):
 
-        employment = UserCompany.get(company_id=company_id)
-        membership = MemberCompanyPortal.get(portal_id=self.division.portal_id, company_id=company_id)
+        employment = UserCompany.get(company_id=company.id)
+        membership = MemberCompanyPortal.get(portal_id=self.division.portal_id, company_id=company.id)
 
         return {action_name: self.action_is_allowed(action_name, employment, membership) for action_name in
                 self.ACTIONS_FOR_STATUSES[self.status]}
@@ -326,12 +266,19 @@ class ArticlePortalDivision(Base, PRBase):
         actions = {ArticlePortalDivision.VISIBILITIES['OPEN']: lambda: True,
                    ArticlePortalDivision.VISIBILITIES['REGISTERED']:
                        lambda: True if getattr(g.user, 'id', False) else
-                       redirect('//profireader.com/auth/login_signup'),
-                   ArticlePortalDivision.VISIBILITIES['PAYED']: True,
+                       dict(redirect_url='//profireader.com/auth/login_signup',
+                            message='This article can read only by users which are logged in.',
+                            context='log in'),
+                   ArticlePortalDivision.VISIBILITIES['PAYED']: lambda:
+                   dict(redirect_url='//profireader.com/reader/buy_subscription',
+                        message='This article can read only by users which bought subscription on this portal.',
+                        context='buy subscription'),
                    ArticlePortalDivision.VISIBILITIES['CONFIDENTIAL']:
                        lambda portal_id=self.portal.id: True if
                        ArticlePortalDivision.articles_visibility_for_user(portal_id)[1] else
-                       redirect('//profireader.com/reader/buy_subscription')
+                       dict(redirect_url='//profireader.com/auth/login_signup',
+                            message='This article can read only employees of this company.',
+                            context='login as employee')
                    }
         return actions[self.visibility]()
 
@@ -489,6 +436,72 @@ class ArticleCompany(Base, PRBase):
                      'subtitle': {'relevance': lambda field='subtitle': RELEVANCE.short},
                      'long': {'relevance': lambda field='long': RELEVANCE.long},
                      'keywords': {'relevance': lambda field='keywords': RELEVANCE.keywords}}
+
+    ACTIONS = {
+        'SUBMIT': 'SUBMIT',
+        'EDIT': 'EDIT'
+        # 'DELETE': 'DELETE',
+        # 'UNDELETE': 'UNDELETE'
+    }
+
+    # TODO OZ by OZ: we need lambda function somewhere here and remove ugly code (search for line `move this ugly code to ACTIONS_FOR_STATUSES`)
+    ACTIONS_FOR_STATUSES = {
+        STATUSES['NORMAL']: {
+            ACTIONS['SUBMIT']: {'employment': [UserCompany.RIGHT_AT_COMPANY.ARTICLES_SUBMIT_OR_PUBLISH]
+                                },
+            ACTIONS['EDIT']: {'employment': [UserCompany.RIGHT_AT_COMPANY.ARTICLES_EDIT_OTHERS]
+                              }
+        }
+
+    }
+
+    def action_is_allowed(self, action_name, employment):
+
+        if not employment:
+            return "Unconfirmed employment"
+
+        if not action_name in self.ACTIONS:
+            return "Unrecognized publication action `{}`".format(action_name)
+
+        if not self.status in self.ACTIONS_FOR_STATUSES:
+            return "Unrecognized publication status `{}`".format(self.status)
+
+        if not action_name in self.ACTIONS_FOR_STATUSES[self.status]:
+            return "Action `{}` is not applicable for publication with status `{}`".format(action_name, self.status)
+
+        if employment.status != UserCompany.STATUSES['ACTIVE']:
+            return "User need employment with status `{}` to perform action `{}`".format(
+                    UserCompany.STATUSES['ACTIVE'], action_name)
+
+        # if membership.status != MemberCompanyPortal.STATUSES['ACTIVE']:
+        #     return "Company need membership with status `{}` to perform action `{}`".format(
+        #             MemberCompanyPortal.STATUSES['ACTIVE'], action_name)
+
+        required_rights = self.ACTIONS_FOR_STATUSES[self.status][action_name]
+
+        # TODO: OZ by OZ: move this ugly code to ACTIONS_FOR_STATUSES
+        if action_name == self.ACTIONS['EDIT'] and self.editor_user_id == employment.user_id:
+            return True
+
+        if 'employment' in required_rights:
+            for required_right in required_rights['employment']:
+                if not employment.has_rights(required_right):
+                    return "Employment need right `{}` to perform action `{}`".format(required_right, action_name)
+
+        # if 'membership' in required_rights:
+        #     for required_right in required_rights['membership']:
+        #         if not membership.has_rights(required_right):
+        #             return "Membership need right `{}` to perform action `{}`".format(required_right, action_name)
+
+
+        return True
+
+    def actions(self, company):
+
+        employment = UserCompany.get(company_id=company.id)
+
+        return {action_name: self.action_is_allowed(action_name, employment) for action_name in
+                self.ACTIONS_FOR_STATUSES[self.status]}
 
     def get_client_side_dict(self,
                              fields='id|title|subtitle|short|keywords|cr_tm|md_tm|article_id|image_file_id|company_id',
@@ -884,6 +897,11 @@ class ReaderArticlePortalDivision(Base, PRBase):
         article = db(ReaderArticlePortalDivision, article_portal_division_id=article_portal_division_id,
                      user_id=g.user_id).one()
         article.favorite = True if favorite else False
+
+    @staticmethod
+    def article_is_favorite(user_id, article_portal_division_id):
+        reader_article = db(ReaderArticlePortalDivision, user_id=user_id, article_portal_division_id=article_portal_division_id).first()
+        return reader_article.favorite if reader_article else False
 
     @staticmethod
     def add_to_table_if_not_exists(article_portal_division_id):

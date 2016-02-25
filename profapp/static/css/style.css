@@ -404,6 +404,9 @@ body {
 }
 .list-reader-image {
   width: 100%;
+  height: 60%;
+  margin-bottom: 15px;
+  margin-top: 15px;
 }
 .reader-content {
   margin-top: 30px;
