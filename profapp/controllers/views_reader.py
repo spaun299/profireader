@@ -8,6 +8,7 @@ from .errors import BadDataProvided
 from config import Config
 from .request_wrapers import ok
 from utils.db_utils import db
+from flask.ext.login import login_required
 import datetime
 from ..models.files import File
 from collections import OrderedDict
@@ -35,6 +36,7 @@ def details_reader(article_portal_division_id):
 @reader_bp.route('/list_reader')
 @reader_bp.route('/list_reader/<int:page>/')
 @tos_required
+@login_required
 def list_reader(page=1):
     search_text = request.args.get('search_text') or ''
     article_fields = 'title|short|image_file_id|subtitle|publishing_tm,company.name|logo_file_id,' \
@@ -61,8 +63,10 @@ def list_reader(page=1):
                                                 search_text=search_text)
     portals = UserPortalReader.get_portals_for_user() if not articles else None
     for article_id, article in articles.items():
-        articles[article_id]['company']['logo'] = File().get(articles[article_id]['company']['logo_file_id']).url()
-        articles[article_id]['portal']['logo'] = File().get(articles[article_id]['portal']['logo_file_id']).url()
+        articles[article_id]['company']['logo'] = File().get(articles[article_id]['company']['logo_file_id']).url() if \
+            articles[article_id]['company']['logo_file_id'] else None
+        articles[article_id]['portal']['logo'] = File().get(articles[article_id]['portal']['logo_file_id']).url() if \
+            articles[article_id]['portal']['logo_file_id'] else None
         del articles[article_id]['company']['logo_file_id'], articles[article_id]['portal']['logo_file_id']
     return render_template('partials/reader/reader_base.html',
                            articles=articles,
@@ -89,7 +93,6 @@ def reader_subscribe(portal_id):
     portal = Portal.get(portal_id)
     if not portal:
         raise BadDataProvided
-
     user_portal_reader = g.db.query(UserPortalReader).filter_by(user_id=user_dict['id'], portal_id=portal_id).count()
     if not user_portal_reader:
         free_plan = g.db.query(ReaderUserPortalPlan.id, ReaderUserPortalPlan.time,
@@ -103,9 +106,7 @@ def reader_subscribe(portal_id):
                                                                             for division in portal.divisions]])
         g.db.add(user_portal_reader)
         g.db.commit()
-
         flash('You have successfully subscribed to this portal')
-
     return redirect(url_for('reader.list_reader'))
 
 
@@ -149,14 +150,9 @@ def profile_load(json):
     if json.get('paginationOptions'):
         pagination_params.extend([json['paginationOptions']['pageNumber'], json['paginationOptions']['pageSize']])
     if json.get('filter'):
-        if json.get('filter').get('portal_name'):
-            filter_params.append(UserPortalReader.portal_id.in_(db(Portal.id).filter(
-                    Portal.name.ilike('%' + json.get('filter').get('portal_name') + '%'))))
-        if json.get('filter').get('start_tm'):
-            from_tm = datetime.datetime.utcfromtimestamp(int(json.get('filter').get('start_tm')['from'] + 1) / 1000)
-            to_tm = datetime.datetime.utcfromtimestamp(int(json.get('filter').get('start_tm')['to'] + 86399999) / 1000)
-            filter_params.extend([UserPortalReader.start_tm >= from_tm,
-                                  UserPortalReader.start_tm <= to_tm])
+        filter_params = UserPortalReader.get_filter_for_portals_and_plans(
+            portal_name=json.get('filter').get('portal_name'), start_end_tm=json.get('filter').get('start_tm'),
+            package_name=json.get('filter').get('package_name'))
     portals_and_plans = UserPortalReader.get_portals_and_plan_info_for_user(g.user.id, *pagination_params,
                                                                             filter_params=and_(*filter_params))
     grid_data = []
@@ -193,7 +189,7 @@ def edit_portal_subscription_load(json, reader_portal_id):
 
 @reader_bp.route('/edit_profile_/<string:reader_portal_id>', methods=['POST'])
 @ok
-def edit_profile_(json, reader_portal_id):
+def edit_profile_submit(json, reader_portal_id):
     divisions_and_comments = db(UserPortalReader, id=reader_portal_id).one().show_divisions_and_comments
     for item in json['divisions']:
         for show_division_and_comments in divisions_and_comments:

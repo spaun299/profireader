@@ -6,7 +6,7 @@
                     <li class="previous">
                         {% if current_page != 1 %}
                             <a href="{{ url_page(page=current_page - 1, search_text=search_text, favorite=favorite) }}"><i
-                                    class="fa fa-arrow-circle-left"></i>
+                                    ></i>
                             </a>
                         {% else %}
                         {% endif %}
@@ -43,7 +43,7 @@
                         {% if current_page != pages %}
 
                             <a href="{{ url_page(page=current_page + 1, search_text=search_text, favorite=favorite) }}"><i
-                                    class="fa fa-arrow-circle-right"></i></a>
+                                    ></i></a>
 
                         {% else %}
                         {% endif %}

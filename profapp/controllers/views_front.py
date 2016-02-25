@@ -34,10 +34,12 @@ def get_division_for_subportal(portal_id, member_company_id):
 def get_params(**argv):
     search_text = request.args.get('search_text') or ''
     app = current_app._get_current_object()
-    portal = g.db().query(Portal).filter_by(host=request.host).one()
-
-    sub_query = Article.subquery_articles_at_portal(search_text=search_text, portal_id=portal.id)
-    return search_text, portal, sub_query
+    portal = g.db().query(Portal).filter_by(host=request.host).first()
+    if portal:
+        sub_query = Article.subquery_articles_at_portal(search_text=search_text, portal_id=portal.id)
+        return search_text, portal, sub_query
+    else:
+        return None, None, None
 
 
 def portal_and_settings(portal):
@@ -204,7 +206,7 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
 
     # articles, pages, page = pagination(query=sub_query, page=page)
 
-    def url_page_division(page=1, search_text=''):
+    def url_page_division(page=1, search_text='', **kwargs):
         return url_for('front.subportal_division', division_name=division_name,
                        member_company_id=member_company_id, member_company_name=member_company_name,
                        page=page, search_text=search_text)

@@ -18,8 +18,6 @@ def help():
 
 @general_bp.route('')
 def index():
-    if current_user.is_authenticated():
-        return redirect(url_for('reader.list_reader'))
     return render_template('general/index.html')
 
 
