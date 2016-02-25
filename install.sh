@@ -332,7 +332,16 @@ function menu_db_download_full {
     }
 
 function menu_db_load_full {
-    runsql_dump 'Enter sql full dump filename' database_full.sql db_save_full
+    runsql_dump 'Enter sql full dump filename' database_full.sql db_reindex_search
+    }
+
+function menu_db_reindex_search {
+    destdir=$(rr 'venv directory' .venv)
+    conf_comm "
+source $destdir/bin/activate
+cd ./utils
+python ./update_search_table.py
+" nosudo 'db_reassign_ownership'
     }
 
 function menu_db_reassign_ownership {
@@ -345,7 +354,7 @@ function menu_db_reassign_ownership {
 su postgres -c \"for tbl in \\\$(psql -qAt -c 'SELECT tablename      FROM pg_tables                     WHERE schemaname      = '\\\"'\\\"public\\\"'\\\"';' $profidb); do echo \\\$tbl; psql -c 'ALTER table \\\"'\\\$tbl'\\\" owner to $profiuser' $profidb ; done\"
 su postgres -c \"for tbl in \\\$(psql -qAt -c 'SELECT sequence_name  FROM information_schema.sequences  WHERE sequence_schema = '\\\"'\\\"public\\\"'\\\"';' $profidb); do echo \\\$tbl; psql -c 'ALTER table \\\"'\\\$tbl'\\\" owner to $profiuser' $profidb ; done\"
 su postgres -c \"for tbl in \\\$(psql -qAt -c 'SELECT table_name     FROM information_schema.views      WHERE table_schema    = '\\\"'\\\"public\\\"'\\\"';' $profidb); do echo \\\$tbl; psql -c 'ALTER table \\\"'\\\$tbl'\\\" owner to $profiuser' $profidb ; done\"
-" sudo 'exit'
+" sudo 'db_save_full'
     }
 
 function menu_db_save_full {
@@ -395,6 +404,7 @@ dialog --title "profireader" --nocancel --default-item $next --menu "Choose an o
 "db_save_full" "save full database to file" \
 "db_download_full" "get full database from x.m.ntaxa.com" \
 "db_load_full" "load full database from file" \
+"db_reindex_search" "reindex search table" \
 "db_reassign_ownership" "reassign ownership" \
 "compare_local_makarony" "compare local database and dev version" \
 "compare_local_artek" "compare local database and production version" \
