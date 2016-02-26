@@ -100,34 +100,8 @@ class Company(Base, PRBase):
     def validate(self, is_new):
         ret = super().validate(is_new)
 
-
-
-        if not re.match('[^\s]{1,}', self.name):
-            ret['errors']['name'] = 'pls enter a bit longer name'
-
-        if not re.match('[^\s]{2,}', self.name):
-            ret['warnings']['name'] = 'pls enter a bit longer name'
-
         if not re.match('[^\s]{3,}', self.name):
             ret['notices']['name'] = 'pls enter a bit longer name'
-
-        if not re.match('[^\s]{3,}', self.country):
-            ret['errors']['country'] = 'pls enter country'
-
-        if not re.match('[^\s]{3,}', self.address):
-            ret['errors']['address'] = 'pls enter address'
-
-        if not re.match('[^\s]{3,}', self.phone):
-            ret['errors']['phone'] = 'pls enter phone'
-
-        if not re.match('[^\s]{3,}', self.email):
-            ret['errors']['email'] = 'pls enter email'
-
-        if not re.match('[^\s]{3,}', self.about):
-            ret['errors']['about'] = 'pls tell us something about your company'
-
-        if not re.match('[^\s]{3,}', self.short_description):
-            ret['errors']['short_description'] = 'pls provide short description of your tremendous company'
 
         self.lon = PRBase.str2float(self.lon)
         self.lat = PRBase.str2float(self.lat)
