@@ -548,6 +548,7 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     mail.init_app(app)
     moment.init_app(app)
     login_manager.init_app(app)
+    login_manager.session_protection = 'basic'
 
     # if not app.debug and not app.testing and not app.config['SSL_DISABLE']:
     #    from flask.ext.sslify import SSLify
