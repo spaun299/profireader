@@ -422,10 +422,28 @@ def portals_partners(company_id):
 def portals_partners_load(json, company_id):
     subquery = Company.subquery_company_partners(company_id, json.get('filter'))
     partners_g, pages, current_page, count = pagination(subquery, **Grid.page_options(json.get('paginationOptions')))
+    partner_list = [
+        PRBase.merge_dicts(partner.get_client_side_dict(fields='id,status,portal.own_company,portal,rights'),
+                           {'actions': partner.actions(company_id, partner)})
+        for partner in partners_g]
     return {'page': current_page,
-            'grid_data': [partner.get_client_side_dict(fields='id,status,company,portal,rights') for partner in
-                          partners_g],
+            'grid_data': partner_list,
             'total': count}
+
+
+
+@portal_bp.route('/portals_partners_change_status/<string:company_id>/<string:portal_id>', methods=['POST'])
+@login_required
+@ok
+# freeze our part in this company
+def portals_partners_change_status(json, company_id , portal_id):
+    print(json)
+    member = MemberCompanyPortal.get(portal_id=portal_id,company_id=company_id)
+    member.set_client_side_dict(status=MemberCompanyPortal.STATUS_FOR_ACTION[json.get('action')])
+    member.save()
+    return {'member':member.get_client_side_dict()}
+
+
 
 # @portal_bp.route('/<string:employeer_id>/company_partner_details/<string:member_id>/', methods=['GET'])
 # @login_required
@@ -459,7 +477,7 @@ def company_update_load(json, employeer_id, member_id):
                 'statuses_available': MemberCompanyPortal.STATUSES,
                 'employeer': Company.get(employeer_id).get_client_side_dict()}
     else:
-        member.set_client_side_dict(json['member']['status'],json['member']['rights'])
+        member.set_client_side_dict(status=json['member']['status'],rights=json['member']['rights'])
         if action == 'validate':
             member.detach()
             return member.validate(False)

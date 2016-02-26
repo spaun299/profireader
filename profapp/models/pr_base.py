@@ -394,6 +394,26 @@ class PRBase:
     def __init__(self):
         self.query = g.db.query_property()
 
+
+    @staticmethod
+    def str2float(str, onfail = None):
+        try:
+            return float(str)
+        except Exception:
+            return onfail
+
+    @staticmethod
+    def str2int(str, onfail = None):
+        try:
+            return int(str)
+        except Exception:
+            return onfail
+
+    @staticmethod
+    def inRange(what, fromr, tor):
+        return True if (what>=fromr) and (what<=tor) else False
+
+
     @staticmethod
     def parseDate(str):
         try:
@@ -458,7 +478,7 @@ class PRBase:
 
         return self
 
-    def validate(self, is_new):
+    def validate(self, is_new=False):
         return {'errors': {}, 'warnings': {}, 'notices': {}}
 
     def delfile(self):

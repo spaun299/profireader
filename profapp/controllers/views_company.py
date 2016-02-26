@@ -1,5 +1,4 @@
 from .blueprints_declaration import company_bp
-
 from flask.ext.login import login_required, current_user
 from flask import render_template, request, url_for, g, redirect
 from ..models.company import Company, UserCompany
@@ -193,7 +192,6 @@ def employee_update(company_id, user_id):
 def employee_update_load(json, company_id, user_id):
     action = g.req('action', allowed=['load', 'validate', 'save'])
     employment = UserCompany.get(user_id=user_id, company_id=company_id)
-    print(employment.get_client_side_dict())
 
     if action == 'load':
         return {'employment': employment.get_client_side_dict(),
@@ -253,7 +251,7 @@ def update_rights():
 @company_bp.route('/create/', methods=['GET'])
 @tos_required
 @login_required
-# @check_rights(simple_permissions([]))
+# @check_rights()
 def update(company_id=None):
     user_companies = [user_comp for user_comp in current_user.employer_assoc]
     user_have_comp = True if len(user_companies) > 0 else False
@@ -268,9 +266,10 @@ def update(company_id=None):
 @login_required
 # @check_rights(simple_permissions([]))
 def profile(company_id=None):
+    company=db(Company, id=company_id).first()
     return render_template('company/company_profile.html',
                            rights_user_in_company=UserCompany.get(company_id=company_id).rights,
-                           company=db(Company, id=company_id).first())
+                           company = company)
 
 
 @company_bp.route('/create/', methods=['POST'])

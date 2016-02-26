@@ -298,6 +298,7 @@ class MemberCompanyPortal(Base, PRBase):
         PUBLICATION_UNPUBLISH = 2
         PUBLICATION_EDIT = 3
 
+
     id = Column(TABLE_TYPES['id_profireader'], nullable=False, primary_key=True)
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'))
     portal_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('portal.id'))
@@ -309,8 +310,9 @@ class MemberCompanyPortal(Base, PRBase):
     member_company_portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))
 
     status = Column(TABLE_TYPES['status'], default='APPLICANT')
-    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED',
-                'CANCELED': 'CANCELED'}
+
+    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE',
+                'SUSPENDED': 'SUSPENDED', 'FROZEN': 'FROZEN', 'DELETED': 'DELETED'}
 
     portal = relationship(Portal
                           # ,back_populates = 'company_members'
@@ -326,6 +328,42 @@ class MemberCompanyPortal(Base, PRBase):
     plan = relationship('MemberCompanyPortalPlan'
                         # , backref='partner_portals'
                         )
+
+    ACTIONS = {
+        'UNSUBSCRIBE': 'UNSUBSCRIBE',
+        'FREEZE': 'FREEZE',
+        'RESTORE': 'RESTORE'
+    }
+
+    STATUS_FOR_ACTION = {
+        ACTIONS['UNSUBSCRIBE']: 'DELETED',
+        ACTIONS['FREEZE']: 'FROZEN',
+    }
+
+    def actions(self, company_id, partner):
+        from .company import UserCompany
+        print(partner.status)
+        right_for_action = UserCompany.RIGHT_AT_COMPANY.COMPANY_REQUIRE_MEMBEREE_AT_PORTALS
+        employment = UserCompany.get(company_id=company_id)
+        return {action_name: self.action_is_allowed(action_name, employment, right_for_action) for action_name in
+                self.ACTIONS}
+
+    def action_is_allowed(self, action_name, employment, right_for_action ):
+
+        if not employment:
+            return "Unconfirmed employment"
+
+        if not action_name in self.ACTIONS:
+            return "Unrecognized action `{}`".format(action_name)
+
+        if employment.status != MemberCompanyPortal.STATUSES['ACTIVE']:
+            return "User need employment with status `{}` to perform action `{}`".format(
+                    MemberCompanyPortal.STATUSES['ACTIVE'], action_name)
+
+        if not employment.has_rights(right_for_action):
+            return "Employment need right `{}` to perform action `{}`".format(right_for_action, action_name)
+
+        return True
 
     def get_client_side_dict(self, fields='id,status,rights', more_fields=None):
         return self.to_dict(fields, more_fields)
@@ -352,12 +390,13 @@ class MemberCompanyPortal(Base, PRBase):
     def get(portal_id=None, company_id=None):
         return db(MemberCompanyPortal).filter_by(portal_id=portal_id, company_id=company_id).one()
 
-    def set_client_side_dict(self, status, rights):
-        self.status = status
-        self.rights = rights
+    def set_client_side_dict(self, status=None, rights=None):
+        if status:
+            self.status = status
+        if rights:
+            self.rights = rights
 
     def has_rights(self, rightname):
-
         if self.portal.own_company.id == self.company_id:
             return True
 
@@ -366,7 +405,6 @@ class MemberCompanyPortal(Base, PRBase):
 
         if rightname == '_ANY':
             return True if self.status == self.STATUSES['ACTIVE'] else False
-
         return True if (self.status == self.STATUSES['ACTIVE'] and self.rights[rightname]) else False
 
 
@@ -574,7 +612,7 @@ class UserPortalReader(Base, PRBase):
     start_tm = Column(TABLE_TYPES['timestamp'])
     end_tm = Column(TABLE_TYPES['timestamp'])
     amount = Column(TABLE_TYPES['int'], default=99999)
-    portal = relationship('Portal')
+    portal = relationship('Portal', uselist=False)
     user = relationship('User')
     show_divisions_and_comments = relationship('ReaderDivision', back_populates='user_portal_reader')
 
@@ -621,6 +659,22 @@ class UserPortalReader(Base, PRBase):
                        portal_divisions=[{division.name: division.id}
                                          for division in upr.portal.divisions])
 
+    @staticmethod
+    def get_filter_for_portals_and_plans(portal_name=None, start_end_tm=None, package_name=None):
+        filter_params = []
+        if portal_name:
+            filter_params.append(UserPortalReader.portal_id.in_(db(Portal.id).filter(
+                    Portal.name.ilike('%' + portal_name + '%'))))
+        if start_end_tm:
+            from_tm = datetime.datetime.utcfromtimestamp(int(start_end_tm['from'] + 1) / 1000)
+            to_tm = datetime.datetime.utcfromtimestamp(int(start_end_tm['to'] + 86399999) / 1000)
+            filter_params.extend([UserPortalReader.start_tm >= from_tm,
+                                  UserPortalReader.start_tm <= to_tm])
+        if package_name:
+            filter_params.append(UserPortalReader.portal_plan_id == db(ReaderUserPortalPlan.id).filter(
+                ReaderUserPortalPlan.name.ilike('%' + package_name + '%')))
+        return filter_params
+
 
 class ReaderDivision(Base, PRBase):
     __tablename__ = 'reader_division'
@@ -643,6 +697,9 @@ class ReaderDivision(Base, PRBase):
 
     @property
     def show_divisions_and_comments(self):
+        print('aaa')
+        print([[sn, True if self._show_division_and_comments & 2 ** ind else False] for ind, sn in
+                enumerate(['show_articles', 'show_comments', 'show_favorite_comments', 'show_liked_comments'])])
         return [[sn, True if self._show_division_and_comments & 2 ** ind else False] for ind, sn in
                 enumerate(['show_articles', 'show_comments', 'show_favorite_comments', 'show_liked_comments'])]
 
