@@ -41,7 +41,7 @@
 
         $scope.afterSave = function (resp, defcallback) {
             $uibModalInstance.close(resp)
-        }
+        };
 
         $scope.amidLoad = function (resp, defaultcallback) {
             if (resp.publication.publishing_tm)
@@ -82,9 +82,9 @@
                 <div ng-repeat="division in data.portal.divisions">
                     <label>
                         <input
-                            name="material_details_publish_dialog_division"
-                            ng-value="division.id" ng-model="data.publication.portal_division_id"
-                            type="radio"> {{ division.name }}
+                                name="material_details_publish_dialog_division"
+                                ng-value="division.id" ng-model="data.publication.portal_division_id"
+                                type="radio"> {{ division.name }}
                     </label>
                 </div>
                 {{ _('Select publication date') }}<span

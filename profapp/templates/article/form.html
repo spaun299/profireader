@@ -43,6 +43,7 @@
 
             $scope.getData = function (model, deff) {
                 model.portal_division.insert_after = model.portal_division.positioned_articles[model.portal_division.current].id;
+                console.log(model, deff)
                 return deff(model);
             };
 
