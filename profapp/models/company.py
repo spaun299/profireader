@@ -331,6 +331,14 @@ class UserCompany(Base, PRBase):
             return "User need employment with status `{}` to perform action `{}`".format(
                     UserCompany.STATUSES['ACTIVE'], action_name)
 
+        if action_name == 'FIRE':
+            if self.user_id == employment_subject.employer.author_user_id:
+                return 'You can`t fire company owner'
+
+        if action_name == 'ALLOW':
+            if self.user_id == employment_subject.employer.author_user_id:
+                return 'Company owner have all permissions and you can do nothing with that'
+
         required_rights = self.ACTIONS_FOR_STATUSES[self.status][action_name]
 
         if 'employment' in required_rights:
