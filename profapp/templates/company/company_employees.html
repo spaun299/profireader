@@ -81,8 +81,7 @@
                 $ok($scope.url_employment_change_position({
                     employment_id: $scope.user.id,
                     company_id: $scope.company.id,
-                    position: $scope.action
-                }), {}, $uibModalInstance.close);
+                }), {position: $scope.position}, $uibModalInstance.close);
             }
 
             $scope.cancel = $uibModalInstance.dismiss;
@@ -99,8 +98,11 @@
                 <h3 class="modal-title">{{ _('set employee position') }}</h3>
             </div>
 
-            <div class="modal-footer">
+            <div class="modal-body">
                 <input ng-model="position"/>
+            </div>
+
+            <div class="modal-footer">
                 <button class="btn btn-primary" type="button" ng-click="set_position()">{{ _('set position') }}
                 </button>
                 <button class="btn btn-warning" type="button" ng-click="cancel()">{{ _('Cancel') }}</button>

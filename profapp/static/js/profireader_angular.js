@@ -1264,7 +1264,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
 
                     var attributes_for_cell = ' pr-id="{{ row.entity.id }}" ';
                     if (col.onclick && col.type!=='actions' && col.type!=='editable') {
-                        attributes_for_cell += ' ng-click="grid.appScope.'+col.onclick+'(row.entity.id, \'{{ icon_name }}\', row.entity, \'' + col['name'] + '\') "';
+                        attributes_for_cell += ' ng-click="grid.appScope.'+col.onclick+'(row.entity.id, row.entity, \'' + col['name'] + '\') "';
                     }
 
                     var prefix_img = '';

@@ -236,7 +236,7 @@ def employment_action(json, company_id, employment_id, action):
 @tos_required
 @login_required
 @ok
-def employment_change_position(json, company_id, employment_id, action):
+def employment_change_position(json, company_id, employment_id):
     employment = db(UserCompany).filter_by(id=employment_id).one()
 
     employment.position = json['position']
