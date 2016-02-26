@@ -42,6 +42,7 @@ class Company(Base, PRBase):
                             nullable=False)
     country = Column(TABLE_TYPES['name'], nullable=False, default='')
     region = Column(TABLE_TYPES['name'], nullable=False, default='')
+    city = Column(TABLE_TYPES['name'], nullable=False, default='')
     address = Column(TABLE_TYPES['name'], nullable=False, default='')
     phone = Column(TABLE_TYPES['phone'], nullable=False, default='')
     phone2 = Column(TABLE_TYPES['phone'], nullable=False, default='')
