@@ -268,9 +268,10 @@ def update(company_id=None):
 @login_required
 # @check_rights(simple_permissions([]))
 def profile(company_id=None):
+    company=db(Company, id=company_id).first()
     return render_template('company/company_profile.html',
                            rights_user_in_company=UserCompany.get(company_id=company_id).rights,
-                           company=db(Company, id=company_id).first())
+                           company = company)
 
 
 @company_bp.route('/create/', methods=['POST'])

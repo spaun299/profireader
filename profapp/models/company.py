@@ -25,6 +25,7 @@ from .users import User
 from ..models.portal import Portal
 from ..models.portal import MemberCompanyPortal
 from ..models.portal import UserPortalReader
+import re
 
 
 class Company(Base, PRBase):
@@ -51,8 +52,8 @@ class Company(Base, PRBase):
     STATUSES = {'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED'}
     status = Column(TABLE_TYPES['status'], nullable=False, default=STATUSES['ACTIVE'])
 
-    lat = Column(TABLE_TYPES['float'], nullable=False, default=49.8418907)
-    lon = Column(TABLE_TYPES['float'], nullable=False, default=24.0316261)
+    lat = Column(TABLE_TYPES['float'], nullable=True, default=49.8418907)
+    lon = Column(TABLE_TYPES['float'], nullable=True, default=24.0316261)
 
     portal_members = relationship('MemberCompanyPortal', uselist=False)
 
@@ -95,6 +96,47 @@ class Company(Base, PRBase):
                 list_filters.append({'type': 'text', 'value': filters[filter], 'field': eval("User." + filter)})
         query = Grid.subquery_grid(query, list_filters)
         return query
+
+    def validate(self, is_new):
+        ret = super().validate(is_new)
+
+        if not re.match('[^\s]{3,}', self.name):
+            ret['errors']['name'] = 'pls enter a bit longer name'
+
+        if not re.match('[^\s]{3,}', self.country):
+            ret['errors']['country'] = 'pls enter country'
+
+        if not re.match('[^\s]{3,}', self.address):
+            ret['errors']['address'] = 'pls enter address'
+
+        if not re.match('[^\s]{3,}', self.phone):
+            ret['errors']['phone'] = 'pls enter phone'
+
+        if not re.match('[^\s]{3,}', self.email):
+            ret['errors']['email'] = 'pls enter email'
+
+        if not re.match('[^\s]{3,}', self.email):
+            ret['errors']['email'] = 'pls enter email'
+
+        if not re.match('[^\s]{3,}', self.about):
+            ret['errors']['about'] = 'pls tell us something about your company'
+
+        if not re.match('[^\s]{3,}', self.short_description):
+            ret['errors']['short_description'] = 'pls provide short description of your tremendous company'
+
+        self.lon = PRBase.str2float(self.lon)
+        self.lat = PRBase.str2float(self.lat)
+
+        if self.lon is not None and PRBase.inRange(self.lon, 180, 180):
+            ret['errors']['lon'] = 'pls longitude in range [-180,180]'
+
+        if self.lat is not None and PRBase.inRange(self.lat, 90, 90):
+            ret['errors']['lat'] = 'pls latitude in range [-90,90]'
+
+        if (self.lat is None and self.lon is not None) or (self.lat is not None and self.lon is None):
+            ret['errors']['long_lat'] = 'pls enter both lon and lat or none of them'
+
+        return ret
 
     @property
     def readers_query(self):
@@ -222,7 +264,7 @@ class UserCompany(Base, PRBase):
     user_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('user.id'), nullable=False)
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'), nullable=False)
 
-# TODO: OZ by OZ: remove `SUSPENDED` status from db type
+    # TODO: OZ by OZ: remove `SUSPENDED` status from db type
     STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'FIRED': 'FIRED'}
     status = Column(TABLE_TYPES['status'], default=STATUSES['APPLICANT'], nullable=False)
 
@@ -317,7 +359,7 @@ class UserCompany(Base, PRBase):
     employee = relationship('User', backref=backref('employer_assoc', lazy='dynamic'))
 
     def __init__(self, user_id=None, company_id=None, status=STATUSES['APPLICANT'],
-                 rights = None):
+                 rights=None):
 
         super(UserCompany, self).__init__()
         self.user_id = user_id
