@@ -230,6 +230,20 @@ def employment_action(json, company_id, employment_id, action):
                               {'actions': employment.actions(
                                   UserCompany.get(user_id=g.user_id, company_id=company_id))})
 
+@company_bp.route('/<string:company_id>/employment/<string:employment_id>/change_position/', methods=['POST'])
+@tos_required
+@login_required
+@ok
+def employment_change_position(json, company_id, employment_id):
+    employment = db(UserCompany).filter_by(id=employment_id).one()
+
+    employment.position = json['position']
+    employment.save()
+
+    return PRBase.merge_dicts(employment.employee.get_client_side_dict(), employment.get_client_side_dict(),
+                              {'actions': employment.actions(
+                                  UserCompany.get(user_id=g.user_id, company_id=company_id))})
+
 
 @company_bp.route('/update_rights', methods=['POST'])
 @login_required
