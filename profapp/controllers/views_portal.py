@@ -437,11 +437,12 @@ def portals_partners_load(json, company_id):
 @ok
 # freeze our part in this company
 def portals_partners_change_status(json, company_id , portal_id):
-    print(json)
-    member = MemberCompanyPortal.get(portal_id=portal_id,company_id=company_id)
-    member.set_client_side_dict(status=MemberCompanyPortal.STATUS_FOR_ACTION[json.get('action')])
-    member.save()
-    return {'member':member.get_client_side_dict()}
+    partner = MemberCompanyPortal.get(portal_id=portal_id,company_id=company_id)
+    employment = UserCompany.get(company_id=company_id)
+    if partner.action_is_allowed(json.get('action'), employment, UserCompany.RIGHT_AT_COMPANY.COMPANY_REQUIRE_MEMBEREE_AT_PORTALS, MemberCompanyPortal.ACTION_FOR_STATUS[partner.status]):
+        partner.set_client_side_dict(status=MemberCompanyPortal.STATUSES['ACTIVE'] if json.get('action') == 'RESTORE' else MemberCompanyPortal.STATUS_FOR_ACTION[json.get('action')])
+        partner.save()
+    return partner.get_client_side_dict()
 
 
 
@@ -474,7 +475,7 @@ def company_update_load(json, employeer_id, member_id):
     member = MemberCompanyPortal.get(Company.get(employeer_id).own_portal.id, member_id)
     if action == 'load':
         return {'member': member.get_client_side_dict(more_fields='company'),
-                'statuses_available': MemberCompanyPortal.STATUSES,
+                'statuses_available': MemberCompanyPortal.get_avaliable_statuses(),
                 'employeer': Company.get(employeer_id).get_client_side_dict()}
     else:
         member.set_client_side_dict(status=json['member']['status'],rights=json['member']['rights'])
