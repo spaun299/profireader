@@ -359,7 +359,7 @@
                 element.attr('uib-popover', "{{ "+model_name+".errors."+field_name+" || "+model_name+".warnings."+field_name+"" +
                     " || "+model_name+".notices."+field_name+" }}");
                 element.attr('ng-class', "{'pr-validation-error': "+model_name+".errors."+field_name+", 'pr-validation-warning':" +
-                    " "+model_name+".errors."+field_name+", 'pr-validation-notice': "+model_name+".notices."+field_name+"}");
+                    " "+model_name+".warnings."+field_name+", 'pr-validation-notice': "+model_name+".notices."+field_name+"}");
                 element.removeAttr("pr-validation-answer"); //remove the attribute to avoid indefinite loop
                 element.removeAttr("data-pr-validation-answer"); //also remove the same attribute with data- prefix in case users specify data-common-things in the html
                 $compile(element)(scope);

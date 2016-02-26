@@ -65,58 +65,56 @@
                         <div class="col-lg-2">Name:</div>
                         <div class="col-lg-10 edit-data">
                             <input type="text" class="form-control border-radius" id="basic-url"
-                                   aria-describedby="basic-addon3" af-validation-answer="data_validation:name" ng-model="data.name">
+                                   aria-describedby="basic-addon3" pr-validation-answer="data_validation:name" ng-model="data.name">
                         </div>
                         <div class="col-lg-2">Country:</div>
                         <div class="col-lg-10 edit-data">
                             <input type="text" class="form-control border-radius" id="basic-url"
-                                   aria-describedby="basic-addon3" ng-model="data.country">
+                                   aria-describedby="basic-addon3" pr-validation-answer="data_validation:country" ng-model="data.country">
                         </div>
                         <div class="col-lg-2">Region:</div>
                         <div class="col-lg-10 edit-data">
                             <input type="text" class="form-control border-radius" id="basic-url"
-                                   aria-describedby="basic-addon3" ng-model="data.region">
+                                   aria-describedby="basic-addon3" pr-validation-answer="data_validation:address" ng-model="data.region">
                         </div>
                         <div class="col-lg-2">Address:</div>
                         <div class="col-lg-10 edit-data">
-                            <input
-                                    pr-validation-answer="data_validation:address"
-                                    type="text" class="form-control border-radius" id="basic-url"
-                                   aria-describedby="basic-addon3" ng-model="data.address">
+                            <input type="text" class="form-control border-radius" id="basic-url"
+                                   aria-describedby="basic-addon3" pr-validation-answer="data_validation:address" ng-model="data.address">
                         </div>
                         <div class="col-lg-2">Phone:</div>
                         <div class="col-lg-10 edit-data">
-                            <input
-                                    type="text" class="form-control border-radius" id="basic-url"
-                                   aria-describedby="basic-addon3" ng-model="data.phone">
+                            <input type="text" class="form-control border-radius" id="basic-url"
+                                   aria-describedby="basic-addon3" pr-validation-answer="data_validation:phone" ng-model="data.phone">
                         </div>
                         <div class="col-lg-2">Fax:</div>
                         <div class="col-lg-10 edit-data">
                             <input type="text" class="form-control border-radius" id="basic-url"
-                                   aria-describedby="basic-addon3" ng-model="data.phone2">
+                                   aria-describedby="basic-addon3" pr-validation-answer="data_validation:phone" ng-model="data.phone2">
                         </div>
                         <div class="col-lg-2">Email:</div>
                         <div class="col-lg-10 edit-data">
                             <input type=text class="form-control border-radius" id="basic-url"
-                                   aria-describedby="basic-addon3" ng-model="data.email">
+                                   aria-describedby="basic-addon3" pr-validation-answer="data_validation:email" ng-model="data.email">
                         </div>
                         <div class="col-lg-3">Lang and long:</div>
                         <div class="col-lg-4 edit-data">
                             <input type="text" class="form-control border-radius" id="basic-url"
-                                   aria-describedby="basic-addon3" ng-model="data.lat">
+                                   aria-describedby="basic-addon3" pr-validation-answer="data_validation:lon" ng-model="data.lat">
                         </div>
                         <div class="col-lg-4 edit-data">
                             <input type="text" class="form-control border-radius" id="basic-url"
-                                   aria-describedby="basic-addon3" ng-model="data.lon">
+                                   aria-describedby="basic-addon3" pr-validation-answer="data_validation:lat" ng-model="data.lon">
                         </div>
+                        <span pr-validation-answer="data_validation:long_lat"></span>
                     </div>
                 </div>
             </div>
             <div>
                 <h3>Short description:</h3>
-                <textarea ui-tinymce="tinymceImageOptions" ng-model="data.short_description"></textarea>
+                <textarea ui-tinymce="tinymceImageOptions" pr-validation-answer="data_validation:short_description" ng-model="data.short_description"></textarea>
                 <h3>About company:</h3>
-                <textarea ui-tinymce="tinymceImageOptions" ng-model="data.about"></textarea>
+                <textarea ui-tinymce="tinymceImageOptions" pr-validation-answer="data_validation:about" ng-model="data.about"></textarea>
             </div>
         </div>
 
