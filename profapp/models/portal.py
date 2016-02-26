@@ -1,5 +1,5 @@
 from ..constants.TABLE_TYPES import TABLE_TYPES, BinaryRights
-from sqlalchemy import Column, ForeignKey
+from sqlalchemy import Column, ForeignKey ,or_
 from sqlalchemy.orm import relationship, remote
 from ..controllers import errors
 from flask import g, jsonify
@@ -142,6 +142,12 @@ class Portal(Base, PRBase):
     #                        secondaryjoin="ArticleCompany.company_id == Company.id",
     #                        viewonly=True, uselist=False)
 
+    ALLOWED_STATUSES_TO_JOIN = {
+        'DELETED':'DELETED',
+        'REJECTED':'REJECTED'
+    }
+
+
     def __init__(self, name=None,
                  # portal_plan_id=None,
                  logo_file_id=None,
@@ -283,11 +289,14 @@ class Portal(Base, PRBase):
     @staticmethod
     def search_for_portal_to_join(company_id, searchtext):
         """This method return all portals which are not partners current company"""
-        return [port.get_client_side_dict() for port in
-                db(Portal).filter(~db(MemberCompanyPortal,
-                                      company_id=company_id,
-                                      portal_id=Portal.id).exists()
-                                  ).filter(Portal.name.ilike("%" + searchtext + "%")).all()]
+        portals = []
+        for portal in db(Portal).filter(Portal.name.ilike("%" + searchtext + "%")).all():
+            member = db(MemberCompanyPortal, company_id=company_id, portal_id=portal.id).first()
+            if member and member.status in Portal.ALLOWED_STATUSES_TO_JOIN:
+                portals.append(portal.get_client_side_dict())
+            elif not member:
+                portals.append(portal.get_client_side_dict())
+        return portals
 
 
 class MemberCompanyPortal(Base, PRBase):
@@ -297,6 +306,7 @@ class MemberCompanyPortal(Base, PRBase):
         PUBLICATION_PUBLISH = 1
         PUBLICATION_UNPUBLISH = 2
         PUBLICATION_EDIT = 3
+
 
     id = Column(TABLE_TYPES['id_profireader'], nullable=False, primary_key=True)
     company_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('company.id'))
@@ -309,8 +319,9 @@ class MemberCompanyPortal(Base, PRBase):
     member_company_portal_plan_id = Column(TABLE_TYPES['id_profireader'], ForeignKey('member_company_portal_plan.id'))
 
     status = Column(TABLE_TYPES['status'], default='APPLICANT')
-    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE', 'SUSPENDED': 'SUSPENDED',
-                'CANCELED': 'CANCELED'}
+
+    STATUSES = {'APPLICANT': 'APPLICANT', 'REJECTED': 'REJECTED', 'ACTIVE': 'ACTIVE',
+                'SUSPENDED': 'SUSPENDED', 'FROZEN': 'FROZEN', 'DELETED': 'DELETED'}
 
     portal = relationship(Portal
                           # ,back_populates = 'company_members'
@@ -326,6 +337,55 @@ class MemberCompanyPortal(Base, PRBase):
     plan = relationship('MemberCompanyPortalPlan'
                         # , backref='partner_portals'
                         )
+
+    ACTIONS_FOR_ACTIVE = {
+        'UNSUBSCRIBE': 'UNSUBSCRIBE',
+        'FREEZE': 'FREEZE',
+    }
+    ACTIONS_FOR_NONACTIVE = {
+        'REFUSE': 'REFUSE',
+    }
+    ACTIONS_FOR_FROZEN = {
+        'UNSUBSCRIBE': 'UNSUBSCRIBE',
+        'RESTORE': 'RESTORE'
+    }
+
+    ACTION_FOR_STATUS = {
+        STATUSES['ACTIVE']: ACTIONS_FOR_ACTIVE,
+        STATUSES['APPLICANT']: ACTIONS_FOR_NONACTIVE,
+        STATUSES['SUSPENDED']: ACTIONS_FOR_FROZEN,
+        STATUSES['FROZEN']: ACTIONS_FOR_FROZEN,
+        STATUSES['REJECTED']: ACTIONS_FOR_NONACTIVE
+    }
+
+    STATUS_FOR_ACTION = {
+        'UNSUBSCRIBE': 'DELETED',
+        'FREEZE': 'FROZEN',
+        'REFUSE': 'DELETED'
+    }
+
+    def actions(self, company_id, partner):
+        from .company import UserCompany
+        right_for_action = UserCompany.RIGHT_AT_COMPANY.COMPANY_REQUIRE_MEMBEREE_AT_PORTALS
+        employment = UserCompany.get(company_id=company_id)
+        return {action_name: self.action_is_allowed(action_name, employment, right_for_action , self.ACTION_FOR_STATUS[partner.status]) for action_name in
+                self.ACTION_FOR_STATUS[partner.status]}
+
+    def action_is_allowed(self, action_name, employment, right_for_action, actions):
+        if not employment:
+            return "Unconfirmed employment"
+
+        if not action_name in actions:
+            return "Unrecognized action `{}`".format(action_name)
+
+        if employment.status != MemberCompanyPortal.STATUSES['ACTIVE']:
+            return "User need employment with status `{}` to perform action `{}`".format(
+                    MemberCompanyPortal.STATUSES['ACTIVE'], action_name)
+
+        if not employment.has_rights(right_for_action):
+            return "Employment need right `{}` to perform action `{}`".format(right_for_action, action_name)
+
+        return True
 
     def get_client_side_dict(self, fields='id,status,rights', more_fields=None):
         return self.to_dict(fields, more_fields)
@@ -343,21 +403,31 @@ class MemberCompanyPortal(Base, PRBase):
     @staticmethod
     def apply_company_to_portal(company_id, portal_id):
         """Add company to MemberCompanyPortal table. Company will be partner of this portal"""
-        g.db.add(MemberCompanyPortal(company_id=company_id,
-                                     portal=db(Portal, id=portal_id).one(),
-                                     plan=db(MemberCompanyPortalPlan).first()))
-        g.db.flush()
+        member = db(MemberCompanyPortal).filter_by(portal_id=portal_id, company_id=company_id).first()
+        if member:
+            member.set_client_side_dict(MemberCompanyPortal.STATUSES['APPLICANT'])
+            member.save()
+        else:
+            g.db.add(MemberCompanyPortal(company_id=company_id,
+                                         portal=db(Portal, id=portal_id).one(),
+                                         plan=db(MemberCompanyPortalPlan).first()))
+            g.db.flush()
 
     @staticmethod
     def get(portal_id=None, company_id=None):
         return db(MemberCompanyPortal).filter_by(portal_id=portal_id, company_id=company_id).one()
 
-    def set_client_side_dict(self, status, rights):
-        self.status = status
-        self.rights = rights
+    @staticmethod
+    def get_avaliable_statuses():
+        return PRBase.del_attr_by_key(MemberCompanyPortal.STATUSES, [MemberCompanyPortal.STATUSES['DELETED'], MemberCompanyPortal.STATUSES['FROZEN']])
+
+    def set_client_side_dict(self, status=None, rights=None):
+        if status:
+            self.status = status
+        if rights:
+            self.rights = rights
 
     def has_rights(self, rightname):
-
         if self.portal.own_company.id == self.company_id:
             return True
 
@@ -366,7 +436,6 @@ class MemberCompanyPortal(Base, PRBase):
 
         if rightname == '_ANY':
             return True if self.status == self.STATUSES['ACTIVE'] else False
-
         return True if (self.status == self.STATUSES['ACTIVE'] and self.rights[rightname]) else False
 
 
@@ -574,7 +643,7 @@ class UserPortalReader(Base, PRBase):
     start_tm = Column(TABLE_TYPES['timestamp'])
     end_tm = Column(TABLE_TYPES['timestamp'])
     amount = Column(TABLE_TYPES['int'], default=99999)
-    portal = relationship('Portal')
+    portal = relationship('Portal', uselist=False)
     user = relationship('User')
     show_divisions_and_comments = relationship('ReaderDivision', back_populates='user_portal_reader')
 
@@ -659,6 +728,9 @@ class ReaderDivision(Base, PRBase):
 
     @property
     def show_divisions_and_comments(self):
+        print('aaa')
+        print([[sn, True if self._show_division_and_comments & 2 ** ind else False] for ind, sn in
+                enumerate(['show_articles', 'show_comments', 'show_favorite_comments', 'show_liked_comments'])])
         return [[sn, True if self._show_division_and_comments & 2 ** ind else False] for ind, sn in
                 enumerate(['show_articles', 'show_comments', 'show_favorite_comments', 'show_liked_comments'])]
 

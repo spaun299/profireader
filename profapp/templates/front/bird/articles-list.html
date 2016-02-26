@@ -75,4 +75,6 @@
         <img {{ prImage(article['image_file_id']) }} class="block-item-img"/>
 
     </div>
+{% else %}
+<h1>{{ _('There are no articles in this division') }}</h1>
 {% endfor %}

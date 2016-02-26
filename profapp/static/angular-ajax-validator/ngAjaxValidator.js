@@ -213,7 +213,7 @@
                                     }, 0);
                                 }
                                 catch (e) {
-                                    add_message(e, 'warning');
+                                    add_message(e.message, 'warning');
                                     if (stateonfail) setInParent('afState', stateonfail);
                                     notok(resp);
                                 }
@@ -330,14 +330,16 @@
             //},
             template: function (tElement, tAttrs) {
                 var model_fields = tAttrs['afValidationAnswer'].split(':');
-                var model_name = model_fields[0];
-                var field_name = model_fields[1];
-                var erm = '' + model_name + '.errors.' + field_name;
-                var ewm = '' + model_name + '.warnings.' + field_name;
-                var enm = '' + model_name + '.notices.' + field_name;
-                return '<span class="error"   ng-if="' + erm + '"><span class="icon icon-stop"></span> {{ ' + erm + ' }}</span>' +
-                    '<span class="warning" ng-if="!' + erm + ' && ' + ewm + '"><span class="icon icon-warning"></span> {{ ' + ewm + ' }}</span>' +
-                    '<span class="notice"  ng-if="!' + erm + ' && ! ' + ewm + ' && ' + enm + '"><span class="icon icon-check"></span> {{ ' + enm + ' }}</span>';
+                $(tElement).attr('uib-popover', "Ops! Pls enter at least one keyword");
+                //var model_name = model_fields[0];
+                //var field_name = model_fields[1];
+                //var erm = '' + model_name + '.errors.' + field_name;
+                //var ewm = '' + model_name + '.warnings.' + field_name;
+                //var enm = '' + model_name + '.notices.' + field_name;
+                //$(tElement).attr('data-toggle')
+                //return '<span class="error"   ng-if="' + erm + '"><span class="icon icon-stop"></span> {{ ' + erm + ' }}</span>' +
+                //    '<span class="warning" ng-if="!' + erm + ' && ' + ewm + '"><span class="icon icon-warning"></span> {{ ' + ewm + ' }}</span>' +
+                //    '<span class="notice"  ng-if="!' + erm + ' && ! ' + ewm + ' && ' + enm + '"><span class="icon icon-check"></span> {{ ' + enm + ' }}</span>';
             },
             scope: false,
             link: function ($scope, iElement, iAttrs, ngModelCtrl) {
@@ -357,7 +359,7 @@
                 element.attr('uib-popover', "{{ "+model_name+".errors."+field_name+" || "+model_name+".warnings."+field_name+"" +
                     " || "+model_name+".notices."+field_name+" }}");
                 element.attr('ng-class', "{'pr-validation-error': "+model_name+".errors."+field_name+", 'pr-validation-warning':" +
-                    " "+model_name+".errors."+field_name+", 'pr-validation-notice': "+model_name+".notices."+field_name+"}");
+                    " "+model_name+".warnings."+field_name+", 'pr-validation-notice': "+model_name+".notices."+field_name+"}");
                 element.removeAttr("pr-validation-answer"); //remove the attribute to avoid indefinite loop
                 element.removeAttr("data-pr-validation-answer"); //also remove the same attribute with data- prefix in case users specify data-common-things in the html
                 $compile(element)(scope);

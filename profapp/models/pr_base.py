@@ -431,6 +431,12 @@ class PRBase:
             ret.update(d)
         return ret
 
+    @staticmethod
+    def del_attr_by_key(dict, keys):
+        for key in keys:
+            if key in dict:
+                del dict[key]
+        return dict
 
 
     # if insert_after_id == False - insert at top
@@ -478,7 +484,7 @@ class PRBase:
 
         return self
 
-    def validate(self, is_new):
+    def validate(self, is_new=False):
         return {'errors': {}, 'warnings': {}, 'notices': {}}
 
     def delfile(self):
