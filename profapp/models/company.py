@@ -200,7 +200,7 @@ class Company(Base, PRBase):
 
     @staticmethod
     def subquery_company_partners(company_id, filters):
-        sub_query = db(MemberCompanyPortal, company_id=company_id)
+        sub_query = db(MemberCompanyPortal, company_id=company_id).filter(MemberCompanyPortal.status!="DELETED")
         list_filters = []
         if filters:
             sub_query = sub_query.join(MemberCompanyPortal.portal)
