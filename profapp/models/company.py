@@ -43,7 +43,7 @@ class Company(Base, PRBase):
     country = Column(TABLE_TYPES['name'], nullable=False, default='')
     region = Column(TABLE_TYPES['name'], nullable=False, default='')
     city = Column(TABLE_TYPES['name'], nullable=False, default='')
-    zip = Column(TABLE_TYPES['name'], nullable=False, default='')
+    postcode = Column(TABLE_TYPES['name'], nullable=False, default='')
     address = Column(TABLE_TYPES['name'], nullable=False, default='')
     phone = Column(TABLE_TYPES['phone'], nullable=False, default='')
     phone2 = Column(TABLE_TYPES['phone'], nullable=False, default='')
@@ -215,7 +215,7 @@ class Company(Base, PRBase):
                            ).all()]
 
     def get_client_side_dict(self,
-                             fields='id,name,author_user_id,country,region,address,phone,phone2,email|zip|city,'
+                             fields='id,name,author_user_id,country,region,address,phone,phone2,email|postcode|city,'
                                     'short_description,journalist_folder_file_id,logo_file_id,about,lat,lon,'
                                     'own_portal.id|host',
                              more_fields=None):
