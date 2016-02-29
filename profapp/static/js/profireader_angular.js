@@ -1596,6 +1596,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
             },
             //valid_elements: Config['article_html_valid_elements'],
             //valid_elements: 'a[class],img[class|width|height],p[class],table[class|width|height],th[class|width|height],tr[class],td[class|width|height],span[class],div[class],ul[class],ol[class],li[class]',
+            //TODO: OZ by OZ: select css for current theme. also look for another place with same todo
             content_css: ["//static.profireader.com/static/front/css/bootstrap.css", "//static.profireader.com/static/css/article.css", "//static.profireader.com/static/front/bird/css/article.css"],
 
 
