@@ -5,16 +5,12 @@
     {% include '_ruslan/partials/_header_files_articles.html' %}
 {% endblock head %}
 
-{% block portal_base %}
-    {% include 'partials/portal_base_Profireader_auth_user.html' %}
-{% endblock portal_base %}
-
-
 {% block portal_content %}
     {% from 'macros.html' import scripts %}
     {{ scripts(names=['croper']) }}
     <script>
         module.controller('company_create', ['$scope', function ($scope) {
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('home');
 
             $scope.url_back = {{ raw_url_for('company.show')|safe }};
             $scope.data = {};

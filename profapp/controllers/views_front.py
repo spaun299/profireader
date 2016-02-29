@@ -70,7 +70,7 @@ def portal_and_settings(portal):
 def index(page=1):
     search_text, portal, _ = get_params()
     if not portal:
-        return render_template('front/bird/error.html',
+        return render_template('front/error.html',
                            message="No portal found {}".format(request.host),
                            )
 
@@ -88,7 +88,7 @@ def index(page=1):
         items_per_page=items_per_page)
     session['original_search_text'] = search_text
 
-    return render_template('front/bird/index.html',
+    return render_template('front/' + g.portal_layout_path + 'index.html',
                            articles=articles,
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
@@ -120,7 +120,7 @@ def division(division_name, page=1):
             return url_for('front.division', division_name=current_division['name'], page=page,
                            search_text=search_text)
 
-        return render_template('front/bird/division.html',
+        return render_template('front/' + g.portal_layout_path + 'division.html',
                                articles=articles,
                                current_division=current_division,
                                portal=portal_and_settings(portal),
@@ -138,7 +138,7 @@ def division(division_name, page=1):
         members = {member.id: member.company.get_client_side_dict() for
                    member in division.portal.company_members}
 
-        return render_template('front/bird/catalog.html',
+        return render_template('front/' + g.portal_layout_path + 'catalog.html',
                                members=members,
                                current_division=division.get_client_side_dict(),
                                portal=portal_and_settings(portal))
@@ -176,7 +176,7 @@ def details(article_portal_division_id):
     favorite = article.check_favorite_status(user_id=g.user.id)
     liked = article.article_is_liked(g.user.id, article_portal_division_id)
 
-    return render_template('front/bird/article_details.html',
+    return render_template('front/' + g.portal_layout_path + 'article_details.html',
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
                            articles_related={
@@ -229,7 +229,7 @@ def subportal_division(division_name, member_company_id, member_company_name, pa
                        member_company_id=member_company_id, member_company_name=member_company_name,
                        page=page, search_text=search_text)
 
-    return render_template('front/bird/subportal_division.html',
+    return render_template('front/' + g.portal_layout_path + 'subportal_division.html',
                            articles=articles,
                            subportal=True,
                            portal=portal_and_settings(portal),
@@ -253,7 +253,7 @@ def subportal(member_company_id, member_company_name, page=1):
     division = get_division_for_subportal(portal.id, member_company_id)
     subportal_division = g.db().query(PortalDivision).filter_by(portal_id=portal.id,
                                                                 portal_division_type_id='index').one()
-    return render_template('front/bird/subportal.html',
+    return render_template('front/' + g.portal_layout_path + 'subportal.html',
                            subportal=True,
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
@@ -275,7 +275,7 @@ def subportal_address(member_company_id, member_company_name):
 
     division = get_division_for_subportal(portal.id, member_company_id)
 
-    return render_template('front/bird/subportal_address.html',
+    return render_template('front/' + g.portal_layout_path + 'subportal_address.html',
                            subportal=True,
                            portal=portal_and_settings(portal),
                            current_division=division.get_client_side_dict(),
@@ -305,7 +305,7 @@ def subportal_contacts(member_company_id, member_company_name):
         r = db(UserCompany, user_id=u_id, company_id=c_id).first()
         return r.position if r else ''
 
-    return render_template('front/bird/subportal_contacts.html',
+    return render_template('front/' + g.portal_layout_path + 'subportal_contacts.html',
                            subportal=True,
                            company_users={
                                u.id: dict(u.get_client_side_dict(), position=getposition(u.id, member_company_id)) for u
