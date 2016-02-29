@@ -115,7 +115,6 @@
                                 class="fa fa-folder-open-o"></i></a></li>
                         <li><a pr_test="UserInfo" href="{{ url_general_help() }}" title="Інформація"
                                ng-class="{'selected': selected_user_menu == 'info'}"><i class="fa fa-info"></i></a></li>
-
                         <li ng-show="user.id" role="presentation" class="menu-profile">
                             <a pr_test="UserProfile"  href="{{ url_user_profile({user_id:user.id}) }}" role="button" aria-haspopup="true"
                                aria-expanded="false">
