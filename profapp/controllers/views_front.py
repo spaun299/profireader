@@ -154,7 +154,7 @@ def details(article_portal_division_id):
         return redirect(url_for('front.index', search_text=search_text))
     article = ArticlePortalDivision.get(article_portal_division_id)
     article_visibility = article.article_visibility_details()
-    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, visibility,'
+    article_dict = article.get_client_side_dict(fields='id, title,short, read_count, cr_tm, md_tm, visibility,'
                                                        'publishing_tm, keywords, status, long, image_file_id,'
                                                        'division.name, division.portal.id,'
                                                        'company.name|id')
@@ -163,9 +163,8 @@ def details(article_portal_division_id):
     division = g.db().query(PortalDivision).filter_by(id=article.portal_division_id).one()
     if article_visibility is not True:
         back_to_url('front.details', host=portal.host, article_portal_division_id=article_portal_division_id)
-        return render_template('front/bird/cant_read_article.html', redirect_info=article_visibility,
-                               portal=portal_and_settings(portal),
-                               current_division=division.get_client_side_dict())
+    else:
+        article.add_recently_read_articles_to_session()
     related_articles = g.db().query(ArticlePortalDivision).filter(
         and_(ArticlePortalDivision.id != article.id,
              ArticlePortalDivision.portal_division_id.in_(
@@ -181,7 +180,9 @@ def details(article_portal_division_id):
                                for a
                                in related_articles},
                            article=article_dict,
-                           favorite=favorite
+                           favorite=favorite,
+                           article_visibility=article_visibility is True,
+                           redirect_info=article_visibility
                            )
 
 
@@ -314,6 +315,6 @@ def subportal_contacts(member_company_id, member_company_name):
 def send_message(json, member_company_id):
     send_to = User.get(json['user_id'])
     send_email(send_to.profireader_email, 'New message',
-               'messanger/email_send_message', user_to=send_to, user_from=g.user_dict,
+               'messenger/email_send_message', user_to=send_to, user_from=g.user_dict,
                in_company=Company.get(member_company_id), message=json['message'])
     return {}

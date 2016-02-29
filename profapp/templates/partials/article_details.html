@@ -12,6 +12,7 @@
 
             <div class="item-publication-date">{{ article['publishing_tm']|safe }}</div>
             <div class="item-comments">{{_('Comments')}} 0</div>
+            <div class="read_count">Read {{ article['read_count'] }}</div>
         </div>
         <div class="article-short">
             {{ article['short']|safe }}
