@@ -1,7 +1,6 @@
     <script>
         var favorite = {{ favorite|tojson}};
         function add_delete_favorite(boolean) {
-            console.log('{{ url_for('front.add_delete_favorite') }}');
             var article_portal_division_id = {{ article['id']|tojson }};
             $.ajax({
                 type: 'post',
