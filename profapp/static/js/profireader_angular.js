@@ -790,7 +790,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                 var groups = attrs.groupBy ? true : false;
 
                 var template = '<div class="multiselect-parent btn-group dropdown-multiselect" style="width:100%"><div class="kk"><div>';
-                template += '<button type="button" style="width:100%"  id="t1" class="dropdown-toggle" ng-class="settings.buttonClasses" ng-click="toggleDropdown()">{{getButtonText()}}&nbsp;<span class="caret"></span></button>';
+                template += '<button type="button" style="width:100%"  id="t1" class="dropdown-toggle" ng-class="settings.buttonClasses" ng-disabled="parentScope.loading" ng-click="toggleDropdown()">{{getButtonText()}}&nbsp;<span class="caret"></span></button>';
                 template += '<ul class="dropdown-menu dropdown-menu-form ng-dr-ms" ng-style="{display: open ? \'block\' : \'none\', height : settings.scrollable ? settings.scrollableHeight : \'auto\' }" style="position: fixed; top:auto; left: auto; width: 20%;cursor: pointer" >';
                 template += '<li ng-show="settings.selectionLimit === 0"><a data-ng-click="selectAll()"><span class="glyphicon glyphicon-ok"></span>  {{texts.checkAll}}</a>';
                 template += '<li ng-show="settings.showUncheckAll"><a data-ng-click="deselectAll(true);"><span class="glyphicon glyphicon-remove"></span>   {{texts.uncheckAll}}</a></li>';
@@ -817,6 +817,7 @@ module.directive('ngDropdownMultiselect', ['$filter', '$document', '$compile', '
                 element.html(template);
             },
             link: function ($scope, $element, $attrs) {
+                console.log($scope)
                 var $dropdownTrigger = $element.children()[0];
 
                 $scope.toggleDropdown = function () {
@@ -1321,12 +1322,6 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 gridApi.grid.options.columnDefs[i].cellTemplate = generateCellTemplate(col[i], i);
 
             }
-            console.log(gridApi)
-            $timeout(function(){
-               console.log($('.ui-grid-row').className)
-                $('.ui-grid-row').addClass('_ss')
-            }, 5000)
-
 
             gridApi.grid['searchItemGrid'] = function (col) {
                 //highLightSubstring(col.filter.text, 'ui-grid-canvas',col.field)
@@ -1335,18 +1330,12 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 gridApi.grid.setGridData()
             };
 
-            gridApi.grid['setGridData'] = function (grid_data) {
-                var all_grid_data = grid_data ? grid_data : gridApi.grid.all_grid_data
-
-                gridApi.grid.options.loadGridData(all_grid_data, function (grid_data) {
-                    //scope.initGridData = grid_data;
-                    gridApi.grid.options.data = grid_data.grid_data;
+            gridApi.grid['set_data_function'] = function(grid_data){
+                gridApi.grid.options.data = grid_data.grid_data;
                     if ('grid_data' in grid_data) {
                         scope.initGridData = grid_data
                     } else {
-                        for (var z = 0; z < grid_data.length; z++) {
-
-                        }
+                        console.log('grid data doesn\'t exist')
                     }
                     gridApi.grid.listsForMS = {};
                     gridApi.grid.options.totalItems = grid_data.total;
@@ -1374,8 +1363,26 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     if (gridApi.grid.all_grid_data) {
                         gridApi.grid.all_grid_data['editItem'] = {};
                     }
-                });
+            }
+
+            gridApi.grid['setGridData'] = function (grid_data) {
+                var all_grid_data = grid_data ? grid_data : gridApi.grid.all_grid_data
+                scope.loading = true
+                if(gridApi.grid.options.urlLoadGridData){
+                    $ok(gridApi.grid.options.urlLoadGridData, all_grid_data, function(grid_data){
+                        gridApi.grid.set_data_function(grid_data)
+                    }).finally(function(){
+                        console.log('das')
+                        scope.loading = false
+                    })
+                }else{
+                    gridApi.grid.options.loadGridData(all_grid_data, function(grid_data){
+                        gridApi.grid.set_data_function(grid_data)
+                    })
+                }
+
             };
+
 
             if (!gridApi.grid.load_contr) {
                 gridApi.grid.load_contr = true;
