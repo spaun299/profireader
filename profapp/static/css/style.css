@@ -513,11 +513,36 @@ body {
   text-align: center;
 }
 .name-subscriptions h5 {
-  background-color: #C62828;
+  background-color: #18bc9c;
   color: #fff;
   float: left;
   padding: 10px;
   border-radius: 3px;
+}
+/* ---USER--- */
+.link-page i {
+  margin-top: 7px;
+  color: #C62828;
+}
+.link-page i:hover {
+  color: #A90A0A;
+}
+.link-page h5 {
+  background-color: #18bc9c;
+  color: #fff;
+  float: left;
+  padding: 10px;
+  border-radius: 3px;
+}
+.profile-window h3 {
+  text-align: center;
+}
+.profile-window p {
+  line-height: 10px;
+}
+.profile-window span {
+  color: #000;
+  border-bottom: 1px solid #18bc9c;
 }
 /* ---MEDIA--- */
 @media screen and (max-width: 764px) {
