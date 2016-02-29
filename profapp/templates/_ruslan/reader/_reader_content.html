@@ -7,7 +7,7 @@
 
     module.controller('list_reader', function ($scope, $ok, $timeout) {
             $scope.page = 1;
-            $scope.article_details = {{ raw_url_for('article.details_reader') |safe}}
+{#            $scope.article_details = {{ raw_url_for('article.details_reader') |safe}}#}
             $scope.favorite = {{ favorite }}
             $scope.favorite ? addToMenu_Selected('favorite') : addToMenu_Selected('list');
             $scope.getNextListOfArticles = function() {
