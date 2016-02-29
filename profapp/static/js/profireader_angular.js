@@ -1273,7 +1273,7 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     }
                     switch (col.type) {
                         case 'link':
-                            return '<div  '+attributes_for_cell+'  pr-test="Grid" class="' + classes_for_row + '" title="{{ COL_FIELD }}">' + prefix_img + '<a'+attributes_for_cell+' ' + (col.target ? (' target="' + col.target + '" ') : '') + ' href="{{' + 'grid.appScope.' + col.href + '}}"><i ng-if="' + col.link + '" class="fa fa-external-link" style="font-size: 12px"></i> {{COL_FIELD}}</a></div>';
+                            return '<div  '+attributes_for_cell+'  pr-test="Grid" class="' + classes_for_row + '" title="{{ COL_FIELD }}">' + prefix_img + '<a'+attributes_for_cell+' ' + (col.target ? (' target="' + col.target + '" ') : '') + ' href="{{' + 'grid.appScope.' + col.href + '}}"><i ng-if="' + col.link + '" class="fa fa-external-link" style="font-size: 12px"></i>{{COL_FIELD}}</a></div>';
                         case 'img':
                             return '<div  '+attributes_for_cell+'  pr-test="Grid" class="' + classes_for_row + '" style="text-align:center;">' + prefix_img + '<img ng-src="{{ COL_FIELD }}" alt="image" style="background-position: center; height: 30px;text-align: center; background-repeat: no-repeat;background-size: contain;"></div>';
                         case 'show_modal':
@@ -1372,7 +1372,6 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                     $ok(gridApi.grid.options.urlLoadGridData, all_grid_data, function(grid_data){
                         gridApi.grid.set_data_function(grid_data)
                     }).finally(function(){
-                        console.log('das')
                         scope.loading = false
                     })
                 }else{
@@ -1558,6 +1557,28 @@ module.run(function ($rootScope, $ok, $sce, $uibModal, $sanitize, $timeout, $tem
                 }
             });
         },
+        loadNextPage: function(url){
+            var scope = this;
+            $(window).scroll(function () {
+                    if($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
+                        if(scope.loading === false && scope.data.end !== true) {
+                            scope.loading = true;
+                            scope.next_page += 1
+                            if(scope.send_data){
+                                scope.send_data.next_page = scope.next_page
+                            }
+
+                            $ok(url, scope.send_data?scope.send_data:{next_page:scope.next_page}, function (resp) {
+                                scope.data = resp;
+                            }).finally(function () {
+                                $timeout(function(){
+                                    scope.loading = false;
+                                }, 1000)
+                            });
+                        }
+                   }
+            });
+        },
         dateOptions: {
             formatYear: 'yy',
             startingDay: 1
@@ -1704,6 +1725,14 @@ function highLightSubstring(substring, block, element) {
             $(this).html($(this).html().replace(re, '<span class="search-highlight">' + rex[0] + '</span>'));
         })
     })
+}
+
+//get next page when our scroll in bottom
+function getNextPage(func){
+    $(window).scroll(function () {
+        if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
+        }
+    });
 }
 
 function angularControllerFunction(controller_attr, function_name) {
