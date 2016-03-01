@@ -543,6 +543,7 @@ body {
 .profile-window span {
   color: #000;
   border-bottom: 1px solid #18bc9c;
+  word-wrap: break-word;
 }
 /* ---MEDIA--- */
 @media screen and (max-width: 764px) {
