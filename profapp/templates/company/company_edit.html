@@ -5,16 +5,12 @@
     {% include '_ruslan/partials/_header_files_articles.html' %}
 {% endblock head %}
 
-{% block portal_base %}
-    {% include 'partials/portal_base_Profireader_auth_user.html' %}
-{% endblock portal_base %}
-
-
 {% block portal_content %}
     {% from 'macros.html' import scripts %}
     {{ scripts(names=['croper']) }}
     <script>
         module.controller('company_create', ['$scope', function ($scope) {
+            angularControllerFunction('CompanyMenuController', 'set_selected_company_menu')('home');
 
             $scope.url_back = {{ raw_url_for('company.show')|safe }};
             $scope.data = {};
@@ -55,7 +51,7 @@
             <div class="row">
                 <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 image-company-profile create-img">
                     <div style="width: 400px;">
-                        <div ng-model="data.image" pr-cropper="cropper"></div>
+                        <div ng-model="data.image" pr-crop></div>
                     </div>
                 </div>
                 <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12 edit-company">
@@ -147,7 +143,7 @@
 
              <div class="update_col1" style="width: 400px;">
                  {{ _('Select picture') }}
-                 <div ng-model="data.image" pr-cropper="cropper" pr-company-id="{{ company_id }}"></div>
+                 <div ng-model="data.image" pr-crop pr-company-id="{{ company_id }}"></div>
              </div>
 
 

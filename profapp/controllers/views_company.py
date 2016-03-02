@@ -266,13 +266,12 @@ def update_rights():
 @tos_required
 @login_required
 # @check_rights()
-def update(company_id=None):
-    user_companies = [user_comp for user_comp in current_user.employer_assoc]
-    user_have_comp = True if len(user_companies) > 0 else False
-    company = db(Company, id=company_id).first()
-    return render_template('company/company_edit.html', company_id=company_id, user_comp=user_have_comp,
-                           company_name=company.name if company else '',
-                           company=company if company else {})
+def update():
+    # user_companies = [user_comp for user_comp in current_user.employer_assoc]
+    # user_have_comp = True if len(user_companies) > 0 else False
+    # company = db(Company, id=company_id).first()
+    return render_template('company/company_profile.html',rights_user_in_company={},
+                           company = Company())
 
 
 @company_bp.route('/profile/<string:company_id>/', methods=['GET'])
@@ -373,8 +372,10 @@ def load(json, company_id=None):
 @ok
 # @check_rights(simple_permissions([]))
 def search_for_company_to_join(json):
-    companies = Company().search_for_company_to_join(g.user_dict['id'], json['search'])
-    return companies
+    companies, pages, page, count = pagination(query=Company().search_for_company_to_join(g.user_dict['id'], json['search']), page=1, items_per_page=5)
+    print(pages)
+    return [company.get_client_side_dict() for company in
+                          companies]
 
 
 @company_bp.route('/search_for_user/<string:company_id>', methods=['POST'])

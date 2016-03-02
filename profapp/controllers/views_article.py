@@ -377,9 +377,9 @@ def list_reader(page=1):
                            )
 
 
-@article_bp.route('add_to_favorite/', methods=['POST'])
-def add_delete_favorite():
-    favorite = json.loads(request.form.get('favorite'))
-    article_portal_division_id = request.form.get('article_portal_division_id')
-    ReaderArticlePortalDivision.add_delete_favorite_user_article(article_portal_division_id, favorite)
-    return jsonify({'favorite': favorite})
+# @article_bp.route('add_to_favorite/', methods=['POST'])
+# def add_delete_favorite():
+#     favorite = json.loads(request.form.get('favorite'))
+#     article_portal_division_id = request.form.get('article_portal_division_id')
+#     ReaderArticlePortalDivision.add_delete_favorite_user_article(article_portal_division_id, favorite)
+#     return jsonify({'favorite': favorite})

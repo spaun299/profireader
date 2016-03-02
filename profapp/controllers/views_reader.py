@@ -13,23 +13,23 @@ import datetime
 from ..models.files import File
 
 
-# @reader_bp.route('/details_reader/<string:article_portal_division_id>')
-# @tos_required
-# def details_reader(article_portal_division_id):
-#     article = ArticlePortalDivision.get(article_portal_division_id)
-#     article.add_recently_read_articles_to_session()
-#     article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
-#                                                        'publishing_tm, keywords, status, long, image_file_id,'
-#                                                        'division.name, division.portal.id,'
-#                                                        'company.name|id')
-#     article_dict['tags'] = article.tags
-#     ReaderArticlePortalDivision.add_to_table_if_not_exists(article_portal_division_id)
-#     favorite = article.check_favorite_status(user_id=g.user.id)
-#
-#     return render_template('partials/reader/reader_details.html',
-#                            article=article_dict,
-#                            favorite=favorite
-#                            )
+@reader_bp.route('/details_reader/<string:article_portal_division_id>')
+@tos_required
+def details_reader(article_portal_division_id):
+    article = ArticlePortalDivision.get(article_portal_division_id)
+    article.add_recently_read_articles_to_session()
+    article_dict = article.get_client_side_dict(fields='id, title,short, cr_tm, md_tm, '
+                                                       'publishing_tm, keywords, status, long, image_file_id,'
+                                                       'division.name, division.portal.id,'
+                                                       'company.name|id')
+    article_dict['tags'] = article.tags
+    ReaderArticlePortalDivision.add_to_table_if_not_exists(article_portal_division_id)
+    favorite = article.check_favorite_status(user_id=g.user.id)
+
+    return render_template('partials/reader/reader_details.html',
+                           article=article_dict,
+                           favorite=favorite
+                           )
 
 
 @reader_bp.route('/list_reader', methods=['GET'])
@@ -79,7 +79,9 @@ def list_reader_load(json):
             articles[article_id]['portal']['logo_file_id'] else None
         del articles[article_id]['company']['logo_file_id'], articles[article_id]['portal']['logo_file_id']
         list_articles.append(article)
+
     return {
+        'end': pages == 1,
         'articles': list_articles,
         'pages': pages,
         'current_page': page,

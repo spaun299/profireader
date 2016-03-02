@@ -330,16 +330,16 @@
             //},
             template: function (tElement, tAttrs) {
                 var model_fields = tAttrs['afValidationAnswer'].split(':');
-                $(tElement).attr('uib-popover', "Ops! Pls enter at least one keyword");
-                //var model_name = model_fields[0];
-                //var field_name = model_fields[1];
-                //var erm = '' + model_name + '.errors.' + field_name;
-                //var ewm = '' + model_name + '.warnings.' + field_name;
-                //var enm = '' + model_name + '.notices.' + field_name;
+                //$(tElement).attr('uib-popover', "Ops! Pls enter at least one keyword");
+                var model_name = model_fields[0];
+                var field_name = model_fields[1];
+                var erm = '' + model_name + '.errors.' + field_name;
+                var ewm = '' + model_name + '.warnings.' + field_name;
+                var enm = '' + model_name + '.notices.' + field_name;
                 //$(tElement).attr('data-toggle')
-                //return '<span class="error"   ng-if="' + erm + '"><span class="icon icon-stop"></span> {{ ' + erm + ' }}</span>' +
-                //    '<span class="warning" ng-if="!' + erm + ' && ' + ewm + '"><span class="icon icon-warning"></span> {{ ' + ewm + ' }}</span>' +
-                //    '<span class="notice"  ng-if="!' + erm + ' && ! ' + ewm + ' && ' + enm + '"><span class="icon icon-check"></span> {{ ' + enm + ' }}</span>';
+                return '<span class="error"   ng-if="' + erm + '"><span class="icon icon-stop"></span> {{ ' + erm + ' }}</span>' +
+                    '<span class="warning" ng-if="!' + erm + ' && ' + ewm + '"><span class="icon icon-warning"></span> {{ ' + ewm + ' }}</span>' +
+                    '<span class="notice"  ng-if="!' + erm + ' && ! ' + ewm + ' && ' + enm + '"><span class="icon icon-check"></span> {{ ' + enm + ' }}</span>';
             },
             scope: false,
             link: function ($scope, iElement, iAttrs, ngModelCtrl) {
@@ -347,6 +347,7 @@
             }
         }
     }]).directive('prValidationAnswer', function ($compile) {
+        //TODO: OZ by OZ: maybe compile function is better solution (faster)
         return {
             restrict: 'A',
             replace: false,
