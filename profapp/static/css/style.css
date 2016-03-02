@@ -594,6 +594,37 @@ body {
   background-color: #009627;
   transition: all 0.2s ease-out;
 }
+.add-division-style {
+  margin-top: 15px;
+}
+.add-division-style button {
+  background-color: #C62828;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  display: inline;
+}
+.add-division-style .label-division {
+  margin-top: 23px;
+}
+.portal-division-block {
+  margin-bottom: 10px;
+}
+.portal-division-block span {
+  margin-top: 5px;
+}
+.portal-division-block .delete-division i {
+  margin-top: 12px;
+}
+.form-portal-edit label {
+  margin-right: 10px;
+}
+.form-portal-edit input {
+  margin-right: 10px;
+}
+.name-form {
+  margin-top: 12px;
+}
 /* ---MEDIA--- */
 @media screen and (max-width: 764px) {
   .menu-site ul {

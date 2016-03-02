@@ -32,8 +32,8 @@
 
     <div class="container" ng-controller="UserLoginController">
         <div class="row link-page"><h5>User profile</h5>
-            <a pr_test="EditProfile" href="{{ url_for('user.edit_profile', user_id=user.id) }}">
-                <i class="fa fa-pencil fa-2x"></i>
+            <a title="edit" pr_test="EditProfile" href="{{ url_for('user.edit_profile', user_id=user.id) }}">
+                <i class="fa fa-pencil fa-2x"><span></span></i>
             </a>
         </div>
         <div class="row" ng-controller="UserLoginController">
