@@ -30,8 +30,8 @@
             <div class="item-comments">{{_('Comments')}} 0</div>
             <div class="read_count">Read {{ article['read_count'] }}</div>
             <div class="like_count">Likes {{ article['like_count'] }}</div>
-            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" id='favorite' style="cursor: pointer"
-                         onclick="favorite?add_delete_favorite(false):add_delete_favorite(true);">
+
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" id='favorite' style="cursor: pointer">
                         {% if favorite %}
                             <i class="fa fa-heart"></i>
                         {% else %}
@@ -39,6 +39,15 @@
                         {% endif %}
                         <script>document.write(favorite ? 'Delete from favorite' : 'Add to favorite')</script>
                     </div>
+{#            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" id='favorite' style="cursor: pointer"#}
+{#                         onclick="favorite?add_delete_favorite(false):add_delete_favorite(true);">#}
+{#                        {% if favorite %}#}
+{#                            <i class="fa fa-heart"></i>#}
+{#                        {% else %}#}
+{#                            <i class="fa fa-heart-o"></i>#}
+{#                        {% endif %}#}
+{#                        <script>document.write(favorite ? 'Delete from favorite' : 'Add to favorite')</script>#}
+{#                    </div>#}
 
 
         </div>
