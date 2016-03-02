@@ -1,10 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
-<h3>Hello messenger</h3>
-</body>
-</html>
+{% extends "_ruslan/_index_layout.html" %}
+
+{% block title %}Profireader{% endblock title %}
+{% block head %}
+    {{ super() }}
+    {% include 'partials/empty_page.html' %}
+{% endblock head %}
+
+{% block portal_base %}
+{% endblock portal_base %}
+
+{% block portal_content %}
+    Hello Matynka
+{% endblock portal_content %}
