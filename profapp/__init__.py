@@ -467,7 +467,6 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     app.before_request(lambda: load_user(apptype))
     app.before_request(setup_authomatic(app))
 
-
     def add_map_headers_to_less_files(response):
         response.headers.add('Access-Control-Allow-Origin', '*')
         if request.path and re.search(r'\.css$', request.path):
@@ -525,7 +524,7 @@ def create_app(config='config.ProductionDevelopmentConfig', apptype='profi'):
     def load_user_manager(user_id):
         return g.db.query(User).get(user_id)
 
-    csrf.init_app(app)
+    # csrf.init_app(app)
 
     # read this: http://stackoverflow.com/questions/6036082/call-a-python-function-from-jinja2
     # app.jinja_env.globals.update(flask_endpoint_to_angular=flask_endpoint_to_angular)
