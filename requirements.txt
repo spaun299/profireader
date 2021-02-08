@@ -23,7 +23,7 @@ Flask-Babel
 google-api-python-client-py3
 apiclient==1.0.2
 oauth2client==1.5.1
-httplib2==0.9.1
+httplib2==0.19.0
 urllib3==1.12
 selenium==2.48.0
 simplejson>=3.8.0
